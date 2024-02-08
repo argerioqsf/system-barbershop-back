@@ -41,7 +41,7 @@ services:
     environment:
       PORT: 3333
     healthcheck:
-      test: curl --fail backend:3030/health || exit 1
+      test: curl --fail backend:3333/health || exit 1
       interval: 5s
       retries: 5
       start_period: 20s
