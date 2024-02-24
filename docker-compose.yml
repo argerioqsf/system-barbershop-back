@@ -1,20 +1,20 @@
 version: '3.7'
 
 services:
-  postgresql:
-    container_name: postgresql
-    image: bitnami/postgresql:latest
+  mysqldb:
+    container_name: mysqldb
+    image: mysql
     restart: always
     ports:
-      - 5432:5432
+      - 3306:3306
     environment:
-      POSTGRES_USER: dev
-      POSTGRES_PASSWORD: 12345678A
-      POSTGRES_ROOT_PASSWORD: 12345678A
+      MYSQL_USER: dev
+      MYSQL_PASSWORD: 12345678A
+      MYSQL_ROOT_PASSWORD: 12345678A
     volumes:
-      - postgres_db:/var/lib/postgresdb
+      - mysqldb:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
       interval: 5s
       retries: 5
       start_period: 20s
@@ -34,7 +34,7 @@ services:
     volumes:
       - ./:/opt/app
     depends_on:
-      postgresql:
+      mysqldb:
         condition: service_healthy 
     ports:
       - '3333:3333'
@@ -56,5 +56,5 @@ networks:
     driver: bridge
 
 volumes:
-  postgres_db:
+  mysqldb:
   
