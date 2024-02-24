@@ -1,8 +1,8 @@
 import { FastifyInstance } from 'fastify'
-import { users } from '../controllers/users-controller'
+import { register } from '../controllers/register-controller'
 import { authenticate } from '../controllers/authenticate-controller'
 
 export async function appRoute(app: FastifyInstance) {
-  app.post('/users', users)
+  app.post('/users', register)
   app.post('/sessions', authenticate)
 }
