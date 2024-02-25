@@ -17,9 +17,21 @@ export async function authenticate(
   try {
     const authenticateService = makeAuthenticateService()
 
-    await authenticateService.execute({
+    const { user } = await authenticateService.execute({
       email,
       password,
+    })
+
+    const token = await replay.jwtSign(
+      {},
+      {
+        sign: {
+          sub: user.id,
+        },
+      },
+    )
+    return replay.status(200).send({
+      token,
     })
   } catch (error) {
     if (error instanceof InvalidCredentialsError) {
@@ -27,6 +39,4 @@ export async function authenticate(
     }
     throw error
   }
-
-  return replay.status(200).send()
 }
