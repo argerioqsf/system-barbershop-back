@@ -30,6 +30,7 @@ export class InMemoryUserRepository implements UsersRepository {
       name: data.name,
       email: data.email,
       password: data.password,
+      active: false,
     }
     this.items.push(user)
 
