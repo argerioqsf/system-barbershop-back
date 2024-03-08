@@ -35,17 +35,20 @@ model Profile {
   @@map("profiles")
 }
 
-model segment {
-  id   String @id @default(uuid())
-  name String
+model Segment {
+  id       String @id @default(uuid())
+  name     String
+  course   Course @relation(fields: [courseId], references: [id])
+  courseId String
 
   @@map("segments")
 }
 
-model course {
-  id     String  @id @default(uuid())
-  name   String
-  active Boolean
+model Course {
+  id      String    @id @default(uuid())
+  name    String
+  active  Boolean
+  Segment Segment[]
 
   @@map("courses")
 }
