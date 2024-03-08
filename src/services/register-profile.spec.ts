@@ -12,7 +12,7 @@ describe('Profile use case', () => {
 
   beforeEach(() => {
     userRepository = new InMemoryUserRepository()
-    profileRepository = new InMemoryProfilesRepository(userRepository)
+    profileRepository = new InMemoryProfilesRepository()
     stu = new CreateProfileService(userRepository, profileRepository)
   })
 
