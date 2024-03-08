@@ -1,29 +1,28 @@
-import { UsersRepository } from '@/repositories/users-repository'
-import { User } from '@prisma/client'
-import { ResourceNotFoundError } from './errors/resource-not-found-error'
+import { ProfilesRepository } from "@/repositories/profiles-repository";
+import { Profile } from "@prisma/client";
+import { ResourceNotFoundError } from "./errors/resource-not-found-error";
+import { UsersRepository } from "@/repositories/users-repository";
 
 interface GetUserProfileServiceRequest {
-  userId: string
+  id: string;
 }
 
 interface GetUserProfileServiceResponse {
-  user: User
+  profile: Profile;
 }
 
 export class GetUserProfileService {
-  constructor(private usersRepository: UsersRepository) {}
+  constructor(private profileRepository: ProfilesRepository) {}
 
-  async execute({
-    userId,
-  }: GetUserProfileServiceRequest): Promise<GetUserProfileServiceResponse> {
-    const user = await this.usersRepository.findById(userId)
+  async execute({ id }: GetUserProfileServiceRequest): Promise<GetUserProfileServiceResponse> {
+    const profile = await this.profileRepository.findById(id);
 
-    if (!user) {
-      throw new ResourceNotFoundError()
+    if (!profile) {
+      throw new ResourceNotFoundError();
     }
 
     return {
-      user,
-    }
+      profile,
+    };
   }
 }

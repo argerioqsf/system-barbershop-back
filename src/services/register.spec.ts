@@ -18,6 +18,7 @@ describe('Users use case', () => {
       name: 'joe',
       email: 'joedoe@dev.com',
       password: '123456789A@',
+      active: false,
     })
 
     expect(user.id).toEqual(expect.any(String))
@@ -28,6 +29,7 @@ describe('Users use case', () => {
       name: 'joe',
       email: 'joedoe@dev.com',
       password: '123456789A@',
+      active: false,
     })
 
     const isPasswordCorrectlyHashed = await compare(
@@ -45,6 +47,7 @@ describe('Users use case', () => {
       name: 'joe',
       email,
       password: '123456789A@',
+      active: false,
     })
 
     await expect(() =>
@@ -52,6 +55,7 @@ describe('Users use case', () => {
         name: 'joe',
         email,
         password: '123456789A@',
+        active: false,
       }),
     ).rejects.toBeInstanceOf(UserAlreadyExistsError)
   })
