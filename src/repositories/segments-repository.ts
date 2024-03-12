@@ -1,5 +1,5 @@
-import { Prisma, segment } from "@prisma/client";
+import { Prisma, Segment } from '@prisma/client'
 
 export interface SegmentsRepository {
-  create(data: Prisma.segmentUncheckedCreateInput): Promise<segment>;
+  create(data: Prisma.SegmentUncheckedCreateInput): Promise<Segment>
 }

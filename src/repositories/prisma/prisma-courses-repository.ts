@@ -1,17 +1,17 @@
-import { Prisma, course } from "@prisma/client";
-import { CoursesRepository } from "../course-repository";
-import { prisma } from "@/lib/prisma";
+import { Prisma, Course } from '@prisma/client'
+import { CoursesRepository } from '../course-repository'
+import { prisma } from '@/lib/prisma'
 
 export class PrismaCoursesRepository implements CoursesRepository {
-  async create(data: Prisma.courseCreateInput): Promise<course> {
-    const course = await prisma.course.create({ data });
+  async create(data: Prisma.CourseCreateInput): Promise<Course> {
+    const course = await prisma.course.create({ data })
 
-    return course;
+    return course
   }
 
-  async findMany(): Promise<course[]> {
-    const courses = await prisma.course.findMany();
+  async findMany(): Promise<Course[]> {
+    const courses = await prisma.course.findMany()
 
-    return courses;
+    return courses
   }
 }
