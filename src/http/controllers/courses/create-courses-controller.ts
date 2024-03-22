@@ -27,5 +27,4 @@ export async function CreateCoursesController(request: FastifyRequest, reply: Fa
     return reply.status(500).send({ message: "Internal server error" });
   }
 
-  return;
 }

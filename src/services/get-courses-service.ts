@@ -1,9 +1,9 @@
 import { CoursesRepository } from "@/repositories/course-repository";
-import { course } from "@prisma/client";
+import { Course } from "@prisma/client";
 import { CourseNotFoundError } from "./errors/course-not-found-error";
 
 interface GetCoursesServiceResponse {
-  courses: course[];
+  courses: Course[];
 }
 
 export class GetCoursesService {

@@ -1,6 +1,7 @@
-import { Prisma, course } from "@prisma/client";
+import { Prisma, Course } from "@prisma/client";
 
 export interface CoursesRepository {
-  create(data: Prisma.courseCreateInput): Promise<course>;
-  findMany(): Promise<course[]>;
+  create(data: Prisma.CourseCreateInput): Promise<Course>;
+  findMany(): Promise<Course[]>;
+  findById(data: string): Promise<Course | null>
 }

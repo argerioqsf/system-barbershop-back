@@ -7,6 +7,8 @@ export async function GetCoursesController(request: FastifyRequest, replay: Fast
   const { courses } = await getCoursesService.execute();
 
   return replay.status(200).send({
-    courses,
+    courses: {
+      courses: courses,
+    },
   });
 }
