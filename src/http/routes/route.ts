@@ -11,9 +11,11 @@ import { GetSegmentsController } from '../controllers/segments/get-segments-cont
 import { CreateUnitController } from '../controllers/unit/create-unit-controller'
 import { GetUnitController } from '../controllers/unit/get-units-controller'
 import { registerUserProfile } from '../controllers/user/register-user-profile-controller'
+import { getUsers } from '../controllers/user/get-users-controller'
 
 export async function appRoute(app: FastifyInstance) {
   app.post('/users', registerUser)
+  app.get('/users', { onRequest: [verifyJWT] }, getUsers)
   app.post('/userProfile', { onRequest: [verifyJWT] }, registerUserProfile)
   app.post('/sessions', authenticate)
 
