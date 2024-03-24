@@ -8,7 +8,7 @@ interface GetUserProfileServiceRequest {
 }
 
 interface GetUserProfileServiceResponse {
-  profile: Profile;
+  profile: Profile & { user: User };
 }
 
 export class GetUserProfileService {

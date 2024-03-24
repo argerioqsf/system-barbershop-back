@@ -16,7 +16,7 @@ export async function appRoute(app: FastifyInstance) {
   app.post("/sessions", authenticate);
 
   // authenticated
-  app.get("/me/:id", { onRequest: [verifyJWT] }, profile);
+  app.get("/me", { onRequest: [verifyJWT] }, profile);
   app.post("/create/profile", { onRequest: [verifyJWT] }, createProfileController);
   app.post("/create/course", { onRequest: [verifyJWT] }, CreateCoursesController);
   app.get("/courses", { onRequest: [verifyJWT] }, GetCoursesController);

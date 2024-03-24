@@ -1,5 +1,6 @@
 import { InvalidCredentialsError } from '@/services/errors/invalid-credentials-error'
 import { makeAuthenticateService } from '@/services/factories/make-authenticate-service'
+import { Role } from '@prisma/client'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
@@ -30,7 +31,12 @@ export async function authenticate(
         },
       },
     )
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _, ...userWithoutPassword } = user
     return replay.status(200).send({
+      user: userWithoutPassword,
+      roles: Role,
       token,
     })
   } catch (error) {
