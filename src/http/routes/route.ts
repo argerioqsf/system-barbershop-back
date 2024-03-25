@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify'
-import { register } from '../controllers/register-controller'
+import { registerUser } from '../controllers/user/register-user-controller'
 import { authenticate } from '../controllers/authenticate-controller'
 import { profile } from '../controllers/profile-controller'
 import { verifyJWT } from '../middlewares/verify-jwt'
@@ -10,13 +10,17 @@ import { CreateSegmentsController } from '../controllers/segments/create-segment
 import { GetSegmentsController } from '../controllers/segments/get-segments-controller'
 import { CreateUnitController } from '../controllers/unit/create-unit-controller'
 import { GetUnitController } from '../controllers/unit/get-units-controller'
+import { registerUserProfile } from '../controllers/user/register-user-profile-controller'
+import { getUsers } from '../controllers/user/get-users-controller'
 
 export async function appRoute(app: FastifyInstance) {
-  app.post('/users', register)
+  app.post('/users', registerUser)
+  app.get('/users', { onRequest: [verifyJWT] }, getUsers)
+  app.post('/userProfile', { onRequest: [verifyJWT] }, registerUserProfile)
   app.post('/sessions', authenticate)
 
   // authenticated
-  app.get('/me/:id', { onRequest: [verifyJWT] }, profile)
+  app.get('/me', { onRequest: [verifyJWT] }, profile)
   app.post(
     '/create/profile',
     { onRequest: [verifyJWT] },
