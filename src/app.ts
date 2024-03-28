@@ -8,6 +8,7 @@ import { segmentRoute } from './http/controllers/segments/route'
 import { unitRoute } from './http/controllers/units/route'
 import { userRoute } from './http/controllers/user/route'
 import { appRoute } from './http/routes/route'
+import { unitCourseRoute } from './http/controllers/unit-course/route'
 
 export const app = fastify()
 
@@ -21,6 +22,7 @@ app.register(courseRoute)
 app.register(segmentRoute)
 app.register(profileRoute)
 app.register(userRoute)
+app.register(unitCourseRoute)
 
 app.setErrorHandler((error, _, replay) => {
   if (error instanceof ZodError) {

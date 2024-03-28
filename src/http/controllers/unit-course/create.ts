@@ -7,7 +7,7 @@ const bodySchema = z.object({
   courseId: z.string()
 });
 
-export async function CreateUnitCourseController(request: FastifyRequest, reply: FastifyReply) {
+export async function Create(request: FastifyRequest, reply: FastifyReply) {
   
   try {
    const { unitId, courseId } = bodySchema.parse(request.body)
