@@ -1,4 +1,4 @@
-import { makeCreateUnitCourseService } from "@/services/factories/make-create-unit-course-service";
+import { makeCreateUnitCourseService } from "@/services/@factories/unit-course/make-create-unit-course-service";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
 
