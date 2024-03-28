@@ -10,13 +10,13 @@ interface GetUserProfileServiceResponse {
   profile: Profile & { user: User }
 }
 
-export class GetUserProfileService {
+export class GetUserProfileFromUserIdService {
   constructor(private profileRepository: ProfilesRepository) {}
 
   async execute({
     id,
   }: GetUserProfileServiceRequest): Promise<GetUserProfileServiceResponse> {
-    const profile = await this.profileRepository.findById(id)
+    const profile = await this.profileRepository.findByUserId(id)
 
     if (!profile) {
       throw new ResourceNotFoundError()

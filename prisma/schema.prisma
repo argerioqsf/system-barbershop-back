@@ -16,38 +16,101 @@ model User {
   email    String   @unique
   password String
   active   Boolean  @default(false)
-  Profile  Profile?
+  profile  Profile?
 
   @@map("users")
 }
 
 model Profile {
-  id       String @id @default(uuid())
-  phone    String
-  cpf      String
-  genre    String
-  birthday String
-  pix      String
-  role     Role   @default(indicator)
-  user     User   @relation(fields: [userId], references: [id])
-  userId   String @unique
+  id              String  @id @default(uuid())
+  phone           String
+  cpf             String
+  genre           String
+  birthday        String
+  pix             String
+  role            Role    @default(indicator)
+  user            User    @relation(fields: [userId], references: [id])
+  userId          String  @unique
+  leadsIndicator  Leads[] @relation(name: "indicatorLeads")
+  leadsConsultant Leads[] @relation(name: "consultantLeads")
 
   @@map("profiles")
 }
 
-model segment {
-  id   String @id @default(uuid())
-  name String
+model Segment {
+  id    String        @id @default(uuid())
+  name  String
+  units UnitSegment[]
 
   @@map("segments")
 }
 
-model course {
-  id     String  @id @default(uuid())
-  name   String
-  active Boolean
+model UnitSegment {
+  segment   Segment @relation(fields: [segmentId], references: [id])
+  segmentId String
+  unit      Unit    @relation(fields: [unitId], references: [id])
+  unitId    String
+
+  @@id([segmentId, unitId])
+  @@map("unit_segment")
+}
+
+model Course {
+  id       String        @id @default(uuid())
+  name     String
+  active   Boolean
+  units    UnitCourses[]
+  timeline Timeline[]
 
   @@map("courses")
+}
+
+model Unit {
+  id       String        @id @default(uuid())
+  name     String
+  courses  UnitCourses[]
+  segments UnitSegment[]
+
+  @@map("units")
+}
+
+model UnitCourses {
+  course   Course @relation(fields: [courseId], references: [id])
+  courseId String
+  unit     Unit   @relation(fields: [unitId], references: [id])
+  unitId   String
+
+  @@id([courseId, unitId])
+  @@map("unit_courses")
+}
+
+model Timeline {
+  id          String @id @default(uuid())
+  title       String
+  description String
+  status      String
+  lead        Leads  @relation(fields: [leadsId], references: [id])
+  leadsId     String
+  course      Course @relation(fields: [courseId], references: [id])
+  courseId    String
+
+  @@map("timeline")
+}
+
+model Leads {
+  id           String     @id @default(uuid())
+  name         String
+  phone        String
+  document     String
+  email        String
+  city         String
+  indicator    Profile    @relation(fields: [indicatorId], references: [id], name: "indicatorLeads")
+  indicatorId  String
+  consultant   Profile    @relation(fields: [consultantId], references: [id], name: "consultantLeads")
+  consultantId String
+  timeline     Timeline[]
+
+  @@map("leads")
 }
 
 enum Role {

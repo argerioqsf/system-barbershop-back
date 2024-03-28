@@ -3,7 +3,9 @@
 /.vscode
 
 /build
+/dist
 
 coverage
 
 .env
+.vercel
