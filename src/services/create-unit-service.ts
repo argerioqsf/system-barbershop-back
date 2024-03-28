@@ -1,13 +1,14 @@
+import { CoursesRepository } from "@/repositories/course-repository";
 import { SegmentsRepository } from "@/repositories/segments-repository";
 import { UnitRepository } from "@/repositories/unit-repository";
-import { Unit } from "@prisma/client";
+import { Course, Unit } from "@prisma/client";
 
 interface CreateUnitServiceRequest {
-  name: string;
+  name: string
 }
 
 interface CreateUnitServiceResponse {
-  unit: Unit;
+  unit: Unit
 }
 
 export class CreateUnitService {

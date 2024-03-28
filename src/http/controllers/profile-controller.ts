@@ -1,13 +1,13 @@
 import { InvalidCredentialsError } from '@/services/errors/invalid-credentials-error'
-import { getProfileFromUseridService } from '@/services/factories/get-profile-from-userId-service'
+import { getProfileFromUserIdService } from '@/services/factories/get-profile-from-userId-service'
 import { Role } from '@prisma/client'
 import { FastifyReply, FastifyRequest } from 'fastify'
 
 export async function profile(request: FastifyRequest, replay: FastifyReply) {
   try {
-    const getProfileFromUserid = getProfileFromUseridService()
+    const getProfileFromUserId = getProfileFromUserIdService()
     const userId = request.user.sub
-    const { profile } = await getProfileFromUserid.execute({
+    const { profile } = await getProfileFromUserId.execute({
       id: userId,
     })
     const { user, ...profileWithoutUser } = profile

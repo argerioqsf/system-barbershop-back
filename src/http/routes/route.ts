@@ -12,6 +12,7 @@ import { CreateUnitController } from '../controllers/unit/create-unit-controller
 import { GetUnitController } from '../controllers/unit/get-units-controller'
 import { registerUserProfile } from '../controllers/user/register-user-profile-controller'
 import { getUsers } from '../controllers/user/get-users-controller'
+import { CreateUnitCourseController } from '../controllers/unit-course/create-unit-course-controller'
 
 export async function appRoute(app: FastifyInstance) {
   app.post('/users', registerUser)
@@ -42,4 +43,6 @@ export async function appRoute(app: FastifyInstance) {
 
   app.post('/create/unit', { onRequest: [verifyJWT] }, CreateUnitController)
   app.get('/units', { onRequest: [verifyJWT] }, GetUnitController)
+
+  app.post('/create/unit/courses', {onRequest: [verifyJWT]}, CreateUnitCourseController)
 }
