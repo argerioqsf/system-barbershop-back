@@ -1,4 +1,3 @@
-
 import { getUsersService } from '@/services/@factories/user/get-users-service'
 import { FastifyReply, FastifyRequest } from 'fastify'
 

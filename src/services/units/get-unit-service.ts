@@ -1,3 +1,4 @@
+import { CoursesRepository } from '@/repositories/course-repository'
 import { UnitRepository } from '@/repositories/unit-repository'
 import { Unit } from '@prisma/client'
 
@@ -6,7 +7,10 @@ interface GetUnitsServiceResponse {
 }
 
 export class GetUnitService {
-  constructor(private unitRepository: UnitRepository) {}
+  constructor(
+    private unitRepository: UnitRepository,
+    private courseRepository: CoursesRepository,
+  ) {}
 
   async execute(): Promise<GetUnitsServiceResponse> {
     const units = await this.unitRepository.findMany()
