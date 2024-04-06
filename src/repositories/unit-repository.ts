@@ -1,4 +1,4 @@
-import { Course, Prisma, Segment, Unit } from "@prisma/client";
+import { Prisma, Unit } from '@prisma/client';
 
 export interface UnitRepository {
   create(data: Prisma.UnitCreateInput): Promise<Unit>;
