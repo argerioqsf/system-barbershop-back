@@ -1,31 +1,54 @@
-import { CoursesRepository } from '@/repositories/course-repository'
-import { UnitRepository } from '@/repositories/unit-repository'
-import { Unit } from '@prisma/client'
+import { CoursesRepository } from "@/repositories/course-repository";
+import { SegmentsRepository } from "@/repositories/segments-repository";
+import { UnitCourseRepository } from "@/repositories/unit-course-repository";
+import { UnitRepository } from "@/repositories/unit-repository";
+import { UnitSegmentRepository } from "@/repositories/unit-segment-repository";
+import { Prisma, Unit } from "@prisma/client";
+import { CourseNotFoundError } from "../@errors/course-not-found-error";
+import { SegmentNotFoundError } from "../@errors/segment-not-found-error";
 
 interface CreateUnitServiceRequest {
-  name: string
-  courseId: string
+  name: string;
+  coursesIds?: string[];
+  segmentsIds?: string[];
 }
 
 interface CreateUnitServiceResponse {
-  unit: Unit
+  unit: Unit;
+  unitCourses: Prisma.BatchPayload;
+  unitSegments: Prisma.BatchPayload;
 }
 
 export class CreateUnitService {
   constructor(
     private unitRepository: UnitRepository,
-    private courseRepository: CoursesRepository,
+    private coursesRepository: CoursesRepository,
+    private segmentRepository: SegmentsRepository,
+    private unitCourseRepository: UnitCourseRepository,
+    private segmentCourseRepository: UnitSegmentRepository
   ) {}
 
-  async execute({
-    name,
-    courseId,
-  }: CreateUnitServiceRequest): Promise<CreateUnitServiceResponse> {
+  async execute({ name, coursesIds, segmentsIds }: CreateUnitServiceRequest): Promise<CreateUnitServiceResponse> {
+    const courses = coursesIds ? await this.coursesRepository.findManyCourseId(coursesIds) : [];
+
+    const segments = segmentsIds ? await this.segmentRepository.findManySegmentId(segmentsIds) : [];
+
+    if (coursesIds && courses.length != coursesIds.length) {
+      throw new CourseNotFoundError();
+    }
+
+    if (segmentsIds && segments.length != segmentsIds.length) {
+      throw new SegmentNotFoundError();
+    }
+
     const unit = await this.unitRepository.create({
       name,
-    })
-    await this.courseRepository.addUnitCourseId(courseId, unit)
+    });
 
-    return { unit }
+    const unitCourses = await this.unitCourseRepository.createMany(unit.id, coursesIds);
+
+    const unitSegments = await this.segmentCourseRepository.createMany(unit.id, segmentsIds);
+
+    return { unit, unitCourses, unitSegments };
   }
 }

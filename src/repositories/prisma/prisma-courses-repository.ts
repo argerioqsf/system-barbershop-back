@@ -3,17 +3,16 @@ import { CoursesRepository } from '../course-repository'
 import { prisma } from '@/lib/prisma'
 
 export class PrismaCoursesRepository implements CoursesRepository {
-  async addUnitCourseId(
-    id: string,
-  ): Promise<(Course & { unit: Unit[] }) | null> {
-    const course = await prisma.course.findUnique({
-      where: { id },
-      include: {
-        units: true,
-      },
+  async findManyCourseId(ids: string[]): Promise<Course[]> {
+    const courses = await prisma.course.findMany({
+      where: {
+        id: {
+          in: ids
+        }
+      }
     })
 
-    return course
+    return courses
   }
 
   async create(data: Prisma.CourseCreateInput): Promise<Course> {
