@@ -3,7 +3,7 @@ import { CoursesRepository } from '../course-repository'
 import { prisma } from '@/lib/prisma'
 
 export class PrismaCoursesRepository implements CoursesRepository {
-  async findManyCourseId(ids: string[]): Promise<Course[]> {
+  async findManyListIds(ids: string[]): Promise<Course[]> {
     const courses = await prisma.course.findMany({
       where: {
         id: {

@@ -29,9 +29,9 @@ export class CreateUnitService {
   ) {}
 
   async execute({ name, coursesIds, segmentsIds }: CreateUnitServiceRequest): Promise<CreateUnitServiceResponse> {
-    const courses = coursesIds ? await this.coursesRepository.findManyCourseId(coursesIds) : [];
+    const courses = coursesIds ? await this.coursesRepository.findManyListIds(coursesIds) : [];
 
-    const segments = segmentsIds ? await this.segmentRepository.findManySegmentId(segmentsIds) : [];
+    const segments = segmentsIds ? await this.segmentRepository.findManyListIds(segmentsIds) : [];
 
     if (coursesIds && courses.length != coursesIds.length) {
       throw new CourseNotFoundError();

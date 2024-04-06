@@ -3,7 +3,7 @@ import { SegmentsRepository } from "../segments-repository";
 import { prisma } from "@/lib/prisma";
 
 export class PrismaSegmentsRepository implements SegmentsRepository {
-  async findManySegmentId(ids: string[]): Promise<{ id: string; name: string; }[]> {
+  async findManyListIds(ids: string[]): Promise<{ id: string; name: string; }[]> {
     const segment = await prisma.segment.findMany({
       where: {
         id: {
