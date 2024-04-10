@@ -38,6 +38,16 @@ export class PrismaUsersRepository implements UsersRepository {
         email: true,
         name: true,
         active: true,
+        profile: {
+          select: {
+            cpf: true,
+            genre: true,
+            phone: true,
+            role: true,
+            pix: true,
+            birthday: true,
+          },
+        },
       },
     })
 
