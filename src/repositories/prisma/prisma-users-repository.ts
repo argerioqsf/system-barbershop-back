@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { Prisma, Profile, User } from '@prisma/client'
 import { UsersRepository } from '../users-repository'
+import { pagination } from '@/utils/constants/pagination'
 
 export class PrismaUsersRepository implements UsersRepository {
   async findById(
@@ -83,8 +84,8 @@ export class PrismaUsersRepository implements UsersRepository {
           },
         },
       },
-      take: 10,
-      skip: (page - 1) * 10,
+      take: pagination.total,
+      skip: (page - 1) * pagination.total,
     })
 
     return users
