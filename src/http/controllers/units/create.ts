@@ -7,7 +7,7 @@ import { z } from 'zod'
 const bodySchema = z.object({
   name: z.string(),
   courses: z.array(z.string()).optional(),
-  segments: z.array(z.string()).optional()
+  segments: z.array(z.string()).optional(),
 })
 
 export async function Create(request: FastifyRequest, reply: FastifyReply) {
@@ -16,7 +16,11 @@ export async function Create(request: FastifyRequest, reply: FastifyReply) {
   const createUnitService = makeCreateUnitService()
 
   try {
-    const { unit } = await createUnitService.execute({ name, coursesIds: courses, segmentsIds: segments })
+    const { unit } = await createUnitService.execute({
+      name,
+      coursesIds: courses,
+      segmentsIds: segments,
+    })
 
     return reply.status(201).send(unit)
   } catch (error) {

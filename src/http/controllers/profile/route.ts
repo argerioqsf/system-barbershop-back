@@ -6,7 +6,7 @@ import { List } from './list'
 export async function profileRoute(app: FastifyInstance) {
   app.addHook('onRequest', verifyJWT)
 
-  app.get('/profile', List)  
+  app.get('/profile', List)
 
   app.post('/create/profile', Create)
 }

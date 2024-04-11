@@ -6,7 +6,7 @@ import { getUnit } from './get-unit'
 
 export async function unitRoute(app: FastifyInstance) {
   app.addHook('onRequest', verifyJWT)
-  
+
   app.get('/units', List)
 
   app.get('/unit/:id', getUnit)

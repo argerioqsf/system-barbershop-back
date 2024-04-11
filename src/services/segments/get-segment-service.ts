@@ -1,6 +1,10 @@
 import { SegmentsRepository } from '@/repositories/segments-repository'
 import { Segment } from '@prisma/client'
 
+interface GetSegmentsServiceRequest {
+  page: number
+}
+
 interface GetSegmentsServiceResponse {
   segments: Segment[]
 }
@@ -8,8 +12,10 @@ interface GetSegmentsServiceResponse {
 export class GetSegmentsService {
   constructor(private segmentsRepository: SegmentsRepository) {}
 
-  async execute(): Promise<GetSegmentsServiceResponse> {
-    const segments = await this.segmentsRepository.findMany()
+  async execute({
+    page,
+  }: GetSegmentsServiceRequest): Promise<GetSegmentsServiceResponse> {
+    const segments = await this.segmentsRepository.findMany(page)
 
     return { segments }
   }

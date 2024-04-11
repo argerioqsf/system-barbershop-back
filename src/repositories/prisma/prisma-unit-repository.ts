@@ -1,6 +1,6 @@
-import { prisma } from "@/lib/prisma";
-import { Course, Prisma, Unit, UnitCourses } from "@prisma/client";
-import { UnitRepository } from "../unit-repository";
+import { prisma } from '@/lib/prisma'
+import { Course, Prisma, Unit, UnitCourses } from '@prisma/client'
+import { UnitRepository } from '../unit-repository'
 
 export class PrismaUnitRepository implements UnitRepository {
   async findById(id: string): Promise<Unit | null> {
@@ -9,18 +9,18 @@ export class PrismaUnitRepository implements UnitRepository {
       include: {
         courses: {
           select: {
-            course: true
-          }
+            course: true,
+          },
         },
         segments: {
           select: {
-            segment: true
-          }
-        }
-      }
-    });
+            segment: true,
+          },
+        },
+      },
+    })
 
-    return unit;
+    return unit
   }
 
   async create(data: Prisma.UnitCreateInput): Promise<Unit> {
@@ -28,27 +28,33 @@ export class PrismaUnitRepository implements UnitRepository {
       data: {
         name: data.name,
       },
-    });
+    })
 
-    return Unit;
+    return Unit
   }
-  
-  async findMany(): Promise<Unit[]> {
+
+  async findMany(page: number): Promise<Unit[]> {
     const units = await prisma.unit.findMany({
       include: {
         courses: {
           select: {
-            course: true
-          }
+            course: true,
+          },
+          take: 10,
+          skip: (page - 1) * 10,
         },
         segments: {
           select: {
-            segment: true
-          }
-        }
-      }
-    });
+            segment: true,
+          },
+          take: 10,
+          skip: (page - 1) * 10,
+        },
+      },
+      take: 10,
+      skip: (page - 1) * 10,
+    })
 
-    return units;
+    return units
   }
 }

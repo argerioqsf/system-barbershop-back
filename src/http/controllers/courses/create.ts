@@ -8,10 +8,7 @@ const bodySchema = z.object({
   active: z.boolean(),
 })
 
-export async function Create(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function Create(request: FastifyRequest, reply: FastifyReply) {
   const body = bodySchema.parse(request.body)
 
   const createCoursesService = makeCreateCourseService()

@@ -11,6 +11,6 @@ export function makeCreateUnitService() {
     new PrismaCoursesRepository(),
     new PrismaSegmentsRepository(),
     new PrismaUnitCourseRepository(),
-    new PrismaUnitSegmentRepository()
+    new PrismaUnitSegmentRepository(),
   )
 }

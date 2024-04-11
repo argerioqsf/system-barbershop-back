@@ -5,8 +5,8 @@ import { CreateUnitCourseService } from '@/services/unit-courses/create-unit-cou
 
 export function makeCreateUnitCourseService() {
   return new CreateUnitCourseService(
-    new PrismaUnitCourseRepository(), 
-    new PrismaUnitRepository(), 
-    new PrismaCoursesRepository()
+    new PrismaUnitCourseRepository(),
+    new PrismaUnitRepository(),
+    new PrismaCoursesRepository(),
   )
 }

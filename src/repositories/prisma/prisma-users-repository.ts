@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { Prisma } from '@prisma/client'
+import { Prisma, User } from '@prisma/client'
 import { UsersRepository } from '../users-repository'
 
 export class PrismaUsersRepository implements UsersRepository {
@@ -31,7 +31,7 @@ export class PrismaUsersRepository implements UsersRepository {
     return user
   }
 
-  async findMany(): Promise<object[]> {
+  async findMany(page: number): Promise<object[]> {
     const users = await prisma.user.findMany({
       select: {
         id: true,
@@ -49,6 +49,8 @@ export class PrismaUsersRepository implements UsersRepository {
           },
         },
       },
+      take: 10,
+      skip: (page - 1) * 10,
     })
 
     return users
