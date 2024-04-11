@@ -3,6 +3,7 @@ import { Profile, User } from '@prisma/client'
 
 interface GetUsersServiceRequest {
   page: number
+  query?: string
 }
 
 interface GetUsersServiceResponse {
@@ -16,8 +17,9 @@ export class GetUsersService {
 
   async execute({
     page,
+    query,
   }: GetUsersServiceRequest): Promise<GetUsersServiceResponse> {
-    const users = await this.userRepository.findMany(page)
+    const users = await this.userRepository.findMany(page, query)
 
     return { users }
   }

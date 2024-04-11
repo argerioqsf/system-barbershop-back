@@ -3,6 +3,7 @@ import { Course } from '@prisma/client'
 import { CourseNotFoundError } from '../@errors/course-not-found-error'
 
 interface GetCoursesServiceRequest {
+  query?: string
   page: number
 }
 
@@ -15,8 +16,9 @@ export class GetCoursesService {
 
   async execute({
     page,
+    query,
   }: GetCoursesServiceRequest): Promise<GetCoursesServiceResponse> {
-    const courses = await this.coursesRepository.findMany(page)
+    const courses = await this.coursesRepository.findMany(page, query)
 
     if (!courses) {
       throw new CourseNotFoundError()

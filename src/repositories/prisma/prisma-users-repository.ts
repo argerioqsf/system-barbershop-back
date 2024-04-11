@@ -56,10 +56,16 @@ export class PrismaUsersRepository implements UsersRepository {
 
   async findMany(
     page: number,
+    query?: string,
   ): Promise<
     (Omit<User, 'password'> & { profile: Omit<Profile, 'userId'> | null })[]
   > {
     const users = await prisma.user.findMany({
+      where: {
+        name: {
+          contains: query,
+        },
+      },
       select: {
         id: true,
         email: true,

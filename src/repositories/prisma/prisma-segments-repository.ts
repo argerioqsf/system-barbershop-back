@@ -3,20 +3,6 @@ import { SegmentsRepository } from '../segments-repository'
 import { prisma } from '@/lib/prisma'
 
 export class PrismaSegmentsRepository implements SegmentsRepository {
-  async searchMany(query: string, page: number): Promise<Segment[]> {
-    const segments = await prisma.segment.findMany({
-      where: {
-        name: {
-          contains: query,
-        },
-      },
-      take: 10,
-      skip: (page - 1) * 10,
-    })
-
-    return segments
-  }
-
   async findManyListIds(
     ids: string[],
   ): Promise<{ id: string; name: string }[]> {
@@ -37,8 +23,13 @@ export class PrismaSegmentsRepository implements SegmentsRepository {
     return segments
   }
 
-  async findMany(page: number): Promise<Segment[]> {
+  async findMany(page: number, query?: string): Promise<Segment[]> {
     const segments = await prisma.segment.findMany({
+      where: {
+        name: {
+          contains: query,
+        },
+      },
       take: 10,
       skip: (page - 1) * 10,
     })

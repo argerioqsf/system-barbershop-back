@@ -11,6 +11,7 @@ export interface UsersRepository {
   create(data: Prisma.UserCreateInput): Promise<User>
   findMany(
     page: number,
+    query?: string,
   ): Promise<
     (Omit<User, 'password'> & { profile: Omit<Profile, 'userId'> | null })[]
   >
