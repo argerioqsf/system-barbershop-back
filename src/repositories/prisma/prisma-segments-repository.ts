@@ -4,9 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { pagination } from '@/utils/constants/pagination'
 
 export class PrismaSegmentsRepository implements SegmentsRepository {
-  async findManyListIds(
-    ids: string[],
-  ): Promise<Segment[]> {
+  async findManyListIds(ids: string[]): Promise<Segment[]> {
     const segment = await prisma.segment.findMany({
       where: {
         id: {

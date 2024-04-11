@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { Course, Prisma } from '@prisma/client'
 import { CoursesRepository } from '../course-repository'
-import { pagination } from '@/utils/constants/pagination' 
+import { pagination } from '@/utils/constants/pagination'
 
 export class PrismaCoursesRepository implements CoursesRepository {
   async findManyListIds(ids: string[]): Promise<Course[]> {
