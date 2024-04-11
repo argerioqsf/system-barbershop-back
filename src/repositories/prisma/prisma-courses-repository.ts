@@ -1,15 +1,16 @@
-import { Prisma, Course, Unit } from '@prisma/client'
-import { CoursesRepository } from '../course-repository'
 import { prisma } from '@/lib/prisma'
+import { Course, Prisma } from '@prisma/client'
+import { CoursesRepository } from '../course-repository'
+import { pagination } from '@/utils/constants/pagination' 
 
 export class PrismaCoursesRepository implements CoursesRepository {
   async findManyListIds(ids: string[]): Promise<Course[]> {
     const courses = await prisma.course.findMany({
       where: {
         id: {
-          in: ids
-        }
-      }
+          in: ids,
+        },
+      },
     })
 
     return courses
@@ -21,8 +22,16 @@ export class PrismaCoursesRepository implements CoursesRepository {
     return course
   }
 
-  async findMany(): Promise<Course[]> {
-    const courses = await prisma.course.findMany()
+  async findMany(page: number, query?: string): Promise<Course[]> {
+    const courses = await prisma.course.findMany({
+      where: {
+        name: {
+          contains: query,
+        },
+      },
+      take: pagination.total,
+      skip: (page - 1) * pagination.total,
+    })
 
     return courses
   }

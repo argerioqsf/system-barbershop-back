@@ -7,6 +7,6 @@ export async function courseRoute(app: FastifyInstance) {
   app.addHook('onRequest', verifyJWT)
 
   app.get('/courses', List)
-  
+
   app.post('/create/course', Create)
 }

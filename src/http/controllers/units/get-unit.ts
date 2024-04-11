@@ -7,10 +7,7 @@ const routeSchema = z.object({
   id: z.string(),
 })
 
-export async function getUnit(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getUnit(request: FastifyRequest, reply: FastifyReply) {
   const { id } = routeSchema.parse(request.params)
 
   const getUnitService = makeGetUnitService()
@@ -23,7 +20,7 @@ export async function getUnit(
     if (error instanceof UnitNotFoundError) {
       return reply.status(404).send({ message: error.message })
     }
-    
+
     return reply.status(500).send({ message: 'Internal server error' })
   }
 }

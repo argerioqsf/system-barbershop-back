@@ -26,12 +26,11 @@ export async function CreateUserProfile(
   try {
     const registerUserProfileService = makeUserProfileService()
 
-    const { user, profile } = await registerUserProfileService.execute({
+    const { profile } = await registerUserProfileService.execute({
       ...body,
     })
-    const { password: _, ...userWithoutPassword } = user
-    return replay.status(201).send({
-      user: userWithoutPassword,
+
+    return replay.status(200).send({
       profile,
     })
   } catch (error) {

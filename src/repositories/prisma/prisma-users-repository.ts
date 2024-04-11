@@ -1,14 +1,38 @@
 import { prisma } from '@/lib/prisma'
-import { Prisma } from '@prisma/client'
+import { Prisma, Profile, User } from '@prisma/client'
 import { UsersRepository } from '../users-repository'
+import { pagination } from '@/utils/constants/pagination'
 
 export class PrismaUsersRepository implements UsersRepository {
-  async findById(id: string) {
+  async findById(
+    id: string,
+  ): Promise<
+    | (Omit<User, 'password'> & { profile: Omit<Profile, 'userId'> | null })
+    | null
+  > {
     const user = await prisma.user.findUnique({
       where: {
         id,
       },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        active: true,
+        profile: {
+          select: {
+            id: true,
+            cpf: true,
+            genre: true,
+            phone: true,
+            role: true,
+            pix: true,
+            birthday: true,
+          },
+        },
+      },
     })
+
     return user
   }
 
@@ -31,8 +55,18 @@ export class PrismaUsersRepository implements UsersRepository {
     return user
   }
 
-  async findMany(): Promise<object[]> {
+  async findMany(
+    page: number,
+    query?: string,
+  ): Promise<
+    (Omit<User, 'password'> & { profile: Omit<Profile, 'userId'> | null })[]
+  > {
     const users = await prisma.user.findMany({
+      where: {
+        name: {
+          contains: query,
+        },
+      },
       select: {
         id: true,
         email: true,
@@ -40,6 +74,7 @@ export class PrismaUsersRepository implements UsersRepository {
         active: true,
         profile: {
           select: {
+            id: true,
             cpf: true,
             genre: true,
             phone: true,
@@ -49,6 +84,8 @@ export class PrismaUsersRepository implements UsersRepository {
           },
         },
       },
+      take: pagination.total,
+      skip: (page - 1) * pagination.total,
     })
 
     return users

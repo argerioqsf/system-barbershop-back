@@ -1,23 +1,25 @@
-import { UnitRepository } from "@/repositories/unit-repository";
-import { Unit } from "@prisma/client";
-import { UnitNotFoundError } from "../@errors/unit-not-found-error";
+import { UnitRepository } from '@/repositories/unit-repository'
+import { Unit } from '@prisma/client'
+import { UnitNotFoundError } from '../@errors/unit-not-found-error'
 
 interface GetUnitServiceRequest {
-  id: string;
+  id: string
 }
 
 interface GetUnitServiceResponse {
-  unit: Unit;
+  unit: Unit
 }
 
 export class GetUnitService {
   constructor(private unitRepository: UnitRepository) {}
 
-  async execute({ id }: GetUnitServiceRequest): Promise<GetUnitServiceResponse> {
-    const unit = await this.unitRepository.findById(id);
+  async execute({
+    id,
+  }: GetUnitServiceRequest): Promise<GetUnitServiceResponse> {
+    const unit = await this.unitRepository.findById(id)
 
-    if (!unit) throw new UnitNotFoundError();
+    if (!unit) throw new UnitNotFoundError()
 
-    return { unit };
+    return { unit }
   }
 }

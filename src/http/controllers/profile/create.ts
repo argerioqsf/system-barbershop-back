@@ -14,10 +14,7 @@ const bodySchema = z.object({
   role: z.nativeEnum(Role),
 })
 
-export async function Create(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function Create(request: FastifyRequest, reply: FastifyReply) {
   const body = bodySchema.parse(request.body)
 
   const createProfileService = makeCreateProfileService()
@@ -28,7 +25,7 @@ export async function Create(
     const { profile } = await createProfileService.execute({ ...body, userId })
 
     return reply.status(201).send(profile)
-    //TODO: verify catch error 404 - not able
+    // TODO: verify catch error 404 - not able
   } catch (error) {
     if (error instanceof UserNotFoundError) {
       return reply.status(404).send({ message: error.message })
