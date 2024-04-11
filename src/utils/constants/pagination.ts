@@ -1,3 +1,3 @@
 export const pagination = {
-    total: 10
+  total: 10,
 }
