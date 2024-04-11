@@ -1,4 +1,5 @@
 import { IndicatorNotFoundError } from '@/services/@errors/indicator-not-found-error'
+import { UserNotFoundError } from '@/services/@errors/user-not-found-error'
 import { makeGetIndicatorService } from '@/services/@factories/indicator/make-get-indicator'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
@@ -21,6 +22,9 @@ export async function GetIndicatorProfile(
     return reply.status(200).send(user)
   } catch (error) {
     if (error instanceof IndicatorNotFoundError) {
+      return reply.status(404).send({ message: error.message })
+    }
+    if (error instanceof UserNotFoundError) {
       return reply.status(404).send({ message: error.message })
     }
 

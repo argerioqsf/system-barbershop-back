@@ -19,12 +19,8 @@ export class GetIndicatorProfileService {
     page,
     query,
   }: GetIndicatorProfileServiceRequest): Promise<GetIndicatorProfileServiceResponse> {
-    const users = await this.userRepository.findMany(page, query)
+    const users = await this.userRepository.findManyIndicator(page, query)
 
-    const indicatorUsers = users.filter(
-      (user) => user.profile && user.profile.role === 'indicator',
-    )
-
-    return { users: indicatorUsers }
+    return { users }
   }
 }

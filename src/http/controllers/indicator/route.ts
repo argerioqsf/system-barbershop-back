@@ -1,6 +1,6 @@
 import { verifyJWT } from '@/http/middlewares/verify-jwt'
 import { FastifyInstance } from 'fastify'
-import { List } from './List'
+import { List } from './list'
 import { GetIndicatorProfile } from './get-indicator'
 
 export async function indicatorRoute(app: FastifyInstance) {

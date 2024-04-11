@@ -15,4 +15,10 @@ export interface UsersRepository {
   ): Promise<
     (Omit<User, 'password'> & { profile: Omit<Profile, 'userId'> | null })[]
   >
+  findManyIndicator(
+    page: number,
+    query?: string,
+  ): Promise<
+    (Omit<User, 'password'> & { profile: Omit<Profile, 'userId'> | null })[]
+  >
 }
