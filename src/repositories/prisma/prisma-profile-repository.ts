@@ -14,11 +14,30 @@ export class PrismaProfilesRepository implements ProfilesRepository {
     return profile
   }
 
-  async findByUserId(id: string): Promise<(Profile & { user: User }) | null> {
+  async findByUserId(
+    id: string,
+  ): Promise<
+    (Omit<Profile, 'userId'> & { user: Omit<User, 'password'> }) | null
+  > {
     const profile = await prisma.profile.findUnique({
       where: { userId: id },
-      include: {
-        user: true,
+      select: {
+        id: true,
+        phone: true,
+        cpf: true,
+        genre: true,
+        birthday: true,
+        pix: true,
+        role: true,
+        userId: true,
+        user: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            active: true,
+          },
+        },
       },
     })
 

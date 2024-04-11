@@ -1,14 +1,37 @@
 import { prisma } from '@/lib/prisma'
-import { Prisma, User } from '@prisma/client'
+import { Prisma, Profile, User } from '@prisma/client'
 import { UsersRepository } from '../users-repository'
 
 export class PrismaUsersRepository implements UsersRepository {
-  async findById(id: string) {
+  async findById(
+    id: string,
+  ): Promise<
+    | (Omit<User, 'password'> & { profile: Omit<Profile, 'userId'> | null })
+    | null
+  > {
     const user = await prisma.user.findUnique({
       where: {
         id,
       },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        active: true,
+        profile: {
+          select: {
+            id: true,
+            cpf: true,
+            genre: true,
+            phone: true,
+            role: true,
+            pix: true,
+            birthday: true,
+          },
+        },
+      },
     })
+
     return user
   }
 
@@ -31,7 +54,11 @@ export class PrismaUsersRepository implements UsersRepository {
     return user
   }
 
-  async findMany(page: number): Promise<object[]> {
+  async findMany(
+    page: number,
+  ): Promise<
+    (Omit<User, 'password'> & { profile: Omit<Profile, 'userId'> | null })[]
+  > {
     const users = await prisma.user.findMany({
       select: {
         id: true,
@@ -40,6 +67,7 @@ export class PrismaUsersRepository implements UsersRepository {
         active: true,
         profile: {
           select: {
+            id: true,
             cpf: true,
             genre: true,
             phone: true,

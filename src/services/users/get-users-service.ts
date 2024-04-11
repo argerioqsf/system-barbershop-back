@@ -1,12 +1,14 @@
 import { UsersRepository } from '@/repositories/users-repository'
-import { User } from '@prisma/client'
+import { Profile, User } from '@prisma/client'
 
 interface GetUsersServiceRequest {
   page: number
 }
 
 interface GetUsersServiceResponse {
-  users: object[]
+  users: (Omit<User, 'password'> & {
+    profile: Omit<Profile, 'userId'> | null
+  })[]
 }
 
 export class GetUsersService {

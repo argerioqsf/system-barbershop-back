@@ -1,8 +1,22 @@
 import { prisma } from '@/lib/prisma'
-import { Course, Prisma, Unit, UnitCourses } from '@prisma/client'
+import { Prisma, Unit } from '@prisma/client'
 import { UnitRepository } from '../unit-repository'
 
 export class PrismaUnitRepository implements UnitRepository {
+  async searchMany(query: string, page: number): Promise<Unit[]> {
+    const units = await prisma.unit.findMany({
+      where: {
+        name: {
+          contains: query,
+        },
+      },
+      take: 10,
+      skip: (page - 1) * 10,
+    })
+
+    return units
+  }
+
   async findById(id: string): Promise<Unit | null> {
     const unit = await prisma.unit.findUnique({
       where: { id },
