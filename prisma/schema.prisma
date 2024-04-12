@@ -106,8 +106,8 @@ model Leads {
   city         String
   indicator    Profile    @relation(fields: [indicatorId], references: [id], name: "indicatorLeads")
   indicatorId  String
-  consultant   Profile    @relation(fields: [consultantId], references: [id], name: "consultantLeads")
-  consultantId String
+  consultant   Profile?   @relation(fields: [consultantId], references: [id], name: "consultantLeads")
+  consultantId String?
   timeline     Timeline[]
 
   @@map("leads")

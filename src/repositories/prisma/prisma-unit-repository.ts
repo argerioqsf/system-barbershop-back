@@ -1,7 +1,7 @@
-import { prisma } from '@/lib/prisma'
-import { Prisma, Unit } from '@prisma/client'
-import { UnitRepository } from '../unit-repository'
-import { pagination } from '@/utils/constants/pagination'
+import { prisma } from "@/lib/prisma";
+import { Prisma, Unit } from "@prisma/client";
+import { UnitRepository } from "../unit-repository";
+import { pagination } from "@/utils/constants/pagination";
 
 export class PrismaUnitRepository implements UnitRepository {
   async findById(id: string): Promise<Unit | null> {
@@ -19,9 +19,9 @@ export class PrismaUnitRepository implements UnitRepository {
           },
         },
       },
-    })
+    });
 
-    return unit
+    return unit;
   }
 
   async create(data: Prisma.UnitCreateInput): Promise<Unit> {
@@ -29,9 +29,9 @@ export class PrismaUnitRepository implements UnitRepository {
       data: {
         name: data.name,
       },
-    })
+    });
 
-    return Unit
+    return Unit;
   }
 
   async findMany(page: number, query?: string): Promise<Unit[]> {
@@ -42,25 +42,18 @@ export class PrismaUnitRepository implements UnitRepository {
         },
       },
       include: {
-        courses: {
+        _count: {
           select: {
-            course: true,
+            courses: true,
+            segments: true
           },
-          take: pagination.total,
-          skip: (page - 1) * pagination.total,
         },
-        segments: {
-          select: {
-            segment: true,
-          },
-          take: pagination.total,
-          skip: (page - 1) * pagination.total,
-        },
+       
       },
       take: pagination.total,
       skip: (page - 1) * pagination.total,
-    })
+    });
 
-    return units
+    return units;
   }
 }
