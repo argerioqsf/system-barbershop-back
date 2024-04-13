@@ -1,11 +1,47 @@
-import { Leads, Prisma } from "@prisma/client";
-import { LeadsRepository } from "../leads-repository";
-import { prisma } from "@/lib/prisma";
-import { pagination } from "@/utils/constants/pagination";
+import { Leads, Prisma } from '@prisma/client'
+import { LeadsRepository } from '../leads-repository'
+import { prisma } from '@/lib/prisma'
+import { pagination } from '@/utils/constants/pagination'
 
 export class PrismaLeadsRepository implements LeadsRepository {
-  findMany(page: number, query?: string): Promise<Leads[]> {
-    const leads = prisma.leads.findMany({
+  async findById(id: string): Promise<Leads | null> {
+    const lead = await prisma.leads.findUnique({
+      where: {
+        id,
+      },
+      include: {
+        consultant: {
+          select: {
+            user: {
+              select: {
+                name: true,
+                email: true,
+              },
+            },
+            phone: true,
+            cpf: true,
+          },
+        },
+        indicator: {
+          select: {
+            user: {
+              select: {
+                name: true,
+                email: true,
+              },
+            },
+            phone: true,
+            cpf: true,
+          },
+        },
+      },
+    })
+
+    return lead
+  }
+
+  async findMany(page: number, query?: string): Promise<Leads[]> {
+    const leads = await prisma.leads.findMany({
       where: {
         name: {
           contains: query,
@@ -17,36 +53,36 @@ export class PrismaLeadsRepository implements LeadsRepository {
             user: {
               select: {
                 name: true,
-                email: true
-              }
+                email: true,
+              },
             },
-            phone:true, 
-            cpf: true
-          }
+            phone: true,
+            cpf: true,
+          },
         },
         indicator: {
           select: {
             user: {
               select: {
                 name: true,
-                email: true
-              }
+                email: true,
+              },
             },
             phone: true,
-            cpf: true
-          }
-        }
+            cpf: true,
+          },
+        },
       },
       take: pagination.total,
       skip: (page - 1) * pagination.total,
-    });
+    })
 
-    return leads;
+    return leads
   }
 
   async create(data: Prisma.LeadsUncheckedCreateInput): Promise<Leads> {
-    const leads = await prisma.leads.create({ data });
+    const leads = await prisma.leads.create({ data })
 
-    return leads;
+    return leads
   }
 }
