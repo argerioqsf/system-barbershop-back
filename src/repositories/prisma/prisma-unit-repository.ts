@@ -42,19 +42,11 @@ export class PrismaUnitRepository implements UnitRepository {
         },
       },
       include: {
-        courses: {
+        _count: {
           select: {
-            course: true,
+            courses: true,
+            segments: true,
           },
-          take: pagination.total,
-          skip: (page - 1) * pagination.total,
-        },
-        segments: {
-          select: {
-            segment: true,
-          },
-          take: pagination.total,
-          skip: (page - 1) * pagination.total,
         },
       },
       take: pagination.total,
