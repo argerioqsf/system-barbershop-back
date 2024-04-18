@@ -22,6 +22,11 @@ export class PrismaSegmentsRepository implements SegmentsRepository {
     return segments
   }
 
+  async mountSelect(): Promise<Segment[]> {
+    const segments = await prisma.segment.findMany()
+    return segments
+  }
+
   async findMany(page: number, query?: string): Promise<Segment[]> {
     const segments = await prisma.segment.findMany({
       where: {

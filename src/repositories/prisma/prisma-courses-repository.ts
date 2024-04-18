@@ -36,6 +36,20 @@ export class PrismaCoursesRepository implements CoursesRepository {
     return courses
   }
 
+  async mountSelect(): Promise<Omit<Course, 'active'>[]> {
+    const courses = await prisma.course.findMany({
+      where: {
+        active: true,
+      },
+      select: {
+        name: true,
+        id: true,
+      },
+    })
+
+    return courses
+  }
+
   async findById(id: string): Promise<Course | null> {
     const course = await prisma.course.findUnique({ where: { id } })
 
