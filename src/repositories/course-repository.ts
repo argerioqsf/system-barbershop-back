@@ -5,4 +5,5 @@ export interface CoursesRepository {
   findMany(page: number, query?: string): Promise<Course[]>
   findManyListIds(ids: string[]): Promise<Course[]>
   findById(data: string): Promise<Course | null>
+  mountSelect(): Promise<Omit<Course, 'active'>[]>
 }
