@@ -9,8 +9,7 @@ RUN npm install -g npm@10.4.0 \
     npm install -g tsx \
     npm install -g concurrently \
     npm install -g typescript \
-    npx prisma generate \
-    npx prisma migrate dev
+    npx prisma generate
 
 ENV INSTALL_PATH /opt/app
 RUN mkdir -p $INSTALL_PATH

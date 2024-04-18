@@ -12,7 +12,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
-    "migrate": "docker exec api-sim npx prisma migrate dev"
+    "migrate": "docker exec api-sim npx prisma migrate dev",
+    "prisma-studio": "docker exec api-sim npx prisma studio"
   },
   "author": "codecodedev",
   "license": "ISC",

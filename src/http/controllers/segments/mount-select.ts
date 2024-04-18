@@ -5,7 +5,6 @@ export async function MountSelect(
   request: FastifyRequest,
   replay: FastifyReply,
 ) {
-  console.log('MountSelect segment')
   const getMountSelectSegmentService = makeMountSelectSegmentsService()
 
   const { segments } = await getMountSelectSegmentService.execute()
