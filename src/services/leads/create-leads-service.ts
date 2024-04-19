@@ -6,6 +6,7 @@ import { IndicatorNotFoundError } from '../@errors/indicator-not-found-error'
 import { NeedIndicatorField } from '../@errors/need-indicator-field'
 import { SetConsultantNotPermitError } from '../@errors/set-consultant-not-permission'
 import { UserNotFoundError } from '../@errors/user-not-found-error'
+import { PrismaTimelineRepository } from '@/repositories/prisma/prisma-timeline-repository'
 
 interface CreateLeadsServiceRequest {
   name: string
@@ -26,6 +27,7 @@ export class CreateLeadsService {
   constructor(
     private leadsRepository: LeadsRepository,
     private profileRepository: PrismaProfilesRepository,
+    private timelineRepository: PrismaTimelineRepository,
   ) {}
 
   async execute({
@@ -46,6 +48,13 @@ export class CreateLeadsService {
       indicatorId: '',
     }
 
+    let timeLine = [
+      {
+        descriptionTL: '',
+        statusTL: 'Novo Lead',
+      },
+    ]
+
     if (indicatorId) {
       if (profile.role === 'indicator') {
         throw new AdministratorCreateIndicatorNotFound()
@@ -54,6 +63,7 @@ export class CreateLeadsService {
           await this.profileRepository.findById(indicatorId)
 
         if (profileIndicator?.role === 'indicator') {
+          timeLine[0].descriptionTL = `Lead indicator por ${profileIndicator.user.name}`
           data = { ...data, indicatorId }
         } else {
           throw new IndicatorNotFoundError()
@@ -61,6 +71,7 @@ export class CreateLeadsService {
       }
     } else {
       if (profile.role === 'indicator') {
+        timeLine[0].descriptionTL = `Lead indicator por ${profile.user.name}`
         data = { ...data, indicatorId: profile.id }
       } else {
         throw new NeedIndicatorField()
@@ -68,8 +79,22 @@ export class CreateLeadsService {
     }
 
     if (consultantId) {
-      if (profile.role === 'administrator') {
-        data = { ...data, consultantId }
+      const profileConsultant =
+        await this.profileRepository.findById(consultantId)
+
+      if (profileConsultant?.role) {
+        if (profile.role === 'administrator') {
+          timeLine = [
+            ...timeLine,
+            {
+              descriptionTL: `O consultant: ${profileConsultant.user.name} join em contact com o lead: ${name}`,
+              statusTL: 'get',
+            },
+          ]
+          data = { ...data, consultantId }
+        } else {
+          throw new SetConsultantNotPermitError()
+        }
       } else {
         throw new SetConsultantNotPermitError()
       }
