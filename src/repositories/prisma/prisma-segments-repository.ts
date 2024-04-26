@@ -40,4 +40,16 @@ export class PrismaSegmentsRepository implements SegmentsRepository {
 
     return segments
   }
+
+  async count(query?: string): Promise<number> {
+    const segments = await prisma.segment.count({
+      where: {
+        name: {
+          contains: query,
+        },
+      },
+    })
+
+    return segments
+  }
 }

@@ -9,6 +9,7 @@ interface GetCoursesServiceRequest {
 
 interface GetCoursesServiceResponse {
   courses: Course[]
+  count: number
 }
 
 export class GetCoursesService {
@@ -19,11 +20,12 @@ export class GetCoursesService {
     query,
   }: GetCoursesServiceRequest): Promise<GetCoursesServiceResponse> {
     const courses = await this.coursesRepository.findMany(page, query)
+    const count = await this.coursesRepository.count(query)
 
     if (!courses) {
       throw new CourseNotFoundError()
     }
 
-    return { courses }
+    return { courses, count }
   }
 }

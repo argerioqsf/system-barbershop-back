@@ -12,9 +12,13 @@ export async function List(request: FastifyRequest, replay: FastifyReply) {
 
   const getSegmentService = makeGetSegmentsService()
 
-  const { segments } = await getSegmentService.execute({ page, query: q })
+  const { segments, count } = await getSegmentService.execute({
+    page,
+    query: q,
+  })
 
   return replay.status(200).send({
     segments,
+    count,
   })
 }

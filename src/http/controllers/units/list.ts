@@ -12,9 +12,10 @@ export async function List(request: FastifyRequest, replay: FastifyReply) {
 
   const getUnitService = makeGetUnitsService()
 
-  const { units } = await getUnitService.execute({ page, query: q })
+  const { units, count } = await getUnitService.execute({ page, query: q })
 
   return replay.status(200).send({
     units,
+    count,
   })
 }
