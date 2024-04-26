@@ -129,4 +129,31 @@ export class PrismaUsersRepository implements UsersRepository {
 
     return users
   }
+
+  async count(query?: string): Promise<number> {
+    const users = await prisma.user.count({
+      where: {
+        name: {
+          contains: query,
+        },
+      },
+    })
+
+    return users
+  }
+
+  async countIndicator(query?: string): Promise<number> {
+    const users = await prisma.user.count({
+      where: {
+        name: {
+          contains: query,
+        },
+        profile: {
+          role: 'indicator',
+        },
+      },
+    })
+
+    return users
+  }
 }

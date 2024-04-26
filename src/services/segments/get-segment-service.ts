@@ -8,6 +8,7 @@ interface GetSegmentsServiceRequest {
 
 interface GetSegmentsServiceResponse {
   segments: Segment[]
+  count: number
 }
 
 export class GetSegmentsService {
@@ -18,7 +19,8 @@ export class GetSegmentsService {
     page,
   }: GetSegmentsServiceRequest): Promise<GetSegmentsServiceResponse> {
     const segments = await this.segmentsRepository.findMany(page, query)
+    const count = await this.segmentsRepository.count(query)
 
-    return { segments }
+    return { segments, count }
   }
 }

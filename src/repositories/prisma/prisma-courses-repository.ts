@@ -36,6 +36,18 @@ export class PrismaCoursesRepository implements CoursesRepository {
     return courses
   }
 
+  async count(query?: string): Promise<number> {
+    const courses = await prisma.course.count({
+      where: {
+        name: {
+          contains: query,
+        },
+      },
+    })
+
+    return courses
+  }
+
   async mountSelect(): Promise<Omit<Course, 'active'>[]> {
     const courses = await prisma.course.findMany({
       where: {

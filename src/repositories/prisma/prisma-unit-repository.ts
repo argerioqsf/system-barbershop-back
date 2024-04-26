@@ -55,4 +55,16 @@ export class PrismaUnitRepository implements UnitRepository {
 
     return units
   }
+
+  async count(query?: string): Promise<number> {
+    const units = await prisma.unit.count({
+      where: {
+        name: {
+          contains: query,
+        },
+      },
+    })
+
+    return units
+  }
 }

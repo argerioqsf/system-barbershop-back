@@ -12,7 +12,7 @@ export async function List(request: FastifyRequest, replay: FastifyReply) {
 
   const getLeadsService = makeGetLeadsService()
 
-  const { leads } = await getLeadsService.execute({ page, query: q })
+  const { leads, count } = await getLeadsService.execute({ page, query: q })
 
-  return replay.status(200).send({ leads })
+  return replay.status(200).send({ leads, count })
 }

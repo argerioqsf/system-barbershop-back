@@ -15,10 +15,12 @@ export interface UsersRepository {
   ): Promise<
     (Omit<User, 'password'> & { profile: Omit<Profile, 'userId'> | null })[]
   >
+  count(query?: string): Promise<number>
   findManyIndicator(
     page: number,
     query?: string,
   ): Promise<
     (Omit<User, 'password'> & { profile: Omit<Profile, 'userId'> | null })[]
   >
+  countIndicator(query?: string): Promise<number>
 }

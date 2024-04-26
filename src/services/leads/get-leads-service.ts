@@ -8,6 +8,7 @@ interface GetLeadsServiceRequest {
 
 interface GetLeadsServiceResponse {
   leads: Leads[]
+  count: number
 }
 
 export class GetLeadsService {
@@ -18,7 +19,8 @@ export class GetLeadsService {
     query,
   }: GetLeadsServiceRequest): Promise<GetLeadsServiceResponse> {
     const leads = await this.leadsRepository.findMany(page, query)
+    const count = await this.leadsRepository.count(query)
 
-    return { leads }
+    return { leads, count }
   }
 }

@@ -10,6 +10,7 @@ interface GetUsersServiceResponse {
   users: (Omit<User, 'password'> & {
     profile: Omit<Profile, 'userId'> | null
   })[]
+  count: number
 }
 
 export class GetUsersService {
@@ -20,7 +21,8 @@ export class GetUsersService {
     query,
   }: GetUsersServiceRequest): Promise<GetUsersServiceResponse> {
     const users = await this.userRepository.findMany(page, query)
+    const count = await this.userRepository.count(query)
 
-    return { users }
+    return { users, count }
   }
 }

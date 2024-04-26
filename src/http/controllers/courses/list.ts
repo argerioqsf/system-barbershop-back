@@ -12,11 +12,10 @@ export async function List(request: FastifyRequest, replay: FastifyReply) {
 
   const getCoursesService = makeGetCoursesService()
 
-  const { courses } = await getCoursesService.execute({ page, query: q })
+  const { courses, count } = await getCoursesService.execute({ page, query: q })
 
   return replay.status(200).send({
-    courses: {
-      courses,
-    },
+    courses,
+    count,
   })
 }
