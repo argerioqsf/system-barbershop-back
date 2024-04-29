@@ -81,6 +81,18 @@ export class PrismaLeadsRepository implements LeadsRepository {
     return leads
   }
 
+  async count(query?: string): Promise<number> {
+    const leads = await prisma.leads.count({
+      where: {
+        name: {
+          contains: query,
+        },
+      },
+    })
+
+    return leads
+  }
+
   async create(data: Prisma.LeadsUncheckedCreateInput): Promise<Leads> {
     const leads = await prisma.leads.create({ data })
 

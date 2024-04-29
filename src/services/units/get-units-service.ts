@@ -8,6 +8,7 @@ interface GetUnitsServiceRequest {
 
 interface GetUnitsServiceResponse {
   units: Unit[]
+  count: number
 }
 
 export class GetUnitsService {
@@ -18,7 +19,8 @@ export class GetUnitsService {
     query,
   }: GetUnitsServiceRequest): Promise<GetUnitsServiceResponse> {
     const units = await this.unitRepository.findMany(page, query)
+    const count = await this.unitRepository.count(query)
 
-    return { units }
+    return { units, count }
   }
 }
