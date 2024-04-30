@@ -33,14 +33,16 @@ model Profile {
   userId          String  @unique
   leadsIndicator  Leads[] @relation(name: "indicatorLeads")
   leadsConsultant Leads[] @relation(name: "consultantLeads")
+  city            String?
 
   @@map("profiles")
 }
 
 model Segment {
-  id    String        @id @default(uuid())
-  name  String
-  units UnitSegment[]
+  id      String          @id @default(uuid())
+  name    String
+  units   UnitSegment[]
+  courses CourseSegment[]
 
   @@map("segments")
 }
@@ -55,12 +57,23 @@ model UnitSegment {
   @@map("unit_segment")
 }
 
+model CourseSegment {
+  course    Course  @relation(fields: [courseId], references: [id])
+  courseId  String
+  segment   Segment @relation(fields: [segmentId], references: [id])
+  segmentId String
+
+  @@id([segmentId, courseId])
+  @@map("course_segment")
+}
+
 model Course {
-  id       String        @id @default(uuid())
+  id       String          @id @default(uuid())
   name     String
   active   Boolean
   units    UnitCourses[]
   timeline Timeline[]
+  segments CourseSegment[]
 
   @@map("courses")
 }

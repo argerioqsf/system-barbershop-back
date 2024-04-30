@@ -6,4 +6,5 @@ export interface SegmentsRepository {
   count(query?: string): Promise<number>
   mountSelect(): Promise<Segment[]>
   findManyListIds(ids: string[]): Promise<Segment[]>
+  findById(id: string): Promise<Segment | null>
 }

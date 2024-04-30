@@ -11,6 +11,7 @@ interface CreateProfileServiceRequest {
   pix: string
   role: Role
   userId: string
+  city: string
 }
 
 interface CreateProfileServiceResponse {
@@ -31,6 +32,7 @@ export class CreateProfileService {
     pix,
     role,
     userId,
+    city,
   }: CreateProfileServiceRequest): Promise<CreateProfileServiceResponse> {
     const user = await this.userRepository.findById(userId)
 
@@ -46,6 +48,7 @@ export class CreateProfileService {
       pix,
       role,
       userId,
+      city,
     })
 
     return { profile }
