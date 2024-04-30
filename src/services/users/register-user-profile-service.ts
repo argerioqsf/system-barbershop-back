@@ -15,6 +15,7 @@ interface registerCasesRequest {
   birthday: string
   pix: string
   role: Role
+  city: string
 }
 
 interface RegisterUserProfileServiceResponse {
@@ -39,6 +40,7 @@ export class RegisterUserProfileService {
     birthday,
     pix,
     role,
+    city
   }: registerCasesRequest): Promise<RegisterUserProfileServiceResponse> {
     const password_hash = await hash(password, 6)
 
@@ -63,6 +65,7 @@ export class RegisterUserProfileService {
       pix,
       role,
       userId: user.id,
+      city
     })
 
     return {

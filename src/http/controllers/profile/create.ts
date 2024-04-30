@@ -12,6 +12,7 @@ const bodySchema = z.object({
   birthday: z.string(),
   pix: z.string(),
   role: z.nativeEnum(Role),
+  city: z.string()
 })
 
 export async function Create(request: FastifyRequest, reply: FastifyReply) {

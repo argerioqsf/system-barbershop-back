@@ -30,6 +30,7 @@ export class PrismaProfilesRepository implements ProfilesRepository {
         pix: true,
         role: true,
         userId: true,
+        city: true,
         user: {
           select: {
             id: true,
