@@ -33,7 +33,7 @@ export class PrismaUsersRepository implements UsersRepository {
             role: true,
             pix: true,
             birthday: true,
-            city: true
+            city: true,
           },
         },
       },
@@ -68,7 +68,7 @@ export class PrismaUsersRepository implements UsersRepository {
             role: true,
             pix: true,
             birthday: true,
-            city: true
+            city: true,
           },
         },
       },
@@ -122,7 +122,7 @@ export class PrismaUsersRepository implements UsersRepository {
             role: true,
             pix: true,
             birthday: true,
-            city: true
+            city: true,
           },
         },
       },

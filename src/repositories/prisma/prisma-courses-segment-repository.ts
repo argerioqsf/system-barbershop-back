@@ -1,9 +1,12 @@
-import { prisma } from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
-import { CourseSegmentRepository } from "../course-segment-repository";
+import { prisma } from '@/lib/prisma'
+import { Prisma } from '@prisma/client'
+import { CourseSegmentRepository } from '../course-segment-repository'
 
 export class PrismaCourseSegmentRepository implements CourseSegmentRepository {
-  async createMany(segmentId: string, coursesIds?: string[]): Promise<Prisma.BatchPayload> {
+  async createMany(
+    segmentId: string,
+    coursesIds?: string[],
+  ): Promise<Prisma.BatchPayload> {
     const courseSegment = await prisma.courseSegment.createMany({
       data: coursesIds
         ? coursesIds.map((courseId: string) => ({
@@ -11,8 +14,8 @@ export class PrismaCourseSegmentRepository implements CourseSegmentRepository {
             courseId,
           }))
         : [],
-    });
+    })
 
-    return courseSegment;
+    return courseSegment
   }
 }

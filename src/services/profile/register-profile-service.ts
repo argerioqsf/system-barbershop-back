@@ -32,7 +32,7 @@ export class CreateProfileService {
     pix,
     role,
     userId,
-    city
+    city,
   }: CreateProfileServiceRequest): Promise<CreateProfileServiceResponse> {
     const user = await this.userRepository.findById(userId)
 
@@ -48,7 +48,7 @@ export class CreateProfileService {
       pix,
       role,
       userId,
-      city
+      city,
     })
 
     return { profile }

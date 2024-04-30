@@ -1,39 +1,47 @@
-import { CoursesRepository } from "@/repositories/course-repository";
-import { CourseSegmentRepository } from "@/repositories/course-segment-repository";
-import { SegmentsRepository } from "@/repositories/segments-repository";
-import { Prisma, Segment } from "@prisma/client";
-import { CourseNotFoundError } from "../@errors/course-not-found-error";
+import { CoursesRepository } from '@/repositories/course-repository'
+import { CourseSegmentRepository } from '@/repositories/course-segment-repository'
+import { SegmentsRepository } from '@/repositories/segments-repository'
+import { Prisma, Segment } from '@prisma/client'
+import { CourseNotFoundError } from '../@errors/course-not-found-error'
 
 interface CreateSegmentServiceRequest {
-  name: string;
-  coursesIds?: string[];
+  name: string
+  coursesIds?: string[]
 }
 
 interface CreateSegmentServiceResponse {
-  segment: Segment;
-  courseSegment: Prisma.BatchPayload;
+  segment: Segment
+  courseSegment: Prisma.BatchPayload
 }
 
 export class CreateSegmentService {
   constructor(
     private segmentsRepository: SegmentsRepository,
     private coursesRepository: CoursesRepository,
-    private coursesSegments: CourseSegmentRepository
+    private coursesSegments: CourseSegmentRepository,
   ) {}
 
-  async execute({ name, coursesIds }: CreateSegmentServiceRequest): Promise<CreateSegmentServiceResponse> {
-    const courses = coursesIds ? await this.coursesRepository.findManyListIds(coursesIds) : [];
+  async execute({
+    name,
+    coursesIds,
+  }: CreateSegmentServiceRequest): Promise<CreateSegmentServiceResponse> {
+    const courses = coursesIds
+      ? await this.coursesRepository.findManyListIds(coursesIds)
+      : []
 
     if (coursesIds && courses.length !== coursesIds.length) {
-      throw new CourseNotFoundError();
+      throw new CourseNotFoundError()
     }
 
     const segment = await this.segmentsRepository.create({
       name,
-    });
+    })
 
-    const courseSegment = await this.coursesSegments.createMany(segment.id, coursesIds);
+    const courseSegment = await this.coursesSegments.createMany(
+      segment.id,
+      coursesIds,
+    )
 
-    return { segment, courseSegment };
+    return { segment, courseSegment }
   }
 }
