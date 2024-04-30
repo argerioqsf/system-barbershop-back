@@ -1,4 +1,4 @@
-import { Course, Prisma, Segment } from "@prisma/client";
+import { Prisma, Segment } from "@prisma/client";
 
 export interface SegmentsRepository {
   create(data: Prisma.SegmentUncheckedCreateInput): Promise<Segment>;
@@ -6,4 +6,5 @@ export interface SegmentsRepository {
   count(query?: string): Promise<number>;
   mountSelect(): Promise<Segment[]>;
   findManyListIds(ids: string[]): Promise<Segment[]>;
+  findById(id: string): Promise<Segment | null>;
 }
