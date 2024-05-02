@@ -1,9 +1,33 @@
-import { Course, Prisma, Segment } from '@prisma/client'
-import { SegmentsRepository } from '../segments-repository'
 import { prisma } from '@/lib/prisma'
 import { pagination } from '@/utils/constants/pagination'
+import { Prisma, Segment } from '@prisma/client'
+import { SegmentsRepository } from '../segments-repository'
 
 export class PrismaSegmentsRepository implements SegmentsRepository {
+  async updateById(
+    id: string,
+    data: Prisma.SegmentUpdateInput,
+  ): Promise<Segment> {
+    const segment = await prisma.segment.update({
+      where: {
+        id,
+      },
+      data,
+    })
+
+    return segment
+  }
+
+  async deleteById(id: string): Promise<Segment | null> {
+    const segment = await prisma.segment.delete({
+      where: {
+        id,
+      },
+    })
+
+    return segment
+  }
+
   async findById(id: string): Promise<Segment | null> {
     const segment = await prisma.segment.findUnique({
       where: { id },

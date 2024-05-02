@@ -7,4 +7,6 @@ export interface SegmentsRepository {
   mountSelect(): Promise<Segment[]>
   findManyListIds(ids: string[]): Promise<Segment[]>
   findById(id: string): Promise<Segment | null>
+  deleteById(id: string): Promise<Segment | null>
+  updateById(id: string, data: Prisma.SegmentUpdateInput): Promise<Segment>
 }
