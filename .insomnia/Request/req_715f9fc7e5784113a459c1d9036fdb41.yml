@@ -1,0 +1,25 @@
+_id: req_715f9fc7e5784113a459c1d9036fdb41
+type: Request
+parentId: fld_8710da449b714434b36b6ec93a7dac5e
+modified: 1714700654310
+created: 1714672875165
+url: localhost:3333/segment/a12f306b-0c43-4ecc-9857-2c5711c3029c/course/0a1e33d8-a05d-43ed-991f-9972a43a7fb3/delete
+name: delete course segment
+description: ""
+method: DELETE
+body: {}
+parameters: []
+headers:
+  - name: User-Agent
+    value: insomnia/2023.5.8
+authentication:
+  type: bearer
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4MThjOTM1OC00OWExLTQxOTgtYWE4ZS0zMzJlZDYyY2I1ZGUiLCJpYXQiOjE3MTQ0OTMwNzd9.AzMAdk16uXX1GQX3aoUfeCsru3LOcn-L9cfulU7_ji4
+metaSortKey: -1711083367480.75
+isPrivate: false
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: global

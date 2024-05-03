@@ -1,0 +1,25 @@
+_id: req_17c08e6aa7c14ac1870fc3d5ed4fb8e4
+type: Request
+parentId: fld_aa033f2b0fae48c78176b97669d9d356
+modified: 1712872461487
+created: 1712869635473
+url: localhost:3333/indicators
+name: Get Indicator
+description: ""
+method: GET
+body: {}
+parameters: []
+headers:
+  - name: User-Agent
+    value: insomnia/2023.5.8
+authentication:
+  type: bearer
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2ZWM5ZTlkYS03NDgwLTQ4NGEtYTQwYy0zNWYxZmZlZTM0NDkiLCJpYXQiOjE3MTI4NjcwMDZ9.HMqaEHUIJ9C_ED5jXY9GbbSiMQMkv8hjFDlMhUR9c0Q
+metaSortKey: -1712836974413
+isPrivate: false
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: global

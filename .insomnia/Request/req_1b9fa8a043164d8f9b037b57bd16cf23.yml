@@ -1,0 +1,33 @@
+_id: req_1b9fa8a043164d8f9b037b57bd16cf23
+type: Request
+parentId: fld_cf97fbb781d84fc1b62791cac4dffd39
+modified: 1714673373723
+created: 1714660737113
+url: localhost:3333/course/22643a80-fc4d-40ce-b488-eaf18c0a79d8/update
+name: update course
+description: ""
+method: PUT
+body:
+  mimeType: application/json
+  text: |-
+    {
+    	"name": "Sociologia",
+    	"active": false
+    }
+parameters: []
+headers:
+  - name: Content-Type
+    value: application/json
+  - name: User-Agent
+    value: insomnia/2023.5.8
+authentication:
+  type: bearer
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3MjllNmI3NS1jMTVjLTRmN2QtODgzMC1hNTYwN2ZhNDJkYjEiLCJpYXQiOjE3MTE2NjI3OTF9.bQK1cgKWw6rk7xaM2OhCVPpcvLuQRaJU_QJTfzIABGY
+metaSortKey: -1711083433695.25
+isPrivate: false
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: global

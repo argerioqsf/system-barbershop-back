@@ -1,0 +1,25 @@
+_id: req_28fd547774e64b18a717ca78cde252e8
+type: Request
+parentId: fld_8710da449b714434b36b6ec93a7dac5e
+modified: 1714665726679
+created: 1714664983141
+url: localhost:3333/segment/5d98690b-6df0-47dc-a100-ad3d155fcab7
+name: delete segment
+description: ""
+method: DELETE
+body: {}
+parameters: []
+headers:
+  - name: User-Agent
+    value: insomnia/2023.5.8
+authentication:
+  type: bearer
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4MThjOTM1OC00OWExLTQxOTgtYWE4ZS0zMzJlZDYyY2I1ZGUiLCJpYXQiOjE3MTQ0OTMwNzd9.AzMAdk16uXX1GQX3aoUfeCsru3LOcn-L9cfulU7_ji4
+metaSortKey: -1711083375880.5
+isPrivate: false
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: global

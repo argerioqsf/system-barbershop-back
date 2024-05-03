@@ -1,0 +1,33 @@
+_id: req_99a0453fbe424135beac529668396bbc
+type: Request
+parentId: fld_cf97fbb781d84fc1b62791cac4dffd39
+modified: 1714673345865
+created: 1709853353802
+url: localhost:3333/create/course
+name: Create courses
+description: ""
+method: POST
+body:
+  mimeType: application/json
+  text: |-
+    {
+    	"name": "Filosofia",
+    	"active": true
+    }
+parameters: []
+headers:
+  - name: Content-Type
+    value: application/json
+  - name: User-Agent
+    value: insomnia/2023.5.8
+authentication:
+  type: bearer
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3MjllNmI3NS1jMTVjLTRmN2QtODgzMC1hNTYwN2ZhNDJkYjEiLCJpYXQiOjE3MTE2NjI3OTF9.bQK1cgKWw6rk7xaM2OhCVPpcvLuQRaJU_QJTfzIABGY
+metaSortKey: -1711083445989
+isPrivate: false
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: global

@@ -1,0 +1,35 @@
+_id: req_1df272519547439e8f6eb87ec174613e
+type: Request
+parentId: fld_fe56480066654c6f8ce366ef6fbcc8e3
+modified: 1713376741015
+created: 1713363281641
+url: localhost:3333/create/timeline/457201fe-57ad-49ea-bfe5-7d41f3dc9397
+name: Create timeline
+description: ""
+method: POST
+body:
+  mimeType: application/json
+  text: |-
+    {
+    	"title": "o maluco ta muito afim de fazer o curso",
+      "description": "o maluco vai se inscrever no curso itals",
+      "status": "Em andamento",
+      "courseId": "58956bbc-7ad6-49af-83be-b0bd1b0b0b3a"
+    }
+parameters: []
+headers:
+  - name: Content-Type
+    value: application/json
+  - name: User-Agent
+    value: insomnia/2023.5.8
+authentication:
+  type: bearer
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4NjUyY2M2Yy04MGM4LTRhMDYtYTZiNS0zZGMyYjIwM2E1OWEiLCJpYXQiOjE3MTMzNjMyMjZ9.p_5JgCk_RbPgtJLqxvGGtwiOW7Yujm28mWhtQAN6f0Q
+metaSortKey: -1713363281641
+isPrivate: false
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: global

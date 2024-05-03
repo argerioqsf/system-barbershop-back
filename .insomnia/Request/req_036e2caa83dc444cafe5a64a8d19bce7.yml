@@ -1,0 +1,25 @@
+_id: req_036e2caa83dc444cafe5a64a8d19bce7
+type: Request
+parentId: fld_6a3f06003ea74df0b7a133fd86bc8358
+modified: 1713381639622
+created: 1713381602609
+url: localhost:3333/lead/457201fe-57ad-49ea-bfe5-7d41f3dc9397
+name: Timeline lead
+description: ""
+method: GET
+body: {}
+parameters: []
+headers:
+  - name: User-Agent
+    value: insomnia/2023.5.8
+authentication:
+  type: bearer
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0MGM4YTc0OC0wNjMxLTRhODItYmM4Yi0wNGMwOWFmZmQ4MTUiLCJpYXQiOjE3MTI5MzU4MzZ9.Q3pKzuOHkoQMeYeQaMfQ2KjZ6SonvpDqdovXN2_G2Fk
+metaSortKey: -1712906508289
+isPrivate: false
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: global
