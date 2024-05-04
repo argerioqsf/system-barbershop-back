@@ -1,9 +1,9 @@
 _id: req_edcd93dafb674bc9b0306ed7d04c1a46
 type: Request
 parentId: fld_37b9d820576c49f7acd51489e1458ac6
-modified: 1712944686389
+modified: 1714827838106
 created: 1711421274607
-url: localhost:3333/units?page=1
+url: "{{ _.baseURL }}/units?page=1"
 name: List Unit
 description: ""
 method: GET
@@ -18,7 +18,7 @@ headers:
     value: insomnia/2023.5.8
 authentication:
   type: bearer
-  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3MjllNmI3NS1jMTVjLTRmN2QtODgzMC1hNTYwN2ZhNDJkYjEiLCJpYXQiOjE3MTE2NjI3OTF9.bQK1cgKWw6rk7xaM2OhCVPpcvLuQRaJU_QJTfzIABGY
+  token: "{{ _.token }}"
 metaSortKey: -1711252302772.5
 isPrivate: false
 settingStoreCookies: true

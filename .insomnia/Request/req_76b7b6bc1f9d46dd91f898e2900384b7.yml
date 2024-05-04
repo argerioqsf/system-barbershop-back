@@ -1,9 +1,9 @@
 _id: req_76b7b6bc1f9d46dd91f898e2900384b7
 type: Request
 parentId: fld_6d877e84e4f044119a97d80176455307
-modified: 1714496863565
+modified: 1714828014399
 created: 1712935739464
-url: localhost:3333/create/user
+url: "{{ _.baseURL }}/create/user"
 name: Create user com profile
 description: ""
 method: POST
@@ -11,15 +11,15 @@ body:
   mimeType: application/json
   text: |-
     {
-    	"name": "Joao Administrador",
-      "email": "japaoadm@sim.com",
+    	"name": "Matheus Mendes",
+      "email": "matheusmendesadm@sim.com",
       "password": "12345678A@",
       "active": true,
-      "phone": "96981001155",
-      "cpf": "062515158142",
+      "phone": "96984234927",
+      "cpf": "02297187289",
       "genre": "Homem",
-      "birthday": "01/01/2002",
-      "pix": "062515158142",
+      "birthday": "12/11/1996",
+      "pix": "02297187289",
     	"role": "administrator", 
     	"city": "Macapá"
     }
@@ -29,9 +29,7 @@ headers:
     value: application/json
   - name: User-Agent
     value: insomnia/2023.5.8
-authentication:
-  type: bearer
-  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3MjllNmI3NS1jMTVjLTRmN2QtODgzMC1hNTYwN2ZhNDJkYjEiLCJpYXQiOjE3MTE2NjI3OTF9.bQK1cgKWw6rk7xaM2OhCVPpcvLuQRaJU_QJTfzIABGY
+authentication: {}
 metaSortKey: -1711083359031
 isPrivate: false
 settingStoreCookies: true

@@ -1,7 +1,7 @@
 _id: req_e0bc7ebc9c53446f9af17b9e9ae620b0
 type: Request
 parentId: wrk_e41927e2d6d643768f3618a453b49ee4
-modified: 1713363225447
+modified: 1714826221282
 created: 1709823601031
 url: localhost:3333/sessions
 name: Create session user
@@ -11,7 +11,7 @@ body:
   mimeType: application/json
   text: |-
     {
-    	"email": "matheusadm@sim.com",
+    	"email": "matheusmendesadm@sim.com",
     	"password": "12345678A@"
     }
 parameters: []

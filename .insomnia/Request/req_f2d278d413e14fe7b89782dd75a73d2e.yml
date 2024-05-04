@@ -1,9 +1,9 @@
 _id: req_f2d278d413e14fe7b89782dd75a73d2e
 type: Request
 parentId: fld_8710da449b714434b36b6ec93a7dac5e
-modified: 1714700567534
+modified: 1714827880510
 created: 1714672652387
-url: localhost:3333/segment/a12f306b-0c43-4ecc-9857-2c5711c3029c/update
+url: "{{ _.baseURL }}/segment/a12f306b-0c43-4ecc-9857-2c5711c3029c/update"
 name: update segment
 description: ""
 method: PUT
@@ -22,7 +22,7 @@ headers:
     value: insomnia/2023.5.8
 authentication:
   type: bearer
-  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4MThjOTM1OC00OWExLTQxOTgtYWE4ZS0zMzJlZDYyY2I1ZGUiLCJpYXQiOjE3MTQ0OTMwNzd9.AzMAdk16uXX1GQX3aoUfeCsru3LOcn-L9cfulU7_ji4
+  token: "{{ _.token }}"
 metaSortKey: -1711083384280.25
 isPrivate: false
 settingStoreCookies: true

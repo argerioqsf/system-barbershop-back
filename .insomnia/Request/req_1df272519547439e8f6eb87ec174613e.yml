@@ -1,9 +1,9 @@
 _id: req_1df272519547439e8f6eb87ec174613e
 type: Request
 parentId: fld_fe56480066654c6f8ce366ef6fbcc8e3
-modified: 1713376741015
+modified: 1714827774175
 created: 1713363281641
-url: localhost:3333/create/timeline/457201fe-57ad-49ea-bfe5-7d41f3dc9397
+url: "{{ _.baseURL }}/create/timeline/457201fe-57ad-49ea-bfe5-7d41f3dc9397"
 name: Create timeline
 description: ""
 method: POST
@@ -24,7 +24,7 @@ headers:
     value: insomnia/2023.5.8
 authentication:
   type: bearer
-  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4NjUyY2M2Yy04MGM4LTRhMDYtYTZiNS0zZGMyYjIwM2E1OWEiLCJpYXQiOjE3MTMzNjMyMjZ9.p_5JgCk_RbPgtJLqxvGGtwiOW7Yujm28mWhtQAN6f0Q
+  token: "{{ _.token }}"
 metaSortKey: -1713363281641
 isPrivate: false
 settingStoreCookies: true

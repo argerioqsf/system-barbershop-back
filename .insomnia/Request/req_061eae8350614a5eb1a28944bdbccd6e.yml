@@ -1,9 +1,9 @@
 _id: req_061eae8350614a5eb1a28944bdbccd6e
 type: Request
 parentId: fld_6a3f06003ea74df0b7a133fd86bc8358
-modified: 1713381580974
+modified: 1714827683762
 created: 1712937720881
-url: localhost:3333/leads
+url: "{{ _.baseURL }}/leads"
 name: List Leads
 description: ""
 method: GET
@@ -14,7 +14,7 @@ headers:
     value: insomnia/2023.5.8
 authentication:
   type: bearer
-  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0MGM4YTc0OC0wNjMxLTRhODItYmM4Yi0wNGMwOWFmZmQ4MTUiLCJpYXQiOjE3MTI5MzU4MzZ9.Q3pKzuOHkoQMeYeQaMfQ2KjZ6SonvpDqdovXN2_G2Fk
+  token: "{{ _.token }}"
 metaSortKey: -1712937720881
 isPrivate: false
 settingStoreCookies: true

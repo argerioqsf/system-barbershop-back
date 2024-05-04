@@ -1,9 +1,9 @@
 _id: req_6e367dcf8bca4b4cb6c9efad0a4649a0
 type: Request
 parentId: fld_aa033f2b0fae48c78176b97669d9d356
-modified: 1712871585165
+modified: 1714827628060
 created: 1712866933824
-url: localhost:3333/indicators
+url: "{{ _.baseURL }}/indicators"
 name: "List "
 description: ""
 method: GET
@@ -14,7 +14,7 @@ headers:
     value: insomnia/2023.5.8
 authentication:
   type: bearer
-  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2ZWM5ZTlkYS03NDgwLTQ4NGEtYTQwYy0zNWYxZmZlZTM0NDkiLCJpYXQiOjE3MTI4NjcwMDZ9.HMqaEHUIJ9C_ED5jXY9GbbSiMQMkv8hjFDlMhUR9c0Q
+  token: "{{ _.token }}"
 metaSortKey: -1712866933824
 isPrivate: false
 settingStoreCookies: true

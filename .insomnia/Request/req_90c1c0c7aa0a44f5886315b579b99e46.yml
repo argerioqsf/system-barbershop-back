@@ -1,9 +1,9 @@
 _id: req_90c1c0c7aa0a44f5886315b579b99e46
 type: Request
 parentId: fld_cf97fbb781d84fc1b62791cac4dffd39
-modified: 1714582792819
+modified: 1714827917115
 created: 1714582779190
-url: localhost:3333/course/64e73f3a-09b9-4a7d-9f17-53b259834d92
+url: "{{ _.baseURL }}/course/64e73f3a-09b9-4a7d-9f17-53b259834d92"
 name: get course
 description: ""
 method: GET
@@ -14,7 +14,7 @@ headers:
     value: insomnia/2023.5.8
 authentication:
   type: bearer
-  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3MjllNmI3NS1jMTVjLTRmN2QtODgzMC1hNTYwN2ZhNDJkYjEiLCJpYXQiOjE3MTE2NjI3OTF9.bQK1cgKWw6rk7xaM2OhCVPpcvLuQRaJU_QJTfzIABGY
+  token: "{{ _.token }}"
 metaSortKey: -1711083436134
 isPrivate: false
 settingStoreCookies: true

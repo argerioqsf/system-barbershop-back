@@ -1,9 +1,9 @@
 _id: req_9a16eaf3b79f4a609df27fc6b26cda2b
 type: Request
 parentId: fld_75fad450d5864e1caaba6555560888d2
-modified: 1712871709473
+modified: 1714826981891
 created: 1712807015002
-url: localhost:3333/users?page=2
+url: "{{ _.baseURL }}/users?page=2"
 name: List users
 description: ""
 method: GET
@@ -14,7 +14,7 @@ headers:
     value: insomnia/2023.5.8
 authentication:
   type: bearer
-  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3MjllNmI3NS1jMTVjLTRmN2QtODgzMC1hNTYwN2ZhNDJkYjEiLCJpYXQiOjE3MTE2NjI3OTF9.bQK1cgKWw6rk7xaM2OhCVPpcvLuQRaJU_QJTfzIABGY
+  token: "{{ _.token }}"
 metaSortKey: -1712807015002
 isPrivate: false
 settingStoreCookies: true
