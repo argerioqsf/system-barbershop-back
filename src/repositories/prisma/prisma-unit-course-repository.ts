@@ -3,6 +3,20 @@ import { UnitCourseRepository } from '../unit-course-repository'
 import { prisma } from '@/lib/prisma'
 
 export class PrismaUnitCourseRepository implements UnitCourseRepository {
+  async deleteUnitCourseById(
+    unitId: string,
+    courseId: string,
+  ): Promise<Prisma.BatchPayload> {
+    const unitCourse = await prisma.unitCourses.deleteMany({
+      where: {
+        unitId,
+        courseId,
+      },
+    })
+
+    return unitCourse
+  }
+
   async createMany(
     unitId: string,
     coursesIds?: string[],

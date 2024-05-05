@@ -5,4 +5,6 @@ export interface UnitRepository {
   findMany(page: number, query?: string): Promise<Unit[]>
   count(query?: string): Promise<number>
   findById(id: string): Promise<Unit | null>
+  deleteById(id: string): Promise<Unit | null>
+  updateById(id: string, data: Prisma.UnitUpdateInput): Promise<Unit>
 }

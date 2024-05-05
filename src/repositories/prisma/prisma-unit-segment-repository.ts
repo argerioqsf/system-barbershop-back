@@ -4,6 +4,20 @@ import { prisma } from '@/lib/prisma'
 import { UnitSegmentRepository } from '../unit-segment-repository'
 
 export class PrismaUnitSegmentRepository implements UnitSegmentRepository {
+  deleteUnitSegmentById(
+    unitId: string,
+    segmentId: string,
+  ): Promise<Prisma.BatchPayload> {
+    const unitSegment = prisma.unitSegment.deleteMany({
+      where: {
+        unitId,
+        segmentId,
+      },
+    })
+
+    return unitSegment
+  }
+
   async createMany(
     unitId: string,
     segmentsIds?: string[],

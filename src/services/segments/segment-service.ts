@@ -1,7 +1,5 @@
-import { UnitRepository } from '@/repositories/unit-repository'
-import { Segment } from '@prisma/client'
-import { UnitNotFoundError } from '../@errors/unit-not-found-error'
 import { SegmentsRepository } from '@/repositories/segments-repository'
+import { Segment } from '@prisma/client'
 import { SegmentNotFoundError } from '../@errors/segment-not-found-error'
 
 interface GetSegmentServiceRequest {

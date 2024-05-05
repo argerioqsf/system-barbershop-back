@@ -4,6 +4,23 @@ import { UnitRepository } from '../unit-repository'
 import { pagination } from '@/utils/constants/pagination'
 
 export class PrismaUnitRepository implements UnitRepository {
+  async updateById(id: string, data: Prisma.UnitUpdateInput): Promise<Unit> {
+    const unit = await prisma.unit.update({
+      where: { id },
+      data,
+    })
+
+    return unit
+  }
+
+  async deleteById(id: string): Promise<Unit | null> {
+    const unit = await prisma.unit.delete({
+      where: { id },
+    })
+
+    return unit
+  }
+
   async findById(id: string): Promise<Unit | null> {
     const unit = await prisma.unit.findUnique({
       where: { id },
