@@ -36,6 +36,7 @@ export class PrismaSegmentsRepository implements SegmentsRepository {
           select: {
             course: {
               select: {
+                id: true,
                 name: true,
               },
             },
