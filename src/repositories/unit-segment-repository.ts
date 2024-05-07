@@ -6,9 +6,9 @@ export interface UnitSegmentRepository {
     unitId: string,
     segmentsIds?: string[],
   ): Promise<Prisma.BatchPayload>
-
   deleteUnitSegmentById(
     unitId: string,
     segmentId: string,
   ): Promise<Prisma.BatchPayload>
+  deleteMany(unitId: string, segmentId?: string[]): Promise<Prisma.BatchPayload>
 }

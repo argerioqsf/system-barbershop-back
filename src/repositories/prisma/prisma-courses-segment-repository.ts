@@ -32,4 +32,20 @@ export class PrismaCourseSegmentRepository implements CourseSegmentRepository {
 
     return courseSegment
   }
+
+  async deleteMany(
+    segmentId: string,
+    coursesIds?: string[],
+  ): Promise<Prisma.BatchPayload> {
+    const courseSegment = await prisma.courseSegment.deleteMany({
+      where: {
+        segmentId,
+        courseId: {
+          in: coursesIds,
+        },
+      },
+    })
+
+    return courseSegment
+  }
 }

@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { Prisma, Unit } from '@prisma/client'
+import { Course, Prisma, Segment, Unit } from '@prisma/client'
 import { UnitRepository } from '../unit-repository'
 import { pagination } from '@/utils/constants/pagination'
 
@@ -21,7 +21,13 @@ export class PrismaUnitRepository implements UnitRepository {
     return unit
   }
 
-  async findById(id: string): Promise<Unit | null> {
+  async findById(id: string): Promise<
+    | (Unit & {
+        courses: { course: Course }[]
+        segments: { segment: Segment }[]
+      })
+    | null
+  > {
     const unit = await prisma.unit.findUnique({
       where: { id },
       include: {

@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { pagination } from '@/utils/constants/pagination'
-import { Prisma, Segment } from '@prisma/client'
+import { Course, Prisma, Segment } from '@prisma/client'
 import { SegmentsRepository } from '../segments-repository'
 
 export class PrismaSegmentsRepository implements SegmentsRepository {
@@ -28,18 +28,15 @@ export class PrismaSegmentsRepository implements SegmentsRepository {
     return segment
   }
 
-  async findById(id: string): Promise<Segment | null> {
+  async findById(
+    id: string,
+  ): Promise<(Segment & { courses: { course: Course }[] }) | null> {
     const segment = await prisma.segment.findUnique({
       where: { id },
       include: {
         courses: {
           select: {
-            course: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
+            course: true,
           },
         },
       },
