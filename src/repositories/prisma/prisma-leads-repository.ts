@@ -4,6 +4,17 @@ import { prisma } from '@/lib/prisma'
 import { pagination } from '@/utils/constants/pagination'
 
 export class PrismaLeadsRepository implements LeadsRepository {
+  updateById(id: string, data: Prisma.LeadsUpdateInput): Promise<Leads> {
+    const lead = prisma.leads.update({
+      where: {
+        id,
+      },
+      data,
+    })
+
+    return lead
+  }
+
   async findById(id: string): Promise<Leads | null> {
     const lead = await prisma.leads.findUnique({
       where: {

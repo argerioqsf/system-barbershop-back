@@ -1,8 +1,32 @@
 import { prisma } from '@/lib/prisma'
-import { Prisma, Profile, User } from '@prisma/client'
+import { $Enums, Prisma, Profile, User } from '@prisma/client'
 import { ProfilesRepository } from '../profiles-repository'
 
 export class PrismaProfilesRepository implements ProfilesRepository {
+  async update(
+    id: string,
+    data: Prisma.ProfileUpdateInput,
+  ): Promise<{
+    id: string
+    phone: string
+    cpf: string
+    genre: string
+    birthday: string
+    pix: string
+    role: $Enums.Role
+    userId: string
+    city: string | null
+  }> {
+    const profile = await prisma.profile.update({
+      where: {
+        id,
+      },
+      data,
+    })
+
+    return profile
+  }
+
   async findById(id: string): Promise<(Profile & { user: User }) | null> {
     const profile = await prisma.profile.findUnique({
       where: { id },

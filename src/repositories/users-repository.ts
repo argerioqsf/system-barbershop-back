@@ -23,4 +23,5 @@ export interface UsersRepository {
     (Omit<User, 'password'> & { profile: Omit<Profile, 'userId'> | null })[]
   >
   countIndicator(query?: string): Promise<number>
+  update(id: string, data: Prisma.UserUpdateInput): Promise<User>
 }
