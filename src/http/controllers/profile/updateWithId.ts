@@ -1,6 +1,5 @@
-import { ResourceNotFoundError } from '@/services/@errors/resource-not-found-error'
-import { getProfileFromUserIdService } from '@/services/@factories/profile/get-profile-from-userId-service'
 import { MakeUpdateProfileUserService } from '@/services/@factories/profile/update-profile-user-service'
+import { Role } from '@prisma/client'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
@@ -13,28 +12,27 @@ const bodySchema = z.object({
   genre: z.string(),
   birthday: z.string(),
   pix: z.string(),
+  role: z.nativeEnum(Role),
   city: z.string(),
 })
 
-export async function Update(request: FastifyRequest, reply: FastifyReply) {
-  const { active, birthday, city, cpf, email, genre, name, phone, pix } =
+const routeSchema = z.object({
+  id: z.string(),
+})
+
+export async function UpdateWithId(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const { active, birthday, city, cpf, email, genre, name, phone, pix, role } =
     bodySchema.parse(request.body)
 
   const updateProfileUserService = MakeUpdateProfileUserService()
-  const getProfileFromUserId = getProfileFromUserIdService()
 
-  const id = request.user.sub
-
-  const { profile } = await getProfileFromUserId.execute({
-    id,
-  })
-
-  if (!profile) {
-    throw new ResourceNotFoundError()
-  }
+  const { id } = routeSchema.parse(request.params)
 
   try {
-    const { profile: profileUpdate } = await updateProfileUserService.execute({
+    const { profile } = await updateProfileUserService.execute({
       active,
       birthday,
       city,
@@ -45,9 +43,9 @@ export async function Update(request: FastifyRequest, reply: FastifyReply) {
       name,
       phone,
       pix,
-      role: profile.role,
+      role,
     })
-    return reply.status(201).send({ profile: profileUpdate })
+    return reply.status(201).send({ profile })
   } catch (error) {
     return reply.status(500).send({ message: 'Internal server error' })
   }
