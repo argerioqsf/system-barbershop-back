@@ -6,4 +6,12 @@ export interface UnitCourseRepository {
     unitId: string,
     coursesIds?: string[],
   ): Promise<Prisma.BatchPayload>
+  deleteUnitCourseById(
+    unitId: string,
+    courseId: string,
+  ): Promise<Prisma.BatchPayload>
+  deleteMany(
+    unitId: string,
+    coursesIds?: string[],
+  ): Promise<Prisma.BatchPayload>
 }

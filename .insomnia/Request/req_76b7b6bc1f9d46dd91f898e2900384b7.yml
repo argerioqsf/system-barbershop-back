@@ -1,0 +1,40 @@
+_id: req_76b7b6bc1f9d46dd91f898e2900384b7
+type: Request
+parentId: fld_6d877e84e4f044119a97d80176455307
+modified: 1714828014399
+created: 1712935739464
+url: "{{ _.baseURL }}/create/user"
+name: Create user com profile
+description: ""
+method: POST
+body:
+  mimeType: application/json
+  text: |-
+    {
+    	"name": "Matheus Mendes",
+      "email": "matheusmendesadm@sim.com",
+      "password": "12345678A@",
+      "active": true,
+      "phone": "96984234927",
+      "cpf": "02297187289",
+      "genre": "Homem",
+      "birthday": "12/11/1996",
+      "pix": "02297187289",
+    	"role": "administrator", 
+    	"city": "Macapá"
+    }
+parameters: []
+headers:
+  - name: Content-Type
+    value: application/json
+  - name: User-Agent
+    value: insomnia/2023.5.8
+authentication: {}
+metaSortKey: -1711083359031
+isPrivate: false
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: global

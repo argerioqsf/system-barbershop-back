@@ -4,6 +4,26 @@ import { Prisma, Profile, User } from '@prisma/client'
 import { UsersRepository } from '../users-repository'
 
 export class PrismaUsersRepository implements UsersRepository {
+  async update(
+    id: string,
+    data: Prisma.UserUpdateInput,
+  ): Promise<{
+    id: string
+    name: string
+    email: string
+    password: string
+    active: boolean
+  }> {
+    const user = await prisma.user.update({
+      where: {
+        id,
+      },
+      data,
+    })
+
+    return user
+  }
+
   findManyIndicator(
     page: number,
     query?: string,
@@ -61,6 +81,7 @@ export class PrismaUsersRepository implements UsersRepository {
         active: true,
         profile: {
           select: {
+            leadsIndicator: true,
             id: true,
             cpf: true,
             genre: true,

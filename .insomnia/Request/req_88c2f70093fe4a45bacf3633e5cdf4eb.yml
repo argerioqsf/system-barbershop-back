@@ -1,0 +1,34 @@
+_id: req_88c2f70093fe4a45bacf3633e5cdf4eb
+type: Request
+parentId: fld_37b9d820576c49f7acd51489e1458ac6
+modified: 1714827827956
+created: 1711421159556
+url: "{{ _.baseURL }}/create/unit"
+name: Create Unit
+description: ""
+method: POST
+body:
+  mimeType: application/json
+  text: >-
+    {
+    	"name": "UNIDADE DE SANTANAAAAAAAA AMAPÁ BRASIL",
+    	"courses": ["0a1e33d8-a05d-43ed-991f-9972a43a7fb3", "54de03a4-9083-424f-a99e-26d614db99c2"], 
+    	"segments": ["5d98690b-6df0-47dc-a100-ad3d155fcab7", "b61fde4e-aa15-4679-a229-b7275fc6e82a"]
+    }
+parameters: []
+headers:
+  - name: Content-Type
+    value: application/json
+  - name: User-Agent
+    value: insomnia/2023.5.8
+authentication:
+  type: bearer
+  token: "{{ _.token }}"
+metaSortKey: -1711421159556
+isPrivate: false
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: global

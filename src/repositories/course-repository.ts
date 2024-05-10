@@ -7,4 +7,6 @@ export interface CoursesRepository {
   findManyListIds(ids: string[]): Promise<Course[]>
   findById(data: string): Promise<Course | null>
   mountSelect(): Promise<Omit<Course, 'active'>[]>
+  deleteById(id: string): Promise<Course | null>
+  updateById(id: string, data: Prisma.CourseUpdateInput): Promise<Course>
 }

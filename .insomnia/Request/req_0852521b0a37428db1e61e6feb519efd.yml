@@ -1,0 +1,37 @@
+_id: req_0852521b0a37428db1e61e6feb519efd
+type: Request
+parentId: fld_6d877e84e4f044119a97d80176455307
+modified: 1714828038280
+created: 1709823834417
+url: "{{ _.baseURL }}/create/profile"
+name: Create profile user
+description: ""
+method: POST
+body:
+  mimeType: application/json
+  text: |-
+    {
+    	"phone": "1111",
+      "cpf": "1111",
+      "genre": "homem",
+      "birthday": "11/11/1111",
+      "pix": "1111",
+      "role": "indicator"
+    }
+parameters: []
+headers:
+  - name: Content-Type
+    value: application/json
+  - name: User-Agent
+    value: insomnia/2023.5.8
+authentication:
+  type: bearer
+  token: "{{ _.token }}"
+metaSortKey: -1711083359081
+isPrivate: false
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: global

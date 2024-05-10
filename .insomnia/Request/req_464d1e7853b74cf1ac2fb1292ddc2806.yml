@@ -1,0 +1,40 @@
+_id: req_464d1e7853b74cf1ac2fb1292ddc2806
+type: Request
+parentId: fld_aa033f2b0fae48c78176b97669d9d356
+modified: 1714827733177
+created: 1709822893288
+url: "{{ _.baseURL }}/create/indicator"
+name: Create user indicator
+description: ""
+method: POST
+body:
+  mimeType: application/json
+  text: |-
+    {
+    	"name": "Argerin Indicator",
+      "email": "argerinindicator4@indicator.com",
+      "password": "1234678A",
+      "active": false,
+      "phone": "96984234927",
+      "cpf": "022878875856",
+      "genre": "male",
+      "birthday": "12/11/1888",
+      "pix": "96984234927"
+    }
+parameters: []
+headers:
+  - name: Content-Type
+    value: application/json
+  - name: User-Agent
+    value: insomnia/2023.5.8
+authentication:
+  type: bearer
+  token: "{{ _.token }}"
+metaSortKey: -1712866933924
+isPrivate: false
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: global

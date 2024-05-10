@@ -3,6 +3,20 @@ import { Prisma } from '@prisma/client'
 import { CourseSegmentRepository } from '../course-segment-repository'
 
 export class PrismaCourseSegmentRepository implements CourseSegmentRepository {
+  async deleteCourseSegmentById(
+    segmentId: string,
+    courseId: string,
+  ): Promise<Prisma.BatchPayload> {
+    const courseSegment = await prisma.courseSegment.deleteMany({
+      where: {
+        segmentId,
+        courseId,
+      },
+    })
+
+    return courseSegment
+  }
+
   async createMany(
     segmentId: string,
     coursesIds?: string[],
@@ -14,6 +28,22 @@ export class PrismaCourseSegmentRepository implements CourseSegmentRepository {
             courseId,
           }))
         : [],
+    })
+
+    return courseSegment
+  }
+
+  async deleteMany(
+    segmentId: string,
+    coursesIds?: string[],
+  ): Promise<Prisma.BatchPayload> {
+    const courseSegment = await prisma.courseSegment.deleteMany({
+      where: {
+        segmentId,
+        courseId: {
+          in: coursesIds,
+        },
+      },
     })
 
     return courseSegment

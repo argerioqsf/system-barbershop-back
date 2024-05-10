@@ -1,0 +1,25 @@
+_id: req_9a16eaf3b79f4a609df27fc6b26cda2b
+type: Request
+parentId: fld_75fad450d5864e1caaba6555560888d2
+modified: 1714826981891
+created: 1712807015002
+url: "{{ _.baseURL }}/users?page=2"
+name: List users
+description: ""
+method: GET
+body: {}
+parameters: []
+headers:
+  - name: User-Agent
+    value: insomnia/2023.5.8
+authentication:
+  type: bearer
+  token: "{{ _.token }}"
+metaSortKey: -1712807015002
+isPrivate: false
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: global

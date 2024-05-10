@@ -1,0 +1,25 @@
+_id: req_057c8520444940dea6582231e5860fd4
+type: Request
+parentId: fld_8710da449b714434b36b6ec93a7dac5e
+modified: 1714827864506
+created: 1711081774938
+url: "{{ _.baseURL }}/segments"
+name: List segments
+description: ""
+method: GET
+body: {}
+parameters: []
+headers:
+  - name: User-Agent
+    value: insomnia/2023.5.8
+authentication:
+  type: bearer
+  token: "{{ _.token }}"
+metaSortKey: -1711083426279
+isPrivate: false
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: global

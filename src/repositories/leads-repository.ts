@@ -5,4 +5,5 @@ export interface LeadsRepository {
   findMany(page: number, query?: string): Promise<Leads[]>
   count(query?: string): Promise<number>
   findById(id: string): Promise<Leads | null>
+  updateById(id: string, data: Prisma.LeadsUpdateInput): Promise<Leads>
 }

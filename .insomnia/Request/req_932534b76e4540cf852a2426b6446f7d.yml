@@ -1,0 +1,25 @@
+_id: req_932534b76e4540cf852a2426b6446f7d
+type: Request
+parentId: fld_cf97fbb781d84fc1b62791cac4dffd39
+modified: 1714827931431
+created: 1714583470327
+url: "{{ _.baseURL }}/course/delete/64e73f3a-09b9-4a7d-9f17-53b259834d92"
+name: delete course
+description: ""
+method: DELETE
+body: {}
+parameters: []
+headers:
+  - name: User-Agent
+    value: insomnia/2023.5.8
+authentication:
+  type: bearer
+  token: "{{ _.token }}"
+metaSortKey: -1711083431256.5
+isPrivate: false
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: global
