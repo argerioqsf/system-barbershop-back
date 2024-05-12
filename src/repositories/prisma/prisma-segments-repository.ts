@@ -64,7 +64,20 @@ export class PrismaSegmentsRepository implements SegmentsRepository {
   }
 
   async mountSelect(): Promise<Segment[]> {
-    const segments = await prisma.segment.findMany()
+    const segments = await prisma.segment.findMany({
+      include: {
+        courses: {
+          select: {
+            course: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    })
     return segments
   }
 
@@ -80,6 +93,7 @@ export class PrismaSegmentsRepository implements SegmentsRepository {
           select: {
             course: {
               select: {
+                id: true,
                 name: true,
               },
             },

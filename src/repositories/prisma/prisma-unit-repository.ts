@@ -38,7 +38,22 @@ export class PrismaUnitRepository implements UnitRepository {
         },
         segments: {
           select: {
-            segment: true,
+            segment: {
+              select: {
+                id: true,
+                name: true,
+                courses: {
+                  select: {
+                    course: {
+                      select: {
+                        id: true,
+                        name: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
         },
       },
