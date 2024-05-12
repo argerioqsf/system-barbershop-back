@@ -20,8 +20,8 @@ export class GetConsultantProfileService {
     page,
     query,
   }: GetConsultantProfileServiceRequest): Promise<GetConsultantProfileServiceResponse> {
-    const users = await this.userRepository.findManyIndicator(page, query)
-    const count = await this.userRepository.countIndicator(query)
+    const users = await this.userRepository.findManyConsultant(page, query)
+    const count = await this.userRepository.countConsultant(query)
 
     return { users, count }
   }
