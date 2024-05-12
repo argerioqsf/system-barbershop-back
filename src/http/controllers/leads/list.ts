@@ -5,14 +5,19 @@ import { z } from 'zod'
 const searchBodySchema = z.object({
   q: z.string().optional(),
   page: z.coerce.number().min(1).default(1),
+  indicatorId: z.string().optional(),
 })
 
 export async function List(request: FastifyRequest, replay: FastifyReply) {
-  const { q, page } = searchBodySchema.parse(request.query)
+  const { q, page, indicatorId } = searchBodySchema.parse(request.query)
 
   const getLeadsService = makeGetLeadsService()
 
-  const { leads, count } = await getLeadsService.execute({ page, query: q })
+  const { leads, count } = await getLeadsService.execute({
+    page,
+    query: q,
+    indicatorId,
+  })
 
   return replay.status(200).send({ leads, count })
 }
