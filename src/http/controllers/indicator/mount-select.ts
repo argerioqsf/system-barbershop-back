@@ -1,10 +1,13 @@
-import { getMountSelectIndicatorProfileService } from "@/services/@factories/indicator/make-mount-select-indicator-service";
-import { FastifyReply, FastifyRequest } from "fastify";
+import { getMountSelectIndicatorProfileService } from '@/services/@factories/indicator/make-mount-select-indicator-service'
+import { FastifyReply, FastifyRequest } from 'fastify'
 
-export async function MountSelect(request: FastifyRequest, replay: FastifyReply) {
-  const mountSelectIndicatorService = getMountSelectIndicatorProfileService();
+export async function MountSelect(
+  request: FastifyRequest,
+  replay: FastifyReply,
+) {
+  const mountSelectIndicatorService = getMountSelectIndicatorProfileService()
 
-  const { user } = await mountSelectIndicatorService.execute();
+  const { user } = await mountSelectIndicatorService.execute()
 
-  return replay.status(200).send({ user });
+  return replay.status(200).send({ user })
 }
