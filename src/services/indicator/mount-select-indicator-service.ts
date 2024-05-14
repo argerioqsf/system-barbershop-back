@@ -3,19 +3,19 @@ import { User } from '@prisma/client'
 import { UserNotFoundError } from '../@errors/user-not-found-error'
 
 interface MountSelectIndicatorResponse {
-  user: Omit<User, 'email' | 'password' | 'active'>[]
+  users: Omit<User, 'email' | 'password' | 'active'>[]
 }
 
 export class MountSelectIndicatorService {
   constructor(private userRepository: UsersRepository) {}
 
   async execute(): Promise<MountSelectIndicatorResponse> {
-    const user = await this.userRepository.mountSelectIndicator()
+    const users = await this.userRepository.mountSelectIndicator()
 
-    if (!user) {
+    if (!users) {
       throw new UserNotFoundError()
     }
 
-    return { user }
+    return { users }
   }
 }

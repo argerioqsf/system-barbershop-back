@@ -1,4 +1,4 @@
-import { makeMountSelectConsultantService } from '@/services/@factories/consultant/mount-select-consultant-service'
+import { makeMountSelectConsultantService } from '@/services/@factories/consultant/make-mount-select-consultant-service'
 import { FastifyReply, FastifyRequest } from 'fastify'
 
 export async function MountSelect(

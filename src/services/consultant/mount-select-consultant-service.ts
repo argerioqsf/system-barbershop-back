@@ -10,7 +10,7 @@ export class MountSelectConsultantService {
   constructor(private userRepository: UsersRepository) {}
 
   async execute(): Promise<MountSelectConsultantResponse> {
-    const user = await this.userRepository.mountSelect()
+    const user = await this.userRepository.mountSelectConsultant()
 
     if (!user) {
       throw new UserNotFoundError()

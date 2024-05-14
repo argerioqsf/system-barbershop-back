@@ -31,6 +31,6 @@ export interface UsersRepository {
   countIndicator(query?: string): Promise<number>
   countConsultant(query?: string): Promise<number>
   update(id: string, data: Prisma.UserUpdateInput): Promise<User>
-  mountSelect(): Promise<Omit<User, 'email' | 'password' | 'active'>[]>
+  mountSelectConsultant(): Promise<Omit<User, 'email' | 'password' | 'active'>[]>
   mountSelectIndicator(): Promise<Omit<User, 'email' | 'password' | 'active'>[]>
 }
