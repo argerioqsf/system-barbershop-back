@@ -51,9 +51,19 @@ export class PrismaLeadsRepository implements LeadsRepository {
     return lead
   }
 
-  async findMany(page: number, query?: string): Promise<Leads[]> {
+  async findMany(
+    page: number,
+    query?: string,
+    indicatorId?: string,
+  ): Promise<Leads[]> {
+    const whereIndicatorId = indicatorId
+      ? {
+          indicatorId: { contains: indicatorId },
+        }
+      : {}
     const leads = await prisma.leads.findMany({
       where: {
+        ...whereIndicatorId,
         name: {
           contains: query,
         },

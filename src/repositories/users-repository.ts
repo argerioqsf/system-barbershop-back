@@ -22,6 +22,15 @@ export interface UsersRepository {
   ): Promise<
     (Omit<User, 'password'> & { profile: Omit<Profile, 'userId'> | null })[]
   >
+  findManyConsultant(
+    page: number,
+    query?: string,
+  ): Promise<
+    (Omit<User, 'password'> & { profile: Omit<Profile, 'userId'> | null })[]
+  >
   countIndicator(query?: string): Promise<number>
+  countConsultant(query?: string): Promise<number>
   update(id: string, data: Prisma.UserUpdateInput): Promise<User>
+  mountSelectConsultant(): Promise<Omit<User, 'email' | 'password' | 'active'>[]>
+  mountSelectIndicator(): Promise<Omit<User, 'email' | 'password' | 'active'>[]>
 }

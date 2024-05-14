@@ -4,6 +4,97 @@ import { Prisma, Profile, User } from '@prisma/client'
 import { UsersRepository } from '../users-repository'
 
 export class PrismaUsersRepository implements UsersRepository {
+  async mountSelectIndicator(): Promise<
+    Omit<User, 'email' | 'password' | 'active'>[]
+  > {
+    const user = await prisma.user.findMany({
+      where: {
+        profile: {
+          role: 'indicator',
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        profile: false,
+      },
+    })
+
+    return user
+  }
+
+  async mountSelectConsultant(): Promise<Omit<User, 'email' | 'password' | 'active'>[]> {
+    const user = await prisma.user.findMany({
+      where: {
+        profile: {
+          role: 'consultant',
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        profile: false,
+      },
+    })
+
+    return user
+  }
+
+  async countConsultant(query?: string): Promise<number> {
+    const users = await prisma.user.count({
+      where: {
+        name: {
+          contains: query,
+        },
+        profile: {
+          role: 'consultant',
+        },
+      },
+    })
+
+    return users
+  }
+
+  async findManyConsultant(
+    page: number,
+    query?: string,
+  ): Promise<
+    (Omit<User, 'password'> & { profile: Omit<Profile, 'userId'> | null })[]
+  > {
+    const userIndicator = await prisma.user.findMany({
+      where: {
+        name: {
+          contains: query,
+        },
+        profile: {
+          role: 'consultant',
+        },
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        active: true,
+        profile: {
+          select: {
+            id: true,
+            cpf: true,
+            genre: true,
+            phone: true,
+            role: true,
+            pix: true,
+            birthday: true,
+            city: true,
+          },
+        },
+      },
+      take: pagination.total,
+      skip: (page - 1) * pagination.total,
+    })
+
+    return userIndicator
+  }
+
   async update(
     id: string,
     data: Prisma.UserUpdateInput,
@@ -24,13 +115,13 @@ export class PrismaUsersRepository implements UsersRepository {
     return user
   }
 
-  findManyIndicator(
+  async findManyIndicator(
     page: number,
     query?: string,
   ): Promise<
     (Omit<User, 'password'> & { profile: Omit<Profile, 'userId'> | null })[]
   > {
-    const userIndicator = prisma.user.findMany({
+    const userIndicator = await prisma.user.findMany({
       where: {
         name: {
           contains: query,
@@ -81,6 +172,7 @@ export class PrismaUsersRepository implements UsersRepository {
         active: true,
         profile: {
           select: {
+            leadsConsultant: true,
             leadsIndicator: true,
             id: true,
             cpf: true,
