@@ -55,15 +55,22 @@ export class PrismaLeadsRepository implements LeadsRepository {
     page: number,
     query?: string,
     indicatorId?: string,
+    consultantId?: string,
   ): Promise<Leads[]> {
     const whereIndicatorId = indicatorId
       ? {
           indicatorId: { contains: indicatorId },
         }
       : {}
+    const whereConsultantId = consultantId
+      ? {
+          consultantId: { contains: consultantId },
+        }
+      : {}
     const leads = await prisma.leads.findMany({
       where: {
         ...whereIndicatorId,
+        ...whereConsultantId,
         name: {
           contains: query,
         },
