@@ -6,10 +6,13 @@ const searchBodySchema = z.object({
   q: z.string().optional(),
   page: z.coerce.number().min(1).default(1),
   indicatorId: z.string().optional(),
+  consultantId: z.string().optional(),
 })
 
 export async function List(request: FastifyRequest, replay: FastifyReply) {
-  const { q, page, indicatorId } = searchBodySchema.parse(request.query)
+  const { q, page, indicatorId, consultantId } = searchBodySchema.parse(
+    request.query,
+  )
 
   const getLeadsService = makeGetLeadsService()
 
@@ -17,6 +20,7 @@ export async function List(request: FastifyRequest, replay: FastifyReply) {
     page,
     query: q,
     indicatorId,
+    consultantId,
   })
 
   return replay.status(200).send({ leads, count })
