@@ -129,6 +129,7 @@ export class PrismaLeadsRepository implements LeadsRepository {
       where: {
         ...whereIndicatorId,
         ...whereConsultantId,
+        archived: false,
         name: {
           contains: query,
         },
