@@ -23,7 +23,9 @@ export class PrismaUsersRepository implements UsersRepository {
     return user
   }
 
-  async mountSelectConsultant(): Promise<Omit<User, 'email' | 'password' | 'active'>[]> {
+  async mountSelectConsultant(): Promise<
+    Omit<User, 'email' | 'password' | 'active'>[]
+  > {
     const user = await prisma.user.findMany({
       where: {
         profile: {
