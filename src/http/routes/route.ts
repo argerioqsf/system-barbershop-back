@@ -8,5 +8,5 @@ export async function appRoute(app: FastifyInstance) {
   app.post('/users', registerUser)
   app.post('/sessions', authenticate)
   app.post('/create/indicator', RegisterIndicatorController)
-  app.post('/create/lead/public', RegisterLeadPublicController)
+  app.post('/create/lead', RegisterLeadPublicController)
 }
