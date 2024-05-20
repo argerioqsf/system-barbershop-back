@@ -18,7 +18,7 @@ export async function leadsRoute(app: FastifyInstance) {
 
   app.put('/lead/:id', Update)
 
-  app.patch('/lead/:id', UpdateArchived)
+  app.patch('/lead/archived/:id', UpdateArchived)
 
   app.get('/leads/archived', ListArchived)
 }
