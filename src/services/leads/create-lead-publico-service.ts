@@ -8,6 +8,7 @@ interface CreateLeadPublicServiceRequest {
   email: string
   city: string
   indicatorId: string
+  unitId: string
 }
 
 interface CreateLeadPublicServiceResponse {
@@ -24,6 +25,7 @@ export class CreateLeadPublicService {
     email,
     city,
     indicatorId,
+    unitId,
   }: CreateLeadPublicServiceRequest): Promise<CreateLeadPublicServiceResponse> {
     const leads = await this.leadsRepository.create({
       name,
@@ -32,6 +34,7 @@ export class CreateLeadPublicService {
       email,
       city,
       indicatorId,
+      unitId,
     })
 
     return { leads }

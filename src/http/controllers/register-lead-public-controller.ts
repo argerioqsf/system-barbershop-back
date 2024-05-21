@@ -9,6 +9,7 @@ const bodySchema = z.object({
   email: z.string(),
   city: z.string(),
   indicatorId: z.string(),
+  unitId: z.string(),
 })
 
 export async function RegisterLeadPublicController(

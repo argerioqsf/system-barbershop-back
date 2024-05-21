@@ -84,6 +84,7 @@ model Unit {
   name     String
   courses  UnitCourses[]
   segments UnitSegment[]
+  leads    Leads[]
 
   @@map("units")
 }
@@ -123,6 +124,8 @@ model Leads {
   indicatorId  String
   consultant   Profile?   @relation(fields: [consultantId], references: [id], name: "consultantLeads")
   consultantId String?
+  unit         Unit       @relation(fields: [unitId], references: [id])
+  unitId       String
   timeline     Timeline[]
 
   @@map("leads")
