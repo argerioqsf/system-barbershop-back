@@ -84,7 +84,7 @@ model Unit {
   name     String
   courses  UnitCourses[]
   segments UnitSegment[]
-  Leads    Leads[]
+  leads    Leads[]
 
   @@map("units")
 }
