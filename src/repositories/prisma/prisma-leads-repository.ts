@@ -33,6 +33,7 @@ export class PrismaLeadsRepository implements LeadsRepository {
             cpf: true,
           },
         },
+        unit: true,
         indicator: {
           select: {
             user: {
