@@ -13,7 +13,8 @@ const bodySchema = z.object({
   document: z.string(),
   email: z.string(),
   city: z.string(),
-  indicatorId: z.string().optional(),
+  indicatorId: z.string(),
+  unitId: z.string(),
   consultantId: z.string().optional(),
 })
 

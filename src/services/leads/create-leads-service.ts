@@ -16,6 +16,7 @@ interface CreateLeadsServiceRequest {
   indicatorId?: string
   consultantId?: string
   userId: string
+  unitId: string
 }
 
 interface CreateLeadsServiceResponse {
@@ -37,6 +38,7 @@ export class CreateLeadsService {
     userId,
     indicatorId,
     consultantId,
+    unitId,
   }: CreateLeadsServiceRequest): Promise<CreateLeadsServiceResponse> {
     const profile = await this.profileRepository.findByUserId(userId)
 
@@ -81,6 +83,7 @@ export class CreateLeadsService {
       document,
       email,
       city,
+      unitId,
       ...data,
     })
 
