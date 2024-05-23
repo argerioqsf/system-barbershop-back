@@ -1,4 +1,6 @@
+import { UnitNotFoundError } from '@/services/@errors/unit-not-found-error'
 import { UserAlreadyExistsError } from '@/services/@errors/user-already-exists-error'
+import { UserTypeNotCompatible } from '@/services/@errors/user-type-not-compatible'
 import { makeUserProfileService } from '@/services/@factories/user/make-user-profile-service'
 import { Role } from '@prisma/client'
 import { FastifyReply, FastifyRequest } from 'fastify'
@@ -20,7 +22,7 @@ export async function CreateUserProfile(
     pix: z.string(),
     role: z.nativeEnum(Role),
     city: z.string(),
-    unitId: z.string().optional(),
+    unitsIds: z.array(z.string()).optional(),
   })
 
   const body = registerBodySchema.parse(request.body)
@@ -36,6 +38,12 @@ export async function CreateUserProfile(
       profile,
     })
   } catch (error) {
+    if (error instanceof UnitNotFoundError) {
+      return replay.status(409).send({ message: error.message })
+    }
+    if (error instanceof UserTypeNotCompatible) {
+      return replay.status(409).send({ message: error.message })
+    }
     if (error instanceof UserAlreadyExistsError) {
       return replay.status(409).send({ message: error.message })
     }

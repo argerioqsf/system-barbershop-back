@@ -42,8 +42,6 @@ export class PrismaProfilesRepository implements ProfilesRepository {
         role: true,
         userId: true,
         city: true,
-        unitId: true,
-        units: true,
         _count: {
           select: {
             leadsIndicator: true,

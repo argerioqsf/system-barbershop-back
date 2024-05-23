@@ -4,6 +4,18 @@ import { UnitRepository } from '../unit-repository'
 import { pagination } from '@/utils/constants/pagination'
 
 export class PrismaUnitRepository implements UnitRepository {
+  async findManyListIds(ids: string[]): Promise<Unit[]> {
+    const units = await prisma.unit.findMany({
+      where: {
+        id: {
+          in: ids,
+        },
+      },
+    })
+
+    return units
+  }
+
   async updateById(id: string, data: Prisma.UnitUpdateInput): Promise<Unit> {
     const unit = await prisma.unit.update({
       where: { id },

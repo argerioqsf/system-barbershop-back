@@ -13,7 +13,6 @@ const bodySchema = z.object({
   pix: z.string(),
   role: z.nativeEnum(Role),
   city: z.string(),
-  unitId: z.string().optional(),
 })
 
 export async function Create(request: FastifyRequest, reply: FastifyReply) {

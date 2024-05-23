@@ -18,7 +18,6 @@ interface UpdateProfileUserServiceRequest {
   pix: string
   role: Role
   city: string
-  unitId?: string
 }
 
 interface UpdateProfileUserServiceResponse {
@@ -45,7 +44,6 @@ export class UpdateProfileUserService {
     pix,
     role,
     city,
-    unitId,
   }: UpdateProfileUserServiceRequest): Promise<UpdateProfileUserServiceResponse> {
     const user = await this.usersRepository.findById(id)
     const unit = await this.unitRepository.findById(id)
@@ -63,7 +61,6 @@ export class UpdateProfileUserService {
       pix,
       role,
       city,
-      unitId,
     })
 
     const userUpdate = await this.usersRepository.update(profile.userId, {

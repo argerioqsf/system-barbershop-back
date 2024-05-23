@@ -91,7 +91,6 @@ export class PrismaUsersRepository implements UsersRepository {
             pix: true,
             birthday: true,
             city: true,
-            unitId: true,
           },
         },
       },
@@ -145,7 +144,7 @@ export class PrismaUsersRepository implements UsersRepository {
         profile: {
           select: {
             id: true,
-            unitId: true,
+
             cpf: true,
             genre: true,
             phone: true,
@@ -182,8 +181,6 @@ export class PrismaUsersRepository implements UsersRepository {
           select: {
             leadsConsultant: true,
             leadsIndicator: true,
-            unitId: true,
-            units: true,
             id: true,
             cpf: true,
             genre: true,
@@ -246,7 +243,11 @@ export class PrismaUsersRepository implements UsersRepository {
             pix: true,
             birthday: true,
             city: true,
-            unitId: true,
+            units: {
+              select: {
+                unit: true,
+              },
+            },
           },
         },
       },
