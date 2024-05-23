@@ -3,6 +3,7 @@ import { IndicatorNotFoundError } from '@/services/@errors/indicator-not-found-e
 import { LeadsNotFoundError } from '@/services/@errors/leads-not-found-error'
 import { NeedIndicatorField } from '@/services/@errors/need-indicator-field'
 import { SetConsultantNotPermitError } from '@/services/@errors/set-consultant-not-permission'
+import { UserNotFoundError } from '@/services/@errors/user-not-found-error'
 import makeCreateLeadsService from '@/services/@factories/leads/make-create-leads-service'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
@@ -30,6 +31,9 @@ export async function Create(request: FastifyRequest, reply: FastifyReply) {
 
     return reply.status(201).send(leads)
   } catch (error) {
+    if (error instanceof UserNotFoundError) {
+      return reply.status(404).send({ message: error.message })
+    }
     if (error instanceof LeadsNotFoundError) {
       return reply.status(404).send({ message: error.message })
     }

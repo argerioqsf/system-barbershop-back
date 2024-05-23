@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { Prisma, Profile, User } from '@prisma/client'
+import { Prisma, Profile, Unit, User } from '@prisma/client'
 import { ProfilesRepository } from '../profiles-repository'
 
 export class PrismaProfilesRepository implements ProfilesRepository {
@@ -25,10 +25,11 @@ export class PrismaProfilesRepository implements ProfilesRepository {
     return profile
   }
 
-  async findByUserId(
-    id: string,
-  ): Promise<
-    (Omit<Profile, 'userId'> & { user: Omit<User, 'password'> }) | null
+  async findByUserId(id: string): Promise<
+    | (Omit<Profile, 'userId'> & { user: Omit<User, 'password'> } & {
+        units: { unit: Unit }[]
+      })
+    | null
   > {
     const profile = await prisma.profile.findUnique({
       where: { userId: id },
@@ -42,6 +43,11 @@ export class PrismaProfilesRepository implements ProfilesRepository {
         role: true,
         userId: true,
         city: true,
+        units: {
+          select: {
+            unit: true,
+          },
+        },
         _count: {
           select: {
             leadsIndicator: true,

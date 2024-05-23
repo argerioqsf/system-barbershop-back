@@ -1,12 +1,13 @@
-import { Prisma, Profile, User } from '@prisma/client'
+import { Prisma, Profile, Unit, User } from '@prisma/client'
 
 export interface ProfilesRepository {
   findById(id: string): Promise<(Profile & { user: User }) | null>
   create(data: Prisma.ProfileUncheckedCreateInput): Promise<Profile>
-  findByUserId(
-    userId: string,
-  ): Promise<
-    (Omit<Profile, 'userId'> & { user: Omit<User, 'password'> }) | null
+  findByUserId(userId: string): Promise<
+    | (Omit<Profile, 'userId'> & { user: Omit<User, 'password'> } & {
+        units: { unit: Unit }[]
+      })
+    | null
   >
   update(id: string, data: Prisma.ProfileUncheckedUpdateInput): Promise<Profile>
 }
