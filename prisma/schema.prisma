@@ -35,6 +35,8 @@ model Profile {
   leadsConsultant Leads[]           @relation(name: "consultantLeads")
   city            String?
   extract_profile extract_profile[]
+  units           Unit?             @relation(fields: [unitId], references: [id])
+  unitId          String?
 
   @@map("profiles")
 }
@@ -80,11 +82,12 @@ model Course {
 }
 
 model Unit {
-  id       String        @id @default(uuid())
-  name     String
-  courses  UnitCourses[]
-  segments UnitSegment[]
-  leads    Leads[]
+  id         String        @id @default(uuid())
+  name       String
+  courses    UnitCourses[]
+  segments   UnitSegment[]
+  leads      Leads[]
+  consultans Profile[]
 
   @@map("units")
 }

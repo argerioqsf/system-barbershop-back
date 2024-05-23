@@ -71,9 +71,7 @@ export class PrismaUnitRepository implements UnitRepository {
 
   async create(data: Prisma.UnitCreateInput): Promise<Unit> {
     const Unit = await prisma.unit.create({
-      data: {
-        name: data.name,
-      },
+      data,
     })
 
     return Unit

@@ -8,5 +8,5 @@ export interface ProfilesRepository {
   ): Promise<
     (Omit<Profile, 'userId'> & { user: Omit<User, 'password'> }) | null
   >
-  update(id: string, data: Prisma.ProfileUpdateInput): Promise<Profile>
+  update(id: string, data: Prisma.ProfileUncheckedUpdateInput): Promise<Profile>
 }

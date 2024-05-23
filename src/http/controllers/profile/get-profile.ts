@@ -23,7 +23,7 @@ export async function GetProfile(
       return replay.status(404).send({ message: error.message })
     }
 
-    console.error(error)
+    console.log('eroor -->', error)
 
     return replay.status(500).send({ message: 'Internal server error' })
   }

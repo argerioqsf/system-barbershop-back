@@ -3,6 +3,8 @@ import { UsersRepository } from '@/repositories/users-repository'
 import { Profile, Role, User } from '@prisma/client'
 import { UserNotFoundError } from '../@errors/user-not-found-error'
 import { ResourceNotFoundError } from '../@errors/resource-not-found-error'
+import { UnitRepository } from '@/repositories/unit-repository'
+import { UnitNotFoundError } from '../@errors/unit-not-found-error'
 
 interface UpdateProfileUserServiceRequest {
   id: string
@@ -16,6 +18,7 @@ interface UpdateProfileUserServiceRequest {
   pix: string
   role: Role
   city: string
+  unitId?: string
 }
 
 interface UpdateProfileUserServiceResponse {
@@ -27,6 +30,7 @@ export class UpdateProfileUserService {
   constructor(
     private usersRepository: UsersRepository,
     private profileRepository: ProfilesRepository,
+    private unitRepository: UnitRepository,
   ) {}
 
   async execute({
@@ -41,10 +45,16 @@ export class UpdateProfileUserService {
     pix,
     role,
     city,
+    unitId,
   }: UpdateProfileUserServiceRequest): Promise<UpdateProfileUserServiceResponse> {
     const user = await this.usersRepository.findById(id)
+    const unit = await this.unitRepository.findById(id)
     if (!user) throw new UserNotFoundError()
+
+    if (!unit) throw new UnitNotFoundError()
+
     if (!user.profile) throw new ResourceNotFoundError()
+
     const profile = await this.profileRepository.update(user.profile.id, {
       phone,
       cpf,
@@ -53,6 +63,7 @@ export class UpdateProfileUserService {
       pix,
       role,
       city,
+      unitId,
     })
 
     const userUpdate = await this.usersRepository.update(profile.userId, {

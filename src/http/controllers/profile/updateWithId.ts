@@ -14,6 +14,7 @@ const bodySchema = z.object({
   pix: z.string(),
   role: z.nativeEnum(Role),
   city: z.string(),
+  unitId: z.string().optional(),
 })
 
 const routeSchema = z.object({
@@ -24,8 +25,19 @@ export async function UpdateWithId(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
-  const { active, birthday, city, cpf, email, genre, name, phone, pix, role } =
-    bodySchema.parse(request.body)
+  const {
+    active,
+    birthday,
+    city,
+    cpf,
+    email,
+    genre,
+    name,
+    phone,
+    pix,
+    role,
+    unitId,
+  } = bodySchema.parse(request.body)
 
   const updateProfileUserService = MakeUpdateProfileUserService()
 
@@ -44,6 +56,7 @@ export async function UpdateWithId(
       phone,
       pix,
       role,
+      unitId,
     })
     return reply.status(201).send({ profile })
   } catch (error) {

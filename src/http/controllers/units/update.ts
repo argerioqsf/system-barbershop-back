@@ -7,6 +7,7 @@ const bodySchema = z.object({
   name: z.string(),
   courses: z.array(z.string()).optional(),
   segments: z.array(z.string()).optional(),
+  consultantId: z.string().optional(),
 })
 
 const routeSchema = z.object({
@@ -14,7 +15,9 @@ const routeSchema = z.object({
 })
 
 export async function Update(request: FastifyRequest, reply: FastifyReply) {
-  const { name, courses, segments } = bodySchema.parse(request.body)
+  const { name, courses, segments, consultantId } = bodySchema.parse(
+    request.body,
+  )
 
   const updateUnitService = makeUpdateUnitService()
 
@@ -26,12 +29,14 @@ export async function Update(request: FastifyRequest, reply: FastifyReply) {
       name,
       coursesIds: courses,
       segmentsIds: segments,
+      consultantId,
     })
     return reply.status(201).send(unit)
   } catch (error) {
     if (error instanceof UnitNotFoundError) {
       return reply.status(404).send({ message: error.message })
     }
+    console.log(error)
     return reply.status(500).send({ message: 'Internal server error' })
   }
 }

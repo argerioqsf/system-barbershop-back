@@ -19,6 +19,8 @@ export async function CreateUserProfile(
     birthday: z.string(),
     pix: z.string(),
     role: z.nativeEnum(Role),
+    city: z.string(),
+    unitId: z.string().optional(),
   })
 
   const body = registerBodySchema.parse(request.body)
