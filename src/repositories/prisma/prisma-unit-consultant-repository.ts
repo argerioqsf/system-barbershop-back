@@ -6,8 +6,8 @@ export class PrismaUnitConsultantRepository
   implements UnitConsultantRepository
 {
   async createMany(
-    unitsIds: string[],
     consultantId: string,
+    unitsIds?: string[],
   ): Promise<Prisma.BatchPayload> {
     const unitConsultant = await prisma.unitConsultant.createMany({
       data: unitsIds
@@ -16,6 +16,22 @@ export class PrismaUnitConsultantRepository
             unitId,
           }))
         : [],
+    })
+
+    return unitConsultant
+  }
+
+  async deleteMany(
+    consultantId: string,
+    unitsIds?: string[],
+  ): Promise<Prisma.BatchPayload> {
+    const unitConsultant = await prisma.unitConsultant.deleteMany({
+      where: {
+        consultantId,
+        unitId: {
+          in: unitsIds,
+        },
+      },
     })
 
     return unitConsultant

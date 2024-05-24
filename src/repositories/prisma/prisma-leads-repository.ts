@@ -4,7 +4,10 @@ import { prisma } from '@/lib/prisma'
 import { pagination } from '@/utils/constants/pagination'
 
 export class PrismaLeadsRepository implements LeadsRepository {
-  updateById(id: string, data: Prisma.LeadsUpdateInput): Promise<Leads> {
+  updateById(
+    id: string,
+    data: Prisma.LeadsUncheckedUpdateInput,
+  ): Promise<Leads> {
     const lead = prisma.leads.update({
       where: {
         id,

@@ -89,10 +89,7 @@ export class RegisterUserProfileService {
     })
 
     if (unitsIds) {
-      const unitConsultant = await this.unitConsultantRepository.createMany(
-        unitsIds,
-        profile.id,
-      )
+      await this.unitConsultantRepository.createMany(profile.id, unitsIds)
     }
 
     return {

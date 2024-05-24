@@ -14,7 +14,7 @@ const bodySchema = z.object({
   pix: z.string(),
   role: z.nativeEnum(Role),
   city: z.string(),
-  unitId: z.string().optional(),
+  unitsIds: z.array(z.string()).optional(),
 })
 
 const routeSchema = z.object({
@@ -36,7 +36,7 @@ export async function UpdateWithId(
     phone,
     pix,
     role,
-    unitId,
+    unitsIds,
   } = bodySchema.parse(request.body)
 
   const updateProfileUserService = MakeUpdateProfileUserService()
@@ -56,7 +56,7 @@ export async function UpdateWithId(
       phone,
       pix,
       role,
-      unitId,
+      unitsIds,
     })
     return reply.status(201).send({ profile })
   } catch (error) {

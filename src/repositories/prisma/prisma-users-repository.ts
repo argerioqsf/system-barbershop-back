@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { pagination } from '@/utils/constants/pagination'
-import { Prisma, Profile, User } from '@prisma/client'
+import { Prisma, Profile, Unit, User } from '@prisma/client'
 import { UsersRepository } from '../users-repository'
 
 export class PrismaUsersRepository implements UsersRepository {
@@ -162,10 +162,10 @@ export class PrismaUsersRepository implements UsersRepository {
     return userIndicator
   }
 
-  async findById(
-    id: string,
-  ): Promise<
-    | (Omit<User, 'password'> & { profile: Omit<Profile, 'userId'> | null })
+  async findById(id: string): Promise<
+    | (Omit<User, 'password'> & {
+        profile: Omit<Profile & { units: { unit: Unit }[] }, 'userId'> | null
+      })
     | null
   > {
     const user = await prisma.user.findUnique({
@@ -189,6 +189,11 @@ export class PrismaUsersRepository implements UsersRepository {
             pix: true,
             birthday: true,
             city: true,
+            units: {
+              select: {
+                unit: true,
+              },
+            },
           },
         },
       },
