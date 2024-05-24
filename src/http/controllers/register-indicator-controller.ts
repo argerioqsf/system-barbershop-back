@@ -11,7 +11,6 @@ export async function RegisterIndicatorController(
     name: z.string(),
     email: z.string().email(),
     password: z.string().min(6),
-    active: z.boolean().default(false),
     phone: z.string(),
     cpf: z.string(),
     genre: z.string(),
@@ -26,6 +25,7 @@ export async function RegisterIndicatorController(
       makeRegisterIndicatorProfileService()
 
     const { profile } = await RegisterIndicatorProfileService.execute({
+      active: false,
       ...body,
     })
 

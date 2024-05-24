@@ -1,22 +1,9 @@
 import { prisma } from '@/lib/prisma'
-import { $Enums, Prisma, Profile, User } from '@prisma/client'
+import { Prisma, Profile, Unit, User } from '@prisma/client'
 import { ProfilesRepository } from '../profiles-repository'
 
 export class PrismaProfilesRepository implements ProfilesRepository {
-  async update(
-    id: string,
-    data: Prisma.ProfileUpdateInput,
-  ): Promise<{
-    id: string
-    phone: string
-    cpf: string
-    genre: string
-    birthday: string
-    pix: string
-    role: $Enums.Role
-    userId: string
-    city: string | null
-  }> {
+  async update(id: string, data: Prisma.ProfileUpdateInput): Promise<Profile> {
     const profile = await prisma.profile.update({
       where: {
         id,
@@ -38,10 +25,11 @@ export class PrismaProfilesRepository implements ProfilesRepository {
     return profile
   }
 
-  async findByUserId(
-    id: string,
-  ): Promise<
-    (Omit<Profile, 'userId'> & { user: Omit<User, 'password'> }) | null
+  async findByUserId(id: string): Promise<
+    | (Omit<Profile, 'userId'> & { user: Omit<User, 'password'> } & {
+        units: { unit: Unit }[]
+      })
+    | null
   > {
     const profile = await prisma.profile.findUnique({
       where: { userId: id },
@@ -55,6 +43,11 @@ export class PrismaProfilesRepository implements ProfilesRepository {
         role: true,
         userId: true,
         city: true,
+        units: {
+          select: {
+            unit: true,
+          },
+        },
         _count: {
           select: {
             leadsIndicator: true,

@@ -8,6 +8,8 @@ interface UpdateLeadServiceRequest {
   document: string
   email: string
   city: string
+  consultantId?: string | null
+  unitId?: string
 }
 
 interface UpdateLeadServiceResponse {
@@ -24,6 +26,8 @@ export class UpdateLeadService {
     document,
     phone,
     city,
+    consultantId,
+    unitId,
   }: UpdateLeadServiceRequest): Promise<UpdateLeadServiceResponse> {
     const lead = await this.leadRepository.updateById(id, {
       id,
@@ -32,6 +36,8 @@ export class UpdateLeadService {
       document,
       email,
       phone,
+      consultantId,
+      unitId,
     })
 
     return {

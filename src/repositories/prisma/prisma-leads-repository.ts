@@ -4,7 +4,10 @@ import { prisma } from '@/lib/prisma'
 import { pagination } from '@/utils/constants/pagination'
 
 export class PrismaLeadsRepository implements LeadsRepository {
-  updateById(id: string, data: Prisma.LeadsUpdateInput): Promise<Leads> {
+  updateById(
+    id: string,
+    data: Prisma.LeadsUncheckedUpdateInput,
+  ): Promise<Leads> {
     const lead = prisma.leads.update({
       where: {
         id,
@@ -115,6 +118,7 @@ export class PrismaLeadsRepository implements LeadsRepository {
     query?: string,
     indicatorId?: string,
     consultantId?: string,
+    unitsId?: string[],
   ): Promise<Leads[]> {
     const whereIndicatorId = indicatorId
       ? {
@@ -126,10 +130,16 @@ export class PrismaLeadsRepository implements LeadsRepository {
           consultantId: { contains: consultantId },
         }
       : {}
+    const whereUnitsId = unitsId
+      ? {
+          unitId: { in: unitsId },
+        }
+      : {}
     const leads = await prisma.leads.findMany({
       where: {
         ...whereIndicatorId,
         ...whereConsultantId,
+        ...whereUnitsId,
         archived: false,
         name: {
           contains: query,
@@ -168,9 +178,15 @@ export class PrismaLeadsRepository implements LeadsRepository {
     return leads
   }
 
-  async count(query?: string): Promise<number> {
+  async count(query?: string, unitsId?: string[]): Promise<number> {
+    const whereUnitsId = unitsId
+      ? {
+          unitId: { in: unitsId },
+        }
+      : {}
     const leads = await prisma.leads.count({
       where: {
+        ...whereUnitsId,
         name: {
           contains: query,
         },

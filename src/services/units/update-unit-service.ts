@@ -90,7 +90,9 @@ export class UpdateUnitService {
       })
       .map((segment) => segment.segment.id)
 
-    const unitUpdate = await this.unitRepository.updateById(id, { name })
+    const unitUpdate = await this.unitRepository.updateById(id, {
+      name,
+    })
 
     if (removeCoursesIds.length > 0) {
       await this.unitCourseRepository.deleteMany(unit.id, removeCoursesIds)

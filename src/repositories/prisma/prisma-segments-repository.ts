@@ -76,6 +76,16 @@ export class PrismaSegmentsRepository implements SegmentsRepository {
             },
           },
         },
+        units: {
+          select: {
+            unit: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
       },
     })
     return segments

@@ -32,6 +32,7 @@ export async function Update(request: FastifyRequest, reply: FastifyReply) {
     if (error instanceof UnitNotFoundError) {
       return reply.status(404).send({ message: error.message })
     }
+
     return reply.status(500).send({ message: 'Internal server error' })
   }
 }
