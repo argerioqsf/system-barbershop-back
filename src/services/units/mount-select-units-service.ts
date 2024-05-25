@@ -1,6 +1,6 @@
 import { UnitRepository } from '@/repositories/unit-repository'
 import { Unit } from '@prisma/client'
-import { CourseNotFoundError } from '../@errors/course-not-found-error'
+import { UnitNotFoundError } from '../@errors/unit-not-found-error'
 
 interface MountSelectUnitsResponse {
   units: Unit[]
@@ -13,7 +13,7 @@ export class MountSelectUnitsService {
     const units = await this.unitsRepository.mountSelect()
 
     if (!units) {
-      throw new CourseNotFoundError()
+      throw new UnitNotFoundError()
     }
 
     return { units }
