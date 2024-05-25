@@ -4,6 +4,17 @@ import { UnitRepository } from '../unit-repository'
 import { pagination } from '@/utils/constants/pagination'
 
 export class PrismaUnitRepository implements UnitRepository {
+  async mountSelect(): Promise<Unit[]> {
+    const units = await prisma.unit.findMany({
+      select: {
+        name: true,
+        id: true,
+      },
+    })
+
+    return units
+  }
+
   async findManyListIds(ids: string[]): Promise<Unit[]> {
     const units = await prisma.unit.findMany({
       where: {

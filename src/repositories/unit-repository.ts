@@ -14,4 +14,5 @@ export interface UnitRepository {
   deleteById(id: string): Promise<Unit | null>
   updateById(id: string, data: Prisma.UnitUpdateInput): Promise<Unit>
   findManyListIds(ids: string[]): Promise<Unit[]>
+  mountSelect(): Promise<Unit[]>
 }
