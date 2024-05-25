@@ -2,6 +2,7 @@ import { UsersRepository } from '@/repositories/users-repository'
 import { InvalidCredentialsError } from './@errors/invalid-credentials-error'
 import { compare } from 'bcryptjs'
 import { User } from '@prisma/client'
+import { UserInactiveError } from './@errors/user-inactive-error'
 
 interface AuthenticateServiceRequest {
   email: string
@@ -23,6 +24,10 @@ export class AuthenticateService {
 
     if (!user) {
       throw new InvalidCredentialsError()
+    }
+
+    if (!user.active) {
+      throw new UserInactiveError()
     }
 
     const doesPasswordMatches = await compare(password, user.password)
