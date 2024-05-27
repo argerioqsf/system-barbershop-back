@@ -34,10 +34,10 @@ export async function Create(request: FastifyRequest, reply: FastifyReply) {
     return reply.status(201).send(leads)
   } catch (error) {
     if (error instanceof LeadsDocumentExistsError) {
-      return reply.status(404).send({ message: error.message })
+      return reply.status(409).send({ message: error.message })
     }
     if (error instanceof LeadsEmailExistsError) {
-      return reply.status(404).send({ message: error.message })
+      return reply.status(409).send({ message: error.message })
     }
     if (error instanceof UserNotFoundError) {
       return reply.status(404).send({ message: error.message })
