@@ -49,6 +49,7 @@ export class PrismaLeadsRepository implements LeadsRepository {
             cpf: true,
           },
         },
+        timeline: true,
       },
     })
 
