@@ -18,4 +18,6 @@ export interface LeadsRepository {
     indicatorId?: string,
     consultantId?: string,
   ): Promise<Leads[]>
+
+  find(where: Partial<Leads>): Promise<Leads[]>
 }
