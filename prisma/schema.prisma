@@ -11,13 +11,13 @@ datasource db {
 }
 
 model User {
-  id            String                 @id @default(uuid())
+  id            String              @id @default(uuid())
   name          String
-  email         String                 @unique
+  email         String              @unique
   password      String
-  active        Boolean                @default(false)
+  active        Boolean             @default(false)
   profile       Profile?
-  organizations profile_organization[]
+  organizations user_organization[]
 
   @@map("users")
 }
@@ -153,22 +153,23 @@ model extract_profile {
   @@map("extract_profile")
 }
 
-model profile_organization {
+model user_organization {
   user           User         @relation(fields: [userId], references: [id])
   userId         String
   organization   Organization @relation(fields: [organizationId], references: [id])
   organizationId String
 
   @@id([userId, organizationId])
-  @@map("profile_organization")
+  @@map("user_organization")
 }
 
 model Organization {
-  id               String                 @id @default(uuid())
+  id               String              @id @default(uuid())
   name             String
   consultant_bonus Float
   indicator_bonus  Float
-  users            profile_organization[]
+  slugs            String              @unique
+  users            user_organization[]
 
   @@map("organization")
 }
