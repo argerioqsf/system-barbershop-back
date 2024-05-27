@@ -6,6 +6,8 @@ import { IndicatorNotFoundError } from '../@errors/indicator-not-found-error'
 import { NeedIndicatorField } from '../@errors/need-indicator-field'
 import { SetConsultantNotPermitError } from '../@errors/set-consultant-not-permission'
 import { UserNotFoundError } from '../@errors/user-not-found-error'
+import { LeadsEmailExistsError } from '../@errors/leads-email-exists-error'
+import { LeadsDocumentExistsError } from '../@errors/leads-document-exists-error'
 
 interface CreateLeadsServiceRequest {
   name: string
@@ -16,6 +18,7 @@ interface CreateLeadsServiceRequest {
   indicatorId?: string
   consultantId?: string
   userId: string
+  unitId: string
 }
 
 interface CreateLeadsServiceResponse {
@@ -37,10 +40,23 @@ export class CreateLeadsService {
     userId,
     indicatorId,
     consultantId,
+    unitId,
   }: CreateLeadsServiceRequest): Promise<CreateLeadsServiceResponse> {
     const profile = await this.profileRepository.findByUserId(userId)
 
     if (!profile) throw new UserNotFoundError()
+
+    const verifyExistEmailLead = await this.leadsRepository.find({
+      email,
+    })
+
+    if (verifyExistEmailLead.length > 0) throw new LeadsEmailExistsError()
+
+    const verifyExistDocumentLead = await this.leadsRepository.find({
+      document,
+    })
+
+    if (verifyExistDocumentLead.length > 0) throw new LeadsDocumentExistsError()
 
     let data: { indicatorId: string; consultantId?: string } = {
       indicatorId: '',
@@ -81,6 +97,7 @@ export class CreateLeadsService {
       document,
       email,
       city,
+      unitId,
       ...data,
     })
 

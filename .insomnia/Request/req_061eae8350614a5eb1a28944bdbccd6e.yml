@@ -1,0 +1,25 @@
+_id: req_061eae8350614a5eb1a28944bdbccd6e
+type: Request
+parentId: fld_6a3f06003ea74df0b7a133fd86bc8358
+modified: 1714827683762
+created: 1712937720881
+url: "{{ _.baseURL }}/leads"
+name: List Leads
+description: ""
+method: GET
+body: {}
+parameters: []
+headers:
+  - name: User-Agent
+    value: insomnia/2023.5.8
+authentication:
+  type: bearer
+  token: "{{ _.token }}"
+metaSortKey: -1712937720881
+isPrivate: false
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: global

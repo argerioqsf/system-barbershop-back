@@ -11,73 +11,101 @@ datasource db {
 }
 
 model User {
-  id       String   @id @default(uuid())
-  name     String
-  email    String   @unique
-  password String
-  active   Boolean  @default(false)
-  profile  Profile?
+  id            String              @id @default(uuid())
+  name          String
+  email         String              @unique
+  password      String
+  active        Boolean             @default(false)
+  profile       Profile?
+  organizations user_organization[]
 
   @@map("users")
 }
 
 model Profile {
-  id              String  @id @default(uuid())
+  id              String            @id @default(uuid())
   phone           String
   cpf             String
   genre           String
   birthday        String
   pix             String
-  role            Role    @default(indicator)
-  user            User    @relation(fields: [userId], references: [id])
-  userId          String  @unique
-  leadsIndicator  Leads[] @relation(name: "indicatorLeads")
-  leadsConsultant Leads[] @relation(name: "consultantLeads")
+  role            Role              @default(indicator)
+  user            User              @relation(fields: [userId], references: [id])
+  userId          String            @unique
+  leadsIndicator  Leads[]           @relation(name: "indicatorLeads")
+  leadsConsultant Leads[]           @relation(name: "consultantLeads")
+  city            String?
+  extract_profile extract_profile[]
+  units           UnitConsultant[]
 
   @@map("profiles")
 }
 
 model Segment {
-  id    String        @id @default(uuid())
-  name  String
-  units UnitSegment[]
+  id      String          @id @default(uuid())
+  name    String
+  units   UnitSegment[]
+  courses CourseSegment[]
 
   @@map("segments")
 }
 
 model UnitSegment {
-  segment   Segment @relation(fields: [segmentId], references: [id])
+  segment   Segment @relation(fields: [segmentId], references: [id], onDelete: Cascade)
   segmentId String
-  unit      Unit    @relation(fields: [unitId], references: [id])
+  unit      Unit    @relation(fields: [unitId], references: [id], onDelete: Cascade)
   unitId    String
 
   @@id([segmentId, unitId])
   @@map("unit_segment")
 }
 
+model CourseSegment {
+  course    Course  @relation(fields: [courseId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  courseId  String
+  segment   Segment @relation(fields: [segmentId], references: [id], onDelete: Cascade)
+  segmentId String
+
+  @@id([segmentId, courseId])
+  @@map("course_segment")
+}
+
 model Course {
-  id       String        @id @default(uuid())
+  id       String          @id @default(uuid())
   name     String
   active   Boolean
   units    UnitCourses[]
   timeline Timeline[]
+  segments CourseSegment[]
 
   @@map("courses")
 }
 
 model Unit {
-  id       String        @id @default(uuid())
-  name     String
-  courses  UnitCourses[]
-  segments UnitSegment[]
+  id          String           @id @default(uuid())
+  name        String
+  courses     UnitCourses[]
+  segments    UnitSegment[]
+  leads       Leads[]
+  consultants UnitConsultant[]
 
   @@map("units")
 }
 
+model UnitConsultant {
+  consultant   Profile @relation(fields: [consultantId], references: [id])
+  consultantId String
+  unit         Unit    @relation(fields: [unitId], references: [id])
+  unitId       String
+
+  @@id([consultantId, unitId])
+  @@map("unit_consultant")
+}
+
 model UnitCourses {
-  course   Course @relation(fields: [courseId], references: [id])
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   courseId String
-  unit     Unit   @relation(fields: [unitId], references: [id])
+  unit     Unit   @relation(fields: [unitId], references: [id], onDelete: Cascade)
   unitId   String
 
   @@id([courseId, unitId])
@@ -91,7 +119,7 @@ model Timeline {
   status      String
   lead        Leads  @relation(fields: [leadsId], references: [id])
   leadsId     String
-  course      Course @relation(fields: [courseId], references: [id])
+  course      Course @relation(fields: [courseId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   courseId    String
 
   @@map("timeline")
@@ -104,13 +132,46 @@ model Leads {
   document     String
   email        String
   city         String
+  archived     Boolean    @default(false)
   indicator    Profile    @relation(fields: [indicatorId], references: [id], name: "indicatorLeads")
   indicatorId  String
   consultant   Profile?   @relation(fields: [consultantId], references: [id], name: "consultantLeads")
   consultantId String?
+  unit         Unit       @relation(fields: [unitId], references: [id])
+  unitId       String
   timeline     Timeline[]
 
   @@map("leads")
+}
+
+model extract_profile {
+  id             String   @id @default(uuid())
+  amount_receive Float
+  profile        Profile? @relation(fields: [profileId], references: [id])
+  profileId      String?
+
+  @@map("extract_profile")
+}
+
+model user_organization {
+  user           User         @relation(fields: [userId], references: [id])
+  userId         String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  organizationId String
+
+  @@id([userId, organizationId])
+  @@map("user_organization")
+}
+
+model Organization {
+  id               String              @id @default(uuid())
+  name             String
+  consultant_bonus Float
+  indicator_bonus  Float
+  slugs            String              @unique
+  users            user_organization[]
+
+  @@map("organization")
 }
 
 enum Role {

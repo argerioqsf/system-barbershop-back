@@ -12,9 +12,10 @@ export async function List(request: FastifyRequest, replay: FastifyReply) {
 
   const getIndicatorProfile = getIndicatorProfileService()
 
-  const { users } = await getIndicatorProfile.execute({ page, query: q })
+  const { users, count } = await getIndicatorProfile.execute({ page, query: q })
 
   return replay.status(200).send({
     users,
+    count,
   })
 }

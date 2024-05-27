@@ -1,0 +1,37 @@
+_id: req_4e2e87cc7c9d4e98bfaa48fdefa57f74
+type: Request
+parentId: fld_6a3f06003ea74df0b7a133fd86bc8358
+modified: 1714827672625
+created: 1712875295697
+url: "{{ _.baseURL }}/create/leads"
+name: Create leads
+description: ""
+method: POST
+body:
+  mimeType: application/json
+  text: |-
+    {
+    	"name": "Argerin do github",
+      "phone": "969842345151",
+      "document": "11122233344458",
+      "email": "argerin@github.com",
+      "city": "Macapá",
+      "indicatorId": "781d3afc-305c-48fc-a83a-a279862b01b2"
+    }
+parameters: []
+headers:
+  - name: Content-Type
+    value: application/json
+  - name: User-Agent
+    value: insomnia/2023.5.8
+authentication:
+  type: bearer
+  token: "{{ _.token }}"
+metaSortKey: -1712937720981
+isPrivate: false
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: global

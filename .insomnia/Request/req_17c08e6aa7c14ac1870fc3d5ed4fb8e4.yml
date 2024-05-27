@@ -1,0 +1,25 @@
+_id: req_17c08e6aa7c14ac1870fc3d5ed4fb8e4
+type: Request
+parentId: fld_aa033f2b0fae48c78176b97669d9d356
+modified: 1714827642855
+created: 1712869635473
+url: "{{ _.baseURL }}/indicators"
+name: Get Indicator
+description: ""
+method: GET
+body: {}
+parameters: []
+headers:
+  - name: User-Agent
+    value: insomnia/2023.5.8
+authentication:
+  type: bearer
+  token: "{{ _.token }}"
+metaSortKey: -1712836974413
+isPrivate: false
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: global

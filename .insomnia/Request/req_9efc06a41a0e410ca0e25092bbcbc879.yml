@@ -1,0 +1,32 @@
+_id: req_9efc06a41a0e410ca0e25092bbcbc879
+type: Request
+parentId: wrk_e41927e2d6d643768f3618a453b49ee4
+modified: 1714828061786
+created: 1712866360419
+url: "{{ _.baseURL }}/users"
+name: Create user sem profile
+description: ""
+method: POST
+body:
+  mimeType: application/json
+  text: |-
+    {
+    	"name": "3",
+    	"email": "3@dev.com",
+    	"password": "12345678A@"
+    }
+parameters: []
+headers:
+  - name: Content-Type
+    value: application/json
+  - name: User-Agent
+    value: insomnia/2023.5.8
+authentication: {}
+metaSortKey: -1698964733896.25
+isPrivate: false
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: global

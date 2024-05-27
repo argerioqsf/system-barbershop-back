@@ -1,0 +1,33 @@
+_id: req_d0605cbc0ab84cf5909a66e6b0b14c53
+type: Request
+parentId: fld_8710da449b714434b36b6ec93a7dac5e
+modified: 1714827857092
+created: 1711081494122
+url: "{{ _.baseURL }}/create/segment"
+name: Create segments
+description: ""
+method: POST
+body:
+  mimeType: application/json
+  text: |-
+    {
+    	"name": "Ensino Pos graduação",
+    	"courses": ["0a1e33d8-a05d-43ed-991f-9972a43a7fb3"]
+    }
+parameters: []
+headers:
+  - name: Content-Type
+    value: application/json
+  - name: User-Agent
+    value: insomnia/2023.5.8
+authentication:
+  type: bearer
+  token: "{{ _.token }}"
+metaSortKey: -1711083426379
+isPrivate: false
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: global

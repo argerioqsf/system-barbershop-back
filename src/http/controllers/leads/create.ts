@@ -1,8 +1,11 @@
 import { AdministratorCreateIndicatorNotFound } from '@/services/@errors/administrator-create-indicator-not-found'
 import { IndicatorNotFoundError } from '@/services/@errors/indicator-not-found-error'
+import { LeadsDocumentExistsError } from '@/services/@errors/leads-document-exists-error'
+import { LeadsEmailExistsError } from '@/services/@errors/leads-email-exists-error'
 import { LeadsNotFoundError } from '@/services/@errors/leads-not-found-error'
 import { NeedIndicatorField } from '@/services/@errors/need-indicator-field'
 import { SetConsultantNotPermitError } from '@/services/@errors/set-consultant-not-permission'
+import { UserNotFoundError } from '@/services/@errors/user-not-found-error'
 import makeCreateLeadsService from '@/services/@factories/leads/make-create-leads-service'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
@@ -13,7 +16,8 @@ const bodySchema = z.object({
   document: z.string(),
   email: z.string(),
   city: z.string(),
-  indicatorId: z.string().optional(),
+  indicatorId: z.string(),
+  unitId: z.string(),
   consultantId: z.string().optional(),
 })
 
@@ -29,6 +33,15 @@ export async function Create(request: FastifyRequest, reply: FastifyReply) {
 
     return reply.status(201).send(leads)
   } catch (error) {
+    if (error instanceof LeadsDocumentExistsError) {
+      return reply.status(409).send({ message: error.message })
+    }
+    if (error instanceof LeadsEmailExistsError) {
+      return reply.status(409).send({ message: error.message })
+    }
+    if (error instanceof UserNotFoundError) {
+      return reply.status(404).send({ message: error.message })
+    }
     if (error instanceof LeadsNotFoundError) {
       return reply.status(404).send({ message: error.message })
     }
