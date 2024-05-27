@@ -19,7 +19,7 @@ interface UpdateProfileUserServiceRequest {
   pix: string
   role: Role
   city: string
-  unitsIds?: string[]
+  unitsIds?: string[] | null
 }
 
 interface UpdateProfileUserServiceResponse {
@@ -51,12 +51,12 @@ export class UpdateProfileUserService {
   }: UpdateProfileUserServiceRequest): Promise<UpdateProfileUserServiceResponse> {
     const user = await this.usersRepository.findById(id)
 
-    const units = unitsIds
-      ? await this.unitRepository.findManyListIds(unitsIds)
-      : []
-
-    if (units.length !== unitsIds?.length) {
-      throw new UnitNotFoundError()
+    if (unitsIds) {
+      const units = await this.unitRepository.findManyListIds(unitsIds)
+  
+      if (units.length !== unitsIds?.length) {
+        throw new UnitNotFoundError()
+      }
     }
 
     if (!user) throw new UserNotFoundError()

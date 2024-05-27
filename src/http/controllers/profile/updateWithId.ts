@@ -1,3 +1,6 @@
+import { ResourceNotFoundError } from '@/services/@errors/resource-not-found-error'
+import { UnitNotFoundError } from '@/services/@errors/unit-not-found-error'
+import { UserNotFoundError } from '@/services/@errors/user-not-found-error'
 import { MakeUpdateProfileUserService } from '@/services/@factories/profile/update-profile-user-service'
 import { Role } from '@prisma/client'
 import { FastifyReply, FastifyRequest } from 'fastify'
@@ -14,7 +17,7 @@ const bodySchema = z.object({
   pix: z.string(),
   role: z.nativeEnum(Role),
   city: z.string(),
-  unitsIds: z.array(z.string()).optional(),
+  unitsIds: z.array(z.string()).optional().nullable(),
 })
 
 const routeSchema = z.object({
@@ -60,6 +63,15 @@ export async function UpdateWithId(
     })
     return reply.status(201).send({ profile })
   } catch (error) {
+    if (error instanceof UnitNotFoundError) {
+      return reply.status(404).send({ message: error.message })
+    }
+    if (error instanceof UserNotFoundError) {
+      return reply.status(404).send({ message: error.message })
+    }
+    if (error instanceof ResourceNotFoundError) {
+      return reply.status(404).send({ message: error.message })
+    }
     return reply.status(500).send({ message: 'Internal server error' })
   }
 }

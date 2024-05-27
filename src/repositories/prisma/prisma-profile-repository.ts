@@ -60,6 +60,11 @@ export class PrismaProfilesRepository implements ProfilesRepository {
             email: true,
             name: true,
             active: true,
+            organizations: {
+              select: {
+                organization: true,
+              },
+            },
           },
         },
       },

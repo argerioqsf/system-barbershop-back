@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "main": "server.js",
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "start": "node dist/server.js",
@@ -12,8 +15,10 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
-    "migrate": "docker exec api-sim npx prisma migrate dev",
-    "reset": "docker exec -it api-sim npx prisma migrate reset",
+    "prisma:generate": "docker exec -it api-sim npx prisma generate",
+    "prisma:seed": "docker exec -it api-sim npx prisma db seed",
+    "prisma:migrate": "docker exec api-sim npx prisma migrate dev",
+    "prisma:reset": "docker exec -it api-sim npx prisma migrate reset",
     "prisma-studio": "docker exec api-sim npx prisma studio"
   },
   "author": "codecodedev",
