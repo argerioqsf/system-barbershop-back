@@ -11,7 +11,7 @@ export class PrismaOrganizationRepository implements OrganizationRepository {
     name: string
     consultant_bonus: number
     indicator_bonus: number
-    slugs: string
+    slug: string
   }> {
     const organization = prisma.organization.update({
       where: { id },

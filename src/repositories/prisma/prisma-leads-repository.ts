@@ -1,4 +1,4 @@
-import { Leads, Prisma } from '@prisma/client'
+import { Leads, Prisma, Timeline } from '@prisma/client'
 import { LeadsRepository } from '../leads-repository'
 import { prisma } from '@/lib/prisma'
 import { pagination } from '@/utils/constants/pagination'
@@ -7,12 +7,18 @@ export class PrismaLeadsRepository implements LeadsRepository {
   updateById(
     id: string,
     data: Prisma.LeadsUncheckedUpdateInput,
+    timeline: Omit<Timeline, 'id' | 'leadsId' | 'createdAt' | 'updatedAt'>[],
   ): Promise<Leads> {
     const lead = prisma.leads.update({
       where: {
         id,
       },
-      data,
+      data: {
+        ...data,
+        timeline: {
+          create: [...timeline],
+        },
+      },
     })
 
     return lead
@@ -47,6 +53,11 @@ export class PrismaLeadsRepository implements LeadsRepository {
             },
             phone: true,
             cpf: true,
+          },
+        },
+        timeline: {
+          orderBy: {
+            createdAt: 'desc',
           },
         },
       },
@@ -204,8 +215,18 @@ export class PrismaLeadsRepository implements LeadsRepository {
     return leads
   }
 
-  async create(data: Prisma.LeadsUncheckedCreateInput): Promise<Leads> {
-    const leads = await prisma.leads.create({ data })
+  async create(
+    data: Prisma.LeadsUncheckedCreateInput,
+    timeline: Omit<Timeline, 'id' | 'leadsId' | 'createdAt' | 'updatedAt'>[],
+  ): Promise<Leads> {
+    const leads = await prisma.leads.create({
+      data: {
+        ...data,
+        timeline: {
+          create: [...timeline],
+        },
+      },
+    })
 
     return leads
   }

@@ -12,6 +12,8 @@ const bodySchema = z.object({
   city: z.string(),
   indicatorId: z.string(),
   unitId: z.string(),
+  courseId: z.string(),
+  segmentId: z.string(),
 })
 
 export async function RegisterLeadPublicController(
@@ -33,6 +35,7 @@ export async function RegisterLeadPublicController(
     if (error instanceof LeadsEmailExistsError) {
       return reply.status(409).send({ message: error.message })
     }
+
     return reply.status(500).send({ message: 'Internal server error' })
   }
 }

@@ -6,13 +6,13 @@ import 'dotenv/config'
 const prisma = new PrismaClient()
 async function main() {
   const madretereza = await prisma.organization.upsert({
-    where: { slugs: 'madretereza-01' },
+    where: { slug: 'madretereza-01' },
     update: {},
     create: {
       name: 'Madre Tereza',
       consultant_bonus: 10,
       indicator_bonus: 5,
-      slugs: 'madretereza-01',
+      slug: 'madretereza-01',
     },
   })
 
@@ -40,14 +40,129 @@ async function main() {
     },
   })
 
-  const madreAdmin = await prisma.user_organization.create({
+  const indicator = await prisma.user.upsert({
+    where: { email: 'indicator@sim.com' },
+    update: {},
+    create: {
+      name: 'indicator',
+      email: 'indicator@sim.com',
+      password: password_hash,
+      active: true,
+      profile: {
+        create: {
+          id: '01-profile',
+          genre: 'homem',
+          birthday: '01/01/1999',
+          cpf: '000.123.456.78',
+          phone: '96787548155',
+          pix: 'indicator@sim.com',
+          city: 'Santana',
+          role: 'indicator',
+        },
+      },
+    },
+  })
+
+  const consultant = await prisma.user.upsert({
+    where: { email: 'consultant@sim.com' },
+    update: {},
+    create: {
+      name: 'consultant',
+      email: 'consultant@sim.com',
+      password: password_hash,
+      active: true,
+      profile: {
+        create: {
+          id: '02-profile',
+          genre: 'homem',
+          birthday: '12/11/1999',
+          cpf: '000.123.456.78',
+          phone: '96787548155',
+          pix: 'consultant@sim.com',
+          city: 'Santana',
+          role: 'consultant',
+        },
+      },
+    },
+  })
+
+  const madreAdmin = await prisma.userOrganization.create({
     data: {
       userId: admin.id,
       organizationId: madretereza.id,
     },
   })
 
-  console.log({ madretereza, madreAdmin })
+  const course = await prisma.course.upsert({
+    where: { id: '' },
+    update: {},
+    create: {
+      name: 'Enfermagem',
+      active: true,
+      segments: {
+        create: {
+          segment: {
+            create: {
+              name: 'Graduação',
+            },
+          },
+        },
+      },
+      units: {
+        create: {
+          unit: {
+            create: {
+              name: 'Unidade de santana',
+            },
+          },
+        },
+      },
+    },
+  })
+
+  const segment = await prisma.segment.upsert({
+    where: { id: '' },
+    update: {},
+    create: {
+      name: 'Tecnico',
+    },
+  })
+
+  const unit = await prisma.unit.upsert({
+    where: { id: '' },
+    update: {},
+    create: {
+      name: 'Unidade Macapá',
+    },
+  })
+
+  const lead = await prisma.leads.upsert({
+    where: { id: undefined },
+    update: {},
+    create: {
+      name: 'lead',
+      phone: '96984235689',
+      document: '00211556896',
+      email: 'lead@sim.com',
+      city: 'Macapá',
+      indicatorId: '01-profile',
+      consultantId: '02-profile',
+      courseId: course.id,
+      segmentId: segment.id,
+      unitId: unit.id,
+    },
+  })
+
+  console.log({
+    madretereza,
+    madreAdmin,
+    course,
+    lead,
+    consultant,
+    indicator,
+    unit,
+    segment,
+  })
 }
 main()
   .then(async () => {

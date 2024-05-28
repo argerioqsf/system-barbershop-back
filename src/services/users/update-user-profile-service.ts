@@ -53,7 +53,7 @@ export class UpdateProfileUserService {
 
     if (unitsIds) {
       const units = await this.unitRepository.findManyListIds(unitsIds)
-  
+
       if (units.length !== unitsIds?.length) {
         throw new UnitNotFoundError()
       }

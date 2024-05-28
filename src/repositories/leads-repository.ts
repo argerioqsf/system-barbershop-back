@@ -1,7 +1,10 @@
-import { Leads, Prisma } from '@prisma/client'
+import { Leads, Prisma, Timeline } from '@prisma/client'
 
 export interface LeadsRepository {
-  create(data: Prisma.LeadsUncheckedCreateInput): Promise<Leads>
+  create(
+    data: Prisma.LeadsUncheckedCreateInput,
+    timeline: Omit<Timeline, 'id' | 'leadsId' | 'createdAt' | 'updatedAt'>[],
+  ): Promise<Leads>
   findMany(
     page: number,
     query?: string,
@@ -11,7 +14,11 @@ export interface LeadsRepository {
   ): Promise<Leads[]>
   count(query?: string, unitsId?: string[]): Promise<number>
   findById(id: string): Promise<Leads | null>
-  updateById(id: string, data: Prisma.LeadsUncheckedUpdateInput): Promise<Leads>
+  updateById(
+    id: string,
+    data: Prisma.LeadsUncheckedUpdateInput,
+    timeline: Omit<Timeline, 'id' | 'leadsId' | 'createdAt' | 'updatedAt'>[],
+  ): Promise<Leads>
   findManyArchived(
     page: number,
     query?: string,
