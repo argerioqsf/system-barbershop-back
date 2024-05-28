@@ -9,7 +9,7 @@ interface UpdateOrganizationServiceRequest {
   name: string
   consultant_bonus: number
   indicator_bonus: number
-  slugs: string
+  slug: string
 }
 
 interface UpdateOrganizationServiceResponse {
@@ -28,7 +28,7 @@ export class UpdateOrganizationService {
     name,
     consultant_bonus,
     indicator_bonus,
-    slugs,
+    slug,
   }: UpdateOrganizationServiceRequest): Promise<UpdateOrganizationServiceResponse> {
     const profile = await this.profileRepository.findByUserId(userId)
 
@@ -40,7 +40,7 @@ export class UpdateOrganizationService {
       name,
       consultant_bonus,
       indicator_bonus,
-      slugs,
+      slug,
     })
 
     return {

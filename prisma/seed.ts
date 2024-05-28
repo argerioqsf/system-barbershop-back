@@ -6,13 +6,13 @@ import 'dotenv/config'
 const prisma = new PrismaClient()
 async function main() {
   const madretereza = await prisma.organization.upsert({
-    where: { slugs: 'madretereza-01' },
+    where: { slug: 'madretereza-01' },
     update: {},
     create: {
       name: 'Madre Tereza',
       consultant_bonus: 10,
       indicator_bonus: 5,
-      slugs: 'madretereza-01',
+      slug: 'madretereza-01',
     },
   })
 
@@ -40,7 +40,7 @@ async function main() {
     },
   })
 
-  const madreAdmin = await prisma.user_organization.create({
+  const madreAdmin = await prisma.userOrganization.create({
     data: {
       userId: admin.id,
       organizationId: madretereza.id,

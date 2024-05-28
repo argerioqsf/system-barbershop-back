@@ -7,7 +7,7 @@ const bodySchema = z.object({
   name: z.string(),
   consultant_bonus: z.number(),
   indicator_bonus: z.number(),
-  slugs: z.string(),
+  slug: z.string(),
 })
 
 const routeSchema = z.object({
@@ -15,7 +15,7 @@ const routeSchema = z.object({
 })
 
 export async function Update(request: FastifyRequest, reply: FastifyReply) {
-  const { name, consultant_bonus, indicator_bonus, slugs } = bodySchema.parse(
+  const { name, consultant_bonus, indicator_bonus, slug } = bodySchema.parse(
     request.body,
   )
 
@@ -29,7 +29,7 @@ export async function Update(request: FastifyRequest, reply: FastifyReply) {
       name,
       consultant_bonus,
       indicator_bonus,
-      slugs,
+      slug,
       id,
       userId,
     })

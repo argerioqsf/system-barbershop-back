@@ -1,4 +1,4 @@
-import { Leads, Prisma } from '@prisma/client'
+import { Leads, Prisma, Timeline } from '@prisma/client'
 import { LeadsRepository } from '../leads-repository'
 import { prisma } from '@/lib/prisma'
 import { pagination } from '@/utils/constants/pagination'
@@ -205,8 +205,18 @@ export class PrismaLeadsRepository implements LeadsRepository {
     return leads
   }
 
-  async create(data: Prisma.LeadsUncheckedCreateInput): Promise<Leads> {
-    const leads = await prisma.leads.create({ data })
+  async create(
+    data: Prisma.LeadsUncheckedCreateInput,
+    timeline: Omit<Timeline, 'id' | 'leadsId'>[],
+  ): Promise<Leads> {
+    const leads = await prisma.leads.create({
+      data: {
+        ...data,
+        timeline: {
+          create: [...timeline],
+        },
+      },
+    })
 
     return leads
   }

@@ -1,5 +1,5 @@
 import { LeadsRepository } from '@/repositories/leads-repository'
-import { Leads } from '@prisma/client'
+import { Leads, Timeline } from '@prisma/client'
 import { LeadsEmailExistsError } from '../@errors/leads-email-exists-error'
 import { LeadsDocumentExistsError } from '../@errors/leads-document-exists-error'
 
@@ -11,6 +11,8 @@ interface CreateLeadPublicServiceRequest {
   city: string
   indicatorId: string
   unitId: string
+  courseId: string
+  segmentId: string
 }
 
 interface CreateLeadPublicServiceResponse {
@@ -28,6 +30,8 @@ export class CreateLeadPublicService {
     city,
     indicatorId,
     unitId,
+    courseId,
+    segmentId,
   }: CreateLeadPublicServiceRequest): Promise<CreateLeadPublicServiceResponse> {
     const verifyExistEmailLead = await this.leadsRepository.find({
       email,
@@ -41,15 +45,31 @@ export class CreateLeadPublicService {
 
     if (verifyExistDocumentLead.length > 0) throw new LeadsDocumentExistsError()
 
-    const leads = await this.leadsRepository.create({
-      name,
-      phone,
-      document,
-      email,
-      city,
-      indicatorId,
-      unitId,
-    })
+    const timeLine: Omit<Timeline, 'id' | 'leadsId'>[] = [
+      {
+        description: '',
+        status: 'Novo Lead',
+        courseId,
+        segmentId,
+        unitId,
+        title: '',
+      },
+    ]
+
+    const leads = await this.leadsRepository.create(
+      {
+        name,
+        phone,
+        document,
+        email,
+        city,
+        indicatorId,
+        unitId,
+        courseId,
+        segmentId,
+      },
+      timeLine,
+    )
 
     return { leads }
   }

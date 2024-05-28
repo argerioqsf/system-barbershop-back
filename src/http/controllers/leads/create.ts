@@ -19,6 +19,8 @@ const bodySchema = z.object({
   indicatorId: z.string(),
   unitId: z.string(),
   consultantId: z.string().optional(),
+  courseId: z.string(),
+  segmentId: z.string(),
 })
 
 export async function Create(request: FastifyRequest, reply: FastifyReply) {

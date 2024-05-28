@@ -11,41 +11,43 @@ datasource db {
 }
 
 model User {
-  id            String              @id @default(uuid())
+  id            String             @id @default(uuid())
   name          String
-  email         String              @unique
+  email         String             @unique
   password      String
-  active        Boolean             @default(false)
+  active        Boolean            @default(false)
   profile       Profile?
-  organizations user_organization[]
+  organizations userOrganization[]
 
   @@map("users")
 }
 
 model Profile {
-  id              String            @id @default(uuid())
+  id              String           @id @default(uuid())
   phone           String
   cpf             String
   genre           String
   birthday        String
   pix             String
-  role            Role              @default(indicator)
-  user            User              @relation(fields: [userId], references: [id])
-  userId          String            @unique
-  leadsIndicator  Leads[]           @relation(name: "indicatorLeads")
-  leadsConsultant Leads[]           @relation(name: "consultantLeads")
+  role            Role             @default(indicator)
+  user            User             @relation(fields: [userId], references: [id])
+  userId          String           @unique
+  leadsIndicator  Leads[]          @relation(name: "indicatorLeads")
+  leadsConsultant Leads[]          @relation(name: "consultantLeads")
   city            String?
-  extract_profile extract_profile[]
+  extract_profile extractProfile[]
   units           UnitConsultant[]
 
   @@map("profiles")
 }
 
 model Segment {
-  id      String          @id @default(uuid())
-  name    String
-  units   UnitSegment[]
-  courses CourseSegment[]
+  id       String          @id @default(uuid())
+  name     String
+  units    UnitSegment[]
+  courses  CourseSegment[]
+  leads    Leads[]
+  timeline Timeline[]
 
   @@map("segments")
 }
@@ -77,6 +79,7 @@ model Course {
   units    UnitCourses[]
   timeline Timeline[]
   segments CourseSegment[]
+  leads    Leads[]
 
   @@map("courses")
 }
@@ -88,6 +91,7 @@ model Unit {
   segments    UnitSegment[]
   leads       Leads[]
   consultants UnitConsultant[]
+  timeline    Timeline[]
 
   @@map("units")
 }
@@ -113,14 +117,18 @@ model UnitCourses {
 }
 
 model Timeline {
-  id          String @id @default(uuid())
+  id          String  @id @default(uuid())
   title       String
   description String
   status      String
-  lead        Leads  @relation(fields: [leadsId], references: [id])
+  lead        Leads   @relation(fields: [leadsId], references: [id])
   leadsId     String
-  course      Course @relation(fields: [courseId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  course      Course  @relation(fields: [courseId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   courseId    String
+  segment     Segment @relation(fields: [segmentId], references: [id], onDelete: Cascade)
+  segmentId   String
+  unit        Unit    @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  unitId      String
 
   @@map("timeline")
 }
@@ -139,12 +147,16 @@ model Leads {
   consultantId String?
   unit         Unit       @relation(fields: [unitId], references: [id])
   unitId       String
+  course       Course     @relation(fields: [courseId], references: [id])
+  courseId     String
+  segment      Segment    @relation(fields: [segmentId], references: [id])
+  segmentId    String
   timeline     Timeline[]
 
   @@map("leads")
 }
 
-model extract_profile {
+model extractProfile {
   id             String   @id @default(uuid())
   amount_receive Float
   profile        Profile? @relation(fields: [profileId], references: [id])
@@ -153,7 +165,7 @@ model extract_profile {
   @@map("extract_profile")
 }
 
-model user_organization {
+model userOrganization {
   user           User         @relation(fields: [userId], references: [id])
   userId         String
   organization   Organization @relation(fields: [organizationId], references: [id])
@@ -164,12 +176,12 @@ model user_organization {
 }
 
 model Organization {
-  id               String              @id @default(uuid())
+  id               String             @id @default(uuid())
   name             String
   consultant_bonus Float
   indicator_bonus  Float
-  slugs            String              @unique
-  users            user_organization[]
+  slug             String             @unique
+  users            userOrganization[]
 
   @@map("organization")
 }

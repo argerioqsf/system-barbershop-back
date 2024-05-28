@@ -1,7 +1,10 @@
-import { Leads, Prisma } from '@prisma/client'
+import { Leads, Prisma, Timeline } from '@prisma/client'
 
 export interface LeadsRepository {
-  create(data: Prisma.LeadsUncheckedCreateInput): Promise<Leads>
+  create(
+    data: Prisma.LeadsUncheckedCreateInput,
+    timeline: Omit<Timeline, 'id' | 'leadsId'>[],
+  ): Promise<Leads>
   findMany(
     page: number,
     query?: string,
