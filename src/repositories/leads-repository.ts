@@ -14,7 +14,11 @@ export interface LeadsRepository {
   ): Promise<Leads[]>
   count(query?: string, unitsId?: string[]): Promise<number>
   findById(id: string): Promise<Leads | null>
-  updateById(id: string, data: Prisma.LeadsUncheckedUpdateInput): Promise<Leads>
+  updateById(
+    id: string,
+    data: Prisma.LeadsUncheckedUpdateInput,
+    timeline: Omit<Timeline, 'id' | 'leadsId'>[],
+  ): Promise<Leads>
   findManyArchived(
     page: number,
     query?: string,

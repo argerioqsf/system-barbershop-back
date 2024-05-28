@@ -7,12 +7,18 @@ export class PrismaLeadsRepository implements LeadsRepository {
   updateById(
     id: string,
     data: Prisma.LeadsUncheckedUpdateInput,
+    timeline: Omit<Timeline, 'id' | 'leadsId'>[],
   ): Promise<Leads> {
     const lead = prisma.leads.update({
       where: {
         id,
       },
-      data,
+      data: {
+        ...data,
+        timeline: {
+          create: [...timeline],
+        },
+      },
     })
 
     return lead

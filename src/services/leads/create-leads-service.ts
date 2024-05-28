@@ -8,6 +8,12 @@ import { LeadsEmailExistsError } from '../@errors/leads-email-exists-error'
 import { NeedIndicatorField } from '../@errors/need-indicator-field'
 import { SetConsultantNotPermitError } from '../@errors/set-consultant-not-permission'
 import { UserNotFoundError } from '../@errors/user-not-found-error'
+import { UnitRepository } from '@/repositories/unit-repository'
+import { CoursesRepository } from '@/repositories/course-repository'
+import { SegmentsRepository } from '@/repositories/segments-repository'
+import { UnitNotFoundError } from '../@errors/unit-not-found-error'
+import { SegmentNotFoundError } from '../@errors/segment-not-found-error'
+import { CourseNotFoundError } from '../@errors/course-not-found-error'
 
 interface CreateLeadsServiceRequest {
   name: string
@@ -31,6 +37,9 @@ export class CreateLeadsService {
   constructor(
     private leadsRepository: LeadsRepository,
     private profileRepository: PrismaProfilesRepository,
+    private unitRepository: UnitRepository,
+    private coursesRepository: CoursesRepository,
+    private segmentsRepository: SegmentsRepository,
   ) {}
 
   async execute({
@@ -47,8 +56,18 @@ export class CreateLeadsService {
     courseId,
   }: CreateLeadsServiceRequest): Promise<CreateLeadsServiceResponse> {
     const profile = await this.profileRepository.findByUserId(userId)
+    const unit = await this.unitRepository.findById(unitId)
+    const course = await this.coursesRepository.findById(courseId)
+    const segment = await this.segmentsRepository.findById(segmentId)
 
     if (!profile) throw new UserNotFoundError()
+
+    if (!unit) throw new UnitNotFoundError()
+
+    if (!course) throw new CourseNotFoundError()
+
+    if (!segment) throw new SegmentNotFoundError()
+
     const verifyExistEmailLead = await this.leadsRepository.find({
       email,
     })
@@ -102,8 +121,6 @@ export class CreateLeadsService {
     if (consultantId) {
       const profileConsultant =
         await this.profileRepository.findById(consultantId)
-      console.log('profileConsultant', profileConsultant)
-      console.log('profile', profile)
       if (profileConsultant?.role === 'consultant') {
         if (profile.role === 'administrator') {
           timeLine = [
