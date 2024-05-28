@@ -7,7 +7,7 @@ export class PrismaLeadsRepository implements LeadsRepository {
   updateById(
     id: string,
     data: Prisma.LeadsUncheckedUpdateInput,
-    timeline: Omit<Timeline, 'id' | 'leadsId'>[],
+    timeline: Omit<Timeline, 'id' | 'leadsId' | 'createdAt' | 'updatedAt'>[],
   ): Promise<Leads> {
     const lead = prisma.leads.update({
       where: {
@@ -55,7 +55,11 @@ export class PrismaLeadsRepository implements LeadsRepository {
             cpf: true,
           },
         },
-        timeline: true,
+        timeline: {
+          orderBy: {
+            createdAt: 'desc',
+          },
+        },
       },
     })
 
@@ -213,7 +217,7 @@ export class PrismaLeadsRepository implements LeadsRepository {
 
   async create(
     data: Prisma.LeadsUncheckedCreateInput,
-    timeline: Omit<Timeline, 'id' | 'leadsId'>[],
+    timeline: Omit<Timeline, 'id' | 'leadsId' | 'createdAt' | 'updatedAt'>[],
   ): Promise<Leads> {
     const leads = await prisma.leads.create({
       data: {

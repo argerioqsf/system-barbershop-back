@@ -17,10 +17,15 @@ export class UpdateLeadArchivedService {
     id,
     archived,
   }: UpdateLeadArchivedServiceRequest): Promise<UpdateLeadArchivedServiceResponse> {
-    const lead = await this.leadRepository.updateById(id, {
+    const lead = await this.leadRepository.updateById(
       id,
-      archived,
-    })
+      {
+        id,
+        archived,
+      },
+      // TODO: Create timeline
+      [],
+    )
 
     return {
       lead,

@@ -78,7 +78,10 @@ export class UpdateLeadService {
 
     if (verifyExistDocumentLead.length > 0) throw new LeadsDocumentExistsError()
 
-    let timeLine: Omit<Timeline, 'id' | 'leadsId'>[] = []
+    let timeLine: Omit<
+      Timeline,
+      'id' | 'leadsId' | 'createdAt' | 'updatedAt'
+    >[] = []
 
     if (unitId !== lead?.unitId) {
       const unit = await this.unitRepository.findById(unitId)

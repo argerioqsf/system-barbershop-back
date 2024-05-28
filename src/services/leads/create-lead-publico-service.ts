@@ -66,7 +66,10 @@ export class CreateLeadPublicService {
 
     if (verifyExistDocumentLead.length > 0) throw new LeadsDocumentExistsError()
 
-    const timeLine: Omit<Timeline, 'id' | 'leadsId'>[] = [
+    const timeLine: Omit<
+      Timeline,
+      'id' | 'leadsId' | 'createdAt' | 'updatedAt'
+    >[] = [
       {
         description: '',
         status: 'Novo Lead',

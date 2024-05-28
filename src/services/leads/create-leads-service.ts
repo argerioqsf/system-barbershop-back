@@ -84,7 +84,10 @@ export class CreateLeadsService {
       indicatorId: '',
     }
 
-    let timeLine: Omit<Timeline, 'id' | 'leadsId'>[] = [
+    let timeLine: Omit<
+      Timeline,
+      'id' | 'leadsId' | 'createdAt' | 'updatedAt'
+    >[] = [
       {
         description: '',
         status: 'Novo Lead',
@@ -127,7 +130,7 @@ export class CreateLeadsService {
             ...timeLine,
             {
               description: `O consultor ${profileConsultant.user.name} entrou em contato com o lead ${name}`,
-              status: 'get',
+              status: 'Pegou',
               courseId,
               segmentId,
               unitId,

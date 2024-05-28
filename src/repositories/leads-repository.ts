@@ -3,7 +3,7 @@ import { Leads, Prisma, Timeline } from '@prisma/client'
 export interface LeadsRepository {
   create(
     data: Prisma.LeadsUncheckedCreateInput,
-    timeline: Omit<Timeline, 'id' | 'leadsId'>[],
+    timeline: Omit<Timeline, 'id' | 'leadsId' | 'createdAt' | 'updatedAt'>[],
   ): Promise<Leads>
   findMany(
     page: number,
@@ -17,7 +17,7 @@ export interface LeadsRepository {
   updateById(
     id: string,
     data: Prisma.LeadsUncheckedUpdateInput,
-    timeline: Omit<Timeline, 'id' | 'leadsId'>[],
+    timeline: Omit<Timeline, 'id' | 'leadsId' | 'createdAt' | 'updatedAt'>[],
   ): Promise<Leads>
   findManyArchived(
     page: number,
