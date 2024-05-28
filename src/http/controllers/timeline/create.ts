@@ -30,7 +30,6 @@ export async function Create(request: FastifyRequest, reply: FastifyReply) {
     if (error instanceof LeadsNotFoundError) {
       return reply.status(404).send({ message: error.message })
     }
-    console.log('error ---', error)
     return reply.status(500).send({ message: 'Internal server error' })
   }
 }
