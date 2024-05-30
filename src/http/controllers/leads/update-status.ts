@@ -1,3 +1,6 @@
+import { CourseNotFoundError } from "@/services/@errors/course-not-found-error";
+import { SegmentNotFoundError } from "@/services/@errors/segment-not-found-error";
+import { UnitNotFoundError } from "@/services/@errors/unit-not-found-error";
 import { UserTypeNotCompatible } from "@/services/@errors/user-type-not-compatible";
 import makeUpdateLeadStartService from "@/services/@factories/leads/make-update-status-service";
 import { FastifyReply, FastifyRequest } from "fastify";
@@ -39,7 +42,16 @@ export async function UpdateStatus(request: FastifyRequest, reply: FastifyReply)
     if (error instanceof UserTypeNotCompatible) {
       return reply.status(404).send({ message: error.message });
     }
-    console.log(error);
+    if (error instanceof CourseNotFoundError) {
+      return reply.status(404).send({ message: error.message });
+    }
+    if (error instanceof SegmentNotFoundError) {
+      return reply.status(404).send({ message: error.message });
+    }
+    if (error instanceof UnitNotFoundError) {
+      return reply.status(404).send({ message: error.message });
+    }
+    
     return reply.status(500).send({ message: "Internal server error" });
   }
 }
