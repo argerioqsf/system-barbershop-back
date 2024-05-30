@@ -13,10 +13,5 @@ export interface LeadsRepository {
     data: Prisma.LeadsUncheckedUpdateInput,
     timeline: Omit<Timeline, 'id' | 'leadsId' | 'createdAt' | 'updatedAt'>[],
   ): Promise<Leads>
-  findManyArchived(
-    page: number,
-    where: Prisma.LeadsWhereInput,
-  ): Promise<Leads[]>
-
   find(where: Partial<Leads>): Promise<Leads[]>
 }

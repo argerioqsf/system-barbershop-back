@@ -74,51 +74,14 @@ export class PrismaLeadsRepository implements LeadsRepository {
     return lead
   }
 
-  async findManyArchived(
-    page: number,
-    where: Prisma.LeadsWhereInput,
-  ): Promise<Leads[]> {
-    const leads = await prisma.leads.findMany({
-      where,
-      include: {
-        consultant: {
-          select: {
-            user: {
-              select: {
-                name: true,
-                email: true,
-              },
-            },
-            phone: true,
-            cpf: true,
-          },
-        },
-        indicator: {
-          select: {
-            user: {
-              select: {
-                name: true,
-                email: true,
-              },
-            },
-            phone: true,
-            cpf: true,
-          },
-        },
-      },
-      take: pagination.total,
-      skip: (page - 1) * pagination.total,
-    })
-
-    return leads
-  }
-
   async findMany(
     page: number,
     where: Prisma.LeadsWhereInput,
   ): Promise<Leads[]> {
     const leads = await prisma.leads.findMany({
-      where,
+      where: {
+        ...where,
+      },
       include: {
         consultant: {
           select: {
