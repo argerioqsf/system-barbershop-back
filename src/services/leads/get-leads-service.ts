@@ -38,13 +38,12 @@ export class GetLeadsService {
     if (profile.role === 'consultant') {
       unitsId = profile.units.map((unit) => unit.unit.id)
     }
-    const leads = await this.leadsRepository.findMany(
-      page,
-      query,
+    const leads = await this.leadsRepository.findMany(page, {
+      name: query,
       indicatorId,
       consultantId,
-      unitsId,
-    )
+      unitId: { in: unitsId ?? [] },
+    })
     const count = await this.leadsRepository.count(query, unitsId)
 
     return { leads, count }

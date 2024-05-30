@@ -76,29 +76,10 @@ export class PrismaLeadsRepository implements LeadsRepository {
 
   async findManyArchived(
     page: number,
-    query?: string,
-    indicatorId?: string,
-    consultantId?: string,
+    where: Prisma.LeadsWhereInput,
   ): Promise<Leads[]> {
-    const whereIndicatorId = indicatorId
-      ? {
-          indicatorId: { contains: indicatorId },
-        }
-      : {}
-    const whereConsultantId = consultantId
-      ? {
-          consultantId: { contains: consultantId },
-        }
-      : {}
     const leads = await prisma.leads.findMany({
-      where: {
-        ...whereIndicatorId,
-        ...whereConsultantId,
-        archived: true,
-        name: {
-          contains: query,
-        },
-      },
+      where,
       include: {
         consultant: {
           select: {
@@ -134,36 +115,10 @@ export class PrismaLeadsRepository implements LeadsRepository {
 
   async findMany(
     page: number,
-    query?: string,
-    indicatorId?: string,
-    consultantId?: string,
-    unitsId?: string[],
+    where: Prisma.LeadsWhereInput,
   ): Promise<Leads[]> {
-    const whereIndicatorId = indicatorId
-      ? {
-          indicatorId: { contains: indicatorId },
-        }
-      : {}
-    const whereConsultantId = consultantId
-      ? {
-          consultantId: { contains: consultantId },
-        }
-      : {}
-    const whereUnitsId = unitsId
-      ? {
-          unitId: { in: unitsId },
-        }
-      : {}
     const leads = await prisma.leads.findMany({
-      where: {
-        ...whereIndicatorId,
-        ...whereConsultantId,
-        ...whereUnitsId,
-        archived: false,
-        name: {
-          contains: query,
-        },
-      },
+      where,
       include: {
         consultant: {
           select: {
