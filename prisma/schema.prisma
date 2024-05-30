@@ -136,24 +136,26 @@ model Timeline {
 }
 
 model Leads {
-  id           String     @id @default(uuid())
-  name         String
-  phone        String
-  document     String
-  email        String
-  city         String
-  archived     Boolean    @default(false)
-  indicator    Profile    @relation(fields: [indicatorId], references: [id], name: "indicatorLeads")
-  indicatorId  String
-  consultant   Profile?   @relation(fields: [consultantId], references: [id], name: "consultantLeads")
-  consultantId String?
-  unit         Unit       @relation(fields: [unitId], references: [id])
-  unitId       String
-  course       Course     @relation(fields: [courseId], references: [id])
-  courseId     String
-  segment      Segment    @relation(fields: [segmentId], references: [id])
-  segmentId    String
-  timeline     Timeline[]
+  id            String     @id @default(uuid())
+  name          String
+  phone         String
+  document      String
+  email         String
+  city          String
+  archived      Boolean    @default(false)
+  documents     Boolean    @default(false)
+  matriculation Boolean    @default(false)
+  indicator     Profile    @relation(fields: [indicatorId], references: [id], name: "indicatorLeads")
+  indicatorId   String
+  consultant    Profile?   @relation(fields: [consultantId], references: [id], name: "consultantLeads")
+  consultantId  String?
+  unit          Unit       @relation(fields: [unitId], references: [id])
+  unitId        String
+  course        Course     @relation(fields: [courseId], references: [id])
+  courseId      String
+  segment       Segment    @relation(fields: [segmentId], references: [id])
+  segmentId     String
+  timeline      Timeline[]
 
   @@map("leads")
 }
