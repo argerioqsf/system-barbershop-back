@@ -137,7 +137,7 @@ async function main() {
   })
 
   const lead = await prisma.leads.upsert({
-    where: { id: undefined },
+    where: { id: '' },
     update: {},
     create: {
       name: 'lead',
