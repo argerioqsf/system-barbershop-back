@@ -40,16 +40,7 @@ export class UpdateLeadStatusService {
     let timeLine: Omit<
       Timeline,
       'id' | 'leadsId' | 'createdAt' | 'updatedAt'
-    >[] = [
-      {
-        description: '',
-        status: '',
-        courseId: lead?.courseId,
-        segmentId: lead?.segmentId,
-        unitId: lead?.unitId,
-        title: '',
-      },
-    ]
+    >[] = []
 
     if (documents) {
       timeLine = [
