@@ -115,18 +115,10 @@ export class PrismaLeadsRepository implements LeadsRepository {
     return leads
   }
 
-  async count(query?: string, unitsId?: string[]): Promise<number> {
-    const whereUnitsId = unitsId
-      ? {
-          unitId: { in: unitsId },
-        }
-      : {}
+  async count(where: Prisma.LeadsWhereInput): Promise<number> {
     const leads = await prisma.leads.count({
       where: {
-        ...whereUnitsId,
-        name: {
-          contains: query,
-        },
+        ...where,
       },
     })
 

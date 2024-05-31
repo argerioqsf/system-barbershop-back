@@ -11,25 +11,25 @@ export interface UsersRepository {
   create(data: Prisma.UserCreateInput): Promise<User>
   findMany(
     page: number,
-    query?: string,
+    where: Prisma.UserWhereInput,
   ): Promise<
     (Omit<User, 'password'> & { profile: Omit<Profile, 'userId'> | null })[]
   >
-  count(query?: string): Promise<number>
+  count(where: Prisma.UserWhereInput): Promise<number>
   findManyIndicator(
     page: number,
-    query?: string,
+    where: Prisma.UserWhereInput,
   ): Promise<
     (Omit<User, 'password'> & { profile: Omit<Profile, 'userId'> | null })[]
   >
   findManyConsultant(
     page: number,
-    query?: string,
+    where: Prisma.UserWhereInput,
   ): Promise<
     (Omit<User, 'password'> & { profile: Omit<Profile, 'userId'> | null })[]
   >
-  countIndicator(query?: string): Promise<number>
-  countConsultant(query?: string): Promise<number>
+  countIndicator(where: Prisma.UserWhereInput): Promise<number>
+  countConsultant(where: Prisma.UserWhereInput): Promise<number>
   update(id: string, data: Prisma.UserUpdateInput): Promise<User>
   mountSelectConsultant(): Promise<
     Omit<User, 'email' | 'password' | 'active'>[]

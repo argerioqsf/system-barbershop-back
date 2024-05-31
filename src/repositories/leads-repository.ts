@@ -6,7 +6,7 @@ export interface LeadsRepository {
     timeline: Omit<Timeline, 'id' | 'leadsId' | 'createdAt' | 'updatedAt'>[],
   ): Promise<Leads>
   findMany(page: number, where: Prisma.LeadsWhereInput): Promise<Leads[]>
-  count(query?: string, unitsId?: string[]): Promise<number>
+  count(where: Prisma.LeadsWhereInput, unitsId?: string[]): Promise<number>
   findById(id: string): Promise<Leads | null>
   updateById(
     id: string,

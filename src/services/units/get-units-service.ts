@@ -1,8 +1,8 @@
 import { UnitRepository } from '@/repositories/unit-repository'
-import { Unit } from '@prisma/client'
+import { Prisma, Unit } from '@prisma/client'
 
 interface GetUnitsServiceRequest {
-  query?: string
+  name?: string
   page: number
 }
 
@@ -16,10 +16,13 @@ export class GetUnitsService {
 
   async execute({
     page,
-    query,
+    name,
   }: GetUnitsServiceRequest): Promise<GetUnitsServiceResponse> {
-    const units = await this.unitRepository.findMany(page, query)
-    const count = await this.unitRepository.count(query)
+    const where: Prisma.UnitWhereInput = {
+      name: { contains: name },
+    }
+    const units = await this.unitRepository.findMany(page, where)
+    const count = await this.unitRepository.count(where)
 
     return { units, count }
   }

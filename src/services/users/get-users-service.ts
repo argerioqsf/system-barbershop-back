@@ -1,9 +1,9 @@
 import { UsersRepository } from '@/repositories/users-repository'
-import { Profile, User } from '@prisma/client'
+import { Prisma, Profile, User } from '@prisma/client'
 
 interface GetUsersServiceRequest {
   page: number
-  query?: string
+  name?: string
 }
 
 interface GetUsersServiceResponse {
@@ -18,10 +18,13 @@ export class GetUsersService {
 
   async execute({
     page,
-    query,
+    name,
   }: GetUsersServiceRequest): Promise<GetUsersServiceResponse> {
-    const users = await this.userRepository.findMany(page, query)
-    const count = await this.userRepository.count(query)
+    const where: Prisma.UserWhereInput = {
+      name: { contains: name },
+    }
+    const users = await this.userRepository.findMany(page, where)
+    const count = await this.userRepository.count(where)
 
     return { users, count }
   }

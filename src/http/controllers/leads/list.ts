@@ -4,7 +4,7 @@ import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
 const searchBodySchema = z.object({
-  q: z.string().optional(),
+  name: z.string().optional(),
   page: z.coerce.number().min(1).default(1),
   indicatorId: z.string().optional(),
   consultantId: z.string().optional(),
@@ -21,7 +21,7 @@ const searchBodySchema = z.object({
 })
 
 export async function List(request: FastifyRequest, replay: FastifyReply) {
-  const { q, page, indicatorId, consultantId, archived } =
+  const { name, page, indicatorId, consultantId, archived } =
     searchBodySchema.parse(request.query)
 
   const userId = request.user.sub
@@ -31,7 +31,7 @@ export async function List(request: FastifyRequest, replay: FastifyReply) {
   try {
     const { leads, count } = await getLeadsService.execute({
       page,
-      query: q,
+      name,
       indicatorId,
       consultantId,
       userId,

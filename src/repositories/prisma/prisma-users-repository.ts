@@ -46,15 +46,10 @@ export class PrismaUsersRepository implements UsersRepository {
     return user
   }
 
-  async countConsultant(query?: string): Promise<number> {
+  async countConsultant(where: Prisma.UserWhereInput): Promise<number> {
     const users = await prisma.user.count({
       where: {
-        name: {
-          contains: query,
-        },
-        profile: {
-          role: 'consultant',
-        },
+        ...where,
       },
     })
 
@@ -63,18 +58,13 @@ export class PrismaUsersRepository implements UsersRepository {
 
   async findManyConsultant(
     page: number,
-    query?: string,
+    where: Prisma.UserWhereInput,
   ): Promise<
     (Omit<User, 'password'> & { profile: Omit<Profile, 'userId'> | null })[]
   > {
     const userIndicator = await prisma.user.findMany({
       where: {
-        name: {
-          contains: query,
-        },
-        profile: {
-          role: 'consultant',
-        },
+        ...where,
       },
       select: {
         id: true,
@@ -123,18 +113,13 @@ export class PrismaUsersRepository implements UsersRepository {
 
   async findManyIndicator(
     page: number,
-    query?: string,
+    where: Prisma.UserWhereInput,
   ): Promise<
     (Omit<User, 'password'> & { profile: Omit<Profile, 'userId'> | null })[]
   > {
     const userIndicator = await prisma.user.findMany({
       where: {
-        name: {
-          contains: query,
-        },
-        profile: {
-          role: 'indicator',
-        },
+        ...where,
       },
       select: {
         id: true,
@@ -223,15 +208,13 @@ export class PrismaUsersRepository implements UsersRepository {
 
   async findMany(
     page: number,
-    query?: string,
+    where: Prisma.UserWhereInput,
   ): Promise<
     (Omit<User, 'password'> & { profile: Omit<Profile, 'userId'> | null })[]
   > {
     const users = await prisma.user.findMany({
       where: {
-        name: {
-          contains: query,
-        },
+        ...where,
       },
       select: {
         id: true,
@@ -263,27 +246,20 @@ export class PrismaUsersRepository implements UsersRepository {
     return users
   }
 
-  async count(query?: string): Promise<number> {
+  async count(where: Prisma.UserWhereInput): Promise<number> {
     const users = await prisma.user.count({
       where: {
-        name: {
-          contains: query,
-        },
+        ...where,
       },
     })
 
     return users
   }
 
-  async countIndicator(query?: string): Promise<number> {
+  async countIndicator(where: Prisma.UserWhereInput): Promise<number> {
     const users = await prisma.user.count({
       where: {
-        name: {
-          contains: query,
-        },
-        profile: {
-          role: 'indicator',
-        },
+        ...where,
       },
     })
 

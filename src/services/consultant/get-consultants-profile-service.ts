@@ -1,9 +1,9 @@
 import { UsersRepository } from '@/repositories/users-repository'
-import { Profile, User } from '@prisma/client'
+import { Prisma, Profile, User } from '@prisma/client'
 
 interface GetConsultantProfileServiceRequest {
   page: number
-  query?: string
+  name?: string
 }
 
 interface GetConsultantProfileServiceResponse {
@@ -18,10 +18,16 @@ export class GetConsultantProfileService {
 
   async execute({
     page,
-    query,
+    name,
   }: GetConsultantProfileServiceRequest): Promise<GetConsultantProfileServiceResponse> {
-    const users = await this.userRepository.findManyConsultant(page, query)
-    const count = await this.userRepository.countConsultant(query)
+    const where: Prisma.UserWhereInput = {
+      name: { contains: name },
+      profile: {
+        role: 'consultant',
+      },
+    }
+    const users = await this.userRepository.findManyConsultant(page, where)
+    const count = await this.userRepository.countConsultant(where)
 
     return { users, count }
   }

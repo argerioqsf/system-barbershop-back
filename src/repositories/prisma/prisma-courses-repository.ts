@@ -42,12 +42,13 @@ export class PrismaCoursesRepository implements CoursesRepository {
     return course
   }
 
-  async findMany(page: number, query?: string): Promise<Course[]> {
+  async findMany(
+    page: number,
+    where: Prisma.CourseWhereInput,
+  ): Promise<Course[]> {
     const courses = await prisma.course.findMany({
       where: {
-        name: {
-          contains: query,
-        },
+        ...where,
       },
       take: pagination.total,
       skip: (page - 1) * pagination.total,
@@ -56,12 +57,10 @@ export class PrismaCoursesRepository implements CoursesRepository {
     return courses
   }
 
-  async count(query?: string): Promise<number> {
+  async count(where: Prisma.CourseWhereInput): Promise<number> {
     const courses = await prisma.course.count({
       where: {
-        name: {
-          contains: query,
-        },
+        ...where,
       },
     })
 

@@ -1,11 +1,11 @@
 import { LeadsRepository } from '@/repositories/leads-repository'
 import { PrismaProfilesRepository } from '@/repositories/prisma/prisma-profile-repository'
-import { Leads } from '@prisma/client'
+import { Leads, Prisma } from '@prisma/client'
 import { UserNotFoundError } from '../@errors/user-not-found-error'
 
 interface GetLeadsServiceRequest {
   page: number
-  query?: string
+  name?: string
   indicatorId?: string
   consultantId?: string
   userId: string
@@ -25,7 +25,7 @@ export class GetLeadsService {
 
   async execute({
     page,
-    query,
+    name,
     indicatorId,
     consultantId,
     userId,
@@ -40,14 +40,15 @@ export class GetLeadsService {
     if (profile.role === 'consultant') {
       unitsId = profile.units.map((unit) => unit.unit.id)
     }
-    const leads = await this.leadsRepository.findMany(page, {
-      name: { contains: query },
+    const where: Prisma.LeadsWhereInput = {
+      name: { contains: name },
       archived,
       indicatorId,
       consultantId,
       unitId: { in: unitsId ?? undefined },
-    })
-    const count = await this.leadsRepository.count(query, unitsId)
+    }
+    const leads = await this.leadsRepository.findMany(page, where)
+    const count = await this.leadsRepository.count(where)
 
     return { leads, count }
   }

@@ -91,12 +91,13 @@ export class PrismaSegmentsRepository implements SegmentsRepository {
     return segments
   }
 
-  async findMany(page: number, query?: string): Promise<Segment[]> {
+  async findMany(
+    page: number,
+    where: Prisma.SegmentWhereInput,
+  ): Promise<Segment[]> {
     const segments = await prisma.segment.findMany({
       where: {
-        name: {
-          contains: query,
-        },
+        ...where,
       },
       include: {
         courses: {
@@ -117,12 +118,10 @@ export class PrismaSegmentsRepository implements SegmentsRepository {
     return segments
   }
 
-  async count(query?: string): Promise<number> {
+  async count(where: Prisma.SegmentWhereInput): Promise<number> {
     const segments = await prisma.segment.count({
       where: {
-        name: {
-          contains: query,
-        },
+        ...where,
       },
     })
 
