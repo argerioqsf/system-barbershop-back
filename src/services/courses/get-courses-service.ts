@@ -1,9 +1,9 @@
 import { CoursesRepository } from '@/repositories/course-repository'
-import { Course } from '@prisma/client'
+import { Course, Prisma } from '@prisma/client'
 import { CourseNotFoundError } from '../@errors/course-not-found-error'
 
 interface GetCoursesServiceRequest {
-  query?: string
+  name?: string
   page: number
 }
 
@@ -17,10 +17,13 @@ export class GetCoursesService {
 
   async execute({
     page,
-    query,
+    name,
   }: GetCoursesServiceRequest): Promise<GetCoursesServiceResponse> {
-    const courses = await this.coursesRepository.findMany(page, query)
-    const count = await this.coursesRepository.count(query)
+    const where: Prisma.CourseWhereInput = {
+      name: { contains: name },
+    }
+    const courses = await this.coursesRepository.findMany(page, where)
+    const count = await this.coursesRepository.count(where)
 
     if (!courses) {
       throw new CourseNotFoundError()

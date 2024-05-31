@@ -3,16 +3,16 @@ import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
 const searchBodySchema = z.object({
-  q: z.string().optional(),
+  name: z.string().optional(),
   page: z.coerce.number().min(1).default(1),
 })
 
 export async function List(request: FastifyRequest, replay: FastifyReply) {
-  const { q, page } = searchBodySchema.parse(request.query)
+  const { name, page } = searchBodySchema.parse(request.query)
 
   const getCoursesService = makeGetCoursesService()
 
-  const { courses, count } = await getCoursesService.execute({ page, query: q })
+  const { courses, count } = await getCoursesService.execute({ page, name })
 
   return replay.status(200).send({
     courses,

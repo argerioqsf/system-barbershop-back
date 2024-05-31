@@ -5,26 +5,13 @@ export interface LeadsRepository {
     data: Prisma.LeadsUncheckedCreateInput,
     timeline: Omit<Timeline, 'id' | 'leadsId' | 'createdAt' | 'updatedAt'>[],
   ): Promise<Leads>
-  findMany(
-    page: number,
-    query?: string,
-    indicatorId?: string,
-    consultantId?: string,
-    unitsId?: string[],
-  ): Promise<Leads[]>
-  count(query?: string, unitsId?: string[]): Promise<number>
+  findMany(page: number, where: Prisma.LeadsWhereInput): Promise<Leads[]>
+  count(where: Prisma.LeadsWhereInput, unitsId?: string[]): Promise<number>
   findById(id: string): Promise<Leads | null>
   updateById(
     id: string,
     data: Prisma.LeadsUncheckedUpdateInput,
     timeline: Omit<Timeline, 'id' | 'leadsId' | 'createdAt' | 'updatedAt'>[],
   ): Promise<Leads>
-  findManyArchived(
-    page: number,
-    query?: string,
-    indicatorId?: string,
-    consultantId?: string,
-  ): Promise<Leads[]>
-
   find(where: Partial<Leads>): Promise<Leads[]>
 }

@@ -1,9 +1,9 @@
 import { UsersRepository } from '@/repositories/users-repository'
-import { Profile, User } from '@prisma/client'
+import { Prisma, Profile, User } from '@prisma/client'
 
 interface GetIndicatorProfileServiceRequest {
   page: number
-  query?: string
+  name?: string
 }
 
 interface GetIndicatorProfileServiceResponse {
@@ -18,10 +18,16 @@ export class GetIndicatorProfileService {
 
   async execute({
     page,
-    query,
+    name,
   }: GetIndicatorProfileServiceRequest): Promise<GetIndicatorProfileServiceResponse> {
-    const users = await this.userRepository.findManyIndicator(page, query)
-    const count = await this.userRepository.countIndicator(query)
+    const where: Prisma.UserWhereInput = {
+      name: { contains: name },
+      profile: {
+        role: 'indicator',
+      },
+    }
+    const users = await this.userRepository.findManyIndicator(page, where)
+    const count = await this.userRepository.countIndicator(where)
 
     return { users, count }
   }

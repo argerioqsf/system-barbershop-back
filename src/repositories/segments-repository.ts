@@ -2,8 +2,8 @@ import { Course, Prisma, Segment } from '@prisma/client'
 
 export interface SegmentsRepository {
   create(data: Prisma.SegmentUncheckedCreateInput): Promise<Segment>
-  findMany(page: number, query?: string): Promise<Segment[]>
-  count(query?: string): Promise<number>
+  findMany(page: number, where: Prisma.SegmentWhereInput): Promise<Segment[]>
+  count(where: Prisma.SegmentWhereInput): Promise<number>
   mountSelect(): Promise<Segment[]>
   findManyListIds(ids: string[]): Promise<Segment[]>
   findById(

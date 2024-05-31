@@ -100,12 +100,10 @@ export class PrismaUnitRepository implements UnitRepository {
     return Unit
   }
 
-  async findMany(page: number, query?: string): Promise<Unit[]> {
+  async findMany(page: number, where: Prisma.UnitWhereInput): Promise<Unit[]> {
     const units = await prisma.unit.findMany({
       where: {
-        name: {
-          contains: query,
-        },
+        ...where,
       },
       include: {
         _count: {
@@ -122,12 +120,10 @@ export class PrismaUnitRepository implements UnitRepository {
     return units
   }
 
-  async count(query?: string): Promise<number> {
+  async count(where: Prisma.UnitWhereInput): Promise<number> {
     const units = await prisma.unit.count({
       where: {
-        name: {
-          contains: query,
-        },
+        ...where,
       },
     })
 

@@ -2,8 +2,8 @@ import { Course, Prisma } from '@prisma/client'
 
 export interface CoursesRepository {
   create(data: Prisma.CourseCreateInput): Promise<Course>
-  findMany(page: number, query?: string): Promise<Course[]>
-  count(query?: string): Promise<number>
+  findMany(page: number, where: Prisma.CourseWhereInput): Promise<Course[]>
+  count(where: Prisma.CourseWhereInput): Promise<number>
   findManyListIds(ids: string[]): Promise<Course[]>
   findById(data: string): Promise<Course | null>
   mountSelect(): Promise<Omit<Course, 'active'>[]>

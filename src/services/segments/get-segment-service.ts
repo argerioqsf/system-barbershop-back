@@ -1,8 +1,8 @@
 import { SegmentsRepository } from '@/repositories/segments-repository'
-import { Segment } from '@prisma/client'
+import { Prisma, Segment } from '@prisma/client'
 
 interface GetSegmentsServiceRequest {
-  query?: string
+  name?: string
   page: number
 }
 
@@ -15,11 +15,14 @@ export class GetSegmentsService {
   constructor(private segmentsRepository: SegmentsRepository) {}
 
   async execute({
-    query,
+    name,
     page,
   }: GetSegmentsServiceRequest): Promise<GetSegmentsServiceResponse> {
-    const segments = await this.segmentsRepository.findMany(page, query)
-    const count = await this.segmentsRepository.count(query)
+    const where: Prisma.SegmentWhereInput = {
+      name: { contains: name },
+    }
+    const segments = await this.segmentsRepository.findMany(page, where)
+    const count = await this.segmentsRepository.count(where)
 
     return { segments, count }
   }
