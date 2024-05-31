@@ -29,10 +29,6 @@ export class UpdateLeadStatusService {
     const profile = await this.profileRepository.findByUserId(userId)
     const lead = await this.leadRepository.findById(id)
 
-    if (profile?.role !== 'administrator') {
-      throw new UserTypeNotCompatible()
-    }
-
     if (!lead) {
       throw new UserTypeNotCompatible()
     }
@@ -42,7 +38,12 @@ export class UpdateLeadStatusService {
       'id' | 'leadsId' | 'createdAt' | 'updatedAt'
     >[] = []
 
-    if (documents) {
+    const data: { documents?: boolean; matriculation?: boolean } = {}
+
+    if (documents !== undefined) {
+      if (profile?.role !== 'secretary') {
+        throw new UserTypeNotCompatible()
+      }
       timeLine = [
         {
           description: 'Documentos entregue',
@@ -53,9 +54,13 @@ export class UpdateLeadStatusService {
           title: '',
         },
       ]
+      data.documents = documents
     }
 
-    if (matriculation) {
+    if (matriculation !== undefined) {
+      if (profile?.role !== 'administrator') {
+        throw new UserTypeNotCompatible()
+      }
       timeLine = [
         {
           description: 'Matricula Realizada',
@@ -66,19 +71,10 @@ export class UpdateLeadStatusService {
           title: '',
         },
       ]
+      data.matriculation = matriculation
     }
 
-    const leadUp = await this.leadRepository.updateById(
-      id,
-      {
-        documents,
-        matriculation,
-        courseId: lead?.courseId,
-        segmentId: lead?.segmentId,
-        unitId: lead?.unitId,
-      },
-      timeLine,
-    )
+    const leadUp = await this.leadRepository.updateById(id, data, timeLine)
 
     return {
       lead: leadUp,
