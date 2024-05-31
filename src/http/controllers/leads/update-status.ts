@@ -4,8 +4,8 @@ import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
 const bodySchema = z.object({
-  documents: z.boolean(),
-  matriculation: z.boolean(),
+  documents: z.boolean().optional(),
+  matriculation: z.boolean().optional(),
 })
 
 const routeSchema = z.object({
