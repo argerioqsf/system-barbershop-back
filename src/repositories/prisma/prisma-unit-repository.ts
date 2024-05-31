@@ -9,6 +9,11 @@ export class PrismaUnitRepository implements UnitRepository {
       select: {
         name: true,
         id: true,
+        courses: {
+          select: {
+            course: true,
+          },
+        },
       },
     })
 
