@@ -6,6 +6,7 @@ import { getLead } from './get-lead'
 import { Update } from './update'
 import { UpdateArchived } from './update-archived'
 import { UpdateStatus } from './update-status'
+import { UpdateAddConsultant } from './update-add-consultant'
 
 export async function leadsRoute(app: FastifyInstance) {
   app.addHook('onRequest', verifyJWT)
@@ -21,4 +22,6 @@ export async function leadsRoute(app: FastifyInstance) {
   app.patch('/lead/archived/:id', UpdateArchived)
 
   app.patch('/lead/status/:id', UpdateStatus)
+
+  app.patch('/lead/consultant/:id', UpdateAddConsultant)
 }
