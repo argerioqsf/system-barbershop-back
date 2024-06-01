@@ -159,7 +159,7 @@ model Leads {
   segment               Segment    @relation(fields: [segmentId], references: [id])
   segmentId             String
   timeline              Timeline[]
-  cicle                 Cicle?     @relation(fields: [cicleId], references: [id])
+  cicle                 Cycle?     @relation(fields: [cicleId], references: [id])
   cicleId               String?
 
   @@map("leads")
@@ -195,10 +195,10 @@ model Organization {
   @@map("organization")
 }
 
-model Cicle {
-  id          String   @id @default(uuid())
-  start_cicle DateTime
-  end_cicle   DateTime
+model Cycle {
+  id          String    @id @default(uuid())
+  start_cycle DateTime?
+  end_cycle   DateTime?
   leads       Leads[]
 }
 
