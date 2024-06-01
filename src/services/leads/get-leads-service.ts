@@ -7,9 +7,10 @@ interface GetLeadsServiceRequest {
   page: number
   name?: string
   indicatorId?: string
-  consultantId?: string
+  consultantId?: string | null | { not: null }
   userId: string
   archived?: boolean
+  matriculation?: boolean
 }
 
 interface GetLeadsServiceResponse {
@@ -30,6 +31,7 @@ export class GetLeadsService {
     consultantId,
     userId,
     archived,
+    matriculation,
   }: GetLeadsServiceRequest): Promise<GetLeadsServiceResponse> {
     const profile = await this.profileRepository.findByUserId(userId)
 
@@ -45,6 +47,7 @@ export class GetLeadsService {
       archived,
       indicatorId,
       consultantId,
+      matriculation,
       unitId: { in: unitsId ?? undefined },
     }
     const leads = await this.leadsRepository.findMany(page, where)

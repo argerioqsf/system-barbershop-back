@@ -20,7 +20,7 @@ interface registerCasesRequest {
   pix: string
   role: Role
   city: string
-  unitsIds?: string[]
+  unitsIds?: string[] | null
 }
 
 interface RegisterUserProfileServiceResponse {
@@ -86,6 +86,7 @@ export class RegisterUserProfileService {
       role,
       userId: user.id,
       city,
+      amountToReceive: 0,
     })
 
     if (unitsIds) {

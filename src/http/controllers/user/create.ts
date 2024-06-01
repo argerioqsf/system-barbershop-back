@@ -22,7 +22,7 @@ export async function CreateUserProfile(
     pix: z.string(),
     role: z.nativeEnum(Role),
     city: z.string(),
-    unitsIds: z.array(z.string()).optional(),
+    unitsIds: z.array(z.string()).optional().nullable(),
   })
 
   const body = registerBodySchema.parse(request.body)

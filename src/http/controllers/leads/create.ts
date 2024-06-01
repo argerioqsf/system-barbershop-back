@@ -21,7 +21,7 @@ const bodySchema = z.object({
   city: z.string(),
   indicatorId: z.string(),
   unitId: z.string(),
-  consultantId: z.string().optional(),
+  consultantId: z.string().optional().nullable(),
   courseId: z.string(),
   segmentId: z.string(),
 })

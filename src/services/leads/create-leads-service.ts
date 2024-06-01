@@ -22,7 +22,7 @@ interface CreateLeadsServiceRequest {
   email: string
   city: string
   indicatorId?: string
-  consultantId?: string
+  consultantId?: string | null
   userId: string
   unitId: string
   segmentId: string
@@ -156,6 +156,8 @@ export class CreateLeadsService {
         unitId,
         courseId,
         segmentId,
+        amount_pay_indicator: 0,
+        amount_pay_consultant: 0,
         ...data,
       },
       timeLine,

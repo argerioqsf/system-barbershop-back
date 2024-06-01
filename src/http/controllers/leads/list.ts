@@ -7,7 +7,26 @@ const searchBodySchema = z.object({
   name: z.string().optional(),
   page: z.coerce.number().min(1).default(1),
   indicatorId: z.string().optional(),
-  consultantId: z.string().optional(),
+  matriculation: z
+    .string()
+    .transform((matriculation) => {
+      return matriculation === 'true'
+        ? true
+        : matriculation === 'false'
+          ? false
+          : undefined
+    })
+    .optional(),
+  consultantId: z
+    .string()
+    .transform((consultantId) => {
+      return consultantId === 'null'
+        ? null
+        : consultantId === 'notnull'
+          ? { not: null }
+          : consultantId
+    })
+    .optional(),
   archived: z
     .string()
     .transform((archived) => {
@@ -21,7 +40,7 @@ const searchBodySchema = z.object({
 })
 
 export async function List(request: FastifyRequest, replay: FastifyReply) {
-  const { name, page, indicatorId, consultantId, archived } =
+  const { name, page, indicatorId, consultantId, archived, matriculation } =
     searchBodySchema.parse(request.query)
 
   const userId = request.user.sub
@@ -36,6 +55,7 @@ export async function List(request: FastifyRequest, replay: FastifyReply) {
       consultantId,
       userId,
       archived,
+      matriculation,
     })
 
     return replay.status(200).send({ leads, count })
