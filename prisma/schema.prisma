@@ -29,14 +29,14 @@ model Profile {
   genre           String
   birthday        String
   pix             String
-  amountToReceive Float
+  amountToReceive Float?
   role            Role             @default(indicator)
   user            User             @relation(fields: [userId], references: [id])
   userId          String           @unique
   leadsIndicator  Leads[]          @relation(name: "indicatorLeads")
   leadsConsultant Leads[]          @relation(name: "consultantLeads")
   city            String?
-  extract_profile extractProfile[]
+  extract_profile ExtractProfile[]
   units           UnitConsultant[]
 
   @@map("profiles")
@@ -146,8 +146,8 @@ model Leads {
   archived              Boolean    @default(false)
   documents             Boolean    @default(false)
   matriculation         Boolean    @default(false)
-  amount_pay_indicator  Float
-  amount_pay_consultant Float
+  amount_pay_indicator  Float?
+  amount_pay_consultant Float?
   indicator             Profile    @relation(fields: [indicatorId], references: [id], name: "indicatorLeads")
   indicatorId           String
   consultant            Profile?   @relation(fields: [consultantId], references: [id], name: "consultantLeads")
@@ -165,7 +165,7 @@ model Leads {
   @@map("leads")
 }
 
-model extractProfile {
+model ExtractProfile {
   id             String   @id @default(uuid())
   amount_receive Float
   profile        Profile? @relation(fields: [profileId], references: [id])
@@ -197,7 +197,7 @@ model Organization {
 
 model Cycle {
   id          String    @id @default(uuid())
-  start_cycle DateTime?
+  start_cycle DateTime
   end_cycle   DateTime?
   leads       Leads[]
 }
