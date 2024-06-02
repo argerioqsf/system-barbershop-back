@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { pagination } from '@/utils/constants/pagination'
-import { Prisma, Profile, Unit, User } from '@prisma/client'
+import { Organization, Prisma, Profile, Unit, User } from '@prisma/client'
 import { UsersRepository } from '../users-repository'
 
 export class PrismaUsersRepository implements UsersRepository {
@@ -81,6 +81,7 @@ export class PrismaUsersRepository implements UsersRepository {
             pix: true,
             birthday: true,
             city: true,
+            amountToReceive: true,
           },
         },
       },
@@ -129,7 +130,6 @@ export class PrismaUsersRepository implements UsersRepository {
         profile: {
           select: {
             id: true,
-
             cpf: true,
             genre: true,
             phone: true,
@@ -137,6 +137,7 @@ export class PrismaUsersRepository implements UsersRepository {
             pix: true,
             birthday: true,
             city: true,
+            amountToReceive: true,
           },
         },
       },
@@ -150,6 +151,7 @@ export class PrismaUsersRepository implements UsersRepository {
   async findById(id: string): Promise<
     | (Omit<User, 'password'> & {
         profile: Omit<Profile & { units: { unit: Unit }[] }, 'userId'> | null
+        organizations: { organization: Organization }[]
       })
     | null
   > {
@@ -162,6 +164,11 @@ export class PrismaUsersRepository implements UsersRepository {
         email: true,
         name: true,
         active: true,
+        organizations: {
+          select: {
+            organization: true,
+          },
+        },
         profile: {
           select: {
             leadsConsultant: true,
@@ -174,6 +181,7 @@ export class PrismaUsersRepository implements UsersRepository {
             pix: true,
             birthday: true,
             city: true,
+            amountToReceive: true,
             units: {
               select: {
                 unit: true,
@@ -231,6 +239,7 @@ export class PrismaUsersRepository implements UsersRepository {
             pix: true,
             birthday: true,
             city: true,
+            amountToReceive: true,
             units: {
               select: {
                 unit: true,

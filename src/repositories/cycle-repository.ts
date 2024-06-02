@@ -1,5 +1,6 @@
 import { Cycle, Prisma } from '@prisma/client'
 
 export interface CycleRepository {
-  create(data: Prisma.CycleUncheckedCreateInput): Promise<Cycle>
+  create(organizationId: string): Promise<Cycle>
+  update(id: string, data: Prisma.CycleUpdateInput): Promise<Cycle>
 }

@@ -191,15 +191,16 @@ model Organization {
   indicator_bonus  Float
   slug             String             @unique
   users            userOrganization[]
-  cycles       Cycle[]
+  cycles           Cycle[]
+
   @@map("organization")
 }
 
 model Cycle {
-  id          String    @id @default(uuid())
-  start_cycle DateTime
-  end_cycle   DateTime?
-  leads       Leads[]
+  id             String       @id @default(uuid())
+  start_cycle    DateTime     @default(now())
+  end_cycle      DateTime?
+  leads          Leads[]
   organization   Organization @relation(fields: [organizationId], references: [id])
   organizationId String
 

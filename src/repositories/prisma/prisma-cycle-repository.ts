@@ -1,10 +1,21 @@
+import { prisma } from '@/lib/prisma'
 import { Cycle, Prisma } from '@prisma/client'
 import { CycleRepository } from '../cycle-repository'
-import { prisma } from '@/lib/prisma'
 
 export class PrismaCycleRepository implements CycleRepository {
-  create(data: Prisma.CycleUncheckedCreateInput): Promise<Cycle> {
-    const cycle = prisma.cycle.create({ data })
+  update(id: string, data: Prisma.CycleUpdateInput): Promise<Cycle> {
+    const cycle = prisma.cycle.update({
+      where: {
+        id,
+      },
+      data,
+    })
+
+    return cycle
+  }
+
+  create(organizationId: string): Promise<Cycle> {
+    const cycle = prisma.cycle.create({ data: { organizationId } })
 
     return cycle
   }
