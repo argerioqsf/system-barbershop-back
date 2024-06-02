@@ -1,5 +1,12 @@
 import { prisma } from '@/lib/prisma'
-import { Prisma, Profile, Unit, User } from '@prisma/client'
+import {
+  ExtractProfile,
+  Organization,
+  Prisma,
+  Profile,
+  Unit,
+  User,
+} from '@prisma/client'
 import { ProfilesRepository } from '../profiles-repository'
 
 export class PrismaProfilesRepository implements ProfilesRepository {
@@ -26,7 +33,13 @@ export class PrismaProfilesRepository implements ProfilesRepository {
   }
 
   async findByUserId(id: string): Promise<
-    | (Omit<Profile, 'userId'> & { user: Omit<User, 'password'> } & {
+    | (Omit<Profile, 'userId'> & {
+        extract_profile: ExtractProfile[]
+        user: Omit<
+          User & { organizations: { organization: Organization }[] },
+          'password'
+        >
+      } & {
         units: { unit: Unit }[]
       })
     | null
@@ -43,6 +56,8 @@ export class PrismaProfilesRepository implements ProfilesRepository {
         role: true,
         userId: true,
         city: true,
+        amountToReceive: true,
+        extract_profile: true,
         units: {
           select: {
             unit: true,
@@ -50,8 +65,12 @@ export class PrismaProfilesRepository implements ProfilesRepository {
         },
         _count: {
           select: {
-            leadsIndicator: true,
-            leadsConsultant: true,
+            leadsIndicator: {
+              where: { documents: true },
+            },
+            leadsConsultant: {
+              where: { documents: true },
+            },
           },
         },
         user: {

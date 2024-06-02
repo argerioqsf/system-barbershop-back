@@ -159,8 +159,8 @@ model Leads {
   segment               Segment    @relation(fields: [segmentId], references: [id])
   segmentId             String
   timeline              Timeline[]
-  cicle                 Cycle?     @relation(fields: [cicleId], references: [id])
-  cicleId               String?
+  cycle                 Cycle?     @relation(fields: [cycleId], references: [id])
+  cycleId               String?
 
   @@map("leads")
 }
@@ -191,7 +191,7 @@ model Organization {
   indicator_bonus  Float
   slug             String             @unique
   users            userOrganization[]
-
+  cycles       Cycle[]
   @@map("organization")
 }
 
@@ -200,6 +200,10 @@ model Cycle {
   start_cycle DateTime
   end_cycle   DateTime?
   leads       Leads[]
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  organizationId String
+
+  @@map("cycle")
 }
 
 enum Role {
