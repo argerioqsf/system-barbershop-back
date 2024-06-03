@@ -170,6 +170,7 @@ model ExtractProfile {
   amount_receive Float
   profile        Profile? @relation(fields: [profileId], references: [id])
   profileId      String?
+  createdAt   DateTime @default(now())
 
   @@map("extract_profile")
 }

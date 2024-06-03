@@ -1,5 +1,7 @@
 import {
+  Cycle,
   ExtractProfile,
+  Leads,
   Organization,
   Prisma,
   Profile,
@@ -14,7 +16,13 @@ export interface ProfilesRepository {
     | (Omit<Profile, 'userId'> & {
         extract_profile: ExtractProfile[]
         user: Omit<
-          User & { organizations: { organization: Organization }[] },
+          User & {
+            organizations: {
+              organization: Organization & {
+                cycles: (Cycle & { leads: Leads[] })[]
+              }
+            }[]
+          },
           'password'
         >
       } & {
@@ -23,4 +31,9 @@ export interface ProfilesRepository {
     | null
   >
   update(id: string, data: Prisma.ProfileUncheckedUpdateInput): Promise<Profile>
+  confirmPayment(
+    id: string,
+    data: Prisma.ProfileUncheckedUpdateInput,
+    extract: Prisma.ExtractProfileUncheckedCreateInput,
+  ): Promise<{ profile: Profile; extract: ExtractProfile }>
 }

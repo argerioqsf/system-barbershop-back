@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/prisma'
 import {
+  Cycle,
   ExtractProfile,
+  Leads,
   Organization,
   Prisma,
   Profile,
@@ -21,6 +23,24 @@ export class PrismaProfilesRepository implements ProfilesRepository {
     return profile
   }
 
+  async confirmPayment(
+    id: string,
+    data: Prisma.ProfileUpdateInput,
+    extract: Prisma.ExtractProfileUncheckedCreateInput,
+  ): Promise<{ profile: Profile; extract: ExtractProfile }> {
+    const [profile, NewExtract] = await prisma.$transaction([
+      prisma.profile.update({
+        where: {
+          id,
+        },
+        data,
+      }),
+      prisma.extractProfile.create({ data: extract }),
+    ])
+
+    return { profile, extract: NewExtract }
+  }
+
   async findById(id: string): Promise<(Profile & { user: User }) | null> {
     const profile = await prisma.profile.findUnique({
       where: { id },
@@ -36,7 +56,13 @@ export class PrismaProfilesRepository implements ProfilesRepository {
     | (Omit<Profile, 'userId'> & {
         extract_profile: ExtractProfile[]
         user: Omit<
-          User & { organizations: { organization: Organization }[] },
+          User & {
+            organizations: {
+              organization: Organization & {
+                cycles: (Cycle & { leads: Leads[] })[]
+              }
+            }[]
+          },
           'password'
         >
       } & {
@@ -81,7 +107,24 @@ export class PrismaProfilesRepository implements ProfilesRepository {
             active: true,
             organizations: {
               select: {
-                organization: true,
+                organization: {
+                  select: {
+                    id: true,
+                    name: true,
+                    consultant_bonus: true,
+                    indicator_bonus: true,
+                    slug: true,
+                    cycles: {
+                      select: {
+                        id: true,
+                        start_cycle: true,
+                        end_cycle: true,
+                        organizationId: true,
+                        leads: true,
+                      },
+                    },
+                  },
+                },
               },
             },
           },
