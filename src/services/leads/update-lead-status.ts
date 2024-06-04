@@ -1,6 +1,10 @@
 import { LeadsRepository } from '@/repositories/leads-repository'
 import { ProfilesRepository } from '@/repositories/profiles-repository'
 import { Leads, Timeline } from '@prisma/client'
+import { ConsultantNotFoundError } from '../@errors/consultant-not-found-error'
+import { IndicatorNotFoundError } from '../@errors/indicator-not-found-error'
+import { NoActiveCyclesError } from '../@errors/no-active-cycles-error'
+import { OrganizationNotFoundError } from '../@errors/organization-not-found-error'
 import { UserTypeNotCompatible } from '../@errors/user-type-not-compatible'
 
 interface UpdateLeadStatusServiceRequest {
@@ -38,24 +42,13 @@ export class UpdateLeadStatusService {
       'id' | 'leadsId' | 'createdAt' | 'updatedAt'
     >[] = []
 
-    const data: { documents?: boolean; matriculation?: boolean } = {}
-
-    if (documents !== undefined) {
-      if (profile?.role !== 'secretary') {
-        throw new UserTypeNotCompatible()
-      }
-      timeLine = [
-        {
-          description: 'Documentos entregue',
-          status: 'Status atualizado',
-          courseId: lead?.courseId,
-          segmentId: lead?.segmentId,
-          unitId: lead?.unitId,
-          title: '',
-        },
-      ]
-      data.documents = documents
-    }
+    const data: {
+      documents?: boolean
+      matriculation?: boolean
+      cycleId?: string
+      amount_pay_indicator?: number
+      amount_pay_consultant?: number
+    } = {}
 
     if (matriculation !== undefined) {
       if (profile?.role !== 'administrator') {
@@ -72,6 +65,82 @@ export class UpdateLeadStatusService {
         },
       ]
       data.matriculation = matriculation
+    }
+
+    if (documents !== undefined) {
+      if (profile?.role !== 'secretary' && profile?.role !== 'administrator') {
+        throw new UserTypeNotCompatible()
+      }
+
+      const organizations = profile.user.organizations.map(
+        (org) => org.organization,
+      )
+
+      if (!lead.consultantId) {
+        throw new ConsultantNotFoundError()
+      }
+
+      const consultantLead = await this.profileRepository.findById(
+        lead.consultantId,
+      )
+
+      if (!consultantLead) {
+        throw new ConsultantNotFoundError()
+      }
+
+      if (!lead.indicatorId) {
+        throw new IndicatorNotFoundError()
+      }
+
+      const indicatorLead = await this.profileRepository.findById(
+        lead.indicatorId,
+      )
+
+      if (!indicatorLead) {
+        throw new IndicatorNotFoundError()
+      }
+
+      const organization = organizations[0]
+
+      if (!organization) {
+        throw new OrganizationNotFoundError()
+      }
+
+      const cycles = organization.cycles
+      const cycleId = cycles.find((cycle) => cycle.end_cycle === null)?.id
+
+      if (!cycleId) {
+        throw new NoActiveCyclesError()
+      }
+
+      await this.profileRepository.update(lead.indicatorId, {
+        amountToReceive:
+          (indicatorLead.amountToReceive ?? 0) + organization.indicator_bonus,
+      })
+
+      data.amount_pay_indicator =
+        lead.amount_pay_indicator ?? 0 + organization.indicator_bonus
+
+      await this.profileRepository.update(lead.consultantId, {
+        amountToReceive:
+          (consultantLead.amountToReceive ?? 0) + organization.consultant_bonus,
+      })
+
+      data.amount_pay_consultant =
+        lead.amount_pay_consultant ?? 0 + organization.consultant_bonus
+
+      timeLine = [
+        {
+          description: 'Documentos entregue',
+          status: 'Status atualizado',
+          courseId: lead?.courseId,
+          segmentId: lead?.segmentId,
+          unitId: lead?.unitId,
+          title: '',
+        },
+      ]
+      data.documents = documents
+      data.cycleId = cycles.find((cycle) => cycle.end_cycle === null)?.id
     }
 
     const leadUp = await this.leadRepository.updateById(id, data, timeLine)

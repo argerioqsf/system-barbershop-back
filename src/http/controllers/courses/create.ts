@@ -22,8 +22,6 @@ export async function Create(request: FastifyRequest, reply: FastifyReply) {
       return reply.status(404).send({ message: error.message })
     }
 
-    console.error(error)
-
     return reply.status(500).send({ message: 'Internal server error' })
   }
 }

@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `cycle` MODIFY `start_cycle` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3);

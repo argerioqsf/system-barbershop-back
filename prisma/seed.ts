@@ -35,6 +35,7 @@ async function main() {
           pix: '9699997777',
           city: 'Macapa',
           role: 'administrator',
+          amountToReceive: 0,
         },
       },
     },
@@ -58,6 +59,7 @@ async function main() {
           pix: 'indicator@sim.com',
           city: 'Santana',
           role: 'indicator',
+          amountToReceive: 0,
         },
       },
     },
@@ -81,6 +83,7 @@ async function main() {
           pix: 'consultant@sim.com',
           city: 'Santana',
           role: 'consultant',
+          amountToReceive: 0,
         },
       },
     },
@@ -150,6 +153,9 @@ async function main() {
       courseId: course.id,
       segmentId: segment.id,
       unitId: unit.id,
+      amount_pay_consultant: 0,
+      amount_pay_indicator: 0,
+      archived: false,
     },
   })
 

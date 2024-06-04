@@ -4,6 +4,7 @@ import { Prisma, Profile, User } from '@prisma/client'
 interface GetIndicatorProfileServiceRequest {
   page: number
   name?: string
+  amountToReceive?: number | null | { gt: number }
 }
 
 interface GetIndicatorProfileServiceResponse {
@@ -19,11 +20,13 @@ export class GetIndicatorProfileService {
   async execute({
     page,
     name,
+    amountToReceive,
   }: GetIndicatorProfileServiceRequest): Promise<GetIndicatorProfileServiceResponse> {
     const where: Prisma.UserWhereInput = {
       name: { contains: name },
       profile: {
         role: 'indicator',
+        amountToReceive,
       },
     }
     const users = await this.userRepository.findManyIndicator(page, where)

@@ -29,13 +29,14 @@ model Profile {
   genre           String
   birthday        String
   pix             String
+  amountToReceive Float?
   role            Role             @default(indicator)
   user            User             @relation(fields: [userId], references: [id])
   userId          String           @unique
   leadsIndicator  Leads[]          @relation(name: "indicatorLeads")
   leadsConsultant Leads[]          @relation(name: "consultantLeads")
   city            String?
-  extract_profile extractProfile[]
+  extract_profile ExtractProfile[]
   units           UnitConsultant[]
 
   @@map("profiles")
@@ -136,35 +137,40 @@ model Timeline {
 }
 
 model Leads {
-  id            String     @id @default(uuid())
-  name          String
-  phone         String
-  document      String
-  email         String
-  city          String
-  archived      Boolean    @default(false)
-  documents     Boolean    @default(false)
-  matriculation Boolean    @default(false)
-  indicator     Profile    @relation(fields: [indicatorId], references: [id], name: "indicatorLeads")
-  indicatorId   String
-  consultant    Profile?   @relation(fields: [consultantId], references: [id], name: "consultantLeads")
-  consultantId  String?
-  unit          Unit       @relation(fields: [unitId], references: [id])
-  unitId        String
-  course        Course     @relation(fields: [courseId], references: [id])
-  courseId      String
-  segment       Segment    @relation(fields: [segmentId], references: [id])
-  segmentId     String
-  timeline      Timeline[]
+  id                    String     @id @default(uuid())
+  name                  String
+  phone                 String
+  document              String
+  email                 String
+  city                  String
+  archived              Boolean    @default(false)
+  documents             Boolean    @default(false)
+  matriculation         Boolean    @default(false)
+  amount_pay_indicator  Float?
+  amount_pay_consultant Float?
+  indicator             Profile    @relation(fields: [indicatorId], references: [id], name: "indicatorLeads")
+  indicatorId           String
+  consultant            Profile?   @relation(fields: [consultantId], references: [id], name: "consultantLeads")
+  consultantId          String?
+  unit                  Unit       @relation(fields: [unitId], references: [id])
+  unitId                String
+  course                Course     @relation(fields: [courseId], references: [id])
+  courseId              String
+  segment               Segment    @relation(fields: [segmentId], references: [id])
+  segmentId             String
+  timeline              Timeline[]
+  cycle                 Cycle?     @relation(fields: [cycleId], references: [id])
+  cycleId               String?
 
   @@map("leads")
 }
 
-model extractProfile {
+model ExtractProfile {
   id             String   @id @default(uuid())
   amount_receive Float
   profile        Profile? @relation(fields: [profileId], references: [id])
   profileId      String?
+  createdAt   DateTime @default(now())
 
   @@map("extract_profile")
 }
@@ -186,8 +192,20 @@ model Organization {
   indicator_bonus  Float
   slug             String             @unique
   users            userOrganization[]
+  cycles           Cycle[]
 
   @@map("organization")
+}
+
+model Cycle {
+  id             String       @id @default(uuid())
+  start_cycle    DateTime     @default(now())
+  end_cycle      DateTime?
+  leads          Leads[]
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  organizationId String
+
+  @@map("cycle")
 }
 
 enum Role {

@@ -1,9 +1,10 @@
-import { Prisma, Profile, Unit, User } from '@prisma/client'
+import { Organization, Prisma, Profile, Unit, User } from '@prisma/client'
 
 export interface UsersRepository {
   findById(id: string): Promise<
     | (Omit<User, 'password'> & {
         profile: Omit<Profile & { units: { unit: Unit }[] }, 'userId'> | null
+        organizations: { organization: Organization }[]
       })
     | null
   >

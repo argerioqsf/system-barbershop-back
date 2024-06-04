@@ -1,5 +1,5 @@
 import { ProfilesRepository } from '@/repositories/profiles-repository'
-import { Profile, User } from '@prisma/client'
+import { ExtractProfile, Profile, User } from '@prisma/client'
 import { ResourceNotFoundError } from '../@errors/resource-not-found-error'
 
 interface GetUserProfileServiceRequest {
@@ -7,7 +7,12 @@ interface GetUserProfileServiceRequest {
 }
 
 interface GetUserProfileServiceResponse {
-  profile: (Omit<Profile, 'userId'> & { user: Omit<User, 'password'> }) | null
+  profile:
+    | (Omit<Profile, 'userId'> & {
+        extract_profile: ExtractProfile[]
+        user: Omit<User, 'password'>
+      })
+    | null
 }
 
 export class GetUserProfileFromUserIdService {
