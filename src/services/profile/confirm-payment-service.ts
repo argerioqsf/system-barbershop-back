@@ -1,4 +1,3 @@
-import { ExtractProfileRepository } from '@/repositories/extract-profile-repository'
 import { ProfilesRepository } from '@/repositories/profiles-repository'
 import { ExtractProfile, Profile } from '@prisma/client'
 import { ProfileNotFoundError } from '../@errors/profile-not-found-error'
