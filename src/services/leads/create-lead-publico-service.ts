@@ -8,6 +8,7 @@ import { SegmentsRepository } from '@/repositories/segments-repository'
 import { UnitNotFoundError } from '../@errors/unit-not-found-error'
 import { CourseNotFoundError } from '../@errors/course-not-found-error'
 import { SegmentNotFoundError } from '../@errors/segment-not-found-error'
+import { sendLeadEmail } from '@/lib/sendgrid'
 
 interface CreateLeadPublicServiceRequest {
   name: string
@@ -94,6 +95,8 @@ export class CreateLeadPublicService {
       },
       timeLine,
     )
+
+    await sendLeadEmail(email, name)
 
     return { leads }
   }

@@ -1,11 +1,12 @@
 import { LeadsRepository } from '@/repositories/leads-repository'
 import { ProfilesRepository } from '@/repositories/profiles-repository'
-import { Leads, Timeline } from '@prisma/client'
+import { Leads, Profile, Timeline, User } from '@prisma/client'
 import { ConsultantNotFoundError } from '../@errors/consultant-not-found-error'
 import { IndicatorNotFoundError } from '../@errors/indicator-not-found-error'
 import { NoActiveCyclesError } from '../@errors/no-active-cycles-error'
 import { OrganizationNotFoundError } from '../@errors/organization-not-found-error'
 import { UserTypeNotCompatible } from '../@errors/user-type-not-compatible'
+import { sendConfirmIndicatorPaymentEmail } from '@/lib/sendgrid'
 
 interface UpdateLeadStatusServiceRequest {
   id: string
@@ -49,6 +50,8 @@ export class UpdateLeadStatusService {
       amount_pay_indicator?: number
       amount_pay_consultant?: number
     } = {}
+
+    let indicator: (Profile & { user: User }) | undefined
 
     if (matriculation !== undefined) {
       if (profile?.role !== 'administrator') {
@@ -100,6 +103,8 @@ export class UpdateLeadStatusService {
         throw new IndicatorNotFoundError()
       }
 
+      indicator = indicatorLead
+
       const organization = organizations[0]
 
       if (!organization) {
@@ -144,6 +149,14 @@ export class UpdateLeadStatusService {
     }
 
     const leadUp = await this.leadRepository.updateById(id, data, timeLine)
+
+    if (documents !== undefined && indicator) {
+      sendConfirmIndicatorPaymentEmail(
+        indicator.user.email,
+        indicator.user.name,
+        leadUp,
+      )
+    }
 
     return {
       lead: leadUp,
