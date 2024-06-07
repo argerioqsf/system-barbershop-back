@@ -95,13 +95,7 @@ export class PrismaUsersRepository implements UsersRepository {
   async update(
     id: string,
     data: Prisma.UserUpdateInput,
-  ): Promise<{
-    id: string
-    name: string
-    email: string
-    password: string
-    active: boolean
-  }> {
+  ): Promise<Omit<User, 'password'>> {
     const user = await prisma.user.update({
       where: {
         id,

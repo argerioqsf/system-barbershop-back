@@ -7,7 +7,7 @@ export async function MountSelect(
 ) {
   const mountSelectIndicatorService = getMountSelectIndicatorProfileService()
 
-  const { user } = await mountSelectIndicatorService.execute()
+  const { users } = await mountSelectIndicatorService.execute()
 
-  return replay.status(200).send({ user })
+  return replay.status(200).send({ users })
 }
