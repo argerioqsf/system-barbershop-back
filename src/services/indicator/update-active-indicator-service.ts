@@ -1,6 +1,7 @@
 import { UsersRepository } from '@/repositories/users-repository'
 import { User } from '@prisma/client'
 import { UserNotFoundError } from '../@errors/user-not-found-error'
+import { sendActiveIndicatorEmail } from '@/lib/sendgrid'
 
 interface UpdateActiveIndicatorServiceRequest {
   id: string
@@ -23,6 +24,8 @@ export class UpdateActiveIndicatorService {
     if (!findUser) throw new UserNotFoundError()
 
     const user = await this.userRepository.update(id, { active })
+
+    if (active) sendActiveIndicatorEmail(findUser.email, findUser.name)
 
     return {
       user,
