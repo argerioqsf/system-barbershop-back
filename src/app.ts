@@ -1,5 +1,6 @@
 import fastifyJwt from '@fastify/jwt'
 import fastify from 'fastify'
+import multer from 'fastify-multer'
 import { ZodError } from 'zod'
 import { env } from './env'
 import { courseRoute } from './http/controllers/courses/route'
@@ -16,7 +17,22 @@ import { OrganizationRoute } from './http/controllers/organization/route'
 import { timelineRoute } from './http/controllers/timeline/route'
 import { cycleRoute } from './http/controllers/cycle/route'
 
+const upload = multer({ dest: 'uploads/' })
+
 export const app = fastify()
+
+app.register(multer.contentParser)
+
+app.route({
+  method: 'POST',
+  url: '/upload/profile',
+  preHandler: upload.single('avatar'),
+  handler: function (request, reply) {
+    // request.file is the `avatar` file
+    // request.body will hold the text fields, if there were any
+    reply.code(200).send('SUCCESS')
+  },
+})
 
 app.register(fastifyJwt, {
   secret: env.JWT_SECRET,
