@@ -5,6 +5,7 @@ interface GetIndicatorProfileServiceRequest {
   page: number
   name?: string
   amountToReceive?: number | null | { gt: number }
+  active?: boolean
 }
 
 interface GetIndicatorProfileServiceResponse {
@@ -21,9 +22,11 @@ export class GetIndicatorProfileService {
     page,
     name,
     amountToReceive,
+    active,
   }: GetIndicatorProfileServiceRequest): Promise<GetIndicatorProfileServiceResponse> {
     const where: Prisma.UserWhereInput = {
       name: { contains: name },
+      active,
       profile: {
         role: 'indicator',
         amountToReceive,

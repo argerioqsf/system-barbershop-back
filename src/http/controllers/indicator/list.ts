@@ -15,10 +15,22 @@ const searchBodySchema = z.object({
           : Number(amountToReceive)
     })
     .optional(),
+  active: z
+    .string()
+    .transform((archived) => {
+      return archived === 'true'
+        ? true
+        : archived === 'false'
+          ? false
+          : undefined
+    })
+    .optional(),
 })
 
 export async function List(request: FastifyRequest, replay: FastifyReply) {
-  const { page, name, amountToReceive } = searchBodySchema.parse(request.query)
+  const { page, name, amountToReceive, active } = searchBodySchema.parse(
+    request.query,
+  )
 
   const getIndicatorProfile = getIndicatorProfileService()
 
@@ -26,6 +38,7 @@ export async function List(request: FastifyRequest, replay: FastifyReply) {
     page,
     name,
     amountToReceive,
+    active,
   })
 
   return replay.status(200).send({
