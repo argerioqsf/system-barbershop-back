@@ -24,7 +24,6 @@ export class UpdateActiveIndicatorService {
     if (!findUser) throw new UserNotFoundError()
 
     const user = await this.userRepository.update(id, { active })
-
     if (active) sendActiveIndicatorEmail(findUser.email, findUser.name)
 
     return {

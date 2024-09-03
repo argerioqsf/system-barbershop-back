@@ -51,7 +51,7 @@ export const sendActiveIndicatorEmail = async (to: string, name: string) => {
     to,
     from: 'sim@grupomadretereza.com.br',
     subject: 'Cadastro na plataforma',
-    text: ``,
+    text: `Olá ${name},\n\nObrigado por se cadastrar em nossa plataforma! Estamos muito felizes em tê-lo conosco. Nossa equipe entrará em contato com você em breve para fornecer mais informações e tirar todas as suas dúvidas.\n\nAtenciosamente,\nEquipe Sim`,
     html: templateEmail(
       name,
       'Parabéns por fazer parte do Sistema de Indicação da Madre Tereza (SIM)',
