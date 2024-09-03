@@ -39,7 +39,7 @@ app.register(fastifyStatic, {
 
 app.route({
   method: 'POST',
-  url: '/upload/profile',
+  url: '/upload',
   preHandler: upload.single('avatar'),
   handler: function (request, reply) {
     console.log('Uploaded file:', request.file)
@@ -82,7 +82,7 @@ app.route({
     const filePath = path.join(uploadDir, filename)
 
     if (fs.existsSync(filePath)) {
-      reply.type('image/jpeg') // Ajuste o tipo conforme o arquivo
+      reply.type('image/jpeg')
       reply.send(fs.createReadStream(filePath))
     } else {
       reply.code(404).send('File not found')
