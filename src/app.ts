@@ -90,6 +90,27 @@ app.route({
   },
 })
 
+app.route({
+  method: 'DELETE',
+  url: '/uploads/:filename',
+  handler: function (request, reply) {
+    const { filename } = request.params as { filename: string }
+    const filePath = path.join(uploadDir, filename)
+
+    if (fs.existsSync(filePath)) {
+      fs.unlink(filePath, (err) => {
+        if (err) {
+          reply.code(500).send('Failed to delete file')
+        } else {
+          reply.code(200).send('File deleted successfully')
+        }
+      })
+    } else {
+      reply.code(404).send('File not found')
+    }
+  },
+})
+
 app.register(fastifyJwt, {
   secret: env.JWT_SECRET,
 })
