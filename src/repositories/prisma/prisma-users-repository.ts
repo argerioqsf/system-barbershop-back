@@ -1,6 +1,13 @@
 import { prisma } from '@/lib/prisma'
 import { pagination } from '@/utils/constants/pagination'
-import { Organization, Prisma, Profile, Unit, User } from '@prisma/client'
+import {
+  Cycle,
+  Organization,
+  Prisma,
+  Profile,
+  Unit,
+  User,
+} from '@prisma/client'
 import { UsersRepository } from '../users-repository'
 
 export class PrismaUsersRepository implements UsersRepository {
@@ -145,7 +152,7 @@ export class PrismaUsersRepository implements UsersRepository {
   async findById(id: string): Promise<
     | (Omit<User, 'password'> & {
         profile: Omit<Profile & { units: { unit: Unit }[] }, 'userId'> | null
-        organizations: { organization: Organization }[]
+        organizations: { organization: Organization & { cycles: Cycle[] } }[]
       })
     | null
   > {
@@ -160,7 +167,11 @@ export class PrismaUsersRepository implements UsersRepository {
         active: true,
         organizations: {
           select: {
-            organization: true,
+            organization: {
+              include: {
+                cycles: true,
+              },
+            },
           },
         },
         profile: {
