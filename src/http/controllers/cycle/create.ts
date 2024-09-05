@@ -2,14 +2,24 @@ import { OrganizationNotFoundError } from '@/services/@errors/organization-not-f
 import { UserNotFoundError } from '@/services/@errors/user-not-found-error'
 import makeCreateCycleService from '@/services/@factories/cycle/make-create-cycle-service'
 import { FastifyReply, FastifyRequest } from 'fastify'
+import { z } from 'zod'
+
+const routeSchema = z.object({
+  id: z.string(),
+})
 
 export async function Create(request: FastifyRequest, reply: FastifyReply) {
+  const { id } = routeSchema.parse(request.params)
+
   const createCycleService = makeCreateCycleService()
 
   const userId = request.user.sub
 
   try {
-    const { cycle } = await createCycleService.execute({ userId })
+    const { cycle } = await createCycleService.execute({
+      userId,
+      organizationId: id,
+    })
     return reply.status(201).send(cycle)
   } catch (error) {
     if (error instanceof UserNotFoundError) {
