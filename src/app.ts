@@ -54,20 +54,23 @@ app.route({
   method: 'GET',
   url: '/uploads',
   handler: function (request, reply) {
-    fs.readdir(uploadDir, (err, files) => {
+    fs.readdir(uploadDir, { withFileTypes: true }, (err, files) => {
       if (err) {
         reply.code(500).send('Unable to scan directory: ' + err)
         return
       }
 
-      console.log('Files found:', files)
-
-      const fileUrls = files.map((file) => {
-        return {
-          filename: file,
-          url: `/uploads/${file}`,
-        }
-      })
+      const fileUrls = files
+        .map((file) => {
+          const filePath = `${uploadDir}/${file.name}`
+          const stats = fs.statSync(filePath)
+          return { file, stats }
+        })
+        .sort((a, b) => b.stats.ctimeMs - a.stats.ctimeMs)
+        .map((fileStats) => ({
+          filename: fileStats.file.name,
+          url: `/uploads/${fileStats.file.name}`,
+        }))
 
       reply.code(200).send(fileUrls)
     })
