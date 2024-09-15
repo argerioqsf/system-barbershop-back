@@ -7,7 +7,6 @@ import { deleteUnit } from './delete'
 import { deleteUnitCourse } from './delete-unit-course'
 import { deleteUnitSegment } from './delete-unit-segment'
 import { Update } from './update'
-import { MountSelect } from './mount-select'
 
 export async function unitRoute(app: FastifyInstance) {
   app.addHook('onRequest', verifyJWT)
@@ -25,6 +24,4 @@ export async function unitRoute(app: FastifyInstance) {
   app.put('/unit/:id/update', Update)
 
   app.post('/create/unit', Create)
-
-  app.get('/units/select', MountSelect)
 }

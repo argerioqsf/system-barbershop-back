@@ -2,7 +2,6 @@ import { verifyJWT } from '@/http/middlewares/verify-jwt'
 import { FastifyInstance } from 'fastify'
 import { List } from './list'
 import { Create } from './create'
-import { MountSelect } from './mount-select'
 import { getSegment } from './get-segment'
 import { deleteSegment } from './delete'
 import { Update } from './update'
@@ -22,6 +21,4 @@ export async function segmentRoute(app: FastifyInstance) {
   app.post('/create/segment', Create)
 
   app.put('/segment/:id/update', Update)
-
-  app.get('/segment/select', MountSelect)
 }

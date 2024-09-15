@@ -1,7 +1,7 @@
 import { makeMountSelectUnitsService } from '@/services/@factories/units/mount-select-units-service'
 import { FastifyReply, FastifyRequest } from 'fastify'
 
-export async function MountSelect(
+export async function MountSelectUnit(
   request: FastifyRequest,
   replay: FastifyReply,
 ) {

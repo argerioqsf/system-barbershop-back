@@ -1,7 +1,7 @@
 import { makeMountSelectCourseService } from '@/services/@factories/courses/mount-select-course-service'
 import { FastifyReply, FastifyRequest } from 'fastify'
 
-export async function MountSelect(
+export async function MountSelectCourse(
   request: FastifyRequest,
   replay: FastifyReply,
 ) {

@@ -1,7 +1,7 @@
 import { makeMountSelectSegmentsService } from '@/services/@factories/segments/mount-select-segment-service'
 import { FastifyReply, FastifyRequest } from 'fastify'
 
-export async function MountSelect(
+export async function MountSelectSegment(
   request: FastifyRequest,
   replay: FastifyReply,
 ) {
