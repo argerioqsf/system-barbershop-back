@@ -20,6 +20,7 @@ const bodySchema = z.object({
   unitId: z.string(),
   courseId: z.string(),
   segmentId: z.string(),
+  released: z.boolean(),
 })
 
 const routeSchema = z.object({
@@ -37,6 +38,7 @@ export async function Update(request: FastifyRequest, reply: FastifyReply) {
     unitId,
     courseId,
     segmentId,
+    released,
   } = bodySchema.parse(request.body)
 
   const updateLeadService = makeUpdateLeadService()
@@ -57,6 +59,7 @@ export async function Update(request: FastifyRequest, reply: FastifyReply) {
       courseId,
       segmentId,
       userId,
+      released,
     })
     return reply.status(201).send(lead)
   } catch (error) {

@@ -25,6 +25,7 @@ interface UpdateLeadServiceRequest {
   segmentId: string
   courseId: string
   userId: string
+  released: boolean
 }
 
 interface UpdateLeadServiceResponse {
@@ -52,6 +53,7 @@ export class UpdateLeadService {
     segmentId,
     courseId,
     userId,
+    released,
   }: UpdateLeadServiceRequest): Promise<UpdateLeadServiceResponse> {
     const profile = await this.profileRepository.findByUserId(userId)
     const lead = await this.leadRepository.findById(id)
@@ -149,7 +151,7 @@ export class UpdateLeadService {
           }
     }
 
-    let data: { consultantId?: string | null } = {
+    let data: { consultantId?: string | null; released?: boolean } = {
       consultantId: lead?.consultantId,
     }
 
@@ -194,6 +196,13 @@ export class UpdateLeadService {
         }
       } else {
         throw new SetConsultantNotPermitError()
+      }
+    }
+
+    if (lead.released !== released && profile.role === 'auxiliary') {
+      data = {
+        ...data,
+        released,
       }
     }
 

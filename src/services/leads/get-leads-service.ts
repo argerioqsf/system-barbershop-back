@@ -38,17 +38,25 @@ export class GetLeadsService {
     if (!profile) throw new UserNotFoundError()
 
     let unitsId
-
+    let released
     if (profile.role === 'consultant') {
       unitsId = profile.units.map((unit) => unit.unit.id)
+      released = true
     }
-    const where: Prisma.LeadsWhereInput = {
+
+    let where: Prisma.LeadsWhereInput = {
       name: { contains: name },
       archived,
       indicatorId,
       consultantId,
       matriculation,
       unitId: { in: unitsId ?? undefined },
+    }
+    if (released !== undefined) {
+      where = {
+        ...where,
+        released,
+      }
     }
     const leads = await this.leadsRepository.findMany(page, where)
     const count = await this.leadsRepository.count(where)
