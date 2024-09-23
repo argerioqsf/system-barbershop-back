@@ -11,6 +11,7 @@ interface GetLeadsServiceRequest {
   userId: string
   archived?: boolean
   matriculation?: boolean
+  released?: boolean
 }
 
 interface GetLeadsServiceResponse {
@@ -32,16 +33,15 @@ export class GetLeadsService {
     userId,
     archived,
     matriculation,
+    released,
   }: GetLeadsServiceRequest): Promise<GetLeadsServiceResponse> {
     const profile = await this.profileRepository.findByUserId(userId)
 
     if (!profile) throw new UserNotFoundError()
 
     let unitsId
-    let released
     if (profile.role === 'consultant') {
       unitsId = profile.units.map((unit) => unit.unit.id)
-      released = true
     }
 
     let where: Prisma.LeadsWhereInput = {

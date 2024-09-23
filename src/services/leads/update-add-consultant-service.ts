@@ -5,6 +5,7 @@ import { LeadsNotFoundError } from '../@errors/leads-not-found-error'
 import { UserNotFoundError } from '../@errors/user-not-found-error'
 import { UserTypeNotCompatible } from '../@errors/user-type-not-compatible'
 import { LeadAlreadyHasConsultant } from '../@errors/lead-already-has-consultant'
+import { LeadNotReadyYetError } from '../@errors/lead-not-ready-yet-error'
 
 interface UpdateAddLeadConsultantServiceRequest {
   id: string
@@ -35,6 +36,8 @@ export class UpdateAddConsultantLeadService {
     if (profileConsultant.role !== 'consultant') {
       throw new UserTypeNotCompatible()
     }
+
+    if (findLeadById.released === false) throw new LeadNotReadyYetError()
 
     if (findLeadById.consultantId && findLeadById.consultantId?.length > 0)
       throw new LeadAlreadyHasConsultant()

@@ -1,4 +1,6 @@
 import { CourseNotFoundError } from '@/services/@errors/course-not-found-error'
+import { InvalidCredentialsError } from '@/services/@errors/invalid-credentials-error'
+import { LeadNotReadyYetError } from '@/services/@errors/lead-not-ready-yet-error'
 import { LeadsDocumentExistsError } from '@/services/@errors/leads-document-exists-error'
 import { LeadsEmailExistsError } from '@/services/@errors/leads-email-exists-error'
 import { LeadsNotFoundError } from '@/services/@errors/leads-not-found-error'
@@ -86,6 +88,12 @@ export async function Update(request: FastifyRequest, reply: FastifyReply) {
     }
     if (error instanceof SetConsultantNotPermitError) {
       return reply.status(401).send({ message: error.message })
+    }
+    if (error instanceof LeadNotReadyYetError) {
+      return reply.status(404).send({ message: error.message })
+    }
+    if (error instanceof InvalidCredentialsError) {
+      return reply.status(404).send({ message: error.message })
     }
     return reply.status(500).send({ message: 'Internal server error' })
   }

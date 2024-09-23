@@ -37,11 +37,28 @@ const searchBodySchema = z.object({
           : undefined
     })
     .optional(),
+  released: z
+    .string()
+    .transform((released) => {
+      return released === 'true'
+        ? true
+        : released === 'false'
+          ? false
+          : undefined
+    })
+    .optional(),
 })
 
 export async function List(request: FastifyRequest, replay: FastifyReply) {
-  const { name, page, indicatorId, consultantId, archived, matriculation } =
-    searchBodySchema.parse(request.query)
+  const {
+    name,
+    page,
+    indicatorId,
+    consultantId,
+    archived,
+    matriculation,
+    released,
+  } = searchBodySchema.parse(request.query)
 
   const userId = request.user.sub
 
@@ -56,6 +73,7 @@ export async function List(request: FastifyRequest, replay: FastifyReply) {
       userId,
       archived,
       matriculation,
+      released,
     })
 
     return replay.status(200).send({ leads, count })
