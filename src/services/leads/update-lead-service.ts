@@ -12,6 +12,8 @@ import { CourseNotFoundError } from '../@errors/course-not-found-error'
 import { SegmentsRepository } from '@/repositories/segments-repository'
 import { SegmentNotFoundError } from '../@errors/segment-not-found-error'
 import { LeadsNotFoundError } from '../@errors/leads-not-found-error'
+import { InvalidCredentialsError } from '../@errors/invalid-credentials-error'
+import { LeadNotReadyYetError } from '../@errors/lead-not-ready-yet-error'
 
 interface UpdateLeadServiceRequest {
   id: string
@@ -25,6 +27,7 @@ interface UpdateLeadServiceRequest {
   segmentId: string
   courseId: string
   userId: string
+  released: boolean
 }
 
 interface UpdateLeadServiceResponse {
@@ -52,6 +55,7 @@ export class UpdateLeadService {
     segmentId,
     courseId,
     userId,
+    released,
   }: UpdateLeadServiceRequest): Promise<UpdateLeadServiceResponse> {
     const profile = await this.profileRepository.findByUserId(userId)
     const lead = await this.leadRepository.findById(id)
@@ -149,51 +153,81 @@ export class UpdateLeadService {
           }
     }
 
-    let data: { consultantId?: string | null } = {
+    let data: { consultantId?: string | null; released?: boolean } = {
       consultantId: lead?.consultantId,
     }
 
-    if (lead?.consultantId && !consultantId) {
-      if (profile.role === 'administrator') {
-        timeLine = [
-          ...timeLine,
-          {
-            description: `O consultor foi removido`,
-            status: 'Consultor removido',
-            courseId,
-            segmentId,
-            unitId,
-            title: '',
-          },
-        ]
-        data = { ...data, consultantId: null }
+    if (lead.released !== released) {
+      if (profile.role === 'auxiliary' || profile.role === 'administrator') {
+        data = {
+          ...data,
+          released,
+        }
       } else {
-        throw new SetConsultantNotPermitError()
+        throw new InvalidCredentialsError()
       }
     }
 
-    if (consultantId && consultantId !== lead?.consultantId) {
-      const profileConsultant =
-        await this.profileRepository.findById(consultantId)
-      if (profileConsultant?.role === 'consultant') {
-        if (profile.role === 'administrator') {
+    if (lead?.consultantId && !consultantId) {
+      if (
+        (lead.released === true &&
+          (released === true || released === undefined)) ||
+        released === true
+      ) {
+        if (profile.role === 'administrator' || profile.role === 'auxiliary') {
           timeLine = [
             ...timeLine,
             {
-              description: `O consultor ${profileConsultant.user.name} entrou em contato com o lead ${name}`,
-              status: 'Pegou',
+              description: `O consultor foi removido`,
+              status: 'Consultor removido',
               courseId,
               segmentId,
               unitId,
               title: '',
             },
           ]
-          data = { ...data, consultantId }
+          data = { ...data, consultantId: null }
         } else {
           throw new SetConsultantNotPermitError()
         }
       } else {
-        throw new SetConsultantNotPermitError()
+        throw new LeadNotReadyYetError()
+      }
+    }
+
+    if (consultantId && consultantId !== lead?.consultantId) {
+      if (
+        (lead.released === true &&
+          (released === true || released === undefined)) ||
+        released === true
+      ) {
+        const profileConsultant =
+          await this.profileRepository.findById(consultantId)
+        if (profileConsultant?.role === 'consultant') {
+          if (
+            profile.role === 'administrator' ||
+            profile.role === 'auxiliary'
+          ) {
+            timeLine = [
+              ...timeLine,
+              {
+                description: `O consultor ${profileConsultant.user.name} entrou em contato com o lead ${name}`,
+                status: 'Pegou',
+                courseId,
+                segmentId,
+                unitId,
+                title: '',
+              },
+            ]
+            data = { ...data, consultantId }
+          } else {
+            throw new SetConsultantNotPermitError()
+          }
+        } else {
+          throw new SetConsultantNotPermitError()
+        }
+      } else {
+        throw new LeadNotReadyYetError()
       }
     }
 

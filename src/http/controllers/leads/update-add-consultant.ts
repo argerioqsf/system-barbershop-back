@@ -1,4 +1,5 @@
 import { LeadAlreadyHasConsultant } from '@/services/@errors/lead-already-has-consultant'
+import { LeadNotReadyYetError } from '@/services/@errors/lead-not-ready-yet-error'
 import { LeadsNotFoundError } from '@/services/@errors/leads-not-found-error'
 import { UserNotFoundError } from '@/services/@errors/user-not-found-error'
 import { UserTypeNotCompatible } from '@/services/@errors/user-type-not-compatible'
@@ -37,6 +38,9 @@ export async function UpdateAddConsultant(
       return reply.status(404).send({ message: error.message })
     }
     if (error instanceof LeadAlreadyHasConsultant) {
+      return reply.status(404).send({ message: error.message })
+    }
+    if (error instanceof LeadNotReadyYetError) {
       return reply.status(404).send({ message: error.message })
     }
 

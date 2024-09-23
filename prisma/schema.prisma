@@ -145,6 +145,7 @@ model Leads {
   city                  String
   archived              Boolean    @default(false)
   documents             Boolean    @default(false)
+  released              Boolean    @default(false)
   matriculation         Boolean    @default(false)
   amount_pay_indicator  Float?
   amount_pay_consultant Float?
@@ -215,4 +216,5 @@ enum Role {
   coordinator
   financial
   secretary
+  auxiliary
 }
