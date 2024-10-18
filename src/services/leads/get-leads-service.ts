@@ -6,8 +6,11 @@ import { UserNotFoundError } from '../@errors/user-not-found-error'
 interface GetLeadsServiceRequest {
   page: number
   name?: string
+  phone?: string
   indicatorId?: string
   consultantId?: string | null | { not: null }
+  segmentId?: string
+  courseId?: string
   userId: string
   archived?: boolean
   matriculation?: boolean
@@ -28,8 +31,11 @@ export class GetLeadsService {
   async execute({
     page,
     name,
+    phone,
     indicatorId,
     consultantId,
+    segmentId,
+    courseId,
     userId,
     archived,
     matriculation,
@@ -46,11 +52,14 @@ export class GetLeadsService {
 
     let where: Prisma.LeadsWhereInput = {
       name: { contains: name },
+      phone: { contains: phone },
       archived,
       indicatorId,
       consultantId,
       matriculation,
       unitId: { in: unitsId ?? undefined },
+      segmentId,
+      courseId,
     }
     if (released !== undefined) {
       where = {

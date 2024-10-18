@@ -5,6 +5,7 @@ import { z } from 'zod'
 
 const searchBodySchema = z.object({
   name: z.string().optional(),
+  phone: z.string().optional(),
   page: z.coerce.number().min(1).default(1),
   indicatorId: z.string().optional(),
   matriculation: z
@@ -47,14 +48,29 @@ const searchBodySchema = z.object({
           : undefined
     })
     .optional(),
+  segmentId: z
+    .string()
+    .transform((segmentId) => {
+      return segmentId === '' ? undefined : segmentId
+    })
+    .optional(),
+  courseId: z
+    .string()
+    .transform((courseId) => {
+      return courseId === '' ? undefined : courseId
+    })
+    .optional(),
 })
 
 export async function List(request: FastifyRequest, replay: FastifyReply) {
   const {
     name,
+    phone,
     page,
     indicatorId,
     consultantId,
+    segmentId,
+    courseId,
     archived,
     matriculation,
     released,
@@ -67,9 +83,12 @@ export async function List(request: FastifyRequest, replay: FastifyReply) {
   try {
     const { leads, count } = await getLeadsService.execute({
       page,
+      phone,
       name,
       indicatorId,
       consultantId,
+      segmentId,
+      courseId,
       userId,
       archived,
       matriculation,
