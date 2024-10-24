@@ -34,7 +34,7 @@ export class CreateCycleService {
     if (!organization) throw new OrganizationNotFoundError()
 
     const existCycle = organization.organization.cycles.find(
-      (cycle) => cycle.end_cycle === undefined,
+      (cycle) => cycle.end_cycle === null,
     )
 
     if (existCycle) {

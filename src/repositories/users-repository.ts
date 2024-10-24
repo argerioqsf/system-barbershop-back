@@ -1,5 +1,6 @@
 import {
   Cycle,
+  Leads,
   Organization,
   Prisma,
   Profile,
@@ -11,7 +12,11 @@ export interface UsersRepository {
   findById(id: string): Promise<
     | (Omit<User, 'password'> & {
         profile: Omit<Profile & { units: { unit: Unit }[] }, 'userId'> | null
-        organizations: { organization: Organization & { cycles: Cycle[] } }[]
+        organizations: {
+          organization: Organization & {
+            cycles: (Cycle & { leads: Leads[] })[]
+          }
+        }[]
       })
     | null
   >

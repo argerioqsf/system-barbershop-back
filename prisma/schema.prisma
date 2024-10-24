@@ -162,6 +162,7 @@ model Leads {
   timeline              Timeline[]
   cycle                 Cycle?     @relation(fields: [cycleId], references: [id])
   cycleId               String?
+  createdAt   DateTime @default(now())
 
   @@map("leads")
 }
