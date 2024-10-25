@@ -18,8 +18,15 @@ type Graphics = {
     horas: number
     minutos: number
     segundos: number
+    totalLeads?: number
   }
-  totalLeads?: number
+  leads_by_steps?: {
+    countStepClosing: number
+    countStepNegotiation: number
+    countStepNewLeads: number
+    countStepPreService: number
+    countStepPresentationOportunity: number
+  }
 }
 
 interface GetGraphicsServiceRequest {
@@ -204,6 +211,95 @@ export class GetGraphicService {
       }
     }
 
+    const handleLeadsSteps = async () => {
+      let countStepNewLeads = 0
+      let where: Prisma.LeadsWhereInput = {}
+      if (
+        user?.profile?.role === 'indicator' ||
+        user?.profile?.role === 'consultant'
+      ) {
+        where = {
+          ...where,
+          indicatorId: user?.profile?.id,
+        }
+      }
+
+      const groupByStepNewLeads = await this.leadsRepository.groupBySteps(
+        ['released', 'consultantId'],
+        {
+          released: false,
+          consultantId: null,
+          ...where,
+        },
+      )
+      groupByStepNewLeads.forEach((item) => {
+        countStepNewLeads = countStepNewLeads + item._count.id
+      })
+
+      let countStepPreService = 0
+      const groupByStepsPreService = await this.leadsRepository.groupBySteps(
+        ['released', 'consultantId'],
+        {
+          released: true,
+          consultantId: null,
+          ...where,
+        },
+      )
+      groupByStepsPreService.forEach((item) => {
+        countStepPreService = countStepPreService + item._count.id
+      })
+
+      let countStepPresentationOpportunity = 0
+      const groupByStepsPresentationOpportunity =
+        await this.leadsRepository.groupBySteps(['released', 'consultantId'], {
+          released: true,
+          consultantId: {
+            not: null,
+          },
+          matriculation: false,
+          documents: false,
+          ...where,
+        })
+      groupByStepsPresentationOpportunity.forEach((item) => {
+        countStepPresentationOpportunity =
+          countStepPresentationOpportunity + item._count.id
+      })
+
+      let countStepNegotiation = 0
+      const groupByStepsNegotiation = await this.leadsRepository.groupBySteps(
+        ['matriculation', 'documents'],
+        {
+          matriculation: true,
+          documents: false,
+          ...where,
+        },
+      )
+      groupByStepsNegotiation.forEach((item) => {
+        countStepNegotiation = countStepNegotiation + item._count.id
+      })
+
+      let countStepClosing = 0
+      const groupByStepsClosing = await this.leadsRepository.groupBySteps(
+        ['matriculation', 'documents'],
+        {
+          matriculation: true,
+          documents: true,
+          ...where,
+        },
+      )
+      groupByStepsClosing.forEach((item) => {
+        countStepClosing = countStepClosing + item._count.id
+      })
+
+      return {
+        countStepNewLeads,
+        countStepPreService,
+        countStepPresentationOportunity: countStepPresentationOpportunity,
+        countStepNegotiation,
+        countStepClosing,
+      }
+    }
+
     if (
       profile?.role === 'indicator' ||
       profile?.role === 'consultant' ||
@@ -214,6 +310,14 @@ export class GetGraphicService {
 
       const { leads_per_cycle_current, leads_per_cycle_old } =
         await handleLeadsPerCycle()
+
+      const {
+        countStepClosing,
+        countStepNegotiation,
+        countStepNewLeads,
+        countStepPreService,
+        countStepPresentationOportunity,
+      } = await handleLeadsSteps()
 
       graphics = {
         ...graphics,
@@ -228,6 +332,13 @@ export class GetGraphicService {
               ? leads_per_cycle_current - leads_per_cycle_old
               : 0,
         },
+        leads_by_steps: {
+          countStepClosing,
+          countStepNegotiation,
+          countStepNewLeads,
+          countStepPreService,
+          countStepPresentationOportunity,
+        },
       }
     }
 
@@ -236,8 +347,10 @@ export class GetGraphicService {
         await handleLeadsAverageServiceTime()
       graphics = {
         ...graphics,
-        average_service_time,
-        totalLeads,
+        average_service_time: {
+          ...average_service_time,
+          totalLeads,
+        },
       }
     }
 
