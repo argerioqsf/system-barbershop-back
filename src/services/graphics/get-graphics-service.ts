@@ -5,8 +5,9 @@ import { UsersRepository } from '@/repositories/users-repository'
 import { Prisma } from '@prisma/client'
 import { ExtractProfileRepository } from '@/repositories/extract-profile-repository'
 import { ProfilesRepository } from '@/repositories/profiles-repository'
+import { CoursesRepository } from '@/repositories/course-repository'
 
-type ListRanking = { name: string; quant_leads: number }
+type ListRanking = { name: string; quant: number }
 
 type Graphics = {
   leads_per_day?: {
@@ -44,6 +45,7 @@ type Graphics = {
   }
   leadsRankingConsultant?: ListRanking[]
   leadsRankingIndicator?: ListRanking[]
+  coursesRanking?: any
 }
 
 interface GetGraphicsServiceRequest {
@@ -61,6 +63,7 @@ export class GetGraphicService {
     private cycleRepository: CycleRepository,
     private extractProfileRepository: ExtractProfileRepository,
     private profilesRepository: ProfilesRepository,
+    private courseRepository: CoursesRepository,
   ) {}
 
   async execute({
@@ -420,7 +423,7 @@ export class GetGraphicService {
         (profile_indicator) => {
           return {
             name: profile_indicator.user.name,
-            quant_leads: profile_indicator.leadsIndicator.length,
+            quant: profile_indicator.leadsIndicator.length,
           }
         },
       )
@@ -429,7 +432,7 @@ export class GetGraphicService {
         (profile_indicator) => {
           return {
             name: profile_indicator.user.name,
-            quant_leads: profile_indicator.leadsConsultant.length,
+            quant: profile_indicator.leadsConsultant.length,
           }
         },
       )
@@ -438,6 +441,38 @@ export class GetGraphicService {
         leadsRankingIndicator: rankingIndicator,
         leadsRankingConsultant: rankingConsultant,
       }
+    }
+
+    const handleRankingCourses = async () => {
+      const coursesRanking = await this.courseRepository.mountSelect(
+        {},
+        {
+          leads: {
+            _count: 'desc',
+          },
+        },
+        {
+          leads: {
+            where: {
+              documents: true,
+            },
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      )
+      const leadsCoursesRanking: ListRanking[] = coursesRanking.map(
+        (course) => {
+          return {
+            name: course.name,
+            quant: course.leads.length,
+          }
+        },
+      )
+      console.log('leadsCoursesRanking: ', leadsCoursesRanking)
+      return { coursesRanking: leadsCoursesRanking }
     }
 
     if (
@@ -489,6 +524,7 @@ export class GetGraphicService {
         await handleBonus()
       const { leadsRankingConsultant, leadsRankingIndicator } =
         await handleRankingIndicators()
+      const { coursesRanking } = await handleRankingCourses()
       graphics = {
         ...graphics,
         average_service_time: {
@@ -501,6 +537,7 @@ export class GetGraphicService {
         },
         leadsRankingConsultant,
         leadsRankingIndicator,
+        coursesRanking,
       }
     }
 
