@@ -45,7 +45,8 @@ type Graphics = {
   }
   leadsRankingConsultant?: ListRanking[]
   leadsRankingIndicator?: ListRanking[]
-  coursesRanking?: any
+  coursesRanking?: ListRanking[]
+  rankingConsultantsCloseSales?: ListRanking[]
 }
 
 interface GetGraphicsServiceRequest {
@@ -471,8 +472,34 @@ export class GetGraphicService {
           }
         },
       )
-      console.log('leadsCoursesRanking: ', leadsCoursesRanking)
       return { coursesRanking: leadsCoursesRanking }
+    }
+
+    const handleRankingConsultantCloseSales = async () => {
+      const rankingConsultantsCloseSales =
+        await this.profilesRepository.findMany(
+          {
+            role: 'consultant',
+            leadsConsultant: {
+              some: {
+                documents: true,
+              },
+            },
+          },
+          {
+            leadsConsultant: {
+              _count: 'desc',
+            },
+          },
+        )
+      const leadsrankingConsultantsCloseSales: ListRanking[] =
+        rankingConsultantsCloseSales.map((profile) => {
+          return {
+            name: profile.user.name,
+            quant: profile.leadsConsultant.length,
+          }
+        })
+      return { rankingConsultantsCloseSales: leadsrankingConsultantsCloseSales }
     }
 
     if (
@@ -525,6 +552,8 @@ export class GetGraphicService {
       const { leadsRankingConsultant, leadsRankingIndicator } =
         await handleRankingIndicators()
       const { coursesRanking } = await handleRankingCourses()
+      const { rankingConsultantsCloseSales } =
+        await handleRankingConsultantCloseSales()
       graphics = {
         ...graphics,
         average_service_time: {
@@ -538,6 +567,7 @@ export class GetGraphicService {
         leadsRankingConsultant,
         leadsRankingIndicator,
         coursesRanking,
+        rankingConsultantsCloseSales,
       }
     }
 
