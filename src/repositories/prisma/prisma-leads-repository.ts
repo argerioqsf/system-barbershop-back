@@ -141,10 +141,15 @@ export class PrismaLeadsRepository implements LeadsRepository {
     return leads
   }
 
-  async mountSelect(where: Prisma.LeadsWhereInput): Promise<Leads[]> {
+  async mountSelect(
+    where: Prisma.LeadsWhereInput,
+  ): Promise<(Leads & { timeline: Timeline[] })[]> {
     const leads = await prisma.leads.findMany({
       where: {
         ...where,
+      },
+      include: {
+        timeline: true,
       },
     })
 

@@ -14,5 +14,7 @@ export interface LeadsRepository {
     timeline: Omit<Timeline, 'id' | 'leadsId' | 'createdAt' | 'updatedAt'>[],
   ): Promise<Leads>
   find(where: Partial<Leads>): Promise<Leads[]>
-  mountSelect(where: Prisma.LeadsWhereInput): Promise<Leads[]>
+  mountSelect(
+    where: Prisma.LeadsWhereInput,
+  ): Promise<(Leads & { timeline: Timeline[] })[]>
 }
