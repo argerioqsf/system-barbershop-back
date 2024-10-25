@@ -52,9 +52,21 @@ export interface UsersRepository {
     data: Prisma.UserUpdateInput,
   ): Promise<Omit<User, 'password'>>
 
-  mountSelectConsultant(): Promise<
-    Omit<User, 'email' | 'password' | 'active'>[]
+  mountSelectConsultant(
+    where: Prisma.UserWhereInput,
+  ): Promise<
+    Omit<
+      User & { profile: { id: string; amountToReceive: number | null } | null },
+      'email' | 'password' | 'active'
+    >[]
   >
 
-  mountSelectIndicator(): Promise<Omit<User, 'email' | 'password' | 'active'>[]>
+  mountSelectIndicator(
+    where: Prisma.UserWhereInput,
+  ): Promise<
+    Omit<
+      User & { profile: { id: string; amountToReceive: number | null } | null },
+      'email' | 'password' | 'active'
+    >[]
+  >
 }

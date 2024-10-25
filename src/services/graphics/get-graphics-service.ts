@@ -3,7 +3,7 @@ import { LeadsRepository } from '@/repositories/leads-repository'
 import { CycleRepository } from '@/repositories/cycle-repository'
 import { UsersRepository } from '@/repositories/users-repository'
 import { Prisma } from '@prisma/client'
-import { TimelineRepository } from '@/repositories/timeline-repository'
+import { ExtractProfileRepository } from '@/repositories/extract-profile-repository'
 
 type Graphics = {
   leads_per_day?: {
@@ -27,6 +27,18 @@ type Graphics = {
     countStepPreService: number
     countStepPresentationOportunity: number
   }
+  bonus?: {
+    bonus_awaiting_confirmation: {
+      total: number
+      indicator: number
+      consultant: number
+    }
+    bonus_confirmed: {
+      total: number
+      indicator: number
+      consultant: number
+    }
+  }
 }
 
 interface GetGraphicsServiceRequest {
@@ -42,6 +54,7 @@ export class GetGraphicService {
     private leadsRepository: LeadsRepository,
     private userRepository: UsersRepository,
     private cycleRepository: CycleRepository,
+    private extractProfileRepository: ExtractProfileRepository,
   ) {}
 
   async execute({
@@ -300,6 +313,79 @@ export class GetGraphicService {
       }
     }
 
+    const handleBonus = async () => {
+      let bonus_awaiting_confirmation = {
+        total: 0,
+        indicator: 0,
+        consultant: 0,
+      }
+      let bonus_confirmed = {
+        total: 0,
+        indicator: 0,
+        consultant: 0,
+      }
+
+      const profiles_to_receive_consultant =
+        await this.userRepository.mountSelectConsultant({
+          profile: {
+            amountToReceive: {
+              not: null,
+            },
+            role: 'consultant',
+          },
+        })
+      const profiles_to_receive_indicator =
+        await this.userRepository.mountSelectIndicator({
+          profile: {
+            amountToReceive: {
+              not: null,
+            },
+            role: 'indicator',
+          },
+        })
+
+      let total_to_receive_consultant = 0
+      profiles_to_receive_consultant.forEach((user_consultant) => {
+        total_to_receive_consultant =
+          total_to_receive_consultant +
+          (user_consultant?.profile?.amountToReceive ?? 0)
+      })
+      let total_to_receive_indicator = 0
+      profiles_to_receive_indicator.forEach((user_indicator) => {
+        total_to_receive_indicator =
+          total_to_receive_indicator +
+          (user_indicator?.profile?.amountToReceive ?? 0)
+      })
+      bonus_awaiting_confirmation = {
+        total: total_to_receive_consultant + total_to_receive_indicator,
+        indicator: total_to_receive_indicator,
+        consultant: total_to_receive_consultant,
+      }
+
+      const addAmountReceiveIndicator =
+        await this.extractProfileRepository.addAmountReceive({
+          profile: {
+            role: 'indicator',
+          },
+        })
+      const addAmountReceiveConsultant =
+        await this.extractProfileRepository.addAmountReceive({
+          profile: {
+            role: 'consultant',
+          },
+        })
+
+      bonus_confirmed = {
+        total:
+          (addAmountReceiveIndicator._sum.amount_receive ?? 0) +
+          (addAmountReceiveConsultant._sum.amount_receive ?? 0),
+        indicator: addAmountReceiveIndicator._sum.amount_receive ?? 0,
+        consultant: addAmountReceiveConsultant._sum.amount_receive ?? 0,
+      }
+
+      return { bonus_awaiting_confirmation, bonus_confirmed }
+    }
+
     if (
       profile?.role === 'indicator' ||
       profile?.role === 'consultant' ||
@@ -345,11 +431,17 @@ export class GetGraphicService {
     if (profile?.role === 'administrator' || profile?.role === 'coordinator') {
       const { average_service_time, totalLeads } =
         await handleLeadsAverageServiceTime()
+      const { bonus_awaiting_confirmation, bonus_confirmed } =
+        await handleBonus()
       graphics = {
         ...graphics,
         average_service_time: {
           ...average_service_time,
           totalLeads,
+        },
+        bonus: {
+          bonus_awaiting_confirmation,
+          bonus_confirmed,
         },
       }
     }

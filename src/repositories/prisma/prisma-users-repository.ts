@@ -12,33 +12,20 @@ import {
 import { UsersRepository } from '../users-repository'
 
 export class PrismaUsersRepository implements UsersRepository {
-  async mountSelectIndicator(): Promise<
-    Omit<User, 'email' | 'password' | 'active'>[]
+  async mountSelectIndicator(
+    where: Prisma.UserWhereInput,
+  ): Promise<
+    Omit<
+      User & { profile: { id: string; amountToReceive: number | null } | null },
+      'email' | 'password' | 'active'
+    >[]
   > {
     const user = await prisma.user.findMany({
       where: {
         profile: {
           role: 'indicator',
         },
-      },
-      select: {
-        id: true,
-        name: true,
-        profile: false,
-      },
-    })
-
-    return user
-  }
-
-  async mountSelectConsultant(): Promise<
-    Omit<User, 'email' | 'password' | 'active'>[]
-  > {
-    const user = await prisma.user.findMany({
-      where: {
-        profile: {
-          role: 'consultant',
-        },
+        ...where,
       },
       select: {
         id: true,
@@ -46,6 +33,37 @@ export class PrismaUsersRepository implements UsersRepository {
         profile: {
           select: {
             id: true,
+            amountToReceive: true,
+          },
+        },
+      },
+    })
+
+    return user
+  }
+
+  async mountSelectConsultant(
+    where: Prisma.UserWhereInput,
+  ): Promise<
+    Omit<
+      User & { profile: { id: string; amountToReceive: number | null } | null },
+      'email' | 'password' | 'active'
+    >[]
+  > {
+    const user = await prisma.user.findMany({
+      where: {
+        profile: {
+          role: 'consultant',
+        },
+        ...where,
+      },
+      select: {
+        id: true,
+        name: true,
+        profile: {
+          select: {
+            id: true,
+            amountToReceive: true,
           },
         },
       },
