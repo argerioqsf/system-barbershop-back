@@ -4,6 +4,9 @@ import { CycleRepository } from '@/repositories/cycle-repository'
 import { UsersRepository } from '@/repositories/users-repository'
 import { Prisma } from '@prisma/client'
 import { ExtractProfileRepository } from '@/repositories/extract-profile-repository'
+import { ProfilesRepository } from '@/repositories/profiles-repository'
+
+type ListRanking = { name: string; quant_leads: number }
 
 type Graphics = {
   leads_per_day?: {
@@ -39,6 +42,8 @@ type Graphics = {
       consultant: number
     }
   }
+  leadsRankingConsultant?: ListRanking[]
+  leadsRankingIndicator?: ListRanking[]
 }
 
 interface GetGraphicsServiceRequest {
@@ -55,6 +60,7 @@ export class GetGraphicService {
     private userRepository: UsersRepository,
     private cycleRepository: CycleRepository,
     private extractProfileRepository: ExtractProfileRepository,
+    private profilesRepository: ProfilesRepository,
   ) {}
 
   async execute({
@@ -161,7 +167,6 @@ export class GetGraphicService {
     }
 
     const handleLeadsAverageServiceTime = async () => {
-      const average_service_time = 0
       let where = {}
       if (
         user?.profile?.role === 'indicator' ||
@@ -386,6 +391,55 @@ export class GetGraphicService {
       return { bonus_awaiting_confirmation, bonus_confirmed }
     }
 
+    const handleRankingIndicators = async () => {
+      const leadsRankingIndicator = await this.profilesRepository.findMany(
+        {
+          leadsIndicator: {
+            some: {},
+          },
+        },
+        {
+          leadsIndicator: {
+            _count: 'desc',
+          },
+        },
+      )
+      const leadsRankingConsultant = await this.profilesRepository.findMany(
+        {
+          leadsConsultant: {
+            some: {},
+          },
+        },
+        {
+          leadsConsultant: {
+            _count: 'desc',
+          },
+        },
+      )
+      const rankingIndicator: ListRanking[] = leadsRankingIndicator.map(
+        (profile_indicator) => {
+          return {
+            name: profile_indicator.user.name,
+            quant_leads: profile_indicator.leadsIndicator.length,
+          }
+        },
+      )
+
+      const rankingConsultant: ListRanking[] = leadsRankingConsultant.map(
+        (profile_indicator) => {
+          return {
+            name: profile_indicator.user.name,
+            quant_leads: profile_indicator.leadsConsultant.length,
+          }
+        },
+      )
+
+      return {
+        leadsRankingIndicator: rankingIndicator,
+        leadsRankingConsultant: rankingConsultant,
+      }
+    }
+
     if (
       profile?.role === 'indicator' ||
       profile?.role === 'consultant' ||
@@ -433,6 +487,8 @@ export class GetGraphicService {
         await handleLeadsAverageServiceTime()
       const { bonus_awaiting_confirmation, bonus_confirmed } =
         await handleBonus()
+      const { leadsRankingConsultant, leadsRankingIndicator } =
+        await handleRankingIndicators()
       graphics = {
         ...graphics,
         average_service_time: {
@@ -443,6 +499,8 @@ export class GetGraphicService {
           bonus_awaiting_confirmation,
           bonus_confirmed,
         },
+        leadsRankingConsultant,
+        leadsRankingIndicator,
       }
     }
 
