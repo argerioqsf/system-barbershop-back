@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { Course, Prisma } from '@prisma/client'
+import { Course, Leads, Prisma } from '@prisma/client'
 import { CoursesRepository } from '../course-repository'
 import { pagination } from '@/utils/constants/pagination'
 
@@ -67,14 +67,23 @@ export class PrismaCoursesRepository implements CoursesRepository {
     return courses
   }
 
-  async mountSelect(): Promise<Omit<Course, 'active'>[]> {
+  async mountSelect(
+    where: Prisma.CourseWhereInput,
+    orderBy?: Prisma.CourseOrderByWithRelationInput,
+    select?: Prisma.CourseSelect,
+  ): Promise<Omit<Course & { leads: Leads[] }, 'active'>[]> {
     const courses = await prisma.course.findMany({
       where: {
         active: true,
+        ...where,
       },
       select: {
         name: true,
         id: true,
+        ...select,
+      },
+      orderBy: {
+        ...orderBy,
       },
     })
 

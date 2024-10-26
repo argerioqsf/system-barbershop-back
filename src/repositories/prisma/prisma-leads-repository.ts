@@ -140,4 +140,41 @@ export class PrismaLeadsRepository implements LeadsRepository {
 
     return leads
   }
+
+  async mountSelect(
+    where: Prisma.LeadsWhereInput,
+  ): Promise<(Leads & { timeline: Timeline[] })[]> {
+    const leads = await prisma.leads.findMany({
+      where: {
+        ...where,
+      },
+      include: {
+        timeline: true,
+      },
+    })
+
+    return leads
+  }
+
+  async groupBySteps(
+    by: Prisma.LeadsScalarFieldEnum | Prisma.LeadsScalarFieldEnum[],
+    where: Prisma.LeadsWhereInput,
+  ): Promise<
+    (Prisma.PickEnumerable<
+      Prisma.LeadsGroupByOutputType,
+      Prisma.LeadsScalarFieldEnum | Prisma.LeadsScalarFieldEnum[]
+    > & { _count: { id: number } })[]
+  > {
+    const resultados = await prisma.leads.groupBy({
+      by,
+      where: {
+        ...where,
+      },
+      _count: {
+        id: true, // Contar o número de leads em cada grupo
+      },
+    })
+
+    return resultados
+  }
 }

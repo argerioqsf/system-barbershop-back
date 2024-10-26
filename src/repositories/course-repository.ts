@@ -1,4 +1,4 @@
-import { Course, Prisma } from '@prisma/client'
+import { Course, Leads, Prisma } from '@prisma/client'
 
 export interface CoursesRepository {
   create(data: Prisma.CourseCreateInput): Promise<Course>
@@ -6,7 +6,11 @@ export interface CoursesRepository {
   count(where: Prisma.CourseWhereInput): Promise<number>
   findManyListIds(ids: string[]): Promise<Course[]>
   findById(data: string): Promise<Course | null>
-  mountSelect(): Promise<Omit<Course, 'active'>[]>
+  mountSelect(
+    where?: Prisma.CourseWhereInput,
+    orderBy?: Prisma.CourseOrderByWithRelationInput,
+    select?: Prisma.CourseSelect,
+  ): Promise<Omit<Course & { leads: Leads[] }, 'active'>[]>
   deleteById(id: string): Promise<Course | null>
   updateById(id: string, data: Prisma.CourseUpdateInput): Promise<Course>
 }

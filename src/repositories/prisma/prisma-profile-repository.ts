@@ -140,4 +140,31 @@ export class PrismaProfilesRepository implements ProfilesRepository {
 
     return user
   }
+
+  async findMany(
+    where?: Prisma.ProfileWhereInput,
+    orderBy?: Prisma.ProfileOrderByWithRelationInput,
+  ): Promise<
+    (Profile & {
+      user: User
+      leadsConsultant: Leads[]
+      leadsIndicator: Leads[]
+    })[]
+  > {
+    const profiles = await prisma.profile.findMany({
+      where: {
+        ...where,
+      },
+      include: {
+        leadsConsultant: true,
+        leadsIndicator: true,
+        user: true,
+      },
+      orderBy: {
+        ...orderBy,
+      },
+    })
+
+    return profiles
+  }
 }

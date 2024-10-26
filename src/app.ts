@@ -16,6 +16,7 @@ import { profileRoute } from './http/controllers/profile/route'
 import { segmentRoute } from './http/controllers/segments/route'
 import { timelineRoute } from './http/controllers/timeline/route'
 import { unitCourseRoute } from './http/controllers/unit-course/route'
+import { graphicsRoute } from './http/controllers/graphics/route'
 import { unitRoute } from './http/controllers/units/route'
 import { userRoute } from './http/controllers/user/route'
 import { appRoute } from './http/routes/route'
@@ -131,6 +132,7 @@ app.register(consultantRoute)
 app.register(OrganizationRoute)
 app.register(timelineRoute)
 app.register(cycleRoute)
+app.register(graphicsRoute)
 
 app.setErrorHandler((error, _, replay) => {
   if (error instanceof ZodError) {

@@ -36,4 +36,14 @@ export interface ProfilesRepository {
     data: Prisma.ProfileUncheckedUpdateInput,
     extract: Prisma.ExtractProfileUncheckedCreateInput,
   ): Promise<{ profile: Profile; extract: ExtractProfile }>
+  findMany(
+    where?: Prisma.ProfileWhereInput,
+    orderBy?: Prisma.ProfileOrderByWithRelationInput,
+  ): Promise<
+    (Profile & {
+      user: User
+      leadsConsultant: Leads[]
+      leadsIndicator: Leads[]
+    })[]
+  >
 }

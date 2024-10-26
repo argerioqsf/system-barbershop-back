@@ -14,4 +14,16 @@ export interface LeadsRepository {
     timeline: Omit<Timeline, 'id' | 'leadsId' | 'createdAt' | 'updatedAt'>[],
   ): Promise<Leads>
   find(where: Partial<Leads>): Promise<Leads[]>
+  groupBySteps(
+    by: Prisma.LeadsScalarFieldEnum | Prisma.LeadsScalarFieldEnum[],
+    where: Prisma.LeadsWhereInput,
+  ): Promise<
+    (Prisma.PickEnumerable<
+      Prisma.LeadsGroupByOutputType,
+      Prisma.LeadsScalarFieldEnum | Prisma.LeadsScalarFieldEnum[]
+    > & { _count: { id: number } })[]
+  >
+  mountSelect(
+    where: Prisma.LeadsWhereInput,
+  ): Promise<(Leads & { timeline: Timeline[] })[]>
 }

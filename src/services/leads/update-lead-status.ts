@@ -63,7 +63,7 @@ export class UpdateLeadStatusService {
         timeLine = [
           {
             description: 'Matricula Realizada',
-            status: 'Status atualizado',
+            status: 'enrollment_completed',
             courseId: lead?.courseId,
             segmentId: lead?.segmentId,
             unitId: lead?.unitId,
@@ -148,7 +148,7 @@ export class UpdateLeadStatusService {
         timeLine = [
           {
             description: 'Documentos entregue',
-            status: 'Status atualizado',
+            status: 'documents_submitted',
             courseId: lead?.courseId,
             segmentId: lead?.segmentId,
             unitId: lead?.unitId,

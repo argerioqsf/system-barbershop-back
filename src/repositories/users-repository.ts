@@ -1,5 +1,6 @@
 import {
   Cycle,
+  Leads,
   Organization,
   Prisma,
   Profile,
@@ -11,7 +12,11 @@ export interface UsersRepository {
   findById(id: string): Promise<
     | (Omit<User, 'password'> & {
         profile: Omit<Profile & { units: { unit: Unit }[] }, 'userId'> | null
-        organizations: { organization: Organization & { cycles: Cycle[] } }[]
+        organizations: {
+          organization: Organization & {
+            cycles: (Cycle & { leads: Leads[] })[]
+          }
+        }[]
       })
     | null
   >
@@ -47,9 +52,21 @@ export interface UsersRepository {
     data: Prisma.UserUpdateInput,
   ): Promise<Omit<User, 'password'>>
 
-  mountSelectConsultant(): Promise<
-    Omit<User, 'email' | 'password' | 'active'>[]
+  mountSelectConsultant(
+    where: Prisma.UserWhereInput,
+  ): Promise<
+    Omit<
+      User & { profile: { id: string; amountToReceive: number | null } | null },
+      'email' | 'password' | 'active'
+    >[]
   >
 
-  mountSelectIndicator(): Promise<Omit<User, 'email' | 'password' | 'active'>[]>
+  mountSelectIndicator(
+    where: Prisma.UserWhereInput,
+  ): Promise<
+    Omit<
+      User & { profile: { id: string; amountToReceive: number | null } | null },
+      'email' | 'password' | 'active'
+    >[]
+  >
 }
