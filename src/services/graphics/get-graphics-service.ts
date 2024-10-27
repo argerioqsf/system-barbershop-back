@@ -19,9 +19,11 @@ type Graphics = {
     diff: number
   }
   average_service_time?: {
+    dias: number
     horas: number
     minutos: number
     segundos: number
+    media_em_dias: number
     totalLeads?: number
   }
   leads_by_steps?: {
@@ -97,29 +99,46 @@ export class GetGraphicService {
         yesterday.getMonth(),
         yesterday.getDate() + 1,
       )
-      const leads_per_day = await this.leadsRepository.count({
+
+      let whereT: Prisma.LeadsWhereInput = {
         createdAt: {
           gte: todayStart,
           lt: todayEnd,
         },
-        indicatorId: user?.profile?.id,
+      }
+
+      if (
+        user?.profile?.role === 'indicator' ||
+        user?.profile?.role === 'consultant'
+      ) {
+        whereT = {
+          ...whereT,
+          indicatorId: user?.profile?.id,
+        }
+      }
+
+      const leads_per_day = await this.leadsRepository.count({
+        ...whereT,
       })
-      let where: Prisma.LeadsWhereInput = {
+
+      let whereY: Prisma.LeadsWhereInput = {
         createdAt: {
           gte: yesterdayStart,
           lt: yesterdayEnd,
         },
       }
+
       if (
         user?.profile?.role === 'indicator' ||
         user?.profile?.role === 'consultant'
       ) {
-        where = {
-          ...where,
+        whereY = {
+          ...whereY,
           indicatorId: user?.profile?.id,
         }
       }
-      const leads_per_yesterday = await this.leadsRepository.count(where)
+
+      const leads_per_yesterday = await this.leadsRepository.count(whereY)
       return { leads_per_day, leads_per_yesterday }
     }
 
@@ -219,15 +238,19 @@ export class GetGraphicService {
           : 0
 
       const mediaEmSegundos = tempoMedioAtendimento / 1000
+      const media_em_dias = tempoMedioAtendimento / 86_400_000
+      const dias = Math.floor(mediaEmSegundos / 86400)
       const horas = Math.floor(mediaEmSegundos / 3600)
       const minutos = Math.floor((mediaEmSegundos % 3600) / 60)
       const segundos = Math.floor(mediaEmSegundos % 60)
 
       return {
         average_service_time: {
+          dias,
           horas,
           minutos,
           segundos,
+          media_em_dias,
         },
         totalLeads: leads_finalized.length,
       }
