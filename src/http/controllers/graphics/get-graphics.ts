@@ -13,7 +13,7 @@ export async function getGraphics(
   try {
     const { graphics } = await getGraphicsService.execute({ userId })
 
-    return reply.status(200).send({ graphics })
+    return reply.status(200).send(graphics)
   } catch (error) {
     if (error instanceof CourseNotFoundError) {
       return reply.status(404).send({ message: error.message })
