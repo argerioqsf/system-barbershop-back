@@ -117,9 +117,7 @@ export class GetGraphicService {
         }
       }
 
-      const leads_per_day = await this.leadsRepository.count({
-        ...whereT,
-      })
+      const leads_per_day = await this.leadsRepository.count(whereT)
 
       let whereY: Prisma.LeadsWhereInput = {
         createdAt: {
@@ -470,11 +468,7 @@ export class GetGraphicService {
     const handleRankingCourses = async () => {
       const coursesRanking = await this.courseRepository.mountSelect(
         {},
-        {
-          leads: {
-            _count: 'desc',
-          },
-        },
+        {},
         {
           leads: {
             where: {
@@ -487,14 +481,16 @@ export class GetGraphicService {
           },
         },
       )
-      const leadsCoursesRanking: ListRanking[] = coursesRanking.map(
-        (course) => {
-          return {
-            name: course.name,
-            quant: course.leads.length,
-          }
-        },
-      )
+      const sortedCourses = coursesRanking.sort((a, b) => {
+        return b.leads.length - a.leads.length
+      })
+
+      const leadsCoursesRanking: ListRanking[] = sortedCourses.map((course) => {
+        return {
+          name: course.name,
+          quant: course.leads.length,
+        }
+      })
       return { coursesRanking: leadsCoursesRanking }
     }
 
