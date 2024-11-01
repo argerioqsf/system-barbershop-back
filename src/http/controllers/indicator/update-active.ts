@@ -5,6 +5,7 @@ import { z } from 'zod'
 
 const bodySchema = z.object({
   active: z.boolean(),
+  sendEmail: z.boolean().optional(),
 })
 
 const routeSchema = z.object({
@@ -15,7 +16,7 @@ export async function UpdateActive(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
-  const { active } = bodySchema.parse(request.body)
+  const { active, sendEmail } = bodySchema.parse(request.body)
 
   const updateActiveIndicatorService = makeUpdateActiveIndicatorService()
 
@@ -25,6 +26,7 @@ export async function UpdateActive(
     const { user } = await updateActiveIndicatorService.execute({
       id,
       active,
+      sendEmail,
     })
     return reply
       .status(201)

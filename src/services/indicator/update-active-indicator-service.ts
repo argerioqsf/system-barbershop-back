@@ -6,6 +6,7 @@ import { sendActiveIndicatorEmail } from '@/lib/sendgrid'
 interface UpdateActiveIndicatorServiceRequest {
   id: string
   active: boolean
+  sendEmail?: boolean
 }
 
 interface UpdateActiveIndicatorServiceResponse {
@@ -18,13 +19,16 @@ export class UpdateActiveIndicatorService {
   async execute({
     id,
     active,
+    sendEmail,
   }: UpdateActiveIndicatorServiceRequest): Promise<UpdateActiveIndicatorServiceResponse> {
     const findUser = await this.userRepository.findById(id)
 
     if (!findUser) throw new UserNotFoundError()
 
     const user = await this.userRepository.update(id, { active })
-    if (active) sendActiveIndicatorEmail(findUser.email, findUser.name)
+
+    if (active && sendEmail)
+      sendActiveIndicatorEmail(findUser.email, findUser.name)
 
     return {
       user,

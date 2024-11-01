@@ -3,6 +3,7 @@ import { FastifyInstance } from 'fastify'
 import { List } from './list'
 import { CreateUserProfile } from './create'
 import { getUser } from './get-user'
+import { ResetPasswordUser } from './reset-password'
 
 export async function userRoute(app: FastifyInstance) {
   app.addHook('onRequest', verifyJWT)
@@ -12,4 +13,6 @@ export async function userRoute(app: FastifyInstance) {
   app.get('/user/:id', getUser)
 
   app.post('/create/user', CreateUserProfile)
+
+  app.put('/resetPassword/user', ResetPasswordUser)
 }
