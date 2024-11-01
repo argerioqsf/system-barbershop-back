@@ -4,6 +4,7 @@ import { Prisma, Profile, User } from '@prisma/client'
 interface GetUsersServiceRequest {
   page: number
   name?: string
+  active?: boolean
 }
 
 interface GetUsersServiceResponse {
@@ -19,8 +20,10 @@ export class GetUsersService {
   async execute({
     page,
     name,
+    active,
   }: GetUsersServiceRequest): Promise<GetUsersServiceResponse> {
     const where: Prisma.UserWhereInput = {
+      active,
       name: { contains: name },
     }
     const users = await this.userRepository.findMany(page, where)

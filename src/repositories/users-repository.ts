@@ -20,7 +20,9 @@ export interface UsersRepository {
       })
     | null
   >
-  findByEmail(email: string): Promise<User | null>
+  findByEmail(
+    email: string,
+  ): Promise<(User & { profile: Profile | null }) | null>
   create(data: Prisma.UserCreateInput): Promise<User>
   findMany(
     page: number,
