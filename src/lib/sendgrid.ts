@@ -96,6 +96,33 @@ export const sendActiveIndicatorEmail = async (to: string, name: string) => {
   }
 }
 
+export const sendContractEmail = async function (
+  to: string,
+  name: string,
+  link: string,
+): Promise<boolean> {
+  const msg = {
+    to,
+    from: 'sim@grupomadretereza.com.br',
+    subject: 'Sua contrato para indicador!',
+    text: `text`,
+    html: templateEmail(
+      name,
+      `Seu contrato para se tornar um indicador<br/><br/>
+       
+       Acesse o link e assine digitalmente!<br/>
+       <a href='${link}'>Acesse aqui seu contrato</a><br/><br/>`,
+    ),
+  }
+  try {
+    await sgMail.send(msg)
+    return true
+  } catch (error) {
+    console.log(error)
+    return false
+  }
+}
+
 export const sendConfirmIndicatorPaymentEmail = async (
   to: string,
   name: string,

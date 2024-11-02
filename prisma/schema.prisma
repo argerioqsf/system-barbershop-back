@@ -36,8 +36,10 @@ model Profile {
   leadsIndicator  Leads[]          @relation(name: "indicatorLeads")
   leadsConsultant Leads[]          @relation(name: "consultantLeads")
   city            String?
-  extract_profile ExtractProfile[]
+  extract_profile  ExtractProfile[]
   units           UnitConsultant[]
+  contractLink    String?
+  contractSent    Boolean          @default(false)
 
   @@map("profiles")
 }

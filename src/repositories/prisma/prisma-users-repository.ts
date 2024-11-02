@@ -107,6 +107,8 @@ export class PrismaUsersRepository implements UsersRepository {
             pix: true,
             birthday: true,
             city: true,
+            contractLink: true,
+            contractSent: true,
             amountToReceive: true,
           },
         },
@@ -157,6 +159,8 @@ export class PrismaUsersRepository implements UsersRepository {
             pix: true,
             birthday: true,
             city: true,
+            contractLink: true,
+            contractSent: true,
             amountToReceive: true,
           },
         },
@@ -213,6 +217,8 @@ export class PrismaUsersRepository implements UsersRepository {
             pix: true,
             birthday: true,
             city: true,
+            contractLink: true,
+            contractSent: true,
             amountToReceive: true,
             units: {
               select: {
@@ -272,6 +278,8 @@ export class PrismaUsersRepository implements UsersRepository {
             pix: true,
             birthday: true,
             city: true,
+            contractLink: true,
+            contractSent: true,
             amountToReceive: true,
             units: {
               select: {
