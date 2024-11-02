@@ -1,9 +1,4 @@
-export const templateEmail = (
-  name: string,
-  title: string,
-  subTitle: string,
-  body: string,
-) => {
+export const templateEmail = (name: string, body: string) => {
   return `
   <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html data-editor-version="2" class="sg-campaigns" xmlns="http://www.w3.org/1999/xhtml">
@@ -226,60 +221,19 @@ export const templateEmail = (
                               </table>
                               <table class="module" role="module" data-type="text" border="0" cellpadding="0"
                                 cellspacing="0" width="100%" style="table-layout: fixed;"
-                                data-muid="b35b8ff4-8b3c-4b35-9ed3-f9f25170affc" data-mc-module-version="2019-10-22">
-                                <tbody>
-                                  <tr>
-                                    <td
-                                      style="padding:40px 20px 18px 20px; line-height:28px; text-align:inherit; background-color:#ffffff;"
-                                      height="100%" valign="top" bgcolor="#ffffff" role="module-content">
-                                      <div>
-                                        <div style="font-family: inherit; text-align: center"><span
-                                            style="color: #0088ad; font-size: 28px; font-family: &quot;lucida sans unicode&quot;, &quot;lucida grande&quot;, sans-serif"><strong>${title}</strong></span></div>
-                                        <div style="font-family: inherit; text-align: center"><span
-                                            style="color: #0088ad; font-size: 28px; font-family: &quot;lucida sans unicode&quot;, &quot;lucida grande&quot;, sans-serif">${subTitle}</span></div>
-                                        <div></div>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                </tbody>
-                              </table>
-                              <table class="module" role="module" data-type="text" border="0" cellpadding="0"
-                                cellspacing="0" width="100%" style="table-layout: fixed;"
                                 data-muid="f758d404-9b02-4e87-937f-cccaa46787a6" data-mc-module-version="2019-10-22">
                                 <tbody>
                                   <tr>
                                     <td style="padding:18px 60px 18px 60px; line-height:22px; text-align:inherit;"
                                       height="100%" valign="top" bgcolor="" role="module-content">
                                       <div>
-                                        <div style="font-family: inherit; text-align: center">Olá ${name},&nbsp;</div>
-                                        <div style="font-family: inherit; text-align: center">${body}</div>
-                                        <div style="font-family: inherit; text-align: center">Atenciosamente,</div>
-                                        <div style="font-family: inherit; text-align: center">Equipe Madre Tereza</div>
+                                        <div style="font-family: inherit; text-align: left">Olá ${name},&nbsp;</div><br/>
+                                        <div style="font-family: inherit; text-align: left">${body}</div>
+                                        <div style="font-family: inherit; text-align: left">Atenciosamente,</div>
+                                        <div style="font-family: inherit; text-align: left">Felipe Borges</div>
+                                        <div style="font-family: inherit; text-align: left">Diretor Geral Adjunto do Madre Tereza</div>
                                         <div></div>
                                       </div>
-                                    </td>
-                                  </tr>
-                                </tbody>
-                              </table>
-                              <table border="0" cellpadding="0" cellspacing="0" class="module" data-role="module-button"
-                                data-type="button" role="module" style="table-layout:fixed;" width="100%"
-                                data-muid="3757586a-ce69-48ba-bd9a-0c0b7937a616">
-                                <tbody>
-                                  <tr>
-                                    <td align="center" bgcolor="" class="outer-td" style="padding:20px 0px 20px 0px;">
-                                      <table border="0" cellpadding="0" cellspacing="0" class="wrapper-mobile"
-                                        style="text-align:center;">
-                                        <tbody>
-                                          <tr>
-                                            <td align="center" bgcolor="#1cc241" class="inner-td"
-                                              style="border-radius:6px; font-size:16px; text-align:center; background-color:inherit;">
-                                              <a href="http://"
-                                                style="background-color:#1cc241; border:1px solid #ffffff; border-color:#ffffff; border-radius:30px; border-width:1px; color:#ffffff; display:inline-block; font-size:16px; font-weight:normal; letter-spacing:0px; line-height:normal; padding:12px 40px 12px 40px; text-align:center; text-decoration:none; border-style:solid; font-family:lucida sans unicode,lucida grande,sans-serif;"
-                                                target="_blank">WhatsApp</a>
-                                            </td>
-                                          </tr>
-                                        </tbody>
-                                      </table>
                                     </td>
                                   </tr>
                                 </tbody>
@@ -331,10 +285,6 @@ export const templateEmail = (
                                 style="color:#444444; font-size:12px; line-height:20px; padding:40px 16px 16px 16px; text-align:Center;"
                                 data-muid="4e838cf3-9892-4a6d-94d6-170e474d21e5">
                                 <div class="Unsubscribe--addressLine"></div>
-                                <p style="font-size:12px; line-height:20px;"><a target="_blank"
-                                    class="Unsubscribe--unsubscribeLink zzzzzzz" href="{{{unsubscribe}}}"
-                                    style="">Unsubscribe</a> - <a href="{{{unsubscribe_preferences}}}" target="_blank"
-                                    class="Unsubscribe--unsubscribePreferences" style="">Unsubscribe Preferences</a></p>
                               </div>
                             </td>
                           </tr>

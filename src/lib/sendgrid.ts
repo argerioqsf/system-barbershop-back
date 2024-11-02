@@ -9,13 +9,27 @@ export const sendLeadEmail = async (to: string, name: string) => {
   const msg = {
     to,
     from: 'sim@grupomadretereza.com.br',
-    subject: 'Você recebeu uma bolsa de desconto',
-    text: `Olá ${name},\n\nObrigado por se cadastrar em nossa plataforma! Estamos muito felizes em tê-lo conosco. Nossa equipe entrará em contato com você em breve para fornecer mais informações e tirar todas as suas dúvidas.\n\nAtenciosamente,\nEquipe Sim`,
+    subject:
+      '🎁 Você ganhou!!! Uma excelente oportunidade que mudará o seu futuro!',
+    text: `text`,
     html: templateEmail(
       name,
-      'VOCÊ GANHOU!!!',
-      'UMA BOLSA DE DESCONTO NO GRUPO MADRE TEREZA',
-      'Obrigado por se cadastrar em nossa plataforma! Estamos muito felizes em tê-lo conosco. Nossa equipe entrará em contato com você em breve para fornecer mais informações e tirar todas as suas dúvidas.',
+      `Temos uma ótima notícia para você!<br/><br/>
+
+       Alguém que te conhece indicou você para fazer parte do <b>Grupo Madre Tereza</b>, o maior grupo
+       educacional do Amapá. E, para tornar essa experiência ainda mais especial, você acaba de
+       receber um presente exclusivo para facilitar seu ingresso! <br/><br/>
+
+       Seja no maternal, nos cursos técnicos, na graduação ou até mesmo na pós-graduação, o Grupo
+       Madre Tereza oferece a melhor estrutura e ensino de qualidade para todas as etapas da sua
+       jornada educacional. Esta é a oportunidade perfeita para você se desenvolver e alcançar seus
+       objetivos.  <br/><br/>
+       
+       Nosso time está à disposição para te ajudar a dar o próximo passo. Entre em contato matrícula:
+       <a href='https://wa.me/message/HDPQFMYF6KEZN1'>Whatsapp</a> e descubra como esse presente pode te abrir as
+       portas para um futuro brilhante!
+
+       Esperamos por você! <br/><br/>`,
     ),
   }
 
@@ -30,13 +44,19 @@ export const sendCreateIndicatorEmail = async (to: string, name: string) => {
   const msg = {
     to,
     from: 'sim@grupomadretereza.com.br',
-    subject: 'Bem-vindo a plataforma SIM',
-    text: `Olá ${name},\n\nObrigado por se cadastrar em nossa plataforma! Estamos muito felizes em tê-lo conosco. Nossa equipe entrará em contato com você em breve para fornecer mais informações e tirar todas as suas dúvidas.\n\nAtenciosamente,\nEquipe Sim`,
+    subject: 'Bem-vindo ao Sistema de Indicadores da Madre!',
+    text: `text`,
     html: templateEmail(
       name,
-      'Bem-vindo ao Sistema de Indicação da Madre Tereza (SIM)',
-      'Obrigado por se cadastrar como um indicador',
-      'Sua conta está em analise, você recebera um email assim que for validada',
+      `Parabéns por sua decisão de fazer parte do Sistema de Indicadores da Madre (SIM)!
+       Estamos muito felizes em tê-lo como parte dessa jornada e por contar com sua colaboração para 
+       fortalecer ainda mais o nosso time. <br/><br/>
+
+       Seu cadastro está em análise, e em breve você receberá um e-mail com a confirmação e o link
+       de acesso à sua conta. Estamos ansiosos para que você possa começar a aproveitar todas as
+       vantagens que o SIM oferece.  <br/><br/>
+
+       Mais uma vez, seja bem-vindo e conte conosco para o que precisar! <br/><br/>`,
     ),
   }
   try {
@@ -50,13 +70,23 @@ export const sendActiveIndicatorEmail = async (to: string, name: string) => {
   const msg = {
     to,
     from: 'sim@grupomadretereza.com.br',
-    subject: 'Cadastro na plataforma',
-    text: `Olá ${name},\n\nObrigado por se cadastrar em nossa plataforma! Estamos muito felizes em tê-lo conosco. Nossa equipe entrará em contato com você em breve para fornecer mais informações e tirar todas as suas dúvidas.\n\nAtenciosamente,\nEquipe Sim`,
+    subject: 'Sua conta foi aprovada! Hora de começar a indicar e ganhar!',
+    text: `text`,
     html: templateEmail(
       name,
-      'Parabéns por fazer parte do Sistema de Indicação da Madre Tereza (SIM)',
-      'Sua conta foi aprovada!!!',
-      'Acesse o sistema e comece a indicar',
+      `Boas notícias! Sua conta no <b>Sistema de Indicadores da Madre (SIM)</b> foi aprovada, e agora você já
+       pode começar a indicar pessoas e ganhar bônus por cada matrícula confirmada.<br/><br/>
+       
+       É muito simples!<br/>
+       Acesse seu dashboard pelo link abaixo, e tenah exclusivo e compartilhe com seus contatos: <a href='https://sim.grupomadretereza.com.br'>Acesse aqui</a><br/><br/>
+
+       Cada indicação que resultar na contratação de serviços do Grupo Madre Tereza vai gerar um bônus
+       para você. Quanto mais você indicar, mais você ganha! <br/><br/>
+
+       Estamos ansiosos para ver você ajudar outras pessoas a transformarem suas vidas através da
+       educação.<br/><br/>
+
+       Vamos juntos nessa jornada! <br/><br/>`,
     ),
   }
   try {
@@ -74,13 +104,24 @@ export const sendConfirmIndicatorPaymentEmail = async (
   const msg = {
     to,
     from: 'sim@grupomadretereza.com.br',
-    subject: 'Cadastro na plataforma',
-    text: `Olá ${name},\n\nObrigado por se cadastrar em nossa plataforma! Estamos muito felizes em tê-lo conosco. Nossa equipe entrará em contato com você em breve para fornecer mais informações e tirar todas as suas dúvidas.\n\nAtenciosamente,\nEquipe Sim`,
+    subject: 'Parabéns! Você acaba de ganhar um bônus no SIM!',
+    text: `text`,
     html: templateEmail(
       name,
-      'Parabéns pelo lead confirmado',
-      `O lead ${lead.name} confirmou sua matricula!!!`,
-      `Foi contabilizado o valor de R$${lead.amount_pay_indicator} como saldo em sua conta \n \n assim que o pagamento for realizado voce sera informado`,
+      `Temos uma ótima notícia para você!<br/><br/>
+      
+       O Lead <b>${lead.name}</b>, que você indicou, acaba de efetuar a matrícula no Grupo Educacional
+       Madre Tereza. Seu esforço foi recompensado, e o bônus já foi contabilizado em sua conta
+       no <b>Sistema de Indicadores da Madre (SIM)</b>.<br/><br/>
+       
+       Para conferir o valor e acompanhar sua evolução no programa, acesse seu dashboard: <a href='https://sim.grupomadretereza.com.br'>Acesse aqui</a><br/><br/>
+
+       Lembre-se: quanto mais pessoas você indicar, mais bonificações você acumula. Afinal, <b>ajudar
+       alguém a alcançar seus objetivos educacionais é um presente tanto para eles quanto para você!</b> <br/><br/>
+
+       Continue assim, e vamos juntos transformar vidas por meio da educação!<br/><br/>
+
+       Vamos juntos nessa jornada! <br/><br/>`,
     ),
   }
   try {
