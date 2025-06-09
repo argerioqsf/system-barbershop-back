@@ -9,20 +9,27 @@ import { SetConsultantNotPermitError } from '@/services/@errors/set-consultant-n
 import { UnitNotFoundError } from '@/services/@errors/unit-not-found-error'
 import { UserNotFoundError } from '@/services/@errors/user-not-found-error'
 import makeUpdateLeadService from '@/services/@factories/leads/make-update-leads-service'
+import { Education, Modalities, personalityTraits, Shift } from '@prisma/client'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
 const bodySchema = z.object({
   name: z.string(),
-  phone: z.string(),
-  document: z.string(),
-  email: z.string(),
-  city: z.string(),
+  phone: z.string().optional(),
+  document: z.string().optional().nullable(),
+  email: z.string().optional().nullable(),
+  city: z.string().optional(),
   consultantId: z.string().optional().nullable(),
   unitId: z.string(),
   courseId: z.string(),
   segmentId: z.string(),
-  released: z.boolean(),
+  released: z.boolean().optional(),
+  shift: z.nativeEnum(Shift).optional().nullable(),
+  course_modality: z.nativeEnum(Modalities).optional().nullable(),
+  education: z.nativeEnum(Education).optional().nullable(),
+  personalityTraits: z.nativeEnum(personalityTraits).optional().nullable(),
+  class: z.string().optional().nullable(),
+  birthday: z.string().optional().nullable(),
 })
 
 const routeSchema = z.object({
@@ -41,6 +48,12 @@ export async function Update(request: FastifyRequest, reply: FastifyReply) {
     courseId,
     segmentId,
     released,
+    shift,
+    course_modality,
+    education,
+    personalityTraits,
+    class: class2,
+    birthday,
   } = bodySchema.parse(request.body)
 
   const updateLeadService = makeUpdateLeadService()
@@ -62,6 +75,12 @@ export async function Update(request: FastifyRequest, reply: FastifyReply) {
       segmentId,
       userId,
       released,
+      shift,
+      course_modality,
+      education,
+      personalityTraits,
+      class2,
+      birthday,
     })
     return reply.status(201).send(lead)
   } catch (error) {

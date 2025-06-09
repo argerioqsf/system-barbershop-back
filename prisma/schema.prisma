@@ -139,32 +139,39 @@ model Timeline {
 }
 
 model Leads {
-  id                    String     @id @default(uuid())
+  id                    String         @id @default(uuid())
   name                  String
   phone                 String
-  document              String
-  email                 String
+  document              String?
+  email                 String?
   city                  String
-  archived              Boolean    @default(false)
-  documents             Boolean    @default(false)
-  released              Boolean    @default(false)
-  matriculation         Boolean    @default(false)
+  archived              Boolean        @default(false)
+  documents             Boolean        @default(false)
+  released              Boolean        @default(false)
+  matriculation         Boolean        @default(false)
   amount_pay_indicator  Float?
   amount_pay_consultant Float?
-  indicator             Profile    @relation(fields: [indicatorId], references: [id], name: "indicatorLeads")
+  birthday              String?
+  class                 String?
+  personalityTraits     personalityTraits?
+  noteLead              Int?   
+  shift                 Shift? 
+  course_modality       Modalities?
+  education             Education?
+  indicator             Profile         @relation(fields: [indicatorId], references: [id], name: "indicatorLeads")
   indicatorId           String
-  consultant            Profile?   @relation(fields: [consultantId], references: [id], name: "consultantLeads")
+  consultant            Profile?        @relation(fields: [consultantId], references: [id], name: "consultantLeads")
   consultantId          String?
-  unit                  Unit       @relation(fields: [unitId], references: [id])
+  unit                  Unit           @relation(fields: [unitId], references: [id])
   unitId                String
-  course                Course     @relation(fields: [courseId], references: [id])
+  course                Course         @relation(fields: [courseId], references: [id])
   courseId              String
-  segment               Segment    @relation(fields: [segmentId], references: [id])
+  segment               Segment        @relation(fields: [segmentId], references: [id])
   segmentId             String
   timeline              Timeline[]
-  cycle                 Cycle?     @relation(fields: [cycleId], references: [id])
+  cycle                 Cycle?         @relation(fields: [cycleId], references: [id])
   cycleId               String?
-  createdAt   DateTime @default(now())
+  createdAt             DateTime       @default(now())
 
   @@map("leads")
 }
@@ -220,4 +227,35 @@ enum Role {
   financial
   secretary
   auxiliary
+}
+
+
+enum personalityTraits {
+  colerico
+  melancolico
+  fleumatico
+  sanguineo
+}
+
+enum Shift { 
+  manha
+  tarde
+  noite
+  finais_de_semana
+}
+
+enum Education { 
+  ensino_fundamental_incompleto
+  ensino_fundamental_completo
+  ensino_medio_incompleto
+  ensino_medio_completo
+  ensino_superior_incompleto
+  ensino_superior_completo
+  sem_escolaridade
+}
+
+enum Modalities {
+  presencial_100
+  online_100
+  semi_presencial
 }

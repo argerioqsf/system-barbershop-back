@@ -1,6 +1,13 @@
 import { LeadsRepository } from '@/repositories/leads-repository'
 import { PrismaProfilesRepository } from '@/repositories/prisma/prisma-profile-repository'
-import { Leads, Timeline } from '@prisma/client'
+import {
+  Education,
+  Leads,
+  Modalities,
+  personalityTraits,
+  Shift,
+  Timeline,
+} from '@prisma/client'
 import { AdministratorCreateIndicatorNotFound } from '../@errors/administrator-create-indicator-not-found'
 import { IndicatorNotFoundError } from '../@errors/indicator-not-found-error'
 import { LeadsDocumentExistsError } from '../@errors/leads-document-exists-error'
@@ -27,6 +34,12 @@ interface CreateLeadsServiceRequest {
   unitId: string
   segmentId: string
   courseId: string
+  shift?: Shift
+  course_modality?: Modalities | null
+  education?: Education | null
+  personalityTraits?: personalityTraits | null
+  class2?: string | null
+  birthday?: string | null
 }
 
 interface CreateLeadsServiceResponse {
@@ -54,6 +67,12 @@ export class CreateLeadsService {
     unitId,
     segmentId,
     courseId,
+    shift,
+    course_modality,
+    education,
+    personalityTraits,
+    class2,
+    birthday,
   }: CreateLeadsServiceRequest): Promise<CreateLeadsServiceResponse> {
     const profile = await this.profileRepository.findByUserId(userId)
     const unit = await this.unitRepository.findById(unitId)
@@ -158,6 +177,12 @@ export class CreateLeadsService {
         segmentId,
         amount_pay_indicator: 0,
         amount_pay_consultant: 0,
+        shift,
+        course_modality,
+        education,
+        personalityTraits,
+        class: class2,
+        birthday,
         ...data,
       },
       timeLine,

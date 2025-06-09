@@ -10,6 +10,7 @@ import { SetConsultantNotPermitError } from '@/services/@errors/set-consultant-n
 import { UnitNotFoundError } from '@/services/@errors/unit-not-found-error'
 import { UserNotFoundError } from '@/services/@errors/user-not-found-error'
 import makeCreateLeadsService from '@/services/@factories/leads/make-create-leads-service'
+import { Education, Modalities, personalityTraits, Shift } from '@prisma/client'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
@@ -24,6 +25,12 @@ const bodySchema = z.object({
   consultantId: z.string().optional().nullable(),
   courseId: z.string(),
   segmentId: z.string(),
+  shift: z.nativeEnum(Shift).optional(),
+  course_modality: z.nativeEnum(Modalities).optional(),
+  education: z.nativeEnum(Education).optional(),
+  personalityTraits: z.nativeEnum(personalityTraits).optional(),
+  class: z.string().optional(),
+  birthday: z.string().optional(),
 })
 
 export async function Create(request: FastifyRequest, reply: FastifyReply) {
@@ -34,7 +41,11 @@ export async function Create(request: FastifyRequest, reply: FastifyReply) {
   const createLeadsService = makeCreateLeadsService()
 
   try {
-    const { leads } = await createLeadsService.execute({ ...body, userId })
+    const { leads } = await createLeadsService.execute({
+      ...body,
+      class2: body.class,
+      userId,
+    })
 
     return reply.status(201).send(leads)
   } catch (error) {

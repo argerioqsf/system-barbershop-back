@@ -1,6 +1,13 @@
 import { LeadsRepository } from '@/repositories/leads-repository'
 import { ProfilesRepository } from '@/repositories/profiles-repository'
-import { Leads, Timeline } from '@prisma/client'
+import {
+  Education,
+  Leads,
+  Modalities,
+  personalityTraits,
+  Shift,
+  Timeline,
+} from '@prisma/client'
 import { UserNotFoundError } from '../@errors/user-not-found-error'
 import { LeadsEmailExistsError } from '../@errors/leads-email-exists-error'
 import { LeadsDocumentExistsError } from '../@errors/leads-document-exists-error'
@@ -18,16 +25,22 @@ import { LeadNotReadyYetError } from '../@errors/lead-not-ready-yet-error'
 interface UpdateLeadServiceRequest {
   id: string
   name: string
-  phone: string
-  document: string
-  email: string
-  city: string
+  phone?: string
+  document?: string | null
+  email?: string | null
+  city?: string
   consultantId?: string | null
   unitId: string
   segmentId: string
   courseId: string
   userId: string
-  released: boolean
+  released?: boolean
+  shift?: Shift | null
+  course_modality?: Modalities | null
+  education?: Education | null
+  personalityTraits?: personalityTraits | null
+  class2?: string | null
+  birthday?: string | null
 }
 
 interface UpdateLeadServiceResponse {
@@ -56,6 +69,12 @@ export class UpdateLeadService {
     courseId,
     userId,
     released,
+    shift,
+    course_modality,
+    education,
+    personalityTraits,
+    class2,
+    birthday,
   }: UpdateLeadServiceRequest): Promise<UpdateLeadServiceResponse> {
     const profile = await this.profileRepository.findByUserId(userId)
     const lead = await this.leadRepository.findById(id)
@@ -243,6 +262,12 @@ export class UpdateLeadService {
         unitId,
         segmentId,
         courseId,
+        shift,
+        course_modality,
+        education,
+        personalityTraits,
+        class: class2,
+        birthday,
         ...data,
       },
       timeLine,
