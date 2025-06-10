@@ -9,6 +9,7 @@ export async function OpenSessionController(request: FastifyRequest, reply: Fast
   })
   const data = bodySchema.parse(request.body)
   const service = makeOpenSessionService()
-  const { session } = await service.execute(data)
+  const unitId = (request.user as any).unitId as string
+  const { session } = await service.execute({ ...data, unitId })
   return reply.status(201).send(session)
 }

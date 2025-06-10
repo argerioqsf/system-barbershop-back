@@ -7,8 +7,8 @@ export class PrismaSaleRepository implements SaleRepository {
     return prisma.sale.create({ data, include: { items: true, user: true, coupon: true } })
   }
 
-  async findMany(): Promise<Sale[]> {
-    return prisma.sale.findMany({ include: { items: true, user: true, coupon: true } })
+  async findMany(where: Prisma.SaleWhereInput = {}): Promise<Sale[]> {
+    return prisma.sale.findMany({ where, include: { items: true, user: true, coupon: true } })
   }
 
   async findById(id: string): Promise<Sale | null> {

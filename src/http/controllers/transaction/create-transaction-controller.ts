@@ -1,0 +1,17 @@
+import { makeCreateTransaction } from '@/services/@factories/transaction/make-create-transaction'
+import { FastifyReply, FastifyRequest } from 'fastify'
+import { z } from 'zod'
+
+export async function CreateTransactionController(request: FastifyRequest, reply: FastifyReply) {
+  const bodySchema = z.object({
+    userId: z.string(),
+    type: z.enum(['ADDITION', 'WITHDRAWAL']),
+    description: z.string(),
+    amount: z.number(),
+  })
+  const data = bodySchema.parse(request.body)
+  const unitId = (request.user as any).unitId as string
+  const service = makeCreateTransaction()
+  const { transaction } = await service.execute({ ...data, unitId })
+  return reply.status(201).send(transaction)
+}

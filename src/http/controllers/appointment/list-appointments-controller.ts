@@ -2,10 +2,11 @@ import { makeListAppointments } from '@/services/@factories/appointment/make-lis
 import { FastifyReply, FastifyRequest } from 'fastify'
 
 export async function ListAppointmentsController(
-  _: FastifyRequest,
+  request: FastifyRequest,
   reply: FastifyReply,
 ) {
   const service = makeListAppointments()
-  const { appointments } = await service.execute()
+  const unitId = (request.user as any).unitId as string
+  const { appointments } = await service.execute(unitId)
   return reply.status(200).send(appointments)
 }

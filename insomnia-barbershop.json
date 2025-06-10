@@ -431,6 +431,39 @@
       ]
     },
     {
+      "_id": "fld_abcd1234abcd1234abcd1234abcd1234",
+      "_type": "request_group",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Transactions"
+    },
+    {
+      "_id": "req_txncreate000000000000000000000001",
+      "_type": "request",
+      "parentId": "fld_abcd1234abcd1234abcd1234abcd1234",
+      "name": "Create transaction",
+      "method": "POST",
+      "url": "{{ baseURL }}/transactions",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"userId\": \"\",\n  \"type\": \"ADDITION\",\n  \"description\": \"\",\n  \"amount\": 0\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ token }}" }
+      ]
+    },
+    {
+      "_id": "req_txnlist000000000000000000000001",
+      "_type": "request",
+      "parentId": "fld_abcd1234abcd1234abcd1234abcd1234",
+      "name": "List transactions",
+      "method": "GET",
+      "url": "{{ baseURL }}/transactions",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ token }}" }
+      ]
+    },
+    {
       "_id": "fld_9ef7e0b2086f44b22f869d45307f52a7",
       "_type": "request_group",
       "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
