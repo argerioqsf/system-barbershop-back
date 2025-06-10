@@ -4,6 +4,7 @@ import fastify from 'fastify'
 import multer from 'fastify-multer'
 import fs from 'fs'
 import path from 'path'
+import { uploadDir, upload } from './lib/upload'
 import { ZodError } from 'zod'
 import { env } from './env'
 import { consultantRoute } from './http/controllers/consultant/route'
@@ -29,13 +30,6 @@ import { reportRoute } from './http/controllers/report/route'
 import { configRoute } from './http/controllers/config/route'
 import { appRoute } from './http/routes/route'
 
-const uploadDir = path.join('/opt/app/uploads')
-
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true })
-}
-
-const upload = multer({ dest: uploadDir })
 
 export const app = fastify()
 
