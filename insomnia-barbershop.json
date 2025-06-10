@@ -1,0 +1,349 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2025-06-10T00:00:00.000Z",
+  "__export_source": "codex",
+  "resources": [
+    {
+      "_id": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "_type": "workspace",
+      "name": "Lobo Barbearia",
+      "description": "API collection"
+    },
+    {
+      "_id": "env_4c1afb0dd44c7f3c6141a3e219738bfc",
+      "_type": "environment",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Base Environment",
+      "data": {
+        "baseURL": "http://localhost:3333",
+        "token": ""
+      }
+    },
+    {
+      "_id": "fld_8cfb148cbcb1f77d494ab985717014d4",
+      "_type": "request_group",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Services"
+    },
+    {
+      "_id": "req_ba116d68ad6398e9ceba43faeb1dc038",
+      "_type": "request",
+      "parentId": "fld_8cfb148cbcb1f77d494ab985717014d4",
+      "name": "Create service",
+      "method": "POST",
+      "url": "{{ baseURL }}/create/service",
+      "body": {
+        "mimeType": "multipart/form-data",
+        "params": [
+          {"name": "name", "value": "Corte"},
+          {"name": "description", "value": "Corte simples"},
+          {"name": "cost", "value": "10"},
+          {"name": "price", "value": "20"},
+          {"name": "isProduct", "value": "false"},
+          {"name": "image", "value": "", "type": "file"}
+        ]
+      },
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ token }}"}
+      ]
+    },
+    {
+      "_id": "req_b685df0c0adb56353ad1397282e24ef8",
+      "_type": "request",
+      "parentId": "fld_8cfb148cbcb1f77d494ab985717014d4",
+      "name": "List services",
+      "method": "GET",
+      "url": "{{ baseURL }}/services",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ token }}"}
+      ]
+    },
+    {
+      "_id": "fld_ba116d68ad6398e9ceba43faeb1dc038",
+      "_type": "request_group",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Appointments"
+    },
+    {
+      "_id": "req_12d71be0f7b15a699324e623b6391cdb",
+      "_type": "request",
+      "parentId": "fld_ba116d68ad6398e9ceba43faeb1dc038",
+      "name": "Create appointment",
+      "method": "POST",
+      "url": "{{ baseURL }}/create/appointment",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"clientId\": \"\",\n  \"barberId\": \"\",\n  \"serviceId\": \"\",\n  \"date\": \"2025-01-01T10:00:00Z\",\n  \"hour\": \"10:00\"\n}"
+      },
+      "headers": [
+        {"name": "Content-Type", "value": "application/json"},
+        {"name": "Authorization", "value": "Bearer {{ token }}"}
+      ]
+    },
+    {
+      "_id": "req_a90b05bb0f273b15a754c37e6973fbc6",
+      "_type": "request",
+      "parentId": "fld_ba116d68ad6398e9ceba43faeb1dc038",
+      "name": "List appointments",
+      "method": "GET",
+      "url": "{{ baseURL }}/appointments",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ token }}"}
+      ]
+    },
+    {
+      "_id": "fld_2e49ddd84004d3063177e1ed1a3952b4",
+      "_type": "request_group",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Barber Users"
+    },
+    {
+      "_id": "req_caa803605d4f1e2f53c6aac1f46fafdd",
+      "_type": "request",
+      "parentId": "fld_2e49ddd84004d3063177e1ed1a3952b4",
+      "name": "Create barber user",
+      "method": "POST",
+      "url": "{{ baseURL }}/barber/users",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"\",\n  \"email\": \"\",\n  \"password\": \"\"\n}"
+      },
+      "headers": [
+        {"name": "Content-Type", "value": "application/json"},
+        {"name": "Authorization", "value": "Bearer {{ token }}"}
+      ]
+    },
+    {
+      "_id": "req_f1964b0cdd650454cfaab4f27847a676",
+      "_type": "request",
+      "parentId": "fld_2e49ddd84004d3063177e1ed1a3952b4",
+      "name": "List barber users",
+      "method": "GET",
+      "url": "{{ baseURL }}/barber/users",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ token }}"}
+      ]
+    },
+    {
+      "_id": "req_9ef7e0b2086f44b22f869d45307f52a7",
+      "_type": "request",
+      "parentId": "fld_2e49ddd84004d3063177e1ed1a3952b4",
+      "name": "Get barber user",
+      "method": "GET",
+      "url": "{{ baseURL }}/barber/users/{{ userId }}",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ token }}"}
+      ]
+    },
+    {
+      "_id": "req_0794989026c475e2842ce7df2529f370",
+      "_type": "request",
+      "parentId": "fld_2e49ddd84004d3063177e1ed1a3952b4",
+      "name": "Update barber user",
+      "method": "PUT",
+      "url": "{{ baseURL }}/barber/users/{{ userId }}",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Updated\"\n}"
+      },
+      "headers": [
+        {"name": "Content-Type", "value": "application/json"},
+        {"name": "Authorization", "value": "Bearer {{ token }}"}
+      ]
+    },
+    {
+      "_id": "req_1214166d5646eb5a092050f790b99668",
+      "_type": "request",
+      "parentId": "fld_2e49ddd84004d3063177e1ed1a3952b4",
+      "name": "Delete barber user",
+      "method": "DELETE",
+      "url": "{{ baseURL }}/barber/users/{{ userId }}",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ token }}"}
+      ]
+    },
+    {
+      "_id": "fld_caa803605d4f1e2f53c6aac1f46fafdd",
+      "_type": "request_group",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Coupons"
+    },
+    {
+      "_id": "req_87151c5dc678be854fa2f2e8885ab117",
+      "_type": "request",
+      "parentId": "fld_caa803605d4f1e2f53c6aac1f46fafdd",
+      "name": "Create coupon",
+      "method": "POST",
+      "url": "{{ baseURL }}/coupons",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"code\": \"X\",\n  \"description\": \"\",\n  \"discount\": 10\n}"
+      },
+      "headers": [
+        {"name": "Content-Type", "value": "application/json"},
+        {"name": "Authorization", "value": "Bearer {{ token }}"}
+      ]
+    },
+    {
+      "_id": "req_d90e62b11af5c485827c051369c9bbbe",
+      "_type": "request",
+      "parentId": "fld_caa803605d4f1e2f53c6aac1f46fafdd",
+      "name": "List coupons",
+      "method": "GET",
+      "url": "{{ baseURL }}/coupons",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ token }}"}
+      ]
+    },
+    {
+      "_id": "req_b617123abcde00001122334455667788",
+      "_type": "request",
+      "parentId": "fld_caa803605d4f1e2f53c6aac1f46fafdd",
+      "name": "Get coupon",
+      "method": "GET",
+      "url": "{{ baseURL }}/coupons/{{ couponId }}",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ token }}"}
+      ]
+    },
+    {
+      "_id": "req_66778899aabbccddeeff001122334455",
+      "_type": "request",
+      "parentId": "fld_caa803605d4f1e2f53c6aac1f46fafdd",
+      "name": "Delete coupon",
+      "method": "DELETE",
+      "url": "{{ baseURL }}/coupons/{{ couponId }}",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ token }}"}
+      ]
+    },
+    {
+      "_id": "fld_f1964b0cdd650454cfaab4f27847a676",
+      "_type": "request_group",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Cash Register"
+    },
+    {
+      "_id": "req_77aaa7b77aaa7b77aaa7b77aaa7b77aa",
+      "_type": "request",
+      "parentId": "fld_f1964b0cdd650454cfaab4f27847a676",
+      "name": "Open session",
+      "method": "POST",
+      "url": "{{ baseURL }}/cash-session/open",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"initialAmount\": 0\n}"
+      },
+      "headers": [
+        {"name": "Content-Type", "value": "application/json"},
+        {"name": "Authorization", "value": "Bearer {{ token }}"}
+      ]
+    },
+    {
+      "_id": "req_88bbb8b88bbb8b88bbb8b88bbb8b88bb",
+      "_type": "request",
+      "parentId": "fld_f1964b0cdd650454cfaab4f27847a676",
+      "name": "Close session",
+      "method": "PUT",
+      "url": "{{ baseURL }}/cash-session/close",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"finalAmount\": 0\n}"
+      },
+      "headers": [
+        {"name": "Content-Type", "value": "application/json"},
+        {"name": "Authorization", "value": "Bearer {{ token }}"}
+      ]
+    },
+    {
+      "_id": "req_99ccc9c99ccc9c99ccc9c99ccc9c99cc",
+      "_type": "request",
+      "parentId": "fld_f1964b0cdd650454cfaab4f27847a676",
+      "name": "List sessions",
+      "method": "GET",
+      "url": "{{ baseURL }}/cash-session",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ token }}"}
+      ]
+    },
+    {
+      "_id": "fld_9ef7e0b2086f44b22f869d45307f52a7",
+      "_type": "request_group",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Sales"
+    },
+    {
+      "_id": "req_a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+      "_type": "request",
+      "parentId": "fld_9ef7e0b2086f44b22f869d45307f52a7",
+      "name": "Create sale",
+      "method": "POST",
+      "url": "{{ baseURL }}/sales",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"items\": []\n}"
+      },
+      "headers": [
+        {"name": "Content-Type", "value": "application/json"},
+        {"name": "Authorization", "value": "Bearer {{ token }}"}
+      ]
+    },
+    {
+      "_id": "req_b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+      "_type": "request",
+      "parentId": "fld_9ef7e0b2086f44b22f869d45307f52a7",
+      "name": "List sales",
+      "method": "GET",
+      "url": "{{ baseURL }}/sales",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ token }}"}
+      ]
+    },
+    {
+      "_id": "req_c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3",
+      "_type": "request",
+      "parentId": "fld_9ef7e0b2086f44b22f869d45307f52a7",
+      "name": "Get sale",
+      "method": "GET",
+      "url": "{{ baseURL }}/sales/{{ saleId }}",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ token }}"}
+      ]
+    },
+    {
+      "_id": "fld_0794989026c475e2842ce7df2529f370",
+      "_type": "request_group",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Reports"
+    },
+    {
+      "_id": "req_d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4",
+      "_type": "request",
+      "parentId": "fld_0794989026c475e2842ce7df2529f370",
+      "name": "Sales report",
+      "method": "GET",
+      "url": "{{ baseURL }}/reports/sales",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ token }}"}
+      ]
+    },
+    {
+      "_id": "fld_1214166d5646eb5a092050f790b99668",
+      "_type": "request_group",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Config"
+    },
+    {
+      "_id": "req_e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5",
+      "_type": "request",
+      "parentId": "fld_1214166d5646eb5a092050f790b99668",
+      "name": "Export users",
+      "method": "GET",
+      "url": "{{ baseURL }}/config/export/users",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ token }}"}
+      ]
+    }
+  ]
+}
