@@ -19,6 +19,11 @@ import { unitCourseRoute } from './http/controllers/unit-course/route'
 import { graphicsRoute } from './http/controllers/graphics/route'
 import { unitRoute } from './http/controllers/units/route'
 import { userRoute } from './http/controllers/user/route'
+import { barberShopServiceRoute } from './http/controllers/barber-shop/route'
+import { appointmentRoute } from './http/controllers/appointment/route'
+import { barberUserRoute } from './http/controllers/barber-user/route'
+import { couponRoute } from './http/controllers/coupon/route'
+import { cashRegisterRoute } from './http/controllers/cash-register/route'
 import { appRoute } from './http/routes/route'
 
 const uploadDir = path.join('/opt/app/uploads')
@@ -133,6 +138,11 @@ app.register(OrganizationRoute)
 app.register(timelineRoute)
 app.register(cycleRoute)
 app.register(graphicsRoute)
+app.register(barberShopServiceRoute)
+app.register(appointmentRoute)
+app.register(barberUserRoute)
+app.register(couponRoute)
+app.register(cashRegisterRoute)
 
 app.setErrorHandler((error, _, replay) => {
   if (error instanceof ZodError) {
