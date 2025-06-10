@@ -1,14 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { pagination } from '@/utils/constants/pagination'
-import {
-  Cycle,
-  Leads,
-  Organization,
-  Prisma,
-  Profile,
-  Unit,
-  User,
-} from '@prisma/client'
+import { Prisma, Profile, User } from '@prisma/client'
 import { UsersRepository } from '../users-repository'
 
 export class PrismaUsersRepository implements UsersRepository {
@@ -173,63 +165,15 @@ export class PrismaUsersRepository implements UsersRepository {
   }
 
   async findById(id: string): Promise<
-    | (Omit<User, 'password'> & {
-        profile: Omit<Profile & { units: { unit: Unit }[] }, 'userId'> | null
-        organizations: {
-          organization: Organization & {
-            cycles: (Cycle & { leads: Leads[] })[]
-          }
-        }[]
-      })
-    | null
+    (Omit<User, 'password'> & { profile: Omit<Profile, 'userId'> | null }) | null
   > {
     const user = await prisma.user.findUnique({
-      where: {
-        id,
-      },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        active: true,
-        organizations: {
-          select: {
-            organization: {
-              include: {
-                cycles: {
-                  include: {
-                    leads: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-        profile: {
-          select: {
-            leadsConsultant: true,
-            leadsIndicator: true,
-            id: true,
-            cpf: true,
-            genre: true,
-            phone: true,
-            role: true,
-            pix: true,
-            birthday: true,
-            city: true,
-            contractLink: true,
-            contractSent: true,
-            amountToReceive: true,
-            units: {
-              select: {
-                unit: true,
-              },
-            },
-          },
-        },
-      },
+      where: { id },
+      include: { profile: true },
     })
-    return user
+    if (!user) return null
+    const { password: _pw, ...rest } = user
+    return rest as Omit<User, 'password'> & { profile: Omit<Profile, 'userId'> | null }
   }
 
   async findByEmail(
