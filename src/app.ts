@@ -4,6 +4,7 @@ import fastify from 'fastify'
 import multer from 'fastify-multer'
 import fs from 'fs'
 import path from 'path'
+import { uploadDir, upload } from './lib/upload'
 import { ZodError } from 'zod'
 import { env } from './env'
 import { consultantRoute } from './http/controllers/consultant/route'
@@ -19,15 +20,17 @@ import { unitCourseRoute } from './http/controllers/unit-course/route'
 import { graphicsRoute } from './http/controllers/graphics/route'
 import { unitRoute } from './http/controllers/units/route'
 import { userRoute } from './http/controllers/user/route'
+import { barberShopServiceRoute } from './http/controllers/barber-shop/route'
+import { appointmentRoute } from './http/controllers/appointment/route'
+import { barberUserRoute } from './http/controllers/barber-user/route'
+import { couponRoute } from './http/controllers/coupon/route'
+import { cashRegisterRoute } from './http/controllers/cash-register/route'
+import { saleRoute } from './http/controllers/sale/route'
+import { reportRoute } from './http/controllers/report/route'
+import { configRoute } from './http/controllers/config/route'
 import { appRoute } from './http/routes/route'
+import { authRoute } from './http/controllers/auth/route'
 
-const uploadDir = path.join('/opt/app/uploads')
-
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true })
-}
-
-const upload = multer({ dest: uploadDir })
 
 export const app = fastify()
 
@@ -119,6 +122,7 @@ app.register(fastifyJwt, {
   secret: env.JWT_SECRET,
 })
 
+app.register(authRoute)
 app.register(appRoute)
 app.register(unitRoute)
 app.register(courseRoute)
@@ -133,6 +137,14 @@ app.register(OrganizationRoute)
 app.register(timelineRoute)
 app.register(cycleRoute)
 app.register(graphicsRoute)
+app.register(barberShopServiceRoute)
+app.register(appointmentRoute)
+app.register(barberUserRoute)
+app.register(couponRoute)
+app.register(cashRegisterRoute)
+app.register(saleRoute)
+app.register(reportRoute)
+app.register(configRoute)
 
 app.setErrorHandler((error, _, replay) => {
   if (error instanceof ZodError) {

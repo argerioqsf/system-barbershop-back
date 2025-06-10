@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,252 +7,157 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  ADMIN
+  BARBER
+  CLIENT
+  ATTENDANT
+}
+
+enum PaymentMethod {
+  CASH
+  PIX
+  CREDIT_CARD
+  DEBIT_CARD
+}
+
+enum TransactionType {
+  ADDITION
+  WITHDRAWAL
+}
+
 model User {
-  id            String             @id @default(uuid())
-  name          String
-  email         String             @unique
-  password      String
-  active        Boolean            @default(false)
-  profile       Profile?
-  organizations userOrganization[]
+  id                  String                @id @default(uuid())
+  name                String
+  email               String                @unique
+  password            String
+  active              Boolean               @default(false)
+  profile             Profile?
+  appointments        Appointment[]         @relation("ClientAppointments")
+  barberAppointments  Appointment[]         @relation("BarberAppointments")
+  sales               Sale[]
+  transactions        Transaction[]
+  sessions            CashRegisterSession[]
+  passwordResetTokens PasswordResetToken[]
+  createdAt           DateTime              @default(now())
 
   @@map("users")
 }
 
 model Profile {
-  id              String           @id @default(uuid())
-  phone           String
-  cpf             String
-  genre           String
-  birthday        String
-  pix             String
-  amountToReceive Float?
-  role            Role             @default(indicator)
-  user            User             @relation(fields: [userId], references: [id])
-  userId          String           @unique
-  leadsIndicator  Leads[]          @relation(name: "indicatorLeads")
-  leadsConsultant Leads[]          @relation(name: "consultantLeads")
-  city            String?
-  extract_profile  ExtractProfile[]
-  units           UnitConsultant[]
-  contractLink    String?
-  contractSent    Boolean          @default(false)
+  id        String   @id @default(uuid())
+  phone     String
+  cpf       String
+  genre     String
+  birthday  String
+  pix       String
+  role      Role     @default(CLIENT)
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
 
   @@map("profiles")
 }
 
-model Segment {
-  id       String          @id @default(uuid())
-  name     String
-  units    UnitSegment[]
-  courses  CourseSegment[]
-  leads    Leads[]
-  timeline Timeline[]
+model Appointment {
+  id        String   @id @default(uuid())
+  clientId  String
+  barberId  String
+  serviceId String
+  date      DateTime
+  hour      String
 
-  @@map("segments")
+  client  User    @relation("ClientAppointments", fields: [clientId], references: [id])
+  barber  User    @relation("BarberAppointments", fields: [barberId], references: [id])
+  service Service @relation(fields: [serviceId], references: [id])
+
+  @@map("appointments")
 }
 
-model UnitSegment {
-  segment   Segment @relation(fields: [segmentId], references: [id], onDelete: Cascade)
-  segmentId String
-  unit      Unit    @relation(fields: [unitId], references: [id], onDelete: Cascade)
-  unitId    String
+model Service {
+  id           String        @id @default(uuid())
+  name         String
+  description  String?
+  imageUrl     String?
+  cost         Float
+  price        Float
+  isProduct    Boolean       @default(false)
+  appointments Appointment[]
+  saleItems    SaleItem[]
 
-  @@id([segmentId, unitId])
-  @@map("unit_segment")
+  @@map("services")
 }
 
-model CourseSegment {
-  course    Course  @relation(fields: [courseId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  courseId  String
-  segment   Segment @relation(fields: [segmentId], references: [id], onDelete: Cascade)
-  segmentId String
-
-  @@id([segmentId, courseId])
-  @@map("course_segment")
-}
-
-model Course {
-  id       String          @id @default(uuid())
-  name     String
-  active   Boolean
-  units    UnitCourses[]
-  timeline Timeline[]
-  segments CourseSegment[]
-  leads    Leads[]
-
-  @@map("courses")
-}
-
-model Unit {
-  id          String           @id @default(uuid())
-  name        String
-  courses     UnitCourses[]
-  segments    UnitSegment[]
-  leads       Leads[]
-  consultants UnitConsultant[]
-  timeline    Timeline[]
-
-  @@map("units")
-}
-
-model UnitConsultant {
-  consultant   Profile @relation(fields: [consultantId], references: [id])
-  consultantId String
-  unit         Unit    @relation(fields: [unitId], references: [id])
-  unitId       String
-
-  @@id([consultantId, unitId])
-  @@map("unit_consultant")
-}
-
-model UnitCourses {
-  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  courseId String
-  unit     Unit   @relation(fields: [unitId], references: [id], onDelete: Cascade)
-  unitId   String
-
-  @@id([courseId, unitId])
-  @@map("unit_courses")
-}
-
-model Timeline {
-  id          String   @id @default(uuid())
-  title       String
+model Transaction {
+  id          String          @id @default(uuid())
+  userId      String
+  type        TransactionType
   description String
-  status      String
-  lead        Leads    @relation(fields: [leadsId], references: [id])
-  leadsId     String
-  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  courseId    String
-  segment     Segment  @relation(fields: [segmentId], references: [id], onDelete: Cascade)
-  segmentId   String
-  unit        Unit     @relation(fields: [unitId], references: [id], onDelete: Cascade)
-  unitId      String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  amount      Float
+  createdAt   DateTime        @default(now())
 
-  @@map("timeline")
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("transactions")
 }
 
-model Leads {
-  id                    String         @id @default(uuid())
-  name                  String
-  phone                 String
-  document              String?
-  email                 String?
-  city                  String
-  archived              Boolean        @default(false)
-  documents             Boolean        @default(false)
-  released              Boolean        @default(false)
-  matriculation         Boolean        @default(false)
-  amount_pay_indicator  Float?
-  amount_pay_consultant Float?
-  birthday              String?
-  class                 String?
-  personalityTraits     personalityTraits?
-  noteLead              Int?   
-  shift                 Shift? 
-  course_modality       Modalities?
-  education             Education?
-  indicator             Profile         @relation(fields: [indicatorId], references: [id], name: "indicatorLeads")
-  indicatorId           String
-  consultant            Profile?        @relation(fields: [consultantId], references: [id], name: "consultantLeads")
-  consultantId          String?
-  unit                  Unit           @relation(fields: [unitId], references: [id])
-  unitId                String
-  course                Course         @relation(fields: [courseId], references: [id])
-  courseId              String
-  segment               Segment        @relation(fields: [segmentId], references: [id])
-  segmentId             String
-  timeline              Timeline[]
-  cycle                 Cycle?         @relation(fields: [cycleId], references: [id])
-  cycleId               String?
-  createdAt             DateTime       @default(now())
+model Sale {
+  id        String        @id @default(uuid())
+  userId    String
+  total     Float
+  method    PaymentMethod
+  createdAt DateTime      @default(now())
 
-  @@map("leads")
+  user  User       @relation(fields: [userId], references: [id])
+  items SaleItem[]
+
+  @@map("sales")
 }
 
-model ExtractProfile {
-  id             String   @id @default(uuid())
-  amount_receive Float
-  profile        Profile? @relation(fields: [profileId], references: [id])
-  profileId      String?
+model SaleItem {
+  id        String @id @default(uuid())
+  saleId    String
+  serviceId String
+  quantity  Int    @default(1)
+
+  sale    Sale    @relation(fields: [saleId], references: [id])
+  service Service @relation(fields: [serviceId], references: [id])
+
+  @@map("sale_items")
+}
+
+model CashRegisterSession {
+  id            String    @id @default(uuid())
+  openedById    String
+  openedAt      DateTime  @default(now())
+  closedAt      DateTime?
+  initialAmount Float
+  finalAmount   Float?
+
+  user User @relation(fields: [openedById], references: [id])
+
+  @@map("cash_register_sessions")
+}
+
+model Coupon {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  description String?
+  discount    Float
+  imageUrl    String?
   createdAt   DateTime @default(now())
 
-  @@map("extract_profile")
+  @@map("coupons")
 }
 
-model userOrganization {
-  user           User         @relation(fields: [userId], references: [id])
-  userId         String
-  organization   Organization @relation(fields: [organizationId], references: [id])
-  organizationId String
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 
-  @@id([userId, organizationId])
-  @@map("user_organization")
-}
+  user User @relation(fields: [userId], references: [id])
 
-model Organization {
-  id               String             @id @default(uuid())
-  name             String
-  consultant_bonus Float
-  indicator_bonus  Float
-  slug             String             @unique
-  users            userOrganization[]
-  cycles           Cycle[]
-
-  @@map("organization")
-}
-
-model Cycle {
-  id             String       @id @default(uuid())
-  start_cycle    DateTime     @default(now())
-  end_cycle      DateTime?
-  leads          Leads[]
-  organization   Organization @relation(fields: [organizationId], references: [id])
-  organizationId String
-
-  @@map("cycle")
-}
-
-enum Role {
-  administrator
-  consultant
-  indicator
-  coordinator
-  financial
-  secretary
-  auxiliary
-}
-
-
-enum personalityTraits {
-  colerico
-  melancolico
-  fleumatico
-  sanguineo
-}
-
-enum Shift { 
-  manha
-  tarde
-  noite
-  finais_de_semana
-}
-
-enum Education { 
-  ensino_fundamental_incompleto
-  ensino_fundamental_completo
-  ensino_medio_incompleto
-  ensino_medio_completo
-  ensino_superior_incompleto
-  ensino_superior_completo
-  sem_escolaridade
-}
-
-enum Modalities {
-  presencial_100
-  online_100
-  semi_presencial
+  @@map("password_reset_tokens")
 }

@@ -1,0 +1,25 @@
+import { makeCreateService } from '@/services/@factories/barbershop/make-create-service'
+import { FastifyReply, FastifyRequest } from 'fastify'
+import { z } from 'zod'
+
+export async function CreateServiceController(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const bodySchema = z.object({
+    name: z.string(),
+    description: z.string().optional(),
+    cost: z.coerce.number(),
+    price: z.coerce.number(),
+    isProduct: z.coerce.boolean().optional(),
+  })
+
+  const data = bodySchema.parse(request.body)
+
+  const imageUrl = request.file ? `/uploads/${request.file.filename}` : undefined
+
+  const serviceCreator = makeCreateService()
+  const { service } = await serviceCreator.execute({ ...data, imageUrl })
+
+  return reply.status(201).send(service)
+}

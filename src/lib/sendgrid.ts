@@ -157,3 +157,25 @@ export const sendConfirmIndicatorPaymentEmail = async (
     console.log(error)
   }
 }
+
+export const sendPasswordResetEmail = async (
+  to: string,
+  name: string,
+  link: string,
+) => {
+  const msg = {
+    to,
+    from: 'sim@grupomadretereza.com.br',
+    subject: 'Recuperação de Senha',
+    text: `Acesse o link para redefinir sua senha: ${link}`,
+    html: templateEmail(
+      name,
+      `Você solicitou a redefinição de senha.<br/><br/><a href='${link}'>Clique aqui para criar uma nova senha</a>`,
+    ),
+  }
+  try {
+    await sgMail.send(msg)
+  } catch (error) {
+    console.log(error)
+  }
+}
