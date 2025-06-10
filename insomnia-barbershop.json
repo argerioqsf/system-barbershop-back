@@ -448,8 +448,14 @@
         "text": "{\n  \"userId\": \"\",\n  \"type\": \"ADDITION\",\n  \"description\": \"\",\n  \"amount\": 0\n}"
       },
       "headers": [
-        { "name": "Content-Type", "value": "application/json" },
-        { "name": "Authorization", "value": "Bearer {{ token }}" }
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -460,7 +466,10 @@
       "method": "GET",
       "url": "{{ baseURL }}/transactions",
       "headers": [
-        { "name": "Authorization", "value": "Bearer {{ token }}" }
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -566,6 +575,374 @@
       "name": "Barber balance",
       "method": "GET",
       "url": "{{ baseURL }}/reports/barber/{{ barberId }}/balance",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "fld_dc9e915b2b377deb4a7bff0c12cfe9f4",
+      "_type": "request_group",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Courses"
+    },
+    {
+      "_id": "req_c2bcb043194bd6376aa1085af55a0b6c",
+      "_type": "request",
+      "parentId": "fld_dc9e915b2b377deb4a7bff0c12cfe9f4",
+      "name": "List courses",
+      "method": "GET",
+      "url": "{{ baseURL }}/courses",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_441b9390447510866f729c9eada1a850",
+      "_type": "request",
+      "parentId": "fld_dc9e915b2b377deb4a7bff0c12cfe9f4",
+      "name": "Create course",
+      "method": "POST",
+      "url": "{{ baseURL }}/create/course",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"\",\n  \"description\": \"\"\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "fld_a67a0f10de6910b8cc002e0c1a608fb9",
+      "_type": "request_group",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Segments"
+    },
+    {
+      "_id": "req_b6ab81d5ee8da5b55a8339281cc666d4",
+      "_type": "request",
+      "parentId": "fld_a67a0f10de6910b8cc002e0c1a608fb9",
+      "name": "List segments",
+      "method": "GET",
+      "url": "{{ baseURL }}/segments",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_6a63e2268e7aa06cb10ce17dcc9fe0cc",
+      "_type": "request",
+      "parentId": "fld_a67a0f10de6910b8cc002e0c1a608fb9",
+      "name": "Create segment",
+      "method": "POST",
+      "url": "{{ baseURL }}/create/segment",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"\"\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "fld_67db82de3a834b0a11e5ddf89dd709a6",
+      "_type": "request_group",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Units"
+    },
+    {
+      "_id": "req_3ab1d3f66f0e7ad23884078ca5f26680",
+      "_type": "request",
+      "parentId": "fld_67db82de3a834b0a11e5ddf89dd709a6",
+      "name": "List units",
+      "method": "GET",
+      "url": "{{ baseURL }}/units",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_e19aba04aa574130463387a085934d98",
+      "_type": "request",
+      "parentId": "fld_67db82de3a834b0a11e5ddf89dd709a6",
+      "name": "Create unit",
+      "method": "POST",
+      "url": "{{ baseURL }}/create/unit",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"\"\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "fld_3913fccce5a9b4f28fc00b9125ea87ec",
+      "_type": "request_group",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Leads"
+    },
+    {
+      "_id": "req_fbc3f493d703cf33a7198ebcaac9fff0",
+      "_type": "request",
+      "parentId": "fld_3913fccce5a9b4f28fc00b9125ea87ec",
+      "name": "List leads",
+      "method": "GET",
+      "url": "{{ baseURL }}/leads",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_34cf73bb42c1248a54c4861f63a72fa5",
+      "_type": "request",
+      "parentId": "fld_3913fccce5a9b4f28fc00b9125ea87ec",
+      "name": "Create lead",
+      "method": "POST",
+      "url": "{{ baseURL }}/create/leads",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"\"\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "fld_51633efa1dbf8e0283e2ec104ec7a425",
+      "_type": "request_group",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Profiles"
+    },
+    {
+      "_id": "req_984b7735c000e1d71349538e0ba1740e",
+      "_type": "request",
+      "parentId": "fld_51633efa1dbf8e0283e2ec104ec7a425",
+      "name": "Get profile",
+      "method": "GET",
+      "url": "{{ baseURL }}/profile",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_183d546caf97a3225236c0c267031aa7",
+      "_type": "request",
+      "parentId": "fld_51633efa1dbf8e0283e2ec104ec7a425",
+      "name": "Update profile",
+      "method": "PUT",
+      "url": "{{ baseURL }}/profile",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"phone\": \"\"\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "fld_a9a3f0a7e610a22c28f22d9b23528f07",
+      "_type": "request_group",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Users"
+    },
+    {
+      "_id": "req_edc32ef5c0fa31db7941c37fd3ff38ce",
+      "_type": "request",
+      "parentId": "fld_a9a3f0a7e610a22c28f22d9b23528f07",
+      "name": "List users",
+      "method": "GET",
+      "url": "{{ baseURL }}/users",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_eabe5e2bdc4e77232559a3c54cf619c1",
+      "_type": "request",
+      "parentId": "fld_a9a3f0a7e610a22c28f22d9b23528f07",
+      "name": "Create user",
+      "method": "POST",
+      "url": "{{ baseURL }}/create/user",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"\",\n  \"email\": \"\"\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "fld_ed87363fb172dd65f91743ea494dbd30",
+      "_type": "request_group",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Consultants"
+    },
+    {
+      "_id": "req_709932cf25c7372f2310f98bdb6b1822",
+      "_type": "request",
+      "parentId": "fld_ed87363fb172dd65f91743ea494dbd30",
+      "name": "List consultants",
+      "method": "GET",
+      "url": "{{ baseURL }}/consultants",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_f9e69ff4d992ba47f5488bd9f0dd9f88",
+      "_type": "request",
+      "parentId": "fld_ed87363fb172dd65f91743ea494dbd30",
+      "name": "Consultant profile",
+      "method": "GET",
+      "url": "{{ baseURL }}/consultant/{{ consultantId }}",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "fld_6ef74e5ee09e10ebc9d2831a693228b3",
+      "_type": "request_group",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Indicators"
+    },
+    {
+      "_id": "req_90fcf8c75746c024062a0d307f4d55fe",
+      "_type": "request",
+      "parentId": "fld_6ef74e5ee09e10ebc9d2831a693228b3",
+      "name": "List indicators",
+      "method": "GET",
+      "url": "{{ baseURL }}/indicators",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_d3dc24bf540ebabcebad852b9bedac54",
+      "_type": "request",
+      "parentId": "fld_6ef74e5ee09e10ebc9d2831a693228b3",
+      "name": "Update indicator active",
+      "method": "PATCH",
+      "url": "{{ baseURL }}/indicator/active/{{ indicatorId }}",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "fld_c48e5769a88b768e5c27309c1308b093",
+      "_type": "request_group",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Misc"
+    },
+    {
+      "_id": "req_aac573d09d8f35c24e8b4517de11ad57",
+      "_type": "request",
+      "parentId": "fld_c48e5769a88b768e5c27309c1308b093",
+      "name": "Create unit course",
+      "method": "POST",
+      "url": "{{ baseURL }}/create/unit/course",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_bbbc1111b23c45ddaa1b87964292acfd",
+      "_type": "request",
+      "parentId": "fld_c48e5769a88b768e5c27309c1308b093",
+      "name": "Create cycle",
+      "method": "POST",
+      "url": "{{ baseURL }}/create/cycle/{{ id }}",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_dddddddddddddddddddddddddddddddd",
+      "_type": "request",
+      "parentId": "fld_c48e5769a88b768e5c27309c1308b093",
+      "name": "Get graphics",
+      "method": "GET",
+      "url": "{{ baseURL }}/graphics",
       "headers": [
         {
           "name": "Authorization",
