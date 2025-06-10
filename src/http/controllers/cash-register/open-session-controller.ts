@@ -5,6 +5,7 @@ import { z } from 'zod'
 export async function OpenSessionController(request: FastifyRequest, reply: FastifyReply) {
   const bodySchema = z.object({
     userId: z.string(),
+    unitId: z.string(),
     initialAmount: z.number(),
   })
   const data = bodySchema.parse(request.body)

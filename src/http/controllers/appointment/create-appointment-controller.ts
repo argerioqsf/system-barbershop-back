@@ -10,6 +10,7 @@ export async function CreateAppointmentController(
     clientId: z.string(),
     barberId: z.string(),
     serviceId: z.string(),
+    unitId: z.string(),
     date: z.coerce.date(),
     hour: z.string(),
   })

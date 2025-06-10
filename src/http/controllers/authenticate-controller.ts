@@ -12,9 +12,10 @@ export async function authenticate(
   const authenticateBodySchema = z.object({
     email: z.string().email(),
     password: z.string().min(6),
+    unitId: z.string(),
   })
 
-  const { email, password } = authenticateBodySchema.parse(request.body)
+  const { email, password, unitId } = authenticateBodySchema.parse(request.body)
 
   try {
     const authenticateService = makeAuthenticateService()
@@ -24,7 +25,7 @@ export async function authenticate(
       password,
     })
 
-    const token = await replay.jwtSign({}, { sign: { sub: user.id } })
+    const token = await replay.jwtSign({ unitId }, { sign: { sub: user.id } })
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password: _, ...userWithoutPassword } = user
