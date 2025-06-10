@@ -21,6 +21,42 @@
       }
     },
     {
+      "_id": "fld_e8a2c92ee3ff7707cc70984aa78b01de",
+      "_type": "request_group",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Auth"
+    },
+    {
+      "_id": "req_9e69c23ae33f5a2ef55c8936bca2d827",
+      "_type": "request",
+      "parentId": "fld_e8a2c92ee3ff7707cc70984aa78b01de",
+      "name": "Register",
+      "method": "POST",
+      "url": "{{ baseURL }}/users",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"\",\n  \"email\": \"\",\n  \"password\": \"\"\n}"
+      },
+      "headers": [
+        {"name": "Content-Type", "value": "application/json"}
+      ]
+    },
+    {
+      "_id": "req_637b15e4ef3b573610cf44199d77c975",
+      "_type": "request",
+      "parentId": "fld_e8a2c92ee3ff7707cc70984aa78b01de",
+      "name": "Authenticate",
+      "method": "POST",
+      "url": "{{ baseURL }}/sessions",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"\",\n  \"password\": \"\"\n}"
+      },
+      "headers": [
+        {"name": "Content-Type", "value": "application/json"}
+      ]
+    },
+    {
       "_id": "fld_8cfb148cbcb1f77d494ab985717014d4",
       "_type": "request_group",
       "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",

@@ -29,6 +29,7 @@ import { saleRoute } from './http/controllers/sale/route'
 import { reportRoute } from './http/controllers/report/route'
 import { configRoute } from './http/controllers/config/route'
 import { appRoute } from './http/routes/route'
+import { authRoute } from './http/controllers/auth/route'
 
 
 export const app = fastify()
@@ -121,6 +122,7 @@ app.register(fastifyJwt, {
   secret: env.JWT_SECRET,
 })
 
+app.register(authRoute)
 app.register(appRoute)
 app.register(unitRoute)
 app.register(courseRoute)
