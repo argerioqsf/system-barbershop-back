@@ -17,7 +17,8 @@ export async function CreateAppointmentController(
   const data = bodySchema.parse(request.body)
 
   const service = makeCreateAppointment()
-  const { appointment } = await service.execute(data)
+  const unitId = (request.user as any).unitId as string
+  const { appointment } = await service.execute({ ...data, unitId })
 
   return reply.status(201).send(appointment)
 }

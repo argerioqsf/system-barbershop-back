@@ -12,9 +12,10 @@ export async function authenticate(
   const authenticateBodySchema = z.object({
     email: z.string().email(),
     password: z.string().min(6),
+    unitId: z.string().optional(),
   })
 
-  const { email, password } = authenticateBodySchema.parse(request.body)
+  const { email, password, unitId } = authenticateBodySchema.parse(request.body)
 
   try {
     const authenticateService = makeAuthenticateService()
@@ -25,7 +26,7 @@ export async function authenticate(
     })
 
     const token = await replay.jwtSign(
-      {},
+      { unitId: unitId ?? null },
       {
         sign: {
           sub: user.id,

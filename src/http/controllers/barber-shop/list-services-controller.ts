@@ -2,10 +2,11 @@ import { makeListServices } from '@/services/@factories/barbershop/make-list-ser
 import { FastifyReply, FastifyRequest } from 'fastify'
 
 export async function ListServicesController(
-  _: FastifyRequest,
+  request: FastifyRequest,
   reply: FastifyReply,
 ) {
   const service = makeListServices()
-  const { services } = await service.execute()
+  const unitId = (request.user as any).unitId as string
+  const { services } = await service.execute(unitId)
   return reply.status(200).send(services)
 }

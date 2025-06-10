@@ -8,8 +8,8 @@ export class PrismaServiceRepository implements ServiceRepository {
     return service
   }
 
-  async findMany(): Promise<Service[]> {
-    const services = await prisma.service.findMany()
+  async findManyByUnit(unitId: string): Promise<Service[]> {
+    const services = await prisma.service.findMany({ where: { unitId } })
     return services
   }
 
