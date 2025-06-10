@@ -5,6 +5,7 @@ interface CreateCouponRequest {
   code: string
   description?: string | null
   discount: number
+  discountType: 'PERCENTAGE' | 'VALUE'
   imageUrl?: string | null
 }
 

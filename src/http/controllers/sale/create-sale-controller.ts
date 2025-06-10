@@ -7,6 +7,8 @@ export async function CreateSaleController(request: FastifyRequest, reply: Fasti
     userId: z.string(),
     method: z.enum(['CASH', 'PIX', 'CREDIT_CARD', 'DEBIT_CARD']),
     items: z.array(z.object({ serviceId: z.string(), quantity: z.number().min(1) })),
+    couponCode: z.string().optional(),
+    total: z.number().optional(),
   })
   const data = bodySchema.parse(request.body)
   const service = makeCreateSale()
