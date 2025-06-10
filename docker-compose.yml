@@ -22,10 +22,10 @@ services:
     networks:
       - backend-network 
 
-  web:
+  web-barbershop:
     stdin_open: true
     tty: true
-    container_name: api-sim
+    container_name: api-barbershop
     build:
       context: .
       dockerfile: ./Dockerfile

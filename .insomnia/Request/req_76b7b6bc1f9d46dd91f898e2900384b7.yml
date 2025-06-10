@@ -12,7 +12,7 @@ body:
   text: |-
     {
     	"name": "Matheus Mendes",
-      "email": "matheusmendesadm@sim.com",
+      "email": "matheusmendesadm@barbershop.com",
       "password": "12345678A@",
       "active": true,
       "phone": "96984234927",

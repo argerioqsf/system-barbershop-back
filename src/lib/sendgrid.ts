@@ -48,7 +48,7 @@ export const sendCreateIndicatorEmail = async (to: string, name: string) => {
     text: `text`,
     html: templateEmail(
       name,
-      `Parabéns por sua decisão de fazer parte do Sistema de Indicadores da Madre (SIM)!
+      `Parabéns por sua decisão de fazer parte do Sistema de Indicadores da Madre (barbershop)!
        Estamos muito felizes em tê-lo como parte dessa jornada e por contar com sua colaboração para 
        fortalecer ainda mais o nosso time. <br/><br/>
 

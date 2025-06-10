@@ -1,5 +1,10 @@
 import { env } from '@/env'
-import { PrismaClient, Role, PaymentMethod, TransactionType } from '@prisma/client'
+import {
+  PrismaClient,
+  Role,
+  PaymentMethod,
+  TransactionType,
+} from '@prisma/client'
 import { hash } from 'bcryptjs'
 import 'dotenv/config'
 

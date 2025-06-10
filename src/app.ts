@@ -31,7 +31,6 @@ import { configRoute } from './http/controllers/config/route'
 import { appRoute } from './http/routes/route'
 import { authRoute } from './http/controllers/auth/route'
 
-
 export const app = fastify()
 
 app.register(multer.contentParser)

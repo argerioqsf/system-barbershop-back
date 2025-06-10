@@ -2,7 +2,10 @@ import { makeSalesReport } from '@/services/@factories/report/make-sales-report'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
-export async function GetSalesReportController(request: FastifyRequest, reply: FastifyReply) {
+export async function GetSalesReportController(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
   const querySchema = z.object({
     startDate: z.coerce.date(),
     endDate: z.coerce.date(),
