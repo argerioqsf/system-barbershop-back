@@ -7,6 +7,7 @@ export async function CreateCouponController(request: FastifyRequest, reply: Fas
     code: z.string(),
     description: z.string().optional(),
     discount: z.number(),
+    discountType: z.enum(['PERCENTAGE', 'VALUE']).default('PERCENTAGE'),
     imageUrl: z.string().optional(),
   })
   const data = bodySchema.parse(request.body)

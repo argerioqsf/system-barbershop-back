@@ -129,6 +129,7 @@ async function main() {
       code: 'WELCOME10',
       description: '10% off',
       discount: 10,
+      discountType: 'PERCENTAGE',
     },
   })
 

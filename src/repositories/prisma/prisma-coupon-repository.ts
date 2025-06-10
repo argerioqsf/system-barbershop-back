@@ -15,6 +15,10 @@ export class PrismaCouponRepository implements CouponRepository {
     return prisma.coupon.findUnique({ where: { id } })
   }
 
+  async findByCode(code: string): Promise<Coupon | null> {
+    return prisma.coupon.findUnique({ where: { code } })
+  }
+
   async delete(id: string): Promise<void> {
     await prisma.coupon.delete({ where: { id } })
   }
