@@ -24,6 +24,9 @@ import { appointmentRoute } from './http/controllers/appointment/route'
 import { barberUserRoute } from './http/controllers/barber-user/route'
 import { couponRoute } from './http/controllers/coupon/route'
 import { cashRegisterRoute } from './http/controllers/cash-register/route'
+import { saleRoute } from './http/controllers/sale/route'
+import { reportRoute } from './http/controllers/report/route'
+import { configRoute } from './http/controllers/config/route'
 import { appRoute } from './http/routes/route'
 
 const uploadDir = path.join('/opt/app/uploads')
@@ -143,6 +146,9 @@ app.register(appointmentRoute)
 app.register(barberUserRoute)
 app.register(couponRoute)
 app.register(cashRegisterRoute)
+app.register(saleRoute)
+app.register(reportRoute)
+app.register(configRoute)
 
 app.setErrorHandler((error, _, replay) => {
   if (error instanceof ZodError) {
