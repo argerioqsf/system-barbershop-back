@@ -10,7 +10,6 @@ interface CreateSaleItem {
 
 interface CreateSaleRequest {
   userId: string
-  unitId: string
   method: PaymentMethod
   items: CreateSaleItem[]
   couponCode?: string
@@ -28,7 +27,7 @@ export class CreateSaleService {
     private couponRepository: CouponRepository,
   ) {}
 
-  async execute({ userId, unitId, method, items, couponCode, total }: CreateSaleRequest): Promise<CreateSaleResponse> {
+  async execute({ userId, method, items, couponCode, total }: CreateSaleRequest): Promise<CreateSaleResponse> {
     let calculatedTotal = 0
     const saleItems = [] as any[]
 
@@ -58,7 +57,6 @@ export class CreateSaleService {
       total,
       method,
       user: { connect: { id: userId } },
-      unit: { connect: { id: unitId } },
       items: { create: saleItems },
       coupon: couponConnect,
     })

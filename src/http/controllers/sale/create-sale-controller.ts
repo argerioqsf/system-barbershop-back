@@ -12,7 +12,6 @@ export async function CreateSaleController(request: FastifyRequest, reply: Fasti
   })
   const data = bodySchema.parse(request.body)
   const service = makeCreateSale()
-  const unitId = (request.user as any).unitId as string
-  const { sale } = await service.execute({ ...data, unitId })
+  const { sale } = await service.execute(data)
   return reply.status(201).send(sale)
 }
