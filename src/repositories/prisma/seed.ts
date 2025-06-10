@@ -54,7 +54,7 @@ async function main() {
   const client = await prisma.user.create({
     data: {
       name: 'Client',
-      email: 'client@barbershop.com',
+      email: 'argerioaf@gmail.com',
       password: passwordHash,
       active: true,
       profile: {
