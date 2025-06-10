@@ -8,12 +8,10 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
     return appointment
   }
 
-  async findManyByUnit(unitId: string): Promise<Appointment[]> {
-    const appointments = await prisma.appointment.findMany({
-      where: { unitId },
+  async findMany(): Promise<Appointment[]> {
+    return prisma.appointment.findMany({
       include: { service: true, client: true, barber: true },
     })
-    return appointments
   }
 
   async findById(id: string): Promise<Appointment | null> {

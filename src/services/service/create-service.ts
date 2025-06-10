@@ -8,7 +8,6 @@ interface CreateServiceRequest {
   cost: number
   price: number
   isProduct?: boolean
-  unitId: string
 }
 
 interface CreateServiceResponse {
@@ -26,7 +25,6 @@ export class CreateServiceService {
       cost: data.cost,
       price: data.price,
       isProduct: data.isProduct ?? false,
-      unit: { connect: { id: data.unitId } },
     })
     return { service }
   }

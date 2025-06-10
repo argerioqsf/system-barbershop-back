@@ -7,19 +7,7 @@ import path from 'path'
 import { uploadDir, upload } from './lib/upload'
 import { ZodError } from 'zod'
 import { env } from './env'
-import { consultantRoute } from './http/controllers/consultant/route'
-import { courseRoute } from './http/controllers/courses/route'
-import { cycleRoute } from './http/controllers/cycle/route'
-import { indicatorRoute } from './http/controllers/indicator/route'
-import { leadsRoute } from './http/controllers/leads/route'
-import { OrganizationRoute } from './http/controllers/organization/route'
 import { profileRoute } from './http/controllers/profile/route'
-import { segmentRoute } from './http/controllers/segments/route'
-import { timelineRoute } from './http/controllers/timeline/route'
-import { unitCourseRoute } from './http/controllers/unit-course/route'
-import { graphicsRoute } from './http/controllers/graphics/route'
-import { unitRoute } from './http/controllers/units/route'
-import { userRoute } from './http/controllers/user/route'
 import { barberShopServiceRoute } from './http/controllers/barber-shop/route'
 import { appointmentRoute } from './http/controllers/appointment/route'
 import { barberUserRoute } from './http/controllers/barber-user/route'
@@ -29,7 +17,6 @@ import { saleRoute } from './http/controllers/sale/route'
 import { transactionRoute } from './http/controllers/transaction/route'
 import { reportRoute } from './http/controllers/report/route'
 import { configRoute } from './http/controllers/config/route'
-import { appRoute } from './http/routes/route'
 import { authRoute } from './http/controllers/auth/route'
 
 export const app = fastify()
@@ -123,20 +110,7 @@ app.register(fastifyJwt, {
 })
 
 app.register(authRoute)
-app.register(appRoute)
-app.register(unitRoute)
-app.register(courseRoute)
-app.register(segmentRoute)
 app.register(profileRoute)
-app.register(userRoute)
-app.register(unitCourseRoute)
-app.register(indicatorRoute)
-app.register(leadsRoute)
-app.register(consultantRoute)
-app.register(OrganizationRoute)
-app.register(timelineRoute)
-app.register(cycleRoute)
-app.register(graphicsRoute)
 app.register(barberShopServiceRoute)
 app.register(appointmentRoute)
 app.register(barberUserRoute)

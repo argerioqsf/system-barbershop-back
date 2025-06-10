@@ -10,8 +10,7 @@ export async function CreateTransactionController(request: FastifyRequest, reply
     amount: z.number(),
   })
   const data = bodySchema.parse(request.body)
-  const unitId = (request.user as any).unitId as string
   const service = makeCreateTransaction()
-  const { transaction } = await service.execute({ ...data, unitId })
+  const { transaction } = await service.execute(data)
   return reply.status(201).send(transaction)
 }

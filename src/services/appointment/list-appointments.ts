@@ -8,8 +8,8 @@ interface ListAppointmentsResponse {
 export class ListAppointmentsService {
   constructor(private repository: AppointmentRepository) {}
 
-  async execute(unitId: string): Promise<ListAppointmentsResponse> {
-    const appointments = await this.repository.findManyByUnit(unitId)
+  async execute(): Promise<ListAppointmentsResponse> {
+    const appointments = await this.repository.findMany()
     return { appointments }
   }
 }
