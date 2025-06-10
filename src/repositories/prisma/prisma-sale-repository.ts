@@ -21,4 +21,11 @@ export class PrismaSaleRepository implements SaleRepository {
       include: { items: true, user: true },
     })
   }
+
+  async findManyByUser(userId: string): Promise<Sale[]> {
+    return prisma.sale.findMany({
+      where: { userId },
+      include: { items: true, user: true },
+    })
+  }
 }
