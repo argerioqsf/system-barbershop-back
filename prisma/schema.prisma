@@ -34,6 +34,7 @@ model User {
   active        Boolean            @default(false)
   profile       Profile?
   appointments  Appointment[]      @relation("ClientAppointments")
+  barberAppointments Appointment[] @relation("BarberAppointments")
   sales         Sale[]
   transactions  Transaction[]
   sessions      CashRegisterSession[]
@@ -66,7 +67,7 @@ model Appointment {
   hour        String
 
   client      User     @relation("ClientAppointments", fields: [clientId], references: [id])
-  barber      User     @relation(fields: [barberId], references: [id])
+  barber      User     @relation("BarberAppointments", fields: [barberId], references: [id])
   service     Service  @relation(fields: [serviceId], references: [id])
 
   @@map("appointments")
