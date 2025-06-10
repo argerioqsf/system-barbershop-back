@@ -15,12 +15,11 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
-    "postinstall": "prisma generate",
-    "prisma:generate": "docker exec -it api-sim npx prisma generate",
-    "prisma:seed": "docker exec -it api-sim npx prisma db seed",
-    "prisma:migrate": "docker exec api-sim npx prisma migrate dev",
-    "prisma:reset": "docker exec -it api-sim npx prisma migrate reset",
-    "prisma-studio": "docker exec api-sim npx prisma studio"
+    "prisma:generate": "docker exec -it api-barbershop npx prisma generate",
+    "prisma:seed": "docker exec -it api-barbershop npx prisma db seed",
+    "prisma:migrate": "docker exec api-barbershop npx prisma migrate dev",
+    "prisma:reset": "docker exec -it api-barbershop npx prisma migrate reset",
+    "prisma-studio": "docker exec api-barbershop npx prisma studio"
   },
   "author": "codecodedev",
   "license": "ISC",
