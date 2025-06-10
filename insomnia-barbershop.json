@@ -38,7 +38,10 @@
         "text": "{\n  \"name\": \"\",\n  \"email\": \"\",\n  \"password\": \"\"\n}"
       },
       "headers": [
-        {"name": "Content-Type", "value": "application/json"}
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
       ]
     },
     {
@@ -53,7 +56,10 @@
         "text": "{\n  \"email\": \"\",\n  \"password\": \"\"\n}"
       },
       "headers": [
-        {"name": "Content-Type", "value": "application/json"}
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
       ]
     },
     {
@@ -68,7 +74,10 @@
         "text": "{\n  \"email\": \"\"\n}"
       },
       "headers": [
-        {"name": "Content-Type", "value": "application/json"}
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
       ]
     },
     {
@@ -83,7 +92,10 @@
         "text": "{\n  \"token\": \"\",\n  \"password\": \"\"\n}"
       },
       "headers": [
-        {"name": "Content-Type", "value": "application/json"}
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
       ]
     },
     {
@@ -102,16 +114,38 @@
       "body": {
         "mimeType": "multipart/form-data",
         "params": [
-          {"name": "name", "value": "Corte"},
-          {"name": "description", "value": "Corte simples"},
-          {"name": "cost", "value": "10"},
-          {"name": "price", "value": "20"},
-          {"name": "isProduct", "value": "false"},
-          {"name": "image", "value": "", "type": "file"}
+          {
+            "name": "name",
+            "value": "Corte"
+          },
+          {
+            "name": "description",
+            "value": "Corte simples"
+          },
+          {
+            "name": "cost",
+            "value": "10"
+          },
+          {
+            "name": "price",
+            "value": "20"
+          },
+          {
+            "name": "isProduct",
+            "value": "false"
+          },
+          {
+            "name": "image",
+            "value": "",
+            "type": "file"
+          }
         ]
       },
       "headers": [
-        {"name": "Authorization", "value": "Bearer {{ token }}"}
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -122,7 +156,10 @@
       "method": "GET",
       "url": "{{ baseURL }}/services",
       "headers": [
-        {"name": "Authorization", "value": "Bearer {{ token }}"}
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -143,8 +180,14 @@
         "text": "{\n  \"clientId\": \"\",\n  \"barberId\": \"\",\n  \"serviceId\": \"\",\n  \"date\": \"2025-01-01T10:00:00Z\",\n  \"hour\": \"10:00\"\n}"
       },
       "headers": [
-        {"name": "Content-Type", "value": "application/json"},
-        {"name": "Authorization", "value": "Bearer {{ token }}"}
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -155,7 +198,10 @@
       "method": "GET",
       "url": "{{ baseURL }}/appointments",
       "headers": [
-        {"name": "Authorization", "value": "Bearer {{ token }}"}
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -176,8 +222,14 @@
         "text": "{\n  \"name\": \"\",\n  \"email\": \"\",\n  \"password\": \"\"\n}"
       },
       "headers": [
-        {"name": "Content-Type", "value": "application/json"},
-        {"name": "Authorization", "value": "Bearer {{ token }}"}
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -188,7 +240,10 @@
       "method": "GET",
       "url": "{{ baseURL }}/barber/users",
       "headers": [
-        {"name": "Authorization", "value": "Bearer {{ token }}"}
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -199,7 +254,10 @@
       "method": "GET",
       "url": "{{ baseURL }}/barber/users/{{ userId }}",
       "headers": [
-        {"name": "Authorization", "value": "Bearer {{ token }}"}
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -214,8 +272,14 @@
         "text": "{\n  \"name\": \"Updated\"\n}"
       },
       "headers": [
-        {"name": "Content-Type", "value": "application/json"},
-        {"name": "Authorization", "value": "Bearer {{ token }}"}
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -226,7 +290,10 @@
       "method": "DELETE",
       "url": "{{ baseURL }}/barber/users/{{ userId }}",
       "headers": [
-        {"name": "Authorization", "value": "Bearer {{ token }}"}
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -244,11 +311,17 @@
       "url": "{{ baseURL }}/coupons",
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"code\": \"X\",\n  \"description\": \"\",\n  \"discount\": 10\n}"
+        "text": "{\n  \"code\": \"X\",\n  \"description\": \"\",\n  \"discount\": 10,\n  \"discountType\": \"PERCENTAGE\"\n}"
       },
       "headers": [
-        {"name": "Content-Type", "value": "application/json"},
-        {"name": "Authorization", "value": "Bearer {{ token }}"}
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -259,7 +332,10 @@
       "method": "GET",
       "url": "{{ baseURL }}/coupons",
       "headers": [
-        {"name": "Authorization", "value": "Bearer {{ token }}"}
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -270,7 +346,10 @@
       "method": "GET",
       "url": "{{ baseURL }}/coupons/{{ couponId }}",
       "headers": [
-        {"name": "Authorization", "value": "Bearer {{ token }}"}
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -281,7 +360,10 @@
       "method": "DELETE",
       "url": "{{ baseURL }}/coupons/{{ couponId }}",
       "headers": [
-        {"name": "Authorization", "value": "Bearer {{ token }}"}
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -302,8 +384,14 @@
         "text": "{\n  \"initialAmount\": 0\n}"
       },
       "headers": [
-        {"name": "Content-Type", "value": "application/json"},
-        {"name": "Authorization", "value": "Bearer {{ token }}"}
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -318,8 +406,14 @@
         "text": "{\n  \"finalAmount\": 0\n}"
       },
       "headers": [
-        {"name": "Content-Type", "value": "application/json"},
-        {"name": "Authorization", "value": "Bearer {{ token }}"}
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -330,7 +424,10 @@
       "method": "GET",
       "url": "{{ baseURL }}/cash-session",
       "headers": [
-        {"name": "Authorization", "value": "Bearer {{ token }}"}
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -348,11 +445,17 @@
       "url": "{{ baseURL }}/sales",
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"items\": []\n}"
+        "text": "{\n  \"items\": [\n    {\n      \"serviceId\": \"\",\n      \"quantity\": 1\n    }\n  ],\n  \"couponCode\": \"\",\n  \"total\": 0\n}"
       },
       "headers": [
-        {"name": "Content-Type", "value": "application/json"},
-        {"name": "Authorization", "value": "Bearer {{ token }}"}
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -363,7 +466,10 @@
       "method": "GET",
       "url": "{{ baseURL }}/sales",
       "headers": [
-        {"name": "Authorization", "value": "Bearer {{ token }}"}
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -374,7 +480,10 @@
       "method": "GET",
       "url": "{{ baseURL }}/sales/{{ saleId }}",
       "headers": [
-        {"name": "Authorization", "value": "Bearer {{ token }}"}
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -391,7 +500,10 @@
       "method": "GET",
       "url": "{{ baseURL }}/reports/sales",
       "headers": [
-        {"name": "Authorization", "value": "Bearer {{ token }}"}
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -408,7 +520,24 @@
       "method": "GET",
       "url": "{{ baseURL }}/config/export/users",
       "headers": [
-        {"name": "Authorization", "value": "Bearer {{ token }}"}
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_bb1bb1bb1bb1bb1bb1bb1bb1bb1bb1bb",
+      "_type": "request",
+      "parentId": "fld_0794989026c475e2842ce7df2529f370",
+      "name": "Barber balance",
+      "method": "GET",
+      "url": "{{ baseURL }}/reports/barber/{{ barberId }}/balance",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     }
   ]
