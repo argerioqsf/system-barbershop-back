@@ -48,7 +48,7 @@
       "url": "{{ baseURL }}/sessions",
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"email\": \"\",\n  \"password\": \"\"\n}"
+        "text": "{\n  \"email\": \"\",\n  \"password\": \"\",\n  \"unitId\": \"\"\n}"
       },
       "headers": [{ "name": "Content-Type", "value": "application/json" }]
     },
@@ -99,6 +99,7 @@
           { "name": "cost", "value": "10" },
           { "name": "price", "value": "20" },
           { "name": "isProduct", "value": "false" },
+          { "name": "unitId", "value": "" },
           { "name": "image", "value": "", "type": "file" }
         ]
       },
@@ -221,7 +222,7 @@
       "url": "{{ baseURL }}/cash/open",
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"userId\": \"\",\n  \"initialAmount\": 0\n}"
+        "text": "{\n  \"userId\": \"\",\n  \"unitId\": \"\",\n  \"initialAmount\": 0\n}"
       },
       "headers": [
         { "name": "Content-Type", "value": "application/json" },
@@ -268,7 +269,7 @@
       "url": "{{ baseURL }}/sales",
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"userId\": \"\",\n  \"method\": \"CASH\",\n  \"items\": []\n}"
+        "text": "{\n  \"userId\": \"\",\n  \"unitId\": \"\",\n  \"method\": \"CASH\",\n  \"items\": []\n}"
       },
       "headers": [
         { "name": "Content-Type", "value": "application/json" },
@@ -299,7 +300,7 @@
       "url": "{{ baseURL }}/transactions",
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"userId\": \"\",\n  \"type\": \"ADDITION\",\n  \"description\": \"\",\n  \"amount\": 0\n}"
+        "text": "{\n  \"userId\": \"\",\n  \"unitId\": \"\",\n  \"type\": \"ADDITION\",\n  \"description\": \"\",\n  \"amount\": 0\n}"
       },
       "headers": [
         { "name": "Content-Type", "value": "application/json" },

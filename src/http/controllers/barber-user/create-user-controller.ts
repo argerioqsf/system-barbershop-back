@@ -14,6 +14,7 @@ export async function CreateBarberUserController(request: FastifyRequest, reply:
     birthday: z.string(),
     pix: z.string(),
     role: z.nativeEnum(Role),
+    organizationId: z.string(),
   })
 
   const data = bodySchema.parse(request.body)

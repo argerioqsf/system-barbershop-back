@@ -37,6 +37,7 @@ model User {
   email               String                @unique
   password            String
   active              Boolean               @default(false)
+  organizationId      String
   profile             Profile?
   appointments        Appointment[]         @relation("ClientAppointments")
   barberAppointments  Appointment[]         @relation("BarberAppointments")
@@ -45,6 +46,9 @@ model User {
   sessions            CashRegisterSession[]
   passwordResetTokens PasswordResetToken[]
   createdAt           DateTime              @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  units        UserUnit[]
 
   @@map("users")
 }
@@ -69,12 +73,14 @@ model Appointment {
   clientId  String
   barberId  String
   serviceId String
+  unitId    String
   date      DateTime
   hour      String
 
   client  User    @relation("ClientAppointments", fields: [clientId], references: [id])
   barber  User    @relation("BarberAppointments", fields: [barberId], references: [id])
   service Service @relation(fields: [serviceId], references: [id])
+  unit    Unit    @relation(fields: [unitId], references: [id])
 
   @@map("appointments")
 }
@@ -87,8 +93,11 @@ model Service {
   cost         Float
   price        Float
   isProduct    Boolean       @default(false)
+  unitId       String
   appointments Appointment[]
   saleItems    SaleItem[]
+
+  unit Unit @relation(fields: [unitId], references: [id])
 
   @@map("services")
 }
@@ -96,12 +105,14 @@ model Service {
 model Transaction {
   id          String          @id @default(uuid())
   userId      String
+  unitId      String
   type        TransactionType
   description String
   amount      Float
   createdAt   DateTime        @default(now())
 
   user User @relation(fields: [userId], references: [id])
+  unit Unit @relation(fields: [unitId], references: [id])
 
   @@map("transactions")
 }
@@ -109,6 +120,7 @@ model Transaction {
 model Sale {
   id        String        @id @default(uuid())
   userId    String
+  unitId    String
   couponId  String?
   total     Float
   method    PaymentMethod
@@ -116,6 +128,7 @@ model Sale {
 
   user   User       @relation(fields: [userId], references: [id])
   items  SaleItem[]
+  unit   Unit       @relation(fields: [unitId], references: [id])
   coupon Coupon?    @relation(fields: [couponId], references: [id])
 
   @@map("sales")
@@ -136,12 +149,14 @@ model SaleItem {
 model CashRegisterSession {
   id            String    @id @default(uuid())
   openedById    String
+  unitId        String
   openedAt      DateTime  @default(now())
   closedAt      DateTime?
   initialAmount Float
   finalAmount   Float?
 
   user User @relation(fields: [openedById], references: [id])
+  unit Unit @relation(fields: [unitId], references: [id])
 
   @@map("cash_register_sessions")
 }
@@ -171,3 +186,39 @@ model PasswordResetToken {
   @@map("password_reset_tokens")
 }
 
+model Organization {
+  id        String   @id @default(uuid())
+  name      String
+  users     User[]
+  units     Unit[]
+  createdAt DateTime @default(now())
+
+  @@map("organizations")
+}
+
+model Unit {
+  id             String                @id @default(uuid())
+  name           String
+  organizationId String
+  services       Service[]
+  appointments   Appointment[]
+  sales          Sale[]
+  transactions   Transaction[]
+  sessions       CashRegisterSession[]
+  users          UserUnit[]
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@map("units")
+}
+
+model UserUnit {
+  userId String
+  unitId String
+
+  user User @relation(fields: [userId], references: [id])
+  unit Unit @relation(fields: [unitId], references: [id])
+
+  @@id([userId, unitId])
+  @@map("user_units")
+}

@@ -19,7 +19,8 @@ export async function CreateServiceController(
   const imageUrl = request.file ? `/uploads/${request.file.filename}` : undefined
 
   const serviceCreator = makeCreateService()
-  const { service } = await serviceCreator.execute({ ...data, imageUrl })
+  const unitId = (request.user as any).unitId
+  const { service } = await serviceCreator.execute({ ...data, imageUrl, unitId })
 
   return reply.status(201).send(service)
 }

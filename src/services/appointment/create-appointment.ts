@@ -5,6 +5,7 @@ interface CreateAppointmentRequest {
   clientId: string
   barberId: string
   serviceId: string
+  unitId: string
   date: Date
   hour: string
 }
@@ -21,6 +22,7 @@ export class CreateAppointmentService {
       client: { connect: { id: data.clientId } },
       barber: { connect: { id: data.barberId } },
       service: { connect: { id: data.serviceId } },
+      unit: { connect: { id: data.unitId } },
       date: data.date,
       hour: data.hour,
     })

@@ -12,6 +12,7 @@ interface RegisterUserRequest {
   birthday: string
   pix: string
   role: Role
+  organizationId: string
 }
 
 interface RegisterUserResponse {
@@ -36,6 +37,7 @@ export class RegisterUserService {
         email: data.email,
         password: password_hash,
         active: false,
+        organization: { connect: { id: data.organizationId } },
       },
       {
         phone: data.phone,

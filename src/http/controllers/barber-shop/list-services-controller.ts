@@ -6,6 +6,7 @@ export async function ListServicesController(
   reply: FastifyReply,
 ) {
   const service = makeListServices()
-  const { services } = await service.execute()
+  const unitId = (request.user as any).unitId
+  const { services } = await service.execute(unitId)
   return reply.status(200).send(services)
 }

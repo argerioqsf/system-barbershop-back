@@ -15,6 +15,10 @@ export class PrismaCashRegisterRepository implements CashRegisterRepository {
     return prisma.cashRegisterSession.findMany({ include: { user: true } })
   }
 
+  async findManyByUnit(unitId: string): Promise<CashRegisterSession[]> {
+    return prisma.cashRegisterSession.findMany({ where: { unitId }, include: { user: true } })
+  }
+
   async findOpenByUser(userId: string): Promise<CashRegisterSession | null> {
     return prisma.cashRegisterSession.findFirst({
       where: { openedById: userId, closedAt: null },

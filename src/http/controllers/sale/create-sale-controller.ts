@@ -5,6 +5,7 @@ import { z } from 'zod'
 export async function CreateSaleController(request: FastifyRequest, reply: FastifyReply) {
   const bodySchema = z.object({
     userId: z.string(),
+    unitId: z.string(),
     method: z.enum(['CASH', 'PIX', 'CREDIT_CARD', 'DEBIT_CARD']),
     items: z.array(z.object({ serviceId: z.string(), quantity: z.number().min(1) })),
     couponCode: z.string().optional(),
