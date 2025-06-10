@@ -57,6 +57,36 @@
       ]
     },
     {
+      "_id": "req_8e219f6a7d03dbc00f7a8f463cb477fe",
+      "_type": "request",
+      "parentId": "fld_e8a2c92ee3ff7707cc70984aa78b01de",
+      "name": "Forgot password",
+      "method": "POST",
+      "url": "{{ baseURL }}/forgot-password",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"\"\n}"
+      },
+      "headers": [
+        {"name": "Content-Type", "value": "application/json"}
+      ]
+    },
+    {
+      "_id": "req_a5fa8823f9e0acac81e074b597ce70b7",
+      "_type": "request",
+      "parentId": "fld_e8a2c92ee3ff7707cc70984aa78b01de",
+      "name": "Reset password",
+      "method": "POST",
+      "url": "{{ baseURL }}/reset-password",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"token\": \"\",\n  \"password\": \"\"\n}"
+      },
+      "headers": [
+        {"name": "Content-Type", "value": "application/json"}
+      ]
+    },
+    {
       "_id": "fld_8cfb148cbcb1f77d494ab985717014d4",
       "_type": "request_group",
       "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
