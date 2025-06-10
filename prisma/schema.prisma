@@ -27,113 +27,114 @@ enum TransactionType {
 }
 
 model User {
-  id            String             @id @default(uuid())
-  name          String
-  email         String             @unique
-  password      String
-  active        Boolean            @default(false)
-  profile       Profile?
-  appointments  Appointment[]      @relation("ClientAppointments")
-  barberAppointments Appointment[] @relation("BarberAppointments")
-  sales         Sale[]
-  transactions  Transaction[]
-  sessions      CashRegisterSession[]
-  createdAt     DateTime           @default(now())
+  id                  String                @id @default(uuid())
+  name                String
+  email               String                @unique
+  password            String
+  active              Boolean               @default(false)
+  profile             Profile?
+  appointments        Appointment[]         @relation("ClientAppointments")
+  barberAppointments  Appointment[]         @relation("BarberAppointments")
+  sales               Sale[]
+  transactions        Transaction[]
+  sessions            CashRegisterSession[]
+  passwordResetTokens PasswordResetToken[]
+  createdAt           DateTime              @default(now())
 
   @@map("users")
 }
 
 model Profile {
-  id              String           @id @default(uuid())
-  phone           String
-  cpf             String
-  genre           String
-  birthday        String
-  pix             String
-  role            Role             @default(CLIENT)
-  userId          String           @unique
-  user            User             @relation(fields: [userId], references: [id])
-  createdAt       DateTime         @default(now())
+  id        String   @id @default(uuid())
+  phone     String
+  cpf       String
+  genre     String
+  birthday  String
+  pix       String
+  role      Role     @default(CLIENT)
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
 
   @@map("profiles")
 }
 
 model Appointment {
-  id          String   @id @default(uuid())
-  clientId    String
-  barberId    String
-  serviceId   String
-  date        DateTime
-  hour        String
+  id        String   @id @default(uuid())
+  clientId  String
+  barberId  String
+  serviceId String
+  date      DateTime
+  hour      String
 
-  client      User     @relation("ClientAppointments", fields: [clientId], references: [id])
-  barber      User     @relation("BarberAppointments", fields: [barberId], references: [id])
-  service     Service  @relation(fields: [serviceId], references: [id])
+  client  User    @relation("ClientAppointments", fields: [clientId], references: [id])
+  barber  User    @relation("BarberAppointments", fields: [barberId], references: [id])
+  service Service @relation(fields: [serviceId], references: [id])
 
   @@map("appointments")
 }
 
 model Service {
-  id          String   @id @default(uuid())
-  name        String
-  description String?
-  imageUrl    String?
-  cost        Float
-  price       Float
-  isProduct   Boolean  @default(false)
+  id           String        @id @default(uuid())
+  name         String
+  description  String?
+  imageUrl     String?
+  cost         Float
+  price        Float
+  isProduct    Boolean       @default(false)
   appointments Appointment[]
-  saleItems   SaleItem[]
+  saleItems    SaleItem[]
 
   @@map("services")
 }
 
 model Transaction {
-  id          String   @id @default(uuid())
+  id          String          @id @default(uuid())
   userId      String
   type        TransactionType
   description String
   amount      Float
-  createdAt   DateTime @default(now())
+  createdAt   DateTime        @default(now())
 
-  user        User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@map("transactions")
 }
 
 model Sale {
-  id          String   @id @default(uuid())
-  userId      String
-  total       Float
-  method      PaymentMethod
-  createdAt   DateTime @default(now())
+  id        String        @id @default(uuid())
+  userId    String
+  total     Float
+  method    PaymentMethod
+  createdAt DateTime      @default(now())
 
-  user        User     @relation(fields: [userId], references: [id])
-  items       SaleItem[]
+  user  User       @relation(fields: [userId], references: [id])
+  items SaleItem[]
 
   @@map("sales")
 }
 
 model SaleItem {
-  id          String   @id @default(uuid())
-  saleId      String
-  serviceId   String
-  quantity    Int      @default(1)
+  id        String @id @default(uuid())
+  saleId    String
+  serviceId String
+  quantity  Int    @default(1)
 
-  sale        Sale     @relation(fields: [saleId], references: [id])
-  service     Service  @relation(fields: [serviceId], references: [id])
+  sale    Sale    @relation(fields: [saleId], references: [id])
+  service Service @relation(fields: [serviceId], references: [id])
 
   @@map("sale_items")
 }
 
 model CashRegisterSession {
-  id            String   @id @default(uuid())
+  id            String    @id @default(uuid())
   openedById    String
-  openedAt      DateTime @default(now())
+  openedAt      DateTime  @default(now())
   closedAt      DateTime?
   initialAmount Float
   finalAmount   Float?
 
-  user          User     @relation(fields: [openedById], references: [id])
+  user User @relation(fields: [openedById], references: [id])
 
   @@map("cash_register_sessions")
 }
@@ -147,4 +148,16 @@ model Coupon {
   createdAt   DateTime @default(now())
 
   @@map("coupons")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("password_reset_tokens")
 }
