@@ -7,6 +7,7 @@ interface CreateCouponRequest {
   discount: number
   discountType: 'PERCENTAGE' | 'VALUE'
   imageUrl?: string | null
+  quantity?: number
 }
 
 interface CreateCouponResponse {

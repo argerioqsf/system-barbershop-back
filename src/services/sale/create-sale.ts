@@ -1,4 +1,7 @@
-import { SaleRepository, DetailedSale } from '../../repositories/sale-repository'
+import {
+  SaleRepository,
+  DetailedSale,
+} from '../../repositories/sale-repository'
 import { ServiceRepository } from '../../repositories/service-repository'
 import { CouponRepository } from '../../repositories/coupon-repository'
 import { PaymentMethod } from '@prisma/client'
@@ -57,12 +60,16 @@ export class CreateSaleService {
     if (couponCode) {
       const coupon = await this.couponRepository.findByCode(couponCode)
       if (!coupon) throw new Error('Coupon not found')
+      if (coupon.quantity <= 0) throw new Error('Coupon exhausted')
       const discountAmount =
         coupon.discountType === 'PERCENTAGE'
           ? (total * coupon.discount) / 100
           : coupon.discount
       total = Math.max(total - discountAmount, 0)
       couponConnect = { connect: { id: coupon.id } }
+      await this.couponRepository.update(coupon.id, {
+        quantity: { decrement: 1 },
+      })
     }
 
     const sale = await this.saleRepository.create({

@@ -8,7 +8,7 @@ export class PrismaSaleRepository implements SaleRepository {
       data,
       include: {
         items: { include: { service: true } },
-        user: true,
+        user: { include: { profile: true } },
         coupon: true,
       },
     })
@@ -19,7 +19,7 @@ export class PrismaSaleRepository implements SaleRepository {
       where,
       include: {
         items: { include: { service: true } },
-        user: true,
+        user: { include: { profile: true } },
         coupon: true,
       },
     })
@@ -30,7 +30,7 @@ export class PrismaSaleRepository implements SaleRepository {
       where: { id },
       include: {
         items: { include: { service: true } },
-        user: true,
+        user: { include: { profile: true } },
         coupon: true,
       },
     })
@@ -41,7 +41,7 @@ export class PrismaSaleRepository implements SaleRepository {
       where: { createdAt: { gte: start, lte: end } },
       include: {
         items: { include: { service: true } },
-        user: true,
+        user: { include: { profile: true } },
         coupon: true,
       },
     })
@@ -52,7 +52,7 @@ export class PrismaSaleRepository implements SaleRepository {
       where: { userId },
       include: {
         items: { include: { service: true } },
-        user: true,
+        user: { include: { profile: true } },
         coupon: true,
       },
     })

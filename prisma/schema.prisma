@@ -12,6 +12,7 @@ enum Role {
   BARBER
   CLIENT
   ATTENDANT
+  OWNER
 }
 
 enum PaymentMethod {
@@ -46,25 +47,27 @@ model User {
   transactions        Transaction[]
   sessions            CashRegisterSession[]
   passwordResetTokens PasswordResetToken[]
+  ownedOrganizations  Organization[]        @relation("OrganizationOwner")
   createdAt           DateTime              @default(now())
 
   organization Organization @relation(fields: [organizationId], references: [id])
-  unit        Unit        @relation(fields: [unitId], references: [id])
+  unit         Unit         @relation(fields: [unitId], references: [id])
 
   @@map("users")
 }
 
 model Profile {
-  id        String   @id @default(uuid())
-  phone     String
-  cpf       String
-  genre     String
-  birthday  String
-  pix       String
-  role      Role     @default(CLIENT)
-  userId    String   @unique
-  user      User     @relation(fields: [userId], references: [id])
-  createdAt DateTime @default(now())
+  id                   String   @id @default(uuid())
+  phone                String
+  cpf                  String
+  genre                String
+  birthday             String
+  pix                  String
+  role                 Role     @default(CLIENT)
+  commissionPercentage Float    @default(100)
+  userId               String   @unique
+  user                 User     @relation(fields: [userId], references: [id])
+  createdAt            DateTime @default(now())
 
   @@map("profiles")
 }
@@ -169,6 +172,7 @@ model Coupon {
   discount     Float
   discountType DiscountType @default(PERCENTAGE)
   imageUrl     String?
+  quantity     Int          @default(0)
   createdAt    DateTime     @default(now())
   sales        Sale[]
 
@@ -190,6 +194,8 @@ model PasswordResetToken {
 model Organization {
   id        String   @id @default(uuid())
   name      String
+  ownerId   String?
+  owner     User?    @relation("OrganizationOwner", fields: [ownerId], references: [id])
   users     User[]
   units     Unit[]
   createdAt DateTime @default(now())

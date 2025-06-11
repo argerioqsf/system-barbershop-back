@@ -1,24 +1,32 @@
 import { SaleRepository } from '@/repositories/sale-repository'
 import { TransactionRepository } from '@/repositories/transaction-repository'
+import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 
-interface BarberBalanceRequest {
-  barberId: string
+interface OwnerBalanceRequest {
+  ownerId: string
 }
 
-interface BarberBalanceResponse {
+interface OwnerBalanceResponse {
   balance: number
 }
 
-export class BarberBalanceService {
+export class OwnerBalanceService {
   constructor(
     private saleRepository: SaleRepository,
     private transactionRepository: TransactionRepository,
+    private userRepository: BarberUsersRepository,
   ) {}
 
   async execute({
-    barberId,
-  }: BarberBalanceRequest): Promise<BarberBalanceResponse> {
-    const sales = await this.saleRepository.findManyByUser(barberId)
+    ownerId,
+  }: OwnerBalanceRequest): Promise<OwnerBalanceResponse> {
+    const owner = await this.userRepository.findById(ownerId)
+    if (!owner) throw new Error('Owner not found')
+    const orgId = owner.organizationId
+    const sales = await this.saleRepository.findMany({
+      unit: { organizationId: orgId },
+    })
+
     const salesTotal = sales.reduce((acc, sale) => {
       const totals = sale.items.reduce(
         (t, item) => {
@@ -32,25 +40,31 @@ export class BarberBalanceService {
       )
 
       let serviceShare = totals.service
+      let productShare = totals.product
 
       if (sale.coupon) {
         if (sale.coupon.discountType === 'PERCENTAGE') {
           serviceShare -= (serviceShare * sale.coupon.discount) / 100
+          productShare -= (productShare * sale.coupon.discount) / 100
         } else {
           const totalBefore = totals.service + totals.product
           const serviceDiscount =
             (totals.service / totalBefore) * sale.coupon.discount
+          const productDiscount =
+            (totals.product / totalBefore) * sale.coupon.discount
           serviceShare -= serviceDiscount
+          productShare -= productDiscount
         }
       }
 
-      const percentage = sale.user.profile?.commissionPercentage ?? 100
-      const barberShare = serviceShare * (percentage / 100)
-      return acc + barberShare
+      const barberPercentage = sale.user.profile?.commissionPercentage ?? 100
+      const barberShare = serviceShare * (barberPercentage / 100)
+      const ownerShare = serviceShare - barberShare + productShare
+      return acc + ownerShare
     }, 0)
 
     const transactions =
-      await this.transactionRepository.findManyByUser(barberId)
+      await this.transactionRepository.findManyByUser(ownerId)
     const additions = transactions
       .filter((t) => t.type === 'ADDITION')
       .reduce((acc, t) => acc + t.amount, 0)
@@ -59,7 +73,6 @@ export class BarberBalanceService {
       .reduce((acc, t) => acc + t.amount, 0)
 
     const balance = Number((salesTotal + additions - withdrawals).toFixed(2))
-
     return { balance }
   }
 }
