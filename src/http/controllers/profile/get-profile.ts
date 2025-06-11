@@ -11,18 +11,10 @@ export async function GetProfile(
   try {
     const getProfileFromUserId = getProfileFromUserIdService()
     const userId = request.user.sub
-    const { profile } = await getProfileFromUserId.execute({
-      id: userId,
-    })
-    let getTotalAmount = 0
-    if (profile?.extract_profile) {
-      for (let i = 0; i < profile?.extract_profile?.length; i++) {
-        getTotalAmount =
-          getTotalAmount + profile?.extract_profile[i].amount_receive
-      }
-    }
+    const { profile } = await getProfileFromUserId.execute({ id: userId })
+
     return replay.status(200).send({
-      profile: { ...profile, totalAmount: getTotalAmount },
+      profile,
       roles: Role,
     })
   } catch (error) {

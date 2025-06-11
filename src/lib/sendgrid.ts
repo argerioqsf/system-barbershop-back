@@ -1,7 +1,6 @@
 import sgMail from '@sendgrid/mail'
 import { env } from '@/env'
 import { templateEmail } from '@/templates/templateEmail'
-import { Leads } from '@prisma/client'
 
 sgMail.setApiKey(env.TOKEN_EMAIL_TWILIO)
 
@@ -126,7 +125,7 @@ export const sendContractEmail = async function (
 export const sendConfirmIndicatorPaymentEmail = async (
   to: string,
   name: string,
-  lead: Leads,
+  lead: { name: string },
 ) => {
   const msg = {
     to,
