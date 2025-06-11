@@ -1,5 +1,5 @@
-import { PrismaSaleRepository } from '../../../repositories/prisma/prisma-sale-repository'
-import { GetSaleService } from '../../sale/get-sale'
+import { PrismaSaleRepository } from '@/repositories/prisma/prisma-sale-repository'
+import { GetSaleService } from '@/services/sale/get-sale'
 
 export function makeGetSale() {
   const repository = new PrismaSaleRepository()
