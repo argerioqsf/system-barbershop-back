@@ -96,7 +96,7 @@ export class CreateSaleService {
     await this.transactionRepository.create({
       user: { connect: { id: userId } },
       unit: { connect: { id: user?.unitId } },
-      cashRegisterSession: { connect: { id: session.id } },
+      session: { connect: { id: session.id } },
       type: TransactionType.ADDITION,
       description: 'Sale',
       amount: total,

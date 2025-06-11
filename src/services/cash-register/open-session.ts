@@ -36,7 +36,7 @@ export class OpenSessionService {
       await this.transactionRepository.create({
         user: { connect: { id: userId } },
         unit: { connect: { id: unitId } },
-        cashRegisterSession: { connect: { id: session.id } },
+        session: { connect: { id: session.id } },
         type: TransactionType.ADDITION,
         description: 'Initial amount',
         amount: initialAmount,
