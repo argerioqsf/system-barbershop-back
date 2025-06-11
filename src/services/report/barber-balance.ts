@@ -20,33 +20,50 @@ export class BarberBalanceService {
   }: BarberBalanceRequest): Promise<BarberBalanceResponse> {
     const sales = await this.saleRepository.findManyByUser(barberId)
     const salesTotal = sales.reduce((acc, sale) => {
-      const totals = sale.items.reduce(
-        (t, item) => {
+      const itemsTotals = sale.items.reduce(
+        (totals, item) => {
           const value = item.service.price * item.quantity
-          if (item.service.isProduct) t.product += value
-          else t.service += value
-          t.total += value
-          return t
+          if (item.service.isProduct) {
+            totals.product += value
+          } else {
+            totals.service += value
+          }
+          totals.total += value
+          return totals
         },
         { service: 0, product: 0, total: 0 },
       )
 
-      let serviceShare = totals.service
+      let serviceShare = itemsTotals.service
+      let productShare = itemsTotals.product
 
-      if (sale.coupon) {
+      if (sale.coupon && serviceShare > 0) {
         if (sale.coupon.discountType === 'PERCENTAGE') {
-          serviceShare -= (serviceShare * sale.coupon.discount) / 100
+          serviceShare =
+            serviceShare - (serviceShare * sale.coupon.discount) / 100
+          productShare =
+            productShare - (productShare * sale.coupon.discount) / 100
         } else {
-          const totalBefore = totals.service + totals.product
-          const serviceDiscount =
-            (totals.service / totalBefore) * sale.coupon.discount
-          serviceShare -= serviceDiscount
+          serviceShare = serviceShare - sale.coupon.discount
+          productShare = productShare - sale.coupon.discount
         }
       }
-
-      const percentage = sale.user.profile?.commissionPercentage ?? 100
-      const barberShare = serviceShare * (percentage / 100)
-      return acc + barberShare
+      const total = serviceShare + productShare
+      if (total !== sale.total) {
+        if (productShare > 0) {
+          let porcentService = (100 * serviceShare) / total
+          if (sale.coupon) {
+            porcentService =
+              (100 * itemsTotals.service) /
+              (itemsTotals.service + itemsTotals.product)
+          }
+          const totalRelative = (sale.total * porcentService) / 100
+          return acc + Number(totalRelative.toFixed(2))
+        } else {
+          return acc + Number(sale.total.toFixed(2))
+        }
+      }
+      return acc + Number(serviceShare.toFixed(2))
     }, 0)
 
     const transactions =
