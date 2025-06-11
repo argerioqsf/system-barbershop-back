@@ -1,12 +1,32 @@
 import { env } from '@/env'
-import { PrismaClient, Role, PaymentMethod, TransactionType } from '@prisma/client'
+import {
+  PrismaClient,
+  Role,
+  PaymentMethod,
+  TransactionType,
+  DiscountType,
+} from '@prisma/client'
 import { hash } from 'bcryptjs'
 import 'dotenv/config'
 
 const prisma = new PrismaClient()
 
 async function main() {
+
   const passwordHash = await hash(env.PASSWORD_SEED, 6)
+
+  const organization = await prisma.organization.create({
+    data: {
+      name: 'Lobo BarberShop',
+    },
+  })
+
+  const mainUnit = await prisma.unit.create({
+    data: {
+      name: 'Main Unit',
+      organization: { connect: { id: organization.id } },
+    },
+  })
 
   const admin = await prisma.user.create({
     data: {
@@ -14,6 +34,7 @@ async function main() {
       email: 'admin@barbershop.com',
       password: passwordHash,
       active: true,
+      organization: { connect: { id: organization.id } },
       profile: {
         create: {
           phone: '969999999',
@@ -24,6 +45,7 @@ async function main() {
           role: Role.ADMIN,
         },
       },
+      units: { create: { unit: { connect: { id: mainUnit.id } } } },
     },
   })
 
@@ -33,6 +55,7 @@ async function main() {
       email: 'barber@barbershop.com',
       password: passwordHash,
       active: true,
+      organization: { connect: { id: organization.id } },
       profile: {
         create: {
           phone: '969888888',
@@ -43,6 +66,7 @@ async function main() {
           role: Role.BARBER,
         },
       },
+      units: { create: { unit: { connect: { id: mainUnit.id } } } },
     },
   })
 
@@ -52,6 +76,7 @@ async function main() {
       email: 'client@barbershop.com',
       password: passwordHash,
       active: true,
+      organization: { connect: { id: organization.id } },
       profile: {
         create: {
           phone: '969777777',
@@ -62,6 +87,7 @@ async function main() {
           role: Role.CLIENT,
         },
       },
+      units: { create: { unit: { connect: { id: mainUnit.id } } } },
     },
   })
 
@@ -71,6 +97,7 @@ async function main() {
       description: 'Basic haircut',
       cost: 10,
       price: 30,
+      unit: { connect: { id: mainUnit.id } },
     },
   })
 
@@ -81,6 +108,7 @@ async function main() {
       cost: 5,
       price: 15,
       isProduct: true,
+      unit: { connect: { id: mainUnit.id } },
     },
   })
 
@@ -89,6 +117,7 @@ async function main() {
       clientId: client.id,
       barberId: barber.id,
       serviceId: haircut.id,
+      unitId: mainUnit.id,
       date: new Date(),
       hour: '10:00',
     },
@@ -97,6 +126,7 @@ async function main() {
   const sale = await prisma.sale.create({
     data: {
       userId: client.id,
+      unitId: mainUnit.id,
       total: 45,
       method: PaymentMethod.CASH,
       items: {
@@ -111,6 +141,7 @@ async function main() {
   await prisma.transaction.create({
     data: {
       userId: admin.id,
+      unitId: mainUnit.id,
       type: TransactionType.ADDITION,
       description: 'Initial cash',
       amount: 100,
@@ -120,6 +151,7 @@ async function main() {
   await prisma.cashRegisterSession.create({
     data: {
       openedById: admin.id,
+      unitId: mainUnit.id,
       initialAmount: 100,
     },
   })
@@ -129,11 +161,21 @@ async function main() {
       code: 'WELCOME10',
       description: '10% off',
       discount: 10,
-      discountType: 'PERCENTAGE',
+      discountType: DiscountType.PERCENTAGE,
     },
   })
 
-  console.log({ admin, barber, client, haircut, shampoo, appointment, sale })
+  console.log({
+    organization,
+    mainUnit,
+    admin,
+    barber,
+    client,
+    haircut,
+    shampoo,
+    appointment,
+    sale,
+  })
 }
 
 main()
