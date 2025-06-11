@@ -1,9 +1,9 @@
-import { PrismaUsersRepository } from '@/repositories/prisma/prisma-users-repository'
-import { RegisterService } from '../register-services'
+import { PrismaBarberUsersRepository } from '@/repositories/prisma/prisma-barber-users-repository'
+import { RegisterUserService } from '../barber-user/register-user'
 
 export function makeRegisterService() {
-  const prismaUserRepository = new PrismaUsersRepository()
-  const registerService = new RegisterService(prismaUserRepository)
+  const repository = new PrismaBarberUsersRepository()
+  const registerService = new RegisterUserService(repository)
 
   return registerService
 }
