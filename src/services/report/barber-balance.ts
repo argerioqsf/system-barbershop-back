@@ -18,18 +18,29 @@ export class BarberBalanceService {
   async execute({
     barberId,
   }: BarberBalanceRequest): Promise<BarberBalanceResponse> {
-    // TODO: implementar logica que calcula o balanço do barbeiro contanto
-    // com os cupons de desconto e se o valor foi setado diferente do valor
-    // real da compra
     const sales = await this.saleRepository.findManyByUser(barberId)
     const salesTotal = sales.reduce((acc, sale) => {
-      const servicesTotal = sale.items.reduce((sum, item) => {
-        if (!item.service.isProduct) {
-          return sum + item.service.price * item.quantity
-        }
-        return sum
-      }, 0)
-      return acc + servicesTotal
+      const itemsTotals = sale.items.reduce(
+        (totals, item) => {
+          const value = item.service.price * item.quantity
+          if (item.service.isProduct) {
+            totals.product += value
+          } else {
+            totals.service += value
+          }
+          totals.total += value
+          return totals
+        },
+        { service: 0, product: 0, total: 0 },
+      )
+
+      let serviceShare = itemsTotals.service
+      if (itemsTotals.total > 0) {
+        const diff = sale.total - itemsTotals.total
+        serviceShare += diff * (itemsTotals.service / itemsTotals.total)
+      }
+
+      return acc + serviceShare
     }, 0)
 
     const transactions =
