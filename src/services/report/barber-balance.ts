@@ -1,46 +1,60 @@
-import { DetailedSale, SaleRepository } from '@/repositories/sale-repository'
-import { TransactionRepository } from '@/repositories/transaction-repository'
+    const transactions = await this.transactionRepository.findMany()
 
-interface BarberBalanceRequest {
-  barberId: string
-}
+    const saleTransactions = transactions.filter(
+      (t) => t.sale && t.sale.items.some((i) => i.barberId === barberId),
+    )
 
-interface HistorySales {
-  valueService: number
-  percentage: number
-  valueBarber: number
-  coupon?: string
-  saleItems: {
-    quantity: number
-    name: string
-    price: number
-    userEmail: string
-  }[]
-}
+    let salesTotal = 0
+    for (const t of saleTransactions) {
+      const sale = t.sale!
+      const totals = sale.items.reduce(
+        (acc, item) => {
+          const value = (item.total ?? item.service.price * item.quantity)
+          if (!item.service.isProduct) {
+            acc.service += value
+            if (item.barberId === barberId) acc.barber += value
+          } else {
+            acc.product += value
+          }
+          acc.total += value
+          return acc
+        { service: 0, product: 0, total: 0, barber: 0 },
+      let serviceAfter = totals.service
+      let productAfter = totals.product
+      let barberAfter = totals.barber
+      if (sale.coupon) {
+        const discount =
+          sale.coupon.discountType === 'PERCENTAGE'
+            ? (totals.total * sale.coupon.discount) / 100
+            : sale.coupon.discount
+        const serviceDisc = discount * (totals.service / totals.total)
+        const productDisc = discount * (totals.product / totals.total)
+        serviceAfter -= serviceDisc
+        productAfter -= productDisc
+        if (totals.service > 0) {
+          barberAfter -= serviceDisc * (totals.barber / totals.service)
+      const sumAfter = serviceAfter + productAfter
+      if (sumAfter > 0 && sumAfter !== sale.total) {
+        const scale = sale.total / sumAfter
+        serviceAfter *= scale
+        barberAfter *= scale
+      const commissionPerc = sale.items.find(
+        (i) => i.barberId === barberId,
+      )?.barber?.profile?.commissionPercentage ?? 100
+      salesTotal += barberAfter * (commissionPerc / 100)
+    }
 
-interface BarberBalanceResponse {
-  balance: number
-  historySales: HistorySales[]
-}
-
-export class BarberBalanceService {
-  constructor(
-    private saleRepository: SaleRepository,
-    private transactionRepository: TransactionRepository,
-  ) {}
-
-  async execute({
-    barberId,
-  }: BarberBalanceRequest): Promise<BarberBalanceResponse> {
-    const sales = await this.saleRepository.findManyByUser(barberId)
-    const historySales: HistorySales[] = []
-
-    function setHistory(
-      valueService: number,
-      percentage: number,
-      valuePorcent: number,
-      sale: DetailedSale,
-    ) {
+    const manualTotals = (await this.transactionRepository.findManyByUser(barberId))
+      .filter((t) => !t.sale)
+      .reduce(
+        (totals, t) => {
+          if (t.type === 'ADDITION') totals.additions += t.amount
+          else if (t.type === 'WITHDRAWAL') totals.withdrawals += t.amount
+          return totals
+        },
+        { additions: 0, withdrawals: 0 },
+    const balance = Number(
+      (salesTotal + manualTotals.additions - manualTotals.withdrawals).toFixed(2),
       if (valueService > 0) {
         historySales.push({
           valueService,

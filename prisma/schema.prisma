@@ -44,6 +44,7 @@ model User {
   appointments        Appointment[]         @relation("ClientAppointments")
   barberAppointments  Appointment[]         @relation("BarberAppointments")
   sales               Sale[]
+  saleItems           SaleItem[]            @relation("BarberSaleItems")
   transactions        Transaction[]
   sessions            CashRegisterSession[]
   passwordResetTokens PasswordResetToken[]
@@ -107,49 +108,58 @@ model Service {
 }
 
 model Transaction {
-  id          String          @id @default(uuid())
-  userId      String
-  unitId      String
+  id                    String          @id @default(uuid())
+  userId                String
+  unitId                String
   cashRegisterSessionId String?
-  type        TransactionType
-  description String
-  amount      Float
-  createdAt   DateTime        @default(now())
+  saleId                String?         @unique
+  type                  TransactionType
+  description           String
+  amount                Float
+  createdAt             DateTime        @default(now())
 
-  user User @relation(fields: [userId], references: [id])
-  unit Unit @relation(fields: [unitId], references: [id])
+  user    User                 @relation(fields: [userId], references: [id])
+  unit    Unit                 @relation(fields: [unitId], references: [id])
   session CashRegisterSession? @relation(fields: [cashRegisterSessionId], references: [id])
+  sale    Sale?                @relation("SaleTransaction", fields: [saleId], references: [id])
 
   @@map("transactions")
 }
 
 model Sale {
-  id        String        @id @default(uuid())
-  userId    String
-  unitId    String
-  sessionId String?
-  couponId  String?
-  total     Float
-  method    PaymentMethod
-  createdAt DateTime      @default(now())
+  id            String        @id @default(uuid())
+  userId        String
+  unitId        String
+  sessionId     String?
+  couponId      String?
+  transactionId String?       @unique
+  total         Float
+  method        PaymentMethod
+  createdAt     DateTime      @default(now())
 
-  user   User       @relation(fields: [userId], references: [id])
-  items  SaleItem[]
-  unit   Unit       @relation(fields: [unitId], references: [id])
-  coupon Coupon?    @relation(fields: [couponId], references: [id])
-  session CashRegisterSession? @relation(fields: [sessionId], references: [id])
+  user        User                 @relation(fields: [userId], references: [id])
+  items       SaleItem[]
+  unit        Unit                 @relation(fields: [unitId], references: [id])
+  coupon      Coupon?              @relation(fields: [couponId], references: [id])
+  session     CashRegisterSession? @relation(fields: [sessionId], references: [id])
+  transaction Transaction?         @relation("SaleTransaction")
 
   @@map("sales")
 }
 
 model SaleItem {
-  id        String @id @default(uuid())
+  id        String  @id @default(uuid())
   saleId    String
   serviceId String
-  quantity  Int    @default(1)
+  quantity  Int     @default(1)
+  barberId  String?
+  couponId  String?
+  total     Float?
 
   sale    Sale    @relation(fields: [saleId], references: [id])
   service Service @relation(fields: [serviceId], references: [id])
+  barber  User?   @relation("BarberSaleItems", fields: [barberId], references: [id])
+  coupon  Coupon? @relation(fields: [couponId], references: [id])
 
   @@map("sale_items")
 }
@@ -163,9 +173,9 @@ model CashRegisterSession {
   initialAmount Float
   finalAmount   Float?
 
-  user User @relation(fields: [openedById], references: [id])
-  unit Unit @relation(fields: [unitId], references: [id])
-  sales Sale[]
+  user         User          @relation(fields: [openedById], references: [id])
+  unit         Unit          @relation(fields: [unitId], references: [id])
+  sales        Sale[]
   transactions Transaction[]
 
   @@map("cash_register_sessions")
@@ -181,6 +191,7 @@ model Coupon {
   quantity     Int          @default(0)
   createdAt    DateTime     @default(now())
   sales        Sale[]
+  saleItems    SaleItem[]
 
   @@map("coupons")
 }
