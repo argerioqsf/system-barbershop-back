@@ -9,6 +9,6 @@ export async function GetOwnerBalanceController(
   const paramsSchema = z.object({ ownerId: z.string() })
   const { ownerId } = paramsSchema.parse(request.params)
   const service = makeOwnerBalance()
-  const { balance } = await service.execute({ ownerId })
-  return reply.status(200).send({ balance })
+  const { balance, historySales } = await service.execute({ ownerId })
+  return reply.status(200).send({ balance, historySales })
 }

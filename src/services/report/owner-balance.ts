@@ -1,4 +1,4 @@
-import { SaleRepository } from '@/repositories/sale-repository'
+import { DetailedSale, SaleRepository } from '@/repositories/sale-repository'
 import { TransactionRepository } from '@/repositories/transaction-repository'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 
@@ -6,8 +6,22 @@ interface OwnerBalanceRequest {
   ownerId: string
 }
 
+interface HistorySales {
+  valueService: number
+  percentage: number
+  valueOwner: number
+  coupon?: string
+  saleItems: {
+    quantity: number
+    name: string
+    price: number
+    userEmail: string
+  }[]
+}
+
 interface OwnerBalanceResponse {
   balance: number
+  historySales: HistorySales[]
 }
 
 export class OwnerBalanceService {
@@ -26,6 +40,29 @@ export class OwnerBalanceService {
     const sales = await this.saleRepository.findMany({
       unit: { organizationId: orgId },
     })
+    const historySales: HistorySales[] = []
+
+    function setHistory(
+      valueService: number,
+      percentage: number,
+      valuePorcent: number,
+      sale: DetailedSale,
+    ) {
+      if (valueService > 0) {
+        historySales.push({
+          valueService,
+          percentage,
+          valueOwner: valuePorcent,
+          coupon: sale.coupon?.code,
+          saleItems: sale.items.map((item) => ({
+            quantity: item.quantity,
+            name: item.service.name,
+            price: item.service.price,
+            userEmail: sale.user.name,
+          })),
+        })
+      }
+    }
 
     const salesTotal = sales.reduce((acc, sale) => {
       const totals = sale.items.reduce(
@@ -58,8 +95,10 @@ export class OwnerBalanceService {
       }
 
       const barberPercentage = sale.user.profile?.commissionPercentage ?? 100
+      const ownerPercentage = 100 - barberPercentage
       const barberShare = serviceShare * (barberPercentage / 100)
       const ownerShare = serviceShare - barberShare + productShare
+      setHistory(serviceShare, ownerPercentage, ownerShare, sale)
       return acc + ownerShare
     }, 0)
 
@@ -73,6 +112,6 @@ export class OwnerBalanceService {
       .reduce((acc, t) => acc + t.amount, 0)
 
     const balance = Number((salesTotal + additions - withdrawals).toFixed(2))
-    return { balance }
+    return { balance, historySales }
   }
 }
