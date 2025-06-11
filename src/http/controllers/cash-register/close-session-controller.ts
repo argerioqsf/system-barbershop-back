@@ -2,7 +2,10 @@ import { makeCloseSessionService } from '@/services/@factories/cash-register/mak
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
-export async function CloseSessionController(request: FastifyRequest, reply: FastifyReply) {
+export async function CloseSessionController(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
   const bodySchema = z.object({
     sessionId: z.string(),
     finalAmount: z.number(),
