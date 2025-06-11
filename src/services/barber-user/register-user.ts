@@ -13,6 +13,7 @@ interface RegisterUserRequest {
   pix: string
   role: Role
   organizationId: string
+  unitId: string
 }
 
 interface RegisterUserResponse {
@@ -38,6 +39,7 @@ export class RegisterUserService {
         password: password_hash,
         active: false,
         organization: { connect: { id: data.organizationId } },
+        unit: { connect: { id: data.unitId } },
       },
       {
         phone: data.phone,

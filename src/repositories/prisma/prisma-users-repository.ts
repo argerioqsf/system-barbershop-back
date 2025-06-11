@@ -225,11 +225,6 @@ export class PrismaUsersRepository implements UsersRepository {
             contractLink: true,
             contractSent: true,
             amountToReceive: true,
-            units: {
-              select: {
-                unit: true,
-              },
-            },
           },
         },
       },

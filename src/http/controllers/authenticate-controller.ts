@@ -24,7 +24,7 @@ export async function authenticate(
       password,
     })
 
-    const token = await replay.jwtSign({}, { sign: { sub: user.id } })
+    const token = await replay.jwtSign({ unitId: user.unitId }, { sign: { sub: user.id } })
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password: _, ...userWithoutPassword } = user

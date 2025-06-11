@@ -34,6 +34,8 @@ export class UpdateUserService {
         email: existing.email,
         password: existing.password,
         active: existing.active,
+        organization: { connect: { id: existing.organizationId } },
+        unit: { connect: { id: existing.unitId } },
       },
       {
         phone: data.phone,
