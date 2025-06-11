@@ -18,7 +18,9 @@ export class PrismaBarberUsersRepository implements BarberUsersRepository {
     return prisma.user.findMany({ include: { profile: true } })
   }
 
-  async findById(id: string): Promise<(User & { profile: Profile | null }) | null> {
+  async findById(
+    id: string,
+  ): Promise<(User & { profile: Profile | null }) | null> {
     return prisma.user.findUnique({ where: { id }, include: { profile: true } })
   }
 

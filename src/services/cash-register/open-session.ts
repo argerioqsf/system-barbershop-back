@@ -14,7 +14,11 @@ interface OpenSessionResponse {
 export class OpenSessionService {
   constructor(private repository: CashRegisterRepository) {}
 
-  async execute({ userId, unitId, initialAmount }: OpenSessionRequest): Promise<OpenSessionResponse> {
+  async execute({
+    userId,
+    unitId,
+    initialAmount,
+  }: OpenSessionRequest): Promise<OpenSessionResponse> {
     const session = await this.repository.create({
       openedBy: { connect: { id: userId } },
       unit: { connect: { id: unitId } },

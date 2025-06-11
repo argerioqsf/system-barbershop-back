@@ -2,6 +2,7 @@ import { SaleRepository } from '@/repositories/sale-repository'
 import { ServiceRepository } from '@/repositories/service-repository'
 import { CouponRepository } from '@/repositories/coupon-repository'
 import { PaymentMethod, Sale } from '@prisma/client'
+import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 
 interface CreateSaleItem {
   serviceId: string
@@ -11,7 +12,6 @@ interface CreateSaleItem {
 interface CreateSaleRequest {
   userId: string
   method: PaymentMethod
-  unitId: string
   items: CreateSaleItem[]
   couponCode?: string
   total?: number
@@ -26,23 +26,34 @@ export class CreateSaleService {
     private saleRepository: SaleRepository,
     private serviceRepository: ServiceRepository,
     private couponRepository: CouponRepository,
+    private barberUserRepository: BarberUsersRepository,
   ) {}
 
-  async execute({ userId, unitId, method, items, couponCode, total }: CreateSaleRequest): Promise<CreateSaleResponse> {
+  async execute({
+    userId,
+    method,
+    items,
+    couponCode,
+    total,
+  }: CreateSaleRequest): Promise<CreateSaleResponse> {
     let calculatedTotal = 0
     const saleItems = [] as any[]
+    const user = await this.barberUserRepository.findById(userId)
 
     for (const item of items) {
       const service = await this.serviceRepository.findById(item.serviceId)
       if (!service) throw new Error('Service not found')
       const subtotal = service.price * item.quantity
       calculatedTotal += subtotal
-      saleItems.push({ service: { connect: { id: item.serviceId } }, quantity: item.quantity })
+      saleItems.push({
+        service: { connect: { id: item.serviceId } },
+        quantity: item.quantity,
+      })
     }
 
     if (typeof total !== 'number') total = calculatedTotal
 
-    let couponConnect: any = undefined
+    let couponConnect: any
     if (couponCode) {
       const coupon = await this.couponRepository.findByCode(couponCode)
       if (!coupon) throw new Error('Coupon not found')
@@ -58,7 +69,7 @@ export class CreateSaleService {
       total,
       method,
       user: { connect: { id: userId } },
-      unit: { connect: { id: unitId } },
+      unit: { connect: { id: user?.unitId } },
       items: { create: saleItems },
       coupon: couponConnect,
     })

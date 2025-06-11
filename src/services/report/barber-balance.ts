@@ -15,11 +15,14 @@ export class BarberBalanceService {
     private transactionRepository: TransactionRepository,
   ) {}
 
-  async execute({ barberId }: BarberBalanceRequest): Promise<BarberBalanceResponse> {
+  async execute({
+    barberId,
+  }: BarberBalanceRequest): Promise<BarberBalanceResponse> {
     const sales = await this.saleRepository.findManyByUser(barberId)
     const salesTotal = sales.reduce((acc, sale) => acc + sale.total, 0)
 
-    const transactions = await this.transactionRepository.findManyByUser(barberId)
+    const transactions =
+      await this.transactionRepository.findManyByUser(barberId)
     const additions = transactions
       .filter((t) => t.type === 'ADDITION')
       .reduce((acc, t) => acc + t.amount, 0)
