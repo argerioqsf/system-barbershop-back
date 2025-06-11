@@ -1,72 +1,26 @@
-    const transactions = await this.transactionRepository.findMany()
+    // TODO: implementar logica que calcula o balanço do barbeiro contanto
+    // com os cupons de desconto e se o valor foi setado diferente do valor
+    // real da compra
+    const sales = await this.saleRepository.findManyByUser(barberId)
+    const salesTotal = sales.reduce((acc, sale) => {
+      const servicesTotal = sale.items.reduce((sum, item) => {
+        if (!item.service.isProduct) {
+          return sum + item.service.price * item.quantity
+        return sum
+      }, 0)
+      return acc + servicesTotal
+    }, 0)
 
-    const saleTransactions = transactions.filter(
-      (t) => t.sale && t.sale.items.some((i) => i.barberId === barberId),
-    )
+    const transactions =
+      await this.transactionRepository.findManyByUser(barberId)
+    const additions = transactions
+      .filter((t) => t.type === 'ADDITION')
+      .reduce((acc, t) => acc + t.amount, 0)
+    const withdrawals = transactions
+      .filter((t) => t.type === 'WITHDRAWAL')
+      .reduce((acc, t) => acc + t.amount, 0)
 
-    let salesTotal = 0
-    for (const t of saleTransactions) {
-      const sale = t.sale!
-      const totals = sale.items.reduce(
-        (acc, item) => {
-          const value = (item.total ?? item.service.price * item.quantity)
-          if (!item.service.isProduct) {
-            acc.service += value
-            if (item.barberId === barberId) acc.barber += value
-          } else {
-            acc.product += value
-          }
-          acc.total += value
-          return acc
-        { service: 0, product: 0, total: 0, barber: 0 },
-      let serviceAfter = totals.service
-      let productAfter = totals.product
-      let barberAfter = totals.barber
-      if (sale.coupon) {
-        const discount =
-          sale.coupon.discountType === 'PERCENTAGE'
-            ? (totals.total * sale.coupon.discount) / 100
-            : sale.coupon.discount
-        const serviceDisc = discount * (totals.service / totals.total)
-        const productDisc = discount * (totals.product / totals.total)
-        serviceAfter -= serviceDisc
-        productAfter -= productDisc
-        if (totals.service > 0) {
-          barberAfter -= serviceDisc * (totals.barber / totals.service)
-      const sumAfter = serviceAfter + productAfter
-      if (sumAfter > 0 && sumAfter !== sale.total) {
-        const scale = sale.total / sumAfter
-        serviceAfter *= scale
-        barberAfter *= scale
-      const commissionPerc = sale.items.find(
-        (i) => i.barberId === barberId,
-      )?.barber?.profile?.commissionPercentage ?? 100
-      salesTotal += barberAfter * (commissionPerc / 100)
-    }
-
-    const manualTotals = (await this.transactionRepository.findManyByUser(barberId))
-      .filter((t) => !t.sale)
-      .reduce(
-        (totals, t) => {
-          if (t.type === 'ADDITION') totals.additions += t.amount
-          else if (t.type === 'WITHDRAWAL') totals.withdrawals += t.amount
-          return totals
-        },
-        { additions: 0, withdrawals: 0 },
-    const balance = Number(
-      (salesTotal + manualTotals.additions - manualTotals.withdrawals).toFixed(2),
-      if (valueService > 0) {
-        historySales.push({
-          valueService,
-          percentage,
-          valueBarber: valuePorcent,
-          coupon: sale.coupon?.code,
-          saleItems: sale.items.map((item) => ({
-            quantity: item.quantity,
-            name: item.service.name,
-            price: item.service.price,
-            userEmail: sale.user.name,
-          })),
+    const balance = salesTotal + additions - withdrawals
         })
       }
     }

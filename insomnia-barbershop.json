@@ -17,7 +17,8 @@
       "name": "Base Environment",
       "data": {
         "baseURL": "http://localhost:3333",
-        "token": ""
+        "token": "",
+        "ownerId": ""
       }
     },
     {
@@ -393,7 +394,7 @@
       "url": "{{ baseURL }}/sales",
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"method\": \"CASH\",\n  \"items\": [\n    {\n      \"serviceId\": \"\",\n      \"quantity\": 1,\n      \"barberId\": \"\"\n    }\n  ]\n}"
+        "text": "{\n  \"method\": \"CASH\",\n  \"items\": [\n    {\n      \"serviceId\": \"\",\n      \"quantity\": 1,\n      \"barberId\": \"\",\n      \"couponCode\": \"\",\n      \"total\": 0\n    }\n  ],\n  \"couponCode\": \"\",\n  \"total\": 0\n}"
       },
       "headers": [
         {
