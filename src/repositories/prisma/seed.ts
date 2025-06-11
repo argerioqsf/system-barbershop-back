@@ -27,6 +27,32 @@ async function main() {
     },
   })
 
+  const owner = await prisma.user.create({
+    data: {
+      name: 'Owner',
+      email: 'owner@barbershop.com',
+      password: passwordHash,
+      active: true,
+      organization: { connect: { id: organization.id } },
+      profile: {
+        create: {
+          phone: '969855555',
+          cpf: '33344455566',
+          genre: 'M',
+          birthday: '1980-04-15',
+          pix: 'ownerpix',
+          role: Role.OWNER,
+        },
+      },
+      unit: { connect: { id: mainUnit.id } },
+    },
+  })
+
+  await prisma.organization.update({
+    where: { id: organization.id },
+    data: { owner: { connect: { id: owner.id } } },
+  })
+
   const admin = await prisma.user.create({
     data: {
       name: 'Admin',
@@ -62,6 +88,7 @@ async function main() {
           genre: 'M',
           birthday: '1995-05-10',
           pix: 'barberpix',
+          commissionPercentage: 70,
           role: Role.BARBER,
         },
       },
@@ -122,10 +149,30 @@ async function main() {
     },
   })
 
+  const cashSession = await prisma.cashRegisterSession.create({
+    data: {
+      openedById: admin.id,
+      unitId: mainUnit.id,
+      initialAmount: 100,
+    },
+  })
+
+  await prisma.transaction.create({
+    data: {
+      userId: admin.id,
+      unitId: mainUnit.id,
+      cashRegisterSessionId: cashSession.id,
+      type: TransactionType.ADDITION,
+      description: 'Initial cash',
+      amount: 100,
+    },
+  })
+
   const sale = await prisma.sale.create({
     data: {
       userId: client.id,
       unitId: mainUnit.id,
+      sessionId: cashSession.id,
       total: 45,
       method: PaymentMethod.CASH,
       items: {
@@ -139,19 +186,12 @@ async function main() {
 
   await prisma.transaction.create({
     data: {
-      userId: admin.id,
+      userId: client.id,
       unitId: mainUnit.id,
+      cashRegisterSessionId: cashSession.id,
       type: TransactionType.ADDITION,
-      description: 'Initial cash',
-      amount: 100,
-    },
-  })
-
-  await prisma.cashRegisterSession.create({
-    data: {
-      openedById: admin.id,
-      unitId: mainUnit.id,
-      initialAmount: 100,
+      description: 'Sale',
+      amount: 45,
     },
   })
 
@@ -161,6 +201,7 @@ async function main() {
       description: '10% off',
       discount: 10,
       discountType: DiscountType.PERCENTAGE,
+      quantity: 10,
     },
   })
 
@@ -173,6 +214,7 @@ async function main() {
     haircut,
     shampoo,
     appointment,
+    cashSession,
     sale,
   })
 }

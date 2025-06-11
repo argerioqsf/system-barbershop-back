@@ -287,7 +287,7 @@
       "url": "{{ baseURL }}/coupons",
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"code\": \"\",\n  \"discount\": 10,\n  \"discountType\": \"PERCENTAGE\"\n}"
+        "text": "{\n  \"code\": \"\",\n  \"discount\": 10,\n  \"discountType\": \"PERCENTAGE\",\n  \"quantity\": 1\n}"
       },
       "headers": [
         {
@@ -326,7 +326,7 @@
       "parentId": "fld_cash",
       "name": "Open session",
       "method": "POST",
-      "url": "{{ baseURL }}/cash/open",
+      "url": "{{ baseURL }}/cash-session/open",
       "body": {
         "mimeType": "application/json",
         "text": "{\n  \"userId\": \"\",\n  \"unitId\": \"\",\n  \"initialAmount\": 0\n}"
@@ -348,7 +348,7 @@
       "parentId": "fld_cash",
       "name": "Close session",
       "method": "POST",
-      "url": "{{ baseURL }}/cash/close",
+      "url": "{{ baseURL }}/cash-session/close",
       "body": {
         "mimeType": "application/json",
         "text": "{\n  \"sessionId\": \"\",\n  \"finalAmount\": 0\n}"
@@ -370,7 +370,7 @@
       "parentId": "fld_cash",
       "name": "List sessions",
       "method": "GET",
-      "url": "{{ baseURL }}/cash/sessions",
+      "url": "{{ baseURL }}/cash-session",
       "headers": [
         {
           "name": "Authorization",
@@ -698,6 +698,53 @@
           "name": "Authorization",
           "value": "Bearer {{ token }}"
         }
+      ]
+    },
+    {
+      "_id": "req_update_coupon",
+      "_type": "request",
+      "parentId": "fld_coupons",
+      "name": "Update coupon",
+      "method": "PATCH",
+      "url": "{{ baseURL }}/coupons/{id}",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"quantity\": 1\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_owner_balance",
+      "_type": "request",
+      "parentId": "fld_reports",
+      "name": "Owner balance",
+      "method": "GET",
+      "url": "{{ baseURL }}/reports/owner/{{ ownerId }}/balance",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    }
+    ,{
+      "_id": "req_cash_session_report",
+      "_type": "request",
+      "parentId": "fld_reports",
+      "name": "Cash session report",
+      "method": "GET",
+      "url": "{{ baseURL }}/reports/cash-session/{sessionId}",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ token }}"}
       ]
     }
   ]

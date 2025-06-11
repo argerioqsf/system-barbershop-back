@@ -5,4 +5,5 @@ export interface TransactionRepository {
   findManyByUser(userId: string): Promise<Transaction[]>;
   findMany(): Promise<Transaction[]>;
   findManyByUnit(unitId: string): Promise<Transaction[]>;
+  findManyBySession(sessionId: string): Promise<Transaction[]>;
 }

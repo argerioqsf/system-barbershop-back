@@ -9,6 +9,6 @@ export async function GetBarberBalanceController(
   const paramsSchema = z.object({ barberId: z.string() })
   const { barberId } = paramsSchema.parse(request.params)
   const service = makeBarberBalance()
-  const { balance } = await service.execute({ barberId })
-  return reply.status(200).send({ balance })
+  const { balance, historySales } = await service.execute({ barberId })
+  return reply.status(200).send({ balance, historySales })
 }

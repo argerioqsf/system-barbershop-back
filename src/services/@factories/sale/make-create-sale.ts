@@ -3,17 +3,23 @@ import { PrismaServiceRepository } from '@/repositories/prisma/prisma-service-re
 import { PrismaCouponRepository } from '@/repositories/prisma/prisma-coupon-repository'
 import { CreateSaleService } from '@/services/sale/create-sale'
 import { PrismaBarberUsersRepository } from '@/repositories/prisma/prisma-barber-users-repository'
+import { PrismaCashRegisterRepository } from '@/repositories/prisma/prisma-cash-register-repository'
+import { PrismaTransactionRepository } from '@/repositories/prisma/prisma-transaction-repository'
 
 export function makeCreateSale() {
   const repository = new PrismaSaleRepository()
   const serviceRepository = new PrismaServiceRepository()
   const couponRepository = new PrismaCouponRepository()
   const barberUserRepository = new PrismaBarberUsersRepository()
+  const cashRegisterRepository = new PrismaCashRegisterRepository()
+  const transactionRepository = new PrismaTransactionRepository()
   const service = new CreateSaleService(
     repository,
     serviceRepository,
     couponRepository,
     barberUserRepository,
+    cashRegisterRepository,
+    transactionRepository,
   )
   return service
 }

@@ -18,4 +18,8 @@ export class PrismaTransactionRepository implements TransactionRepository {
   async findManyByUnit(unitId: string): Promise<Transaction[]> {
     return prisma.transaction.findMany({ where: { unitId } })
   }
+
+  async findManyBySession(sessionId: string): Promise<Transaction[]> {
+    return prisma.transaction.findMany({ where: { cashRegisterSessionId: sessionId } })
+  }
 }

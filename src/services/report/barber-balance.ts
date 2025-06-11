@@ -1,12 +1,26 @@
-import { SaleRepository } from '@/repositories/sale-repository'
+import { DetailedSale, SaleRepository } from '@/repositories/sale-repository'
 import { TransactionRepository } from '@/repositories/transaction-repository'
 
 interface BarberBalanceRequest {
   barberId: string
 }
 
+interface HistorySales {
+  valueService: number
+  percentage: number
+  valueBarber: number
+  coupon?: string
+  saleItems: {
+    quantity: number
+    name: string
+    price: number
+    userEmail: string
+  }[]
+}
+
 interface BarberBalanceResponse {
   balance: number
+  historySales: HistorySales[]
 }
 
 export class BarberBalanceService {
@@ -19,64 +33,96 @@ export class BarberBalanceService {
     barberId,
   }: BarberBalanceRequest): Promise<BarberBalanceResponse> {
     const sales = await this.saleRepository.findManyByUser(barberId)
+    const historySales: HistorySales[] = []
+
+    function setHistory(
+      valueService: number,
+      percentage: number,
+      valuePorcent: number,
+      sale: DetailedSale,
+    ) {
+      if (valueService > 0) {
+        historySales.push({
+          valueService,
+          percentage,
+          valueBarber: valuePorcent,
+          coupon: sale.coupon?.code,
+          saleItems: sale.items.map((item) => ({
+            quantity: item.quantity,
+            name: item.service.name,
+            price: item.service.price,
+            userEmail: sale.user.name,
+          })),
+        })
+      }
+    }
+
     const salesTotal = sales.reduce((acc, sale) => {
-      const itemsTotals = sale.items.reduce(
+      const { service: rawService, product: rawProduct } = sale.items.reduce(
         (totals, item) => {
           const value = item.service.price * item.quantity
-          if (item.service.isProduct) {
-            totals.product += value
-          } else {
-            totals.service += value
-          }
-          totals.total += value
+          item.service.isProduct
+            ? (totals.product += value)
+            : (totals.service += value)
           return totals
         },
-        { service: 0, product: 0, total: 0 },
+        { service: 0, product: 0 },
       )
 
-      let serviceShare = itemsTotals.service
-      let productShare = itemsTotals.product
+      let serviceShare = rawService
+      let productShare = rawProduct
 
       if (sale.coupon && serviceShare > 0) {
-        if (sale.coupon.discountType === 'PERCENTAGE') {
-          serviceShare =
-            serviceShare - (serviceShare * sale.coupon.discount) / 100
-          productShare =
-            productShare - (productShare * sale.coupon.discount) / 100
+        const { discountType, discount } = sale.coupon
+        if (discountType === 'PERCENTAGE') {
+          serviceShare -= (serviceShare * discount) / 100
+          productShare -= (productShare * discount) / 100
         } else {
-          serviceShare = serviceShare - sale.coupon.discount
-          productShare = productShare - sale.coupon.discount
+          serviceShare -= discount
+          productShare -= discount
         }
       }
+
       const total = serviceShare + productShare
-      if (total !== sale.total) {
-        if (productShare > 0) {
-          let porcentService = (100 * serviceShare) / total
-          if (sale.coupon) {
-            porcentService =
-              (100 * itemsTotals.service) /
-              (itemsTotals.service + itemsTotals.product)
-          }
-          const totalRelative = (sale.total * porcentService) / 100
-          return acc + Number(totalRelative.toFixed(2))
-        } else {
-          return acc + Number(sale.total.toFixed(2))
-        }
+      const percentage = sale.user.profile?.commissionPercentage ?? 100
+      if (total === sale.total) {
+        const valueService = Number(serviceShare.toFixed(2))
+        const valuePorcent = (valueService * percentage) / 100
+        setHistory(valueService, percentage, valuePorcent, sale)
+        return acc + valuePorcent
       }
-      return acc + Number(serviceShare.toFixed(2))
+      if (productShare <= 0) {
+        const valueService = Number(sale.total.toFixed(2))
+        const valuePorcent = (valueService * percentage) / 100
+        setHistory(valueService, percentage, valuePorcent, sale)
+        return acc + valuePorcent
+      }
+
+      const porcentService = sale.coupon
+        ? (100 * rawService) / (rawService + rawProduct)
+        : (100 * serviceShare) / total
+
+      const valueService = Number(
+        ((sale.total * porcentService) / 100).toFixed(2),
+      )
+      const valuePorcent = (valueService * percentage) / 100
+      setHistory(valueService, percentage, valuePorcent, sale)
+      return acc + valuePorcent
     }, 0)
 
-    const transactions =
+    const { additions, withdrawals } = (
       await this.transactionRepository.findManyByUser(barberId)
-    const additions = transactions
-      .filter((t) => t.type === 'ADDITION')
-      .reduce((acc, t) => acc + t.amount, 0)
-    const withdrawals = transactions
-      .filter((t) => t.type === 'WITHDRAWAL')
-      .reduce((acc, t) => acc + t.amount, 0)
+    ).reduce(
+      (totals, t) => {
+        if (t.type === 'ADDITION') totals.additions += t.amount
+        else if (t.type === 'WITHDRAWAL') totals.withdrawals += t.amount
+        return totals
+      },
+      { additions: 0, withdrawals: 0 },
+    )
 
     const balance = Number((salesTotal + additions - withdrawals).toFixed(2))
 
-    return { balance }
+    return { balance, historySales }
   }
 }
