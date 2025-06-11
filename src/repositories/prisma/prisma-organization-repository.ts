@@ -14,4 +14,15 @@ export class PrismaOrganizationRepository implements OrganizationRepository {
   async findMany(): Promise<Organization[]> {
     return prisma.organization.findMany()
   }
+
+  async update(
+    id: string,
+    data: Prisma.OrganizationUpdateInput,
+  ): Promise<Organization> {
+    return prisma.organization.update({ where: { id }, data })
+  }
+
+  async delete(id: string): Promise<void> {
+    await prisma.organization.delete({ where: { id } })
+  }
 }

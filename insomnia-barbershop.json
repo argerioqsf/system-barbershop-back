@@ -317,6 +317,136 @@
       "headers": [{ "name": "Authorization", "value": "Bearer {{ token }}" }]
     },
     {
+      "_id": "fld_organizations",
+      "_type": "request_group",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Organizations"
+    },
+    {
+      "_id": "req_create_organization",
+      "_type": "request",
+      "parentId": "fld_organizations",
+      "name": "Create organization",
+      "method": "POST",
+      "url": "{{ baseURL }}/organizations",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"\"\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ token }}" }
+      ]
+    },
+    {
+      "_id": "req_list_organizations",
+      "_type": "request",
+      "parentId": "fld_organizations",
+      "name": "List organizations",
+      "method": "GET",
+      "url": "{{ baseURL }}/organizations",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ token }}" }]
+    },
+    {
+      "_id": "req_get_organization",
+      "_type": "request",
+      "parentId": "fld_organizations",
+      "name": "Get organization",
+      "method": "GET",
+      "url": "{{ baseURL }}/organizations/{{ organizationId }}",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ token }}" }]
+    },
+    {
+      "_id": "req_update_organization",
+      "_type": "request",
+      "parentId": "fld_organizations",
+      "name": "Update organization",
+      "method": "PUT",
+      "url": "{{ baseURL }}/organizations/{{ organizationId }}",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"New Name\"\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ token }}" }
+      ]
+    },
+    {
+      "_id": "req_delete_organization",
+      "_type": "request",
+      "parentId": "fld_organizations",
+      "name": "Delete organization",
+      "method": "DELETE",
+      "url": "{{ baseURL }}/organizations/{{ organizationId }}",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ token }}" }]
+    },
+    {
+      "_id": "fld_units",
+      "_type": "request_group",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Units"
+    },
+    {
+      "_id": "req_create_unit",
+      "_type": "request",
+      "parentId": "fld_units",
+      "name": "Create unit",
+      "method": "POST",
+      "url": "{{ baseURL }}/units",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"\",\n  \"organizationId\": \"\"\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ token }}" }
+      ]
+    },
+    {
+      "_id": "req_list_units",
+      "_type": "request",
+      "parentId": "fld_units",
+      "name": "List units",
+      "method": "GET",
+      "url": "{{ baseURL }}/units?organizationId={{ organizationId }}",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ token }}" }]
+    },
+    {
+      "_id": "req_get_unit",
+      "_type": "request",
+      "parentId": "fld_units",
+      "name": "Get unit",
+      "method": "GET",
+      "url": "{{ baseURL }}/units/{{ unitId }}",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ token }}" }]
+    },
+    {
+      "_id": "req_update_unit",
+      "_type": "request",
+      "parentId": "fld_units",
+      "name": "Update unit",
+      "method": "PUT",
+      "url": "{{ baseURL }}/units/{{ unitId }}",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"New Unit\"\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ token }}" }
+      ]
+    },
+    {
+      "_id": "req_delete_unit",
+      "_type": "request",
+      "parentId": "fld_units",
+      "name": "Delete unit",
+      "method": "DELETE",
+      "url": "{{ baseURL }}/units/{{ unitId }}",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ token }}" }]
+    },
+    {
       "_id": "fld_reports",
       "_type": "request_group",
       "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
