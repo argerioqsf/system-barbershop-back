@@ -37,7 +37,12 @@
         "mimeType": "application/json",
         "text": "{\n  \"name\": \"\",\n  \"email\": \"\",\n  \"password\": \"\"\n}"
       },
-      "headers": [{ "name": "Content-Type", "value": "application/json" }]
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ]
     },
     {
       "_id": "req_authenticate",
@@ -48,9 +53,14 @@
       "url": "{{ baseURL }}/sessions",
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"email\": \"\",\n  \"password\": \"\",\n  \"unitId\": \"\"\n}"
+        "text": "{\n  \"email\": \"\",\n  \"password\": \"\"\n}"
       },
-      "headers": [{ "name": "Content-Type", "value": "application/json" }]
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ]
     },
     {
       "_id": "req_forgot",
@@ -63,7 +73,12 @@
         "mimeType": "application/json",
         "text": "{\n  \"email\": \"\"\n}"
       },
-      "headers": [{ "name": "Content-Type", "value": "application/json" }]
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ]
     },
     {
       "_id": "req_reset",
@@ -76,7 +91,12 @@
         "mimeType": "application/json",
         "text": "{\n  \"token\": \"\",\n  \"password\": \"\"\n}"
       },
-      "headers": [{ "name": "Content-Type", "value": "application/json" }]
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ]
     },
     {
       "_id": "fld_services",
@@ -94,16 +114,43 @@
       "body": {
         "mimeType": "multipart/form-data",
         "params": [
-          { "name": "name", "value": "Corte" },
-          { "name": "description", "value": "Corte simples" },
-          { "name": "cost", "value": "10" },
-          { "name": "price", "value": "20" },
-          { "name": "isProduct", "value": "false" },
-          { "name": "unitId", "value": "" },
-          { "name": "image", "value": "", "type": "file" }
+          {
+            "name": "name",
+            "value": "Corte"
+          },
+          {
+            "name": "description",
+            "value": "Corte simples"
+          },
+          {
+            "name": "cost",
+            "value": "10"
+          },
+          {
+            "name": "price",
+            "value": "20"
+          },
+          {
+            "name": "isProduct",
+            "value": "false"
+          },
+          {
+            "name": "unitId",
+            "value": ""
+          },
+          {
+            "name": "image",
+            "value": "",
+            "type": "file"
+          }
         ]
       },
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
     },
     {
       "_id": "req_list_services",
@@ -112,7 +159,12 @@
       "name": "List services",
       "method": "GET",
       "url": "{{ baseURL }}/services",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
     },
     {
       "_id": "fld_appointments",
@@ -132,8 +184,14 @@
         "text": "{\n  \"clientId\": \"\",\n  \"barberId\": \"\",\n  \"serviceId\": \"\",\n  \"date\": \"2025-01-01T10:00:00Z\",\n  \"hour\": \"10:00\"\n}"
       },
       "headers": [
-        { "name": "Content-Type", "value": "application/json" },
-        { "name": "Authorization", "value": "Bearer {{ token }}" }
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -143,7 +201,12 @@
       "name": "List appointments",
       "method": "GET",
       "url": "{{ baseURL }}/appointments",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
     },
     {
       "_id": "fld_barber_users",
@@ -163,8 +226,14 @@
         "text": "{\n  \"name\": \"\",\n  \"email\": \"\",\n  \"password\": \"\",\n  \"role\": \"BARBER\"\n}"
       },
       "headers": [
-        { "name": "Content-Type", "value": "application/json" },
-        { "name": "Authorization", "value": "Bearer {{ token }}" }
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -174,7 +243,12 @@
       "name": "List barber users",
       "method": "GET",
       "url": "{{ baseURL }}/barber/users",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
     },
     {
       "_id": "fld_coupons",
@@ -194,8 +268,14 @@
         "text": "{\n  \"code\": \"\",\n  \"discount\": 10,\n  \"discountType\": \"PERCENTAGE\"\n}"
       },
       "headers": [
-        { "name": "Content-Type", "value": "application/json" },
-        { "name": "Authorization", "value": "Bearer {{ token }}" }
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -205,7 +285,12 @@
       "name": "List coupons",
       "method": "GET",
       "url": "{{ baseURL }}/coupons",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
     },
     {
       "_id": "fld_cash",
@@ -225,8 +310,14 @@
         "text": "{\n  \"userId\": \"\",\n  \"unitId\": \"\",\n  \"initialAmount\": 0\n}"
       },
       "headers": [
-        { "name": "Content-Type", "value": "application/json" },
-        { "name": "Authorization", "value": "Bearer {{ token }}" }
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -241,8 +332,14 @@
         "text": "{\n  \"sessionId\": \"\",\n  \"finalAmount\": 0\n}"
       },
       "headers": [
-        { "name": "Content-Type", "value": "application/json" },
-        { "name": "Authorization", "value": "Bearer {{ token }}" }
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -252,7 +349,12 @@
       "name": "List sessions",
       "method": "GET",
       "url": "{{ baseURL }}/cash/sessions",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
     },
     {
       "_id": "fld_sales",
@@ -272,8 +374,14 @@
         "text": "{\n  \"userId\": \"\",\n  \"unitId\": \"\",\n  \"method\": \"CASH\",\n  \"items\": []\n}"
       },
       "headers": [
-        { "name": "Content-Type", "value": "application/json" },
-        { "name": "Authorization", "value": "Bearer {{ token }}" }
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -283,7 +391,12 @@
       "name": "List sales",
       "method": "GET",
       "url": "{{ baseURL }}/sales",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
     },
     {
       "_id": "fld_transactions",
@@ -303,8 +416,14 @@
         "text": "{\n  \"userId\": \"\",\n  \"unitId\": \"\",\n  \"type\": \"ADDITION\",\n  \"description\": \"\",\n  \"amount\": 0\n}"
       },
       "headers": [
-        { "name": "Content-Type", "value": "application/json" },
-        { "name": "Authorization", "value": "Bearer {{ token }}" }
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -314,7 +433,12 @@
       "name": "List transactions",
       "method": "GET",
       "url": "{{ baseURL }}/transactions",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
     },
     {
       "_id": "fld_organizations",
@@ -334,8 +458,14 @@
         "text": "{\n  \"name\": \"\"\n}"
       },
       "headers": [
-        { "name": "Content-Type", "value": "application/json" },
-        { "name": "Authorization", "value": "Bearer {{ token }}" }
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -345,7 +475,12 @@
       "name": "List organizations",
       "method": "GET",
       "url": "{{ baseURL }}/organizations",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
     },
     {
       "_id": "req_get_organization",
@@ -354,7 +489,12 @@
       "name": "Get organization",
       "method": "GET",
       "url": "{{ baseURL }}/organizations/{{ organizationId }}",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
     },
     {
       "_id": "req_update_organization",
@@ -368,8 +508,14 @@
         "text": "{\n  \"name\": \"New Name\"\n}"
       },
       "headers": [
-        { "name": "Content-Type", "value": "application/json" },
-        { "name": "Authorization", "value": "Bearer {{ token }}" }
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -379,7 +525,12 @@
       "name": "Delete organization",
       "method": "DELETE",
       "url": "{{ baseURL }}/organizations/{{ organizationId }}",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
     },
     {
       "_id": "fld_units",
@@ -399,8 +550,14 @@
         "text": "{\n  \"name\": \"\",\n  \"organizationId\": \"\"\n}"
       },
       "headers": [
-        { "name": "Content-Type", "value": "application/json" },
-        { "name": "Authorization", "value": "Bearer {{ token }}" }
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -410,7 +567,12 @@
       "name": "List units",
       "method": "GET",
       "url": "{{ baseURL }}/units?organizationId={{ organizationId }}",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
     },
     {
       "_id": "req_get_unit",
@@ -419,7 +581,12 @@
       "name": "Get unit",
       "method": "GET",
       "url": "{{ baseURL }}/units/{{ unitId }}",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
     },
     {
       "_id": "req_update_unit",
@@ -433,8 +600,14 @@
         "text": "{\n  \"name\": \"New Unit\"\n}"
       },
       "headers": [
-        { "name": "Content-Type", "value": "application/json" },
-        { "name": "Authorization", "value": "Bearer {{ token }}" }
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -444,7 +617,12 @@
       "name": "Delete unit",
       "method": "DELETE",
       "url": "{{ baseURL }}/units/{{ unitId }}",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
     },
     {
       "_id": "fld_reports",
@@ -459,7 +637,12 @@
       "name": "Barber balance",
       "method": "GET",
       "url": "{{ baseURL }}/reports/barber/{{ barberId }}/balance",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
     },
     {
       "_id": "req_sales_report",
@@ -468,7 +651,12 @@
       "name": "Sales report",
       "method": "GET",
       "url": "{{ baseURL }}/reports/sales?start=2025-01-01&end=2025-01-31",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
     },
     {
       "_id": "fld_config",
@@ -483,7 +671,34 @@
       "name": "Export users",
       "method": "GET",
       "url": "{{ baseURL }}/config/export/users",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_select_unit",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "Select unit",
+      "method": "POST",
+      "url": "{{ baseURL }}/sessions/unit",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"unitId\": \"\"\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
     }
   ]
 }
