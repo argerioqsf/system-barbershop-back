@@ -1,4 +1,6 @@
-import { Prisma, CashRegisterSession } from "@prisma/client";
+import { Prisma, CashRegisterSession, User } from "@prisma/client";
+
+export type DetailedCashSession = CashRegisterSession & { user: User }
 
 export interface CashRegisterRepository {
   create(
@@ -8,7 +10,7 @@ export interface CashRegisterRepository {
     id: string,
     data: Prisma.CashRegisterSessionUpdateInput,
   ): Promise<CashRegisterSession>;
-  findMany(): Promise<CashRegisterSession[]>;
-  findManyByUnit(unitId: string): Promise<CashRegisterSession[]>;
+  findMany(): Promise<DetailedCashSession[]>;
+  findManyByUnit(unitId: string): Promise<DetailedCashSession[]>;
   findOpenByUser(userId: string): Promise<CashRegisterSession | null>;
 }
