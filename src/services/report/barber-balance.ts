@@ -19,7 +19,15 @@ export class BarberBalanceService {
     barberId,
   }: BarberBalanceRequest): Promise<BarberBalanceResponse> {
     const sales = await this.saleRepository.findManyByUser(barberId)
-    const salesTotal = sales.reduce((acc, sale) => acc + sale.total, 0)
+    const salesTotal = sales.reduce((acc, sale) => {
+      const servicesTotal = sale.items.reduce((sum, item) => {
+        if (!item.service.isProduct) {
+          return sum + item.service.price * item.quantity
+        }
+        return sum
+      }, 0)
+      return acc + servicesTotal
+    }, 0)
 
     const transactions =
       await this.transactionRepository.findManyByUser(barberId)
