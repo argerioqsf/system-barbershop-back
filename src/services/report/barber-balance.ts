@@ -15,12 +15,6 @@ export class BarberBalanceService {
     private transactionRepository: TransactionRepository,
   ) {}
 
-  // Adicionar campo de porcentagem para o barbeiro para fazer
-  // a logica de quanto ele recebera do valor total do corte
-  // e adicionar um campo de UserMenager na organizacao para que o
-  // restante da porcentagem do corte seja adicionada a esse usuario
-  // menager da organizacao que o barbeira esta
-
   async execute({
     barberId,
   }: BarberBalanceRequest): Promise<BarberBalanceResponse> {
