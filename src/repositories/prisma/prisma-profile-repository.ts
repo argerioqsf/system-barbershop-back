@@ -65,8 +65,6 @@ export class PrismaProfilesRepository implements ProfilesRepository {
           },
           'password'
         >
-      } & {
-        units: { unit: Unit }[]
       })
     | null
   > {
@@ -84,11 +82,6 @@ export class PrismaProfilesRepository implements ProfilesRepository {
         city: true,
         amountToReceive: true,
         extract_profile: true,
-        units: {
-          select: {
-            unit: true,
-          },
-        },
         _count: {
           select: {
             leadsIndicator: {

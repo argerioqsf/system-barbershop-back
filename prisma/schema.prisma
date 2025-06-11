@@ -38,6 +38,7 @@ model User {
   password            String
   active              Boolean               @default(false)
   organizationId      String
+  unitId              String
   profile             Profile?
   appointments        Appointment[]         @relation("ClientAppointments")
   barberAppointments  Appointment[]         @relation("BarberAppointments")
@@ -48,7 +49,7 @@ model User {
   createdAt           DateTime              @default(now())
 
   organization Organization @relation(fields: [organizationId], references: [id])
-  units        UserUnit[]
+  unit        Unit        @relation(fields: [unitId], references: [id])
 
   @@map("users")
 }
@@ -205,20 +206,9 @@ model Unit {
   sales          Sale[]
   transactions   Transaction[]
   sessions       CashRegisterSession[]
-  users          UserUnit[]
+  users          User[]
 
   organization Organization @relation(fields: [organizationId], references: [id])
 
   @@map("units")
-}
-
-model UserUnit {
-  userId String
-  unitId String
-
-  user User @relation(fields: [userId], references: [id])
-  unit Unit @relation(fields: [unitId], references: [id])
-
-  @@id([userId, unitId])
-  @@map("user_units")
 }

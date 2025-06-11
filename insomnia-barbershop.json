@@ -35,7 +35,7 @@
       "url": "{{ baseURL }}/users",
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"name\": \"\",\n  \"email\": \"\",\n  \"password\": \"\"\n}"
+        "text": "{\n  \"name\": \"\",\n  \"email\": \"\",\n  \"password\": \"\",\n  \"phone\": \"\",\n  \"cpf\": \"\",\n  \"genre\": \"M\",\n  \"birthday\": \"1990-01-01\",\n  \"pix\": \"\",\n  \"role\": \"BARBER\",\n  \"organizationId\": \"\",\n  \"unitId\": \"\"\n}"
       },
       "headers": [
         {
@@ -223,7 +223,7 @@
       "url": "{{ baseURL }}/barber/users",
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"name\": \"\",\n  \"email\": \"\",\n  \"password\": \"\",\n  \"role\": \"BARBER\"\n}"
+        "text": "{\n  \"name\": \"\",\n  \"email\": \"\",\n  \"password\": \"\",\n  \"phone\": \"\",\n  \"cpf\": \"\",\n  \"genre\": \"M\",\n  \"birthday\": \"1990-01-01\",\n  \"pix\": \"\",\n  \"role\": \"BARBER\",\n  \"organizationId\": \"\",\n  \"unitId\": \"\"\n}"
       },
       "headers": [
         {
@@ -672,28 +672,6 @@
       "method": "GET",
       "url": "{{ baseURL }}/config/export/users",
       "headers": [
-        {
-          "name": "Authorization",
-          "value": "Bearer {{ token }}"
-        }
-      ]
-    },
-    {
-      "_id": "req_select_unit",
-      "_type": "request",
-      "parentId": "fld_auth",
-      "name": "Select unit",
-      "method": "POST",
-      "url": "{{ baseURL }}/sessions/unit",
-      "body": {
-        "mimeType": "application/json",
-        "text": "{\n  \"unitId\": \"\"\n}"
-      },
-      "headers": [
-        {
-          "name": "Content-Type",
-          "value": "application/json"
-        },
         {
           "name": "Authorization",
           "value": "Bearer {{ token }}"

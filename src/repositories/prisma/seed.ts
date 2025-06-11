@@ -45,7 +45,7 @@ async function main() {
           role: Role.ADMIN,
         },
       },
-      units: { create: { unit: { connect: { id: mainUnit.id } } } },
+      unit: { connect: { id: mainUnit.id } },
     },
   })
 
@@ -66,7 +66,7 @@ async function main() {
           role: Role.BARBER,
         },
       },
-      units: { create: { unit: { connect: { id: mainUnit.id } } } },
+      unit: { connect: { id: mainUnit.id } },
     },
   })
 
@@ -87,7 +87,7 @@ async function main() {
           role: Role.CLIENT,
         },
       },
-      units: { create: { unit: { connect: { id: mainUnit.id } } } },
+      unit: { connect: { id: mainUnit.id } },
     },
   })
 

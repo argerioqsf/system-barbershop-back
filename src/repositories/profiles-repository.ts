@@ -25,8 +25,6 @@ export interface ProfilesRepository {
           },
           'password'
         >
-      } & {
-        units: { unit: Unit }[]
       })
     | null
   >
