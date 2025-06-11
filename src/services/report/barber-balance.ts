@@ -15,6 +15,12 @@ export class BarberBalanceService {
     private transactionRepository: TransactionRepository,
   ) {}
 
+  // Adicionar campo de porcentagem para o barbeiro para fazer
+  // a logica de quanto ele recebera do valor total do corte
+  // e adicionar um campo de UserMenager na organizacao para que o
+  // restante da porcentagem do corte seja adicionada a esse usuario
+  // menager da organizacao que o barbeira esta
+
   async execute({
     barberId,
   }: BarberBalanceRequest): Promise<BarberBalanceResponse> {
@@ -35,12 +41,35 @@ export class BarberBalanceService {
       )
 
       let serviceShare = itemsTotals.service
-      if (itemsTotals.total > 0) {
-        const diff = sale.total - itemsTotals.total
-        serviceShare += diff * (itemsTotals.service / itemsTotals.total)
-      }
+      let productShare = itemsTotals.product
 
-      return acc + serviceShare
+      if (sale.coupon && serviceShare > 0) {
+        if (sale.coupon.discountType === 'PERCENTAGE') {
+          serviceShare =
+            serviceShare - (serviceShare * sale.coupon.discount) / 100
+          productShare =
+            productShare - (productShare * sale.coupon.discount) / 100
+        } else {
+          serviceShare = serviceShare - sale.coupon.discount
+          productShare = productShare - sale.coupon.discount
+        }
+      }
+      const total = serviceShare + productShare
+      if (total !== sale.total) {
+        if (productShare > 0) {
+          let porcentService = (100 * serviceShare) / total
+          if (sale.coupon) {
+            porcentService =
+              (100 * itemsTotals.service) /
+              (itemsTotals.service + itemsTotals.product)
+          }
+          const totalRelative = (sale.total * porcentService) / 100
+          return acc + Number(totalRelative.toFixed(2))
+        } else {
+          return acc + Number(sale.total.toFixed(2))
+        }
+      }
+      return acc + Number(serviceShare.toFixed(2))
     }, 0)
 
     const transactions =
@@ -52,7 +81,7 @@ export class BarberBalanceService {
       .filter((t) => t.type === 'WITHDRAWAL')
       .reduce((acc, t) => acc + t.amount, 0)
 
-    const balance = salesTotal + additions - withdrawals
+    const balance = Number((salesTotal + additions - withdrawals).toFixed(2))
 
     return { balance }
   }
