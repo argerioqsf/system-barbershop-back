@@ -1,39 +1,46 @@
+import { DetailedSale, SaleRepository } from '@/repositories/sale-repository'
+import { TransactionRepository } from '@/repositories/transaction-repository'
+import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 
-    const transactions = await this.transactionRepository.findMany()
+interface OwnerBalanceRequest {
+  ownerId: string
+}
 
-    const saleTransactions = transactions.filter(
-      (t) => t.sale && t.sale.unit.organizationId === orgId,
-    )
-    let ownerSales = 0
-    for (const t of saleTransactions) {
-      const sale = t.sale!
-      const bases = sale.items.map((item) => ({
-        item,
-        value: item.total ?? item.service.price * item.quantity,
-      }))
-      const totalBase = bases.reduce((acc, b) => acc + b.value, 0)
-      if (totalBase === 0) continue
-      for (const base of bases) {
-        const final = (sale.total * base.value) / totalBase
-        if (base.item.service.isProduct) {
-          ownerSales += final
-          const perc =
-            base.item.barber?.profile?.commissionPercentage ?? 100
-          ownerSales += final - final * (perc / 100)
-    }
-    const manualTotals = (await this.transactionRepository.findManyByUser(ownerId))
-      .filter((t) => !t.sale)
-      .reduce(
-        (totals, t) => {
-          if (t.type === 'ADDITION') totals.additions += t.amount
-          else if (t.type === 'WITHDRAWAL') totals.withdrawals += t.amount
-          return totals
-        },
-        { additions: 0, withdrawals: 0 },
-      )
-    const balance = Number(
-      (ownerSales + manualTotals.additions - manualTotals.withdrawals).toFixed(2),
-    )
+interface HistorySales {
+  valueService: number
+  percentage: number
+  valueOwner: number
+  coupon?: string
+  saleItems: {
+    quantity: number
+    name: string
+    price: number
+    userEmail: string
+  }[]
+}
+
+interface OwnerBalanceResponse {
+  balance: number
+  historySales: HistorySales[]
+}
+
+export class OwnerBalanceService {
+  constructor(
+    private saleRepository: SaleRepository,
+    private transactionRepository: TransactionRepository,
+    private userRepository: BarberUsersRepository,
+  ) {}
+
+  async execute({
+    ownerId,
+  }: OwnerBalanceRequest): Promise<OwnerBalanceResponse> {
+    const owner = await this.userRepository.findById(ownerId)
+    if (!owner) throw new Error('Owner not found')
+    const orgId = owner.organizationId
+    const sales = await this.saleRepository.findMany({
+      unit: { organizationId: orgId },
+    })
+    const historySales: HistorySales[] = []
 
     function setHistory(
       valueService: number,

@@ -7,19 +7,13 @@ import {
   Coupon,
   Profile,
   CashRegisterSession,
-  Transaction,
 } from '@prisma/client'
 
 export type DetailedSale = Sale & {
-  items: (SaleItem & {
-    service: Service
-    barber: User | null
-    coupon: Coupon | null
-  })[]
+  items: (SaleItem & { service: Service })[]
   user: User & { profile: Profile | null }
   coupon: Coupon | null
   session: CashRegisterSession | null
-  transaction: Transaction | null
 }
 
 export interface SaleRepository {
@@ -29,5 +23,4 @@ export interface SaleRepository {
   findManyByDateRange(start: Date, end: Date): Promise<DetailedSale[]>
   findManyByUser(userId: string): Promise<DetailedSale[]>
   findManyBySession(sessionId: string): Promise<DetailedSale[]>
-  update(id: string, data: Prisma.SaleUpdateInput): Promise<void>
 }

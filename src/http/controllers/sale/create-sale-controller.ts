@@ -9,13 +9,7 @@ export async function CreateSaleController(
   const bodySchema = z.object({
     method: z.enum(['CASH', 'PIX', 'CREDIT_CARD', 'DEBIT_CARD']),
     items: z.array(
-      z.object({
-        serviceId: z.string(),
-        quantity: z.number().min(1),
-        barberId: z.string().optional(),
-        couponCode: z.string().optional(),
-        total: z.number().optional(),
-      }),
+      z.object({ serviceId: z.string(), quantity: z.number().min(1) }),
     ),
     couponCode: z.string().optional(),
     total: z.number().optional(),

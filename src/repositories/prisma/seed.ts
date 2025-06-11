@@ -177,28 +177,22 @@ async function main() {
       method: PaymentMethod.CASH,
       items: {
         create: [
-          { serviceId: haircut.id, quantity: 1, barberId: barber.id },
+          { serviceId: haircut.id, quantity: 1 },
           { serviceId: shampoo.id, quantity: 1 },
         ],
       },
     },
   })
 
-  const saleTx = await prisma.transaction.create({
+  await prisma.transaction.create({
     data: {
       userId: client.id,
       unitId: mainUnit.id,
       cashRegisterSessionId: cashSession.id,
-      saleId: sale.id,
       type: TransactionType.ADDITION,
       description: 'Sale',
       amount: 45,
     },
-  })
-
-  await prisma.sale.update({
-    where: { id: sale.id },
-    data: { transactionId: saleTx.id },
   })
 
   await prisma.coupon.create({

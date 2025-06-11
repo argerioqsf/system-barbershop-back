@@ -1,26 +1,58 @@
-    // TODO: implementar logica que calcula o balanço do barbeiro contanto
-    // com os cupons de desconto e se o valor foi setado diferente do valor
-    // real da compra
+import { DetailedSale, SaleRepository } from '@/repositories/sale-repository'
+import { TransactionRepository } from '@/repositories/transaction-repository'
+
+interface BarberBalanceRequest {
+  barberId: string
+}
+
+interface HistorySales {
+  valueService: number
+  percentage: number
+  valueBarber: number
+  coupon?: string
+  saleItems: {
+    quantity: number
+    name: string
+    price: number
+    userEmail: string
+  }[]
+}
+
+interface BarberBalanceResponse {
+  balance: number
+  historySales: HistorySales[]
+}
+
+export class BarberBalanceService {
+  constructor(
+    private saleRepository: SaleRepository,
+    private transactionRepository: TransactionRepository,
+  ) {}
+
+  async execute({
+    barberId,
+  }: BarberBalanceRequest): Promise<BarberBalanceResponse> {
     const sales = await this.saleRepository.findManyByUser(barberId)
-    const salesTotal = sales.reduce((acc, sale) => {
-      const servicesTotal = sale.items.reduce((sum, item) => {
-        if (!item.service.isProduct) {
-          return sum + item.service.price * item.quantity
-        return sum
-      }, 0)
-      return acc + servicesTotal
-    }, 0)
+    const historySales: HistorySales[] = []
 
-    const transactions =
-      await this.transactionRepository.findManyByUser(barberId)
-    const additions = transactions
-      .filter((t) => t.type === 'ADDITION')
-      .reduce((acc, t) => acc + t.amount, 0)
-    const withdrawals = transactions
-      .filter((t) => t.type === 'WITHDRAWAL')
-      .reduce((acc, t) => acc + t.amount, 0)
-
-    const balance = salesTotal + additions - withdrawals
+    function setHistory(
+      valueService: number,
+      percentage: number,
+      valuePorcent: number,
+      sale: DetailedSale,
+    ) {
+      if (valueService > 0) {
+        historySales.push({
+          valueService,
+          percentage,
+          valueBarber: valuePorcent,
+          coupon: sale.coupon?.code,
+          saleItems: sale.items.map((item) => ({
+            quantity: item.quantity,
+            name: item.service.name,
+            price: item.service.price,
+            userEmail: sale.user.name,
+          })),
         })
       }
     }
