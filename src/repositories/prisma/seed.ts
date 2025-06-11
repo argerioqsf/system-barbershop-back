@@ -149,10 +149,30 @@ async function main() {
     },
   })
 
+  const cashSession = await prisma.cashRegisterSession.create({
+    data: {
+      openedById: admin.id,
+      unitId: mainUnit.id,
+      initialAmount: 100,
+    },
+  })
+
+  await prisma.transaction.create({
+    data: {
+      userId: admin.id,
+      unitId: mainUnit.id,
+      cashRegisterSessionId: cashSession.id,
+      type: TransactionType.ADDITION,
+      description: 'Initial cash',
+      amount: 100,
+    },
+  })
+
   const sale = await prisma.sale.create({
     data: {
       userId: client.id,
       unitId: mainUnit.id,
+      sessionId: cashSession.id,
       total: 45,
       method: PaymentMethod.CASH,
       items: {
@@ -166,19 +186,12 @@ async function main() {
 
   await prisma.transaction.create({
     data: {
-      userId: admin.id,
+      userId: client.id,
       unitId: mainUnit.id,
+      cashRegisterSessionId: cashSession.id,
       type: TransactionType.ADDITION,
-      description: 'Initial cash',
-      amount: 100,
-    },
-  })
-
-  await prisma.cashRegisterSession.create({
-    data: {
-      openedById: admin.id,
-      unitId: mainUnit.id,
-      initialAmount: 100,
+      description: 'Sale',
+      amount: 45,
     },
   })
 
@@ -201,6 +214,7 @@ async function main() {
     haircut,
     shampoo,
     appointment,
+    cashSession,
     sale,
   })
 }

@@ -10,6 +10,7 @@ export class PrismaSaleRepository implements SaleRepository {
         items: { include: { service: true } },
         user: { include: { profile: true } },
         coupon: true,
+        session: true,
       },
     })
   }
@@ -21,6 +22,7 @@ export class PrismaSaleRepository implements SaleRepository {
         items: { include: { service: true } },
         user: { include: { profile: true } },
         coupon: true,
+        session: true,
       },
     })
   }
@@ -32,6 +34,7 @@ export class PrismaSaleRepository implements SaleRepository {
         items: { include: { service: true } },
         user: { include: { profile: true } },
         coupon: true,
+        session: true,
       },
     })
   }
@@ -43,6 +46,7 @@ export class PrismaSaleRepository implements SaleRepository {
         items: { include: { service: true } },
         user: { include: { profile: true } },
         coupon: true,
+        session: true,
       },
     })
   }
@@ -54,6 +58,19 @@ export class PrismaSaleRepository implements SaleRepository {
         items: { include: { service: true } },
         user: { include: { profile: true } },
         coupon: true,
+        session: true,
+      },
+    })
+  }
+
+  async findManyBySession(sessionId: string): Promise<DetailedSale[]> {
+    return prisma.sale.findMany({
+      where: { sessionId },
+      include: {
+        items: { include: { service: true } },
+        user: { include: { profile: true } },
+        coupon: true,
+        session: true,
       },
     })
   }

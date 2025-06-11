@@ -6,12 +6,14 @@ import {
   User,
   Coupon,
   Profile,
+  CashRegisterSession,
 } from '@prisma/client'
 
 export type DetailedSale = Sale & {
   items: (SaleItem & { service: Service })[]
   user: User & { profile: Profile | null }
   coupon: Coupon | null
+  session: CashRegisterSession | null
 }
 
 export interface SaleRepository {
@@ -20,4 +22,5 @@ export interface SaleRepository {
   findById(id: string): Promise<DetailedSale | null>
   findManyByDateRange(start: Date, end: Date): Promise<DetailedSale[]>
   findManyByUser(userId: string): Promise<DetailedSale[]>
+  findManyBySession(sessionId: string): Promise<DetailedSale[]>
 }

@@ -110,6 +110,7 @@ model Transaction {
   id          String          @id @default(uuid())
   userId      String
   unitId      String
+  cashRegisterSessionId String?
   type        TransactionType
   description String
   amount      Float
@@ -117,6 +118,7 @@ model Transaction {
 
   user User @relation(fields: [userId], references: [id])
   unit Unit @relation(fields: [unitId], references: [id])
+  session CashRegisterSession? @relation(fields: [cashRegisterSessionId], references: [id])
 
   @@map("transactions")
 }
@@ -125,6 +127,7 @@ model Sale {
   id        String        @id @default(uuid())
   userId    String
   unitId    String
+  sessionId String?
   couponId  String?
   total     Float
   method    PaymentMethod
@@ -134,6 +137,7 @@ model Sale {
   items  SaleItem[]
   unit   Unit       @relation(fields: [unitId], references: [id])
   coupon Coupon?    @relation(fields: [couponId], references: [id])
+  session CashRegisterSession? @relation(fields: [sessionId], references: [id])
 
   @@map("sales")
 }
@@ -161,6 +165,8 @@ model CashRegisterSession {
 
   user User @relation(fields: [openedById], references: [id])
   unit Unit @relation(fields: [unitId], references: [id])
+  sales Sale[]
+  transactions Transaction[]
 
   @@map("cash_register_sessions")
 }
