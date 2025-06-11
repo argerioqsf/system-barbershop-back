@@ -3,7 +3,10 @@ import { Prisma, Profile, User } from '@prisma/client'
 import { ProfilesRepository } from '../profiles-repository'
 
 export class PrismaProfilesRepository implements ProfilesRepository {
-  async update(id: string, data: Prisma.ProfileUncheckedUpdateInput): Promise<Profile> {
+  async update(
+    id: string,
+    data: Prisma.ProfileUncheckedUpdateInput,
+  ): Promise<Profile> {
     const profile = await prisma.profile.update({
       where: { id },
       data,
@@ -12,18 +15,48 @@ export class PrismaProfilesRepository implements ProfilesRepository {
     return profile
   }
 
-  async findById(id: string): Promise<(Profile & { user: User }) | null> {
-    return prisma.profile.findUnique({
+  async findById(
+    id: string,
+  ): Promise<(Profile & { user: Omit<User, 'password'> }) | null> {
+    const profile = await prisma.profile.findUnique({
       where: { id },
-      include: { user: true },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            active: true,
+            organizationId: true,
+            unitId: true,
+            createdAt: true,
+          },
+        },
+      },
     })
+    return profile as (Profile & { user: Omit<User, 'password'> }) | null
   }
 
-  async findByUserId(id: string): Promise<(Profile & { user: User }) | null> {
-    return prisma.profile.findUnique({
+  async findByUserId(
+    id: string,
+  ): Promise<(Profile & { user: Omit<User, 'password'> }) | null> {
+    const profile = await prisma.profile.findUnique({
       where: { userId: id },
-      include: { user: true },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            active: true,
+            organizationId: true,
+            unitId: true,
+            createdAt: true,
+          },
+        },
+      },
     })
+    return profile as (Profile & { user: Omit<User, 'password'> }) | null
   }
 
   async create(data: Prisma.ProfileUncheckedCreateInput): Promise<Profile> {
@@ -33,11 +66,24 @@ export class PrismaProfilesRepository implements ProfilesRepository {
   async findMany(
     where?: Prisma.ProfileWhereInput,
     orderBy?: Prisma.ProfileOrderByWithRelationInput,
-  ): Promise<(Profile & { user: User })[]> {
-    return prisma.profile.findMany({
+  ): Promise<(Profile & { user: Omit<User, 'password'> })[]> {
+    const profiles = await prisma.profile.findMany({
       where: { ...where },
-      include: { user: true },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            active: true,
+            organizationId: true,
+            unitId: true,
+            createdAt: true,
+          },
+        },
+      },
       orderBy: { ...orderBy },
     })
+    return profiles as (Profile & { user: Omit<User, 'password'> })[]
   }
 }
