@@ -1,6 +1,6 @@
-import { SaleRepository } from '@/repositories/sale-repository'
-import { ServiceRepository } from '@/repositories/service-repository'
-import { CouponRepository } from '@/repositories/coupon-repository'
+import { SaleRepository } from '../../repositories/sale-repository'
+import { ServiceRepository } from '../../repositories/service-repository'
+import { CouponRepository } from '../../repositories/coupon-repository'
 import { PaymentMethod, Sale } from '@prisma/client'
 
 interface CreateSaleItem {
