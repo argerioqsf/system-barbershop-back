@@ -20,6 +20,7 @@ import { configRoute } from './http/controllers/config/route'
 import { authRoute } from './http/controllers/auth/route'
 import { organizationRoute } from './http/controllers/organization/route'
 import { unitRoute } from './http/controllers/unit/route'
+import { sessionRoute } from './http/controllers/session/route'
 
 export const app = fastify()
 
@@ -112,6 +113,7 @@ app.register(fastifyJwt, {
 })
 
 app.register(authRoute)
+app.register(sessionRoute)
 app.register(profileRoute)
 app.register(barberShopServiceRoute)
 app.register(appointmentRoute)

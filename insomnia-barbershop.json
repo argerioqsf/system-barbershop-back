@@ -99,6 +99,28 @@
       ]
     },
     {
+      "_id": "req_set_unit",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "Set unit",
+      "method": "PATCH",
+      "url": "{{ baseURL }}/sessions/unit",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"unitId\": \"\"\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
       "_id": "fld_services",
       "_type": "request_group",
       "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
