@@ -1,12 +1,11 @@
-import { SaleRepository } from '@/repositories/sale-repository'
-import { Sale } from '@prisma/client'
+import { SaleRepository, DetailedSale } from '@/repositories/sale-repository'
 
 interface GetSaleRequest {
   id: string
 }
 
 interface GetSaleResponse {
-  sale: Sale | null
+  sale: DetailedSale | null
 }
 
 export class GetSaleService {

@@ -1,7 +1,7 @@
-import { SaleRepository } from '../../repositories/sale-repository'
+import { SaleRepository, DetailedSale } from '../../repositories/sale-repository'
 import { ServiceRepository } from '../../repositories/service-repository'
 import { CouponRepository } from '../../repositories/coupon-repository'
-import { PaymentMethod, Sale } from '@prisma/client'
+import { PaymentMethod } from '@prisma/client'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 
 interface CreateSaleItem {
@@ -18,7 +18,7 @@ interface CreateSaleRequest {
 }
 
 interface CreateSaleResponse {
-  sale: Sale
+  sale: DetailedSale
 }
 
 export class CreateSaleService {

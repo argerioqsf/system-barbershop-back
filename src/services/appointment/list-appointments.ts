@@ -1,8 +1,7 @@
-import { AppointmentRepository } from '@/repositories/appointment-repository'
-import { Appointment } from '@prisma/client'
+import { AppointmentRepository, DetailedAppointment } from '@/repositories/appointment-repository'
 
 interface ListAppointmentsResponse {
-  appointments: Appointment[]
+  appointments: DetailedAppointment[]
 }
 
 export class ListAppointmentsService {

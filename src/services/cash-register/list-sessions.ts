@@ -1,8 +1,7 @@
-import { CashRegisterRepository } from '@/repositories/cash-register-repository'
-import { CashRegisterSession } from '@prisma/client'
+import { CashRegisterRepository, DetailedCashSession } from '@/repositories/cash-register-repository'
 
 interface ListSessionsResponse {
-  sessions: CashRegisterSession[]
+  sessions: DetailedCashSession[]
 }
 
 export class ListSessionsService {

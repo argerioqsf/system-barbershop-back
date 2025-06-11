@@ -1,8 +1,7 @@
-import { SaleRepository } from '@/repositories/sale-repository'
-import { Sale } from '@prisma/client'
+import { SaleRepository, DetailedSale } from '@/repositories/sale-repository'
 
 interface ListSalesResponse {
-  sales: Sale[]
+  sales: DetailedSale[]
 }
 
 export class ListSalesService {

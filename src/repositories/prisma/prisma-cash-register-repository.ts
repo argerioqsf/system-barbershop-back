@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma'
-import { Prisma, CashRegisterSession } from '@prisma/client'
-import { CashRegisterRepository } from '../cash-register-repository'
+import { Prisma, CashRegisterSession, User } from '@prisma/client'
+import { CashRegisterRepository, DetailedCashSession } from '../cash-register-repository'
 
 export class PrismaCashRegisterRepository implements CashRegisterRepository {
   async create(data: Prisma.CashRegisterSessionCreateInput): Promise<CashRegisterSession> {
@@ -11,11 +11,11 @@ export class PrismaCashRegisterRepository implements CashRegisterRepository {
     return prisma.cashRegisterSession.update({ where: { id }, data })
   }
 
-  async findMany(): Promise<CashRegisterSession[]> {
+  async findMany(): Promise<DetailedCashSession[]> {
     return prisma.cashRegisterSession.findMany({ include: { user: true } })
   }
 
-  async findManyByUnit(unitId: string): Promise<CashRegisterSession[]> {
+  async findManyByUnit(unitId: string): Promise<DetailedCashSession[]> {
     return prisma.cashRegisterSession.findMany({ where: { unitId }, include: { user: true } })
   }
 
