@@ -44,6 +44,7 @@ model User {
   appointments        Appointment[]         @relation("ClientAppointments")
   barberAppointments  Appointment[]         @relation("BarberAppointments")
   sales               Sale[]
+  saleItems           SaleItem[]
   transactions        Transaction[]
   sessions            CashRegisterSession[]
   passwordResetTokens PasswordResetToken[]
@@ -147,9 +148,11 @@ model SaleItem {
   saleId    String
   serviceId String
   quantity  Int    @default(1)
+  barberId  String?
 
   sale    Sale    @relation(fields: [saleId], references: [id])
   service Service @relation(fields: [serviceId], references: [id])
+  barber  User?   @relation(fields: [barberId], references: [id])
 
   @@map("sale_items")
 }

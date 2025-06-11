@@ -94,10 +94,32 @@ export class OwnerBalanceService {
         }
       }
 
-      const barberPercentage = sale.user.profile?.commissionPercentage ?? 100
-      const ownerPercentage = 100 - barberPercentage
-      const barberShare = serviceShare * (barberPercentage / 100)
-      const ownerShare = serviceShare - barberShare + productShare
+      let ownerShare = productShare
+      let totalServiceAfterDiscount = 0
+      for (const item of sale.items) {
+        let value = item.service.price * item.quantity
+        if (sale.coupon) {
+          if (sale.coupon.discountType === 'PERCENTAGE') {
+            value -= (value * sale.coupon.discount) / 100
+          } else {
+            const proportion =
+              value / (totals.service + totals.product)
+            value -= proportion * sale.coupon.discount
+          }
+        }
+        if (item.service.isProduct) {
+          ownerShare += value
+        } else {
+          totalServiceAfterDiscount += value
+          const perc = item.barber?.profile?.commissionPercentage ?? 100
+          const barberShare = value * (perc / 100)
+          ownerShare += value - barberShare
+        }
+      }
+      const ownerPercentage =
+        totalServiceAfterDiscount > 0
+          ? (ownerShare - productShare) / totalServiceAfterDiscount * 100
+          : 0
       setHistory(serviceShare, ownerPercentage, ownerShare, sale)
       return acc + ownerShare
     }, 0)

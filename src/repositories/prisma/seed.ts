@@ -177,7 +177,7 @@ async function main() {
       method: PaymentMethod.CASH,
       items: {
         create: [
-          { serviceId: haircut.id, quantity: 1 },
+          { serviceId: haircut.id, quantity: 1, barberId: barber.id },
           { serviceId: shampoo.id, quantity: 1 },
         ],
       },

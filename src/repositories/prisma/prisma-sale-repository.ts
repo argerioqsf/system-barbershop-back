@@ -7,7 +7,7 @@ export class PrismaSaleRepository implements SaleRepository {
     return prisma.sale.create({
       data,
       include: {
-        items: { include: { service: true } },
+        items: { include: { service: true, barber: { include: { profile: true } } } },
         user: { include: { profile: true } },
         coupon: true,
         session: true,
@@ -19,7 +19,7 @@ export class PrismaSaleRepository implements SaleRepository {
     return prisma.sale.findMany({
       where,
       include: {
-        items: { include: { service: true } },
+        items: { include: { service: true, barber: { include: { profile: true } } } },
         user: { include: { profile: true } },
         coupon: true,
         session: true,
@@ -31,7 +31,7 @@ export class PrismaSaleRepository implements SaleRepository {
     return prisma.sale.findUnique({
       where: { id },
       include: {
-        items: { include: { service: true } },
+        items: { include: { service: true, barber: { include: { profile: true } } } },
         user: { include: { profile: true } },
         coupon: true,
         session: true,
@@ -43,7 +43,7 @@ export class PrismaSaleRepository implements SaleRepository {
     return prisma.sale.findMany({
       where: { createdAt: { gte: start, lte: end } },
       include: {
-        items: { include: { service: true } },
+        items: { include: { service: true, barber: { include: { profile: true } } } },
         user: { include: { profile: true } },
         coupon: true,
         session: true,
@@ -55,7 +55,19 @@ export class PrismaSaleRepository implements SaleRepository {
     return prisma.sale.findMany({
       where: { userId },
       include: {
-        items: { include: { service: true } },
+        items: { include: { service: true, barber: { include: { profile: true } } } },
+        user: { include: { profile: true } },
+        coupon: true,
+        session: true,
+      },
+    })
+  }
+
+  async findManyByBarber(barberId: string): Promise<DetailedSale[]> {
+    return prisma.sale.findMany({
+      where: { items: { some: { barberId } } },
+      include: {
+        items: { include: { service: true, barber: { include: { profile: true } } } },
         user: { include: { profile: true } },
         coupon: true,
         session: true,
@@ -67,7 +79,7 @@ export class PrismaSaleRepository implements SaleRepository {
     return prisma.sale.findMany({
       where: { sessionId },
       include: {
-        items: { include: { service: true } },
+        items: { include: { service: true, barber: { include: { profile: true } } } },
         user: { include: { profile: true } },
         coupon: true,
         session: true,

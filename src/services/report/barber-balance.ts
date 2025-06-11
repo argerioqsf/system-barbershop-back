@@ -32,7 +32,7 @@ export class BarberBalanceService {
   async execute({
     barberId,
   }: BarberBalanceRequest): Promise<BarberBalanceResponse> {
-    const sales = await this.saleRepository.findManyByUser(barberId)
+    const sales = await this.saleRepository.findManyByBarber(barberId)
     const historySales: HistorySales[] = []
 
     function setHistory(
@@ -47,18 +47,21 @@ export class BarberBalanceService {
           percentage,
           valueBarber: valuePorcent,
           coupon: sale.coupon?.code,
-          saleItems: sale.items.map((item) => ({
-            quantity: item.quantity,
-            name: item.service.name,
-            price: item.service.price,
-            userEmail: sale.user.name,
-          })),
+          saleItems: sale.items
+            .filter((i) => i.barberId === barberId)
+            .map((item) => ({
+              quantity: item.quantity,
+              name: item.service.name,
+              price: item.service.price,
+              userEmail: sale.user.name,
+            })),
         })
       }
     }
 
     const salesTotal = sales.reduce((acc, sale) => {
-      const { service: rawService, product: rawProduct } = sale.items.reduce(
+      const items = sale.items.filter((i) => i.barberId === barberId)
+      const { service: rawService, product: rawProduct } = items.reduce(
         (totals, item) => {
           const value = item.service.price * item.quantity
           item.service.isProduct
@@ -83,28 +86,9 @@ export class BarberBalanceService {
         }
       }
 
-      const total = serviceShare + productShare
-      const percentage = sale.user.profile?.commissionPercentage ?? 100
-      if (total === sale.total) {
-        const valueService = Number(serviceShare.toFixed(2))
-        const valuePorcent = (valueService * percentage) / 100
-        setHistory(valueService, percentage, valuePorcent, sale)
-        return acc + valuePorcent
-      }
-      if (productShare <= 0) {
-        const valueService = Number(sale.total.toFixed(2))
-        const valuePorcent = (valueService * percentage) / 100
-        setHistory(valueService, percentage, valuePorcent, sale)
-        return acc + valuePorcent
-      }
-
-      const porcentService = sale.coupon
-        ? (100 * rawService) / (rawService + rawProduct)
-        : (100 * serviceShare) / total
-
-      const valueService = Number(
-        ((sale.total * porcentService) / 100).toFixed(2),
-      )
+      const percentage =
+        items[0]?.barber?.profile?.commissionPercentage ?? 100
+      const valueService = Number(serviceShare.toFixed(2))
       const valuePorcent = (valueService * percentage) / 100
       setHistory(valueService, percentage, valuePorcent, sale)
       return acc + valuePorcent

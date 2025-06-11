@@ -15,6 +15,7 @@ import { TransactionRepository } from '@/repositories/transaction-repository'
 interface CreateSaleItem {
   serviceId: string
   quantity: number
+  barberId?: string
 }
 
 interface CreateSaleRequest {
@@ -62,6 +63,7 @@ export class CreateSaleService {
       saleItems.push({
         service: { connect: { id: item.serviceId } },
         quantity: item.quantity,
+        barber: item.barberId ? { connect: { id: item.barberId } } : undefined,
       })
     }
 
