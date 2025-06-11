@@ -27,6 +27,32 @@ async function main() {
     },
   })
 
+  const owner = await prisma.user.create({
+    data: {
+      name: 'Owner',
+      email: 'owner@barbershop.com',
+      password: passwordHash,
+      active: true,
+      organization: { connect: { id: organization.id } },
+      profile: {
+        create: {
+          phone: '969855555',
+          cpf: '33344455566',
+          genre: 'M',
+          birthday: '1980-04-15',
+          pix: 'ownerpix',
+          role: Role.OWNER,
+        },
+      },
+      unit: { connect: { id: mainUnit.id } },
+    },
+  })
+
+  await prisma.organization.update({
+    where: { id: organization.id },
+    data: { owner: { connect: { id: owner.id } } },
+  })
+
   const admin = await prisma.user.create({
     data: {
       name: 'Admin',
@@ -62,6 +88,7 @@ async function main() {
           genre: 'M',
           birthday: '1995-05-10',
           pix: 'barberpix',
+          commissionPercentage: 70,
           role: Role.BARBER,
         },
       },
@@ -161,6 +188,7 @@ async function main() {
       description: '10% off',
       discount: 10,
       discountType: DiscountType.PERCENTAGE,
+      quantity: 10,
     },
   })
 
