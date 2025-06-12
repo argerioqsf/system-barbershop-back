@@ -149,10 +149,13 @@ model SaleItem {
   serviceId String
   quantity  Int    @default(1)
   barberId  String?
+  couponId  String?
+  price     Float?
 
   sale    Sale    @relation(fields: [saleId], references: [id])
   service Service @relation(fields: [serviceId], references: [id])
   barber  User?   @relation(fields: [barberId], references: [id])
+  coupon  Coupon? @relation(fields: [couponId], references: [id])
 
   @@map("sale_items")
 }
@@ -184,6 +187,7 @@ model Coupon {
   quantity     Int          @default(0)
   createdAt    DateTime     @default(now())
   sales        Sale[]
+  saleItems    SaleItem[]
 
   @@map("coupons")
 }

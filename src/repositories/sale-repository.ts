@@ -13,6 +13,7 @@ export type DetailedSale = Sale & {
   items: (SaleItem & {
     service: Service
     barber: (User & { profile: Profile | null }) | null
+    coupon: Coupon | null
   })[]
   user: User & { profile: Profile | null }
   coupon: Coupon | null

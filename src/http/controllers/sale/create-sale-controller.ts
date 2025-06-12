@@ -13,6 +13,8 @@ export async function CreateSaleController(
         serviceId: z.string(),
         quantity: z.number().min(1),
         barberId: z.string().optional(),
+        couponCode: z.string().optional(),
+        price: z.number().optional(),
       }),
     ),
     couponCode: z.string().optional(),

@@ -393,7 +393,7 @@
       "url": "{{ baseURL }}/sales",
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"method\": \"CASH\",\n  \"items\": [\n    {\n      \"serviceId\": \"\",\n      \"quantity\": 1,\n      \"barberId\": \"\"\n    }\n  ]\n}"
+        "text": "{\n  \"method\": \"CASH\",\n  \"items\": [\n    {\n      \"serviceId\": \"\",\n      \"quantity\": 1,\n      \"barberId\": \"\",\n      \"couponCode\": \"\",\n      \"price\": 0\n    }\n  ]\n}"
       },
       "headers": [
         {
