@@ -138,6 +138,16 @@ async function main() {
     },
   })
 
+  const itemCoupon = await prisma.coupon.create({
+    data: {
+      code: 'ITEM5',
+      description: 'R$5 off item',
+      discount: 5,
+      discountType: DiscountType.VALUE,
+      quantity: 10,
+    },
+  })
+
   const appointment = await prisma.appointment.create({
     data: {
       clientId: client.id,
@@ -173,12 +183,21 @@ async function main() {
       userId: client.id,
       unitId: mainUnit.id,
       sessionId: cashSession.id,
-      total: 45,
+      total: 35,
       method: PaymentMethod.CASH,
       items: {
         create: [
-          { serviceId: haircut.id, quantity: 1 },
-          { serviceId: shampoo.id, quantity: 1 },
+          {
+            serviceId: haircut.id,
+            quantity: 1,
+            barberId: barber.id,
+            price: 25,
+          },
+          {
+            serviceId: shampoo.id,
+            quantity: 1,
+            couponId: itemCoupon.id,
+          },
         ],
       },
     },
@@ -191,7 +210,7 @@ async function main() {
       cashRegisterSessionId: cashSession.id,
       type: TransactionType.ADDITION,
       description: 'Sale',
-      amount: 45,
+      amount: 35,
     },
   })
 
@@ -216,6 +235,7 @@ async function main() {
     appointment,
     cashSession,
     sale,
+    itemCoupon,
   })
 }
 

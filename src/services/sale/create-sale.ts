@@ -15,6 +15,9 @@ import { TransactionRepository } from '@/repositories/transaction-repository'
 interface CreateSaleItem {
   serviceId: string
   quantity: number
+  barberId?: string
+  couponCode?: string
+  price?: number
 }
 
 interface CreateSaleRequest {
@@ -46,8 +49,8 @@ export class CreateSaleService {
     couponCode,
     total,
   }: CreateSaleRequest): Promise<CreateSaleResponse> {
-    let calculatedTotal = 0
-    const saleItems = [] as any[]
+    const saleItems: any[] = []
+    const tempItems: { price: number; ownDiscount: boolean; data: any }[] = []
     const user = await this.barberUserRepository.findById(userId)
     const session = await this.cashRegisterRepository.findOpenByUnit(
       user?.unitId as string,
@@ -57,31 +60,74 @@ export class CreateSaleService {
     for (const item of items) {
       const service = await this.serviceRepository.findById(item.serviceId)
       if (!service) throw new Error('Service not found')
-      const subtotal = service.price * item.quantity
-      calculatedTotal += subtotal
-      saleItems.push({
-        service: { connect: { id: item.serviceId } },
-        quantity: item.quantity,
+
+      let price = service.price * item.quantity
+      let itemCouponConnect: any
+      let ownDiscount = false
+
+      if (typeof item.price === 'number') {
+        price = item.price
+        ownDiscount = true
+      } else if (item.couponCode) {
+        const coupon = await this.couponRepository.findByCode(item.couponCode)
+        if (!coupon) throw new Error('Coupon not found')
+        if (coupon.quantity <= 0) throw new Error('Coupon exhausted')
+        const discountAmount =
+          coupon.discountType === 'PERCENTAGE'
+            ? (price * coupon.discount) / 100
+            : coupon.discount
+        price = Math.max(price - discountAmount, 0)
+        itemCouponConnect = { connect: { id: coupon.id } }
+        await this.couponRepository.update(coupon.id, {
+          quantity: { decrement: 1 },
+        })
+        ownDiscount = true
+      }
+
+      tempItems.push({
+        price,
+        ownDiscount,
+        data: {
+          service: { connect: { id: item.serviceId } },
+          quantity: item.quantity,
+          barber: item.barberId ? { connect: { id: item.barberId } } : undefined,
+          coupon: itemCouponConnect,
+        },
       })
     }
-
-    if (typeof total !== 'number') total = calculatedTotal
 
     let couponConnect: any
     if (couponCode) {
       const coupon = await this.couponRepository.findByCode(couponCode)
       if (!coupon) throw new Error('Coupon not found')
       if (coupon.quantity <= 0) throw new Error('Coupon exhausted')
-      const discountAmount =
-        coupon.discountType === 'PERCENTAGE'
-          ? (total * coupon.discount) / 100
-          : coupon.discount
-      total = Math.max(total - discountAmount, 0)
+
+      const affectedTotal = tempItems
+        .filter((i) => !i.ownDiscount)
+        .reduce((acc, i) => acc + i.price, 0)
+
+      for (const temp of tempItems) {
+        if (temp.ownDiscount) continue
+        if (coupon.discountType === 'PERCENTAGE') {
+          temp.price = Math.max(temp.price - (temp.price * coupon.discount) / 100, 0)
+        } else if (affectedTotal > 0) {
+          const part = (temp.price / affectedTotal) * coupon.discount
+          temp.price = Math.max(temp.price - part, 0)
+        }
+      }
+
       couponConnect = { connect: { id: coupon.id } }
       await this.couponRepository.update(coupon.id, {
         quantity: { decrement: 1 },
       })
     }
+
+    for (const temp of tempItems) {
+      saleItems.push({ ...temp.data, price: temp.price })
+    }
+
+    const calculatedTotal = tempItems.reduce((acc, i) => acc + i.price, 0)
+    if (typeof total !== 'number') total = calculatedTotal
 
     const sale = await this.saleRepository.create({
       total,
