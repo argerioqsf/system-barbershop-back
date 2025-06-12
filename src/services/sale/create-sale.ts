@@ -140,17 +140,22 @@ export class CreateSaleService {
       amount: total,
     })
 
-    const sale = await this.saleRepository.create({
-      total,
-      method,
-      user: { connect: { id: userId } },
-      unit: { connect: { id: user?.unitId } },
-      session: { connect: { id: session.id } },
-      items: { create: saleItems },
-      coupon: couponConnect,
-      transaction: { connect: { id: transaction.id } },
-    })
+    try {
+      const sale = await this.saleRepository.create({
+        total,
+        method,
+        user: { connect: { id: userId } },
+        unit: { connect: { id: user?.unitId } },
+        session: { connect: { id: session.id } },
+        items: { create: saleItems },
+        coupon: couponConnect,
+        transaction: { connect: { id: transaction.id } },
+      })
 
-    return { sale }
+      return { sale }
+    } catch (error) {
+      await this.transactionRepository.delete(transaction.id)
+      throw error
+    }
   }
 }

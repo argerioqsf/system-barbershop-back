@@ -26,4 +26,8 @@ export class PrismaTransactionRepository implements TransactionRepository {
       where: { cashRegisterSessionId: sessionId },
     })
   }
+
+  async delete(id: string): Promise<void> {
+    await prisma.transaction.delete({ where: { id } })
+  }
 }
