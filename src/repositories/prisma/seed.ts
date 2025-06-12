@@ -191,9 +191,9 @@ async function main() {
 
   const sale = await prisma.sale.create({
     data: {
-      userId: client.id,
-      unitId: mainUnit.id,
-      sessionId: cashSession.id,
+      user: { connect: { id: client.id } },
+      unit: { connect: { id: mainUnit.id } },
+      session: { connect: { id: cashSession.id } },
       total: 35,
       method: PaymentMethod.CASH,
       items: {
