@@ -197,6 +197,7 @@ async function main() {
             serviceId: shampoo.id,
             quantity: 1,
             couponId: itemCoupon.id,
+            price: 10,
           },
         ],
       },

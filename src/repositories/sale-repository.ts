@@ -9,12 +9,15 @@ import {
   CashRegisterSession,
 } from '@prisma/client'
 
+export type DetailedSaleItem = SaleItem & {
+  service: Service
+  barber: (User & { profile: Profile | null }) | null
+  coupon: Coupon | null
+  price: number
+}
+
 export type DetailedSale = Sale & {
-  items: (SaleItem & {
-    service: Service
-    barber: (User & { profile: Profile | null }) | null
-    coupon: Coupon | null
-  })[]
+  items: DetailedSaleItem[]
   user: User & { profile: Profile | null }
   coupon: Coupon | null
   session: CashRegisterSession | null

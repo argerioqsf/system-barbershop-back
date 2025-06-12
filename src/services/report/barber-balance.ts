@@ -1,4 +1,4 @@
-import { DetailedSale, SaleRepository } from '@/repositories/sale-repository'
+import { SaleRepository } from '@/repositories/sale-repository'
 import { TransactionRepository } from '@/repositories/transaction-repository'
 
 interface BarberBalanceRequest {
@@ -10,12 +10,7 @@ interface HistorySales {
   percentage: number
   valueBarber: number
   coupon?: string
-  saleItems: {
-    quantity: number
-    name: string
-    price: number
-    userEmail: string
-  }[]
+  nameService: string
 }
 
 interface BarberBalanceResponse {
@@ -38,86 +33,53 @@ export class BarberBalanceService {
     function setHistory(
       valueService: number,
       percentage: number,
-      valuePorcent: number,
-      sale: DetailedSale,
+      valueBarber: number,
+      nameService: string,
+      coupon?: string,
     ) {
       if (valueService > 0) {
         historySales.push({
           valueService,
           percentage,
-          valueBarber: valuePorcent,
-          coupon: sale.coupon?.code,
-          saleItems: sale.items.map((item) => ({
-            quantity: item.quantity,
-            name: item.service.name,
-            price: item.service.price,
-            userEmail: sale.user.name,
-          })),
+          valueBarber,
+          coupon,
+          nameService,
         })
       }
     }
 
     const salesTotal = sales.reduce((acc, sale) => {
       const items = sale.items.filter((i) => i.barberId === barberId)
-
-      const { service: rawService, product: rawProduct } = items.reduce(
-        (totals, item) => {
-          const value = item.service.price * item.quantity
-          item.service.isProduct
-            ? (totals.product += value)
-            : (totals.service += value)
-          return totals
-        },
-        { service: 0, product: 0 },
-      )
-
-      let serviceShare = rawService
-      let productShare = rawProduct
-
-      if (sale.coupon && serviceShare > 0) {
-        const { discountType, discount } = sale.coupon
-        if (discountType === 'PERCENTAGE') {
-          serviceShare -= (serviceShare * discount) / 100
-          productShare -= (productShare * discount) / 100
-        } else {
-          serviceShare -= discount
-          productShare -= discount
-        }
-      }
-
-      const total = serviceShare + productShare
       const percentage = sale.user.profile?.commissionPercentage ?? 100
-      if (total === sale.total) {
-        const valueService = Number(serviceShare.toFixed(2))
-        const valuePorcent = (valueService * percentage) / 100
-        setHistory(valueService, percentage, valuePorcent, sale)
-        return acc + valuePorcent
-      }
-      if (productShare <= 0) {
-        const valueService = Number(sale.total.toFixed(2))
-        const valuePorcent = (valueService * percentage) / 100
-        setHistory(valueService, percentage, valuePorcent, sale)
-        return acc + valuePorcent
-      }
 
-      const porcentService = sale.coupon
-        ? (100 * rawService) / (rawService + rawProduct)
-        : (100 * serviceShare) / total
-
-      const valueService = Number(
-        ((sale.total * porcentService) / 100).toFixed(2),
-      )
-      const valuePorcent = (valueService * percentage) / 100
-      setHistory(valueService, percentage, valuePorcent, sale)
-      return acc + valuePorcent
+      const serviceShare = items.reduce((totals, item) => {
+        if (!item.service.isProduct) {
+          const valueBarber = (item.price * percentage) / 100
+          setHistory(
+            item.price,
+            percentage,
+            valueBarber,
+            item.service.name,
+            item.coupon?.code ?? sale.coupon?.code ?? undefined,
+          )
+          totals += valueBarber
+        }
+        return totals
+      }, 0)
+      return acc + serviceShare
     }, 0)
-
-    const { additions, withdrawals } = (
+    const transactions =
       await this.transactionRepository.findManyByUser(barberId)
-    ).reduce(
+    const { additions, withdrawals } = transactions.reduce(
       (totals, t) => {
-        if (t.type === 'ADDITION') totals.additions += t.amount
-        else if (t.type === 'WITHDRAWAL') totals.withdrawals += t.amount
+        if (t.type === 'ADDITION') {
+          setHistory(t.amount, 100, t.amount, 'ADDITION', undefined)
+          totals.additions += t.amount
+        }
+        if (t.type === 'WITHDRAWAL') {
+          setHistory(t.amount * -1, 100, t.amount * -1, 'WITHDRAWAL', undefined)
+          totals.withdrawals += t.amount
+        }
         return totals
       },
       { additions: 0, withdrawals: 0 },

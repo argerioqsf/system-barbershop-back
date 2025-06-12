@@ -11,8 +11,10 @@ export class PrismaTransactionRepository implements TransactionRepository {
     return prisma.transaction.findMany({ where: { userId } })
   }
 
-  async findMany(): Promise<Transaction[]> {
-    return prisma.transaction.findMany()
+  async findMany(
+    where: Prisma.TransactionWhereInput = {},
+  ): Promise<Transaction[]> {
+    return prisma.transaction.findMany({ where })
   }
 
   async findManyByUnit(unitId: string): Promise<Transaction[]> {
@@ -20,6 +22,8 @@ export class PrismaTransactionRepository implements TransactionRepository {
   }
 
   async findManyBySession(sessionId: string): Promise<Transaction[]> {
-    return prisma.transaction.findMany({ where: { cashRegisterSessionId: sessionId } })
+    return prisma.transaction.findMany({
+      where: { cashRegisterSessionId: sessionId },
+    })
   }
 }
