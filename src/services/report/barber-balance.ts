@@ -32,7 +32,7 @@ export class BarberBalanceService {
   async execute({
     barberId,
   }: BarberBalanceRequest): Promise<BarberBalanceResponse> {
-    const sales = await this.saleRepository.findManyByUser(barberId)
+    const sales = await this.saleRepository.findManyByBarber(barberId)
     const historySales: HistorySales[] = []
 
     function setHistory(
@@ -58,7 +58,9 @@ export class BarberBalanceService {
     }
 
     const salesTotal = sales.reduce((acc, sale) => {
-      const { service: rawService, product: rawProduct } = sale.items.reduce(
+      const items = sale.items.filter((i) => i.barberId === barberId)
+
+      const { service: rawService, product: rawProduct } = items.reduce(
         (totals, item) => {
           const value = item.service.price * item.quantity
           item.service.isProduct
