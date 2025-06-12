@@ -16,7 +16,9 @@ interface CashSessionReportResponse {
 export class CashSessionReportService {
   constructor(private repository: CashRegisterRepository) {}
 
-  async execute({ sessionId }: CashSessionReportRequest): Promise<CashSessionReportResponse> {
+  async execute({
+    sessionId,
+  }: CashSessionReportRequest): Promise<CashSessionReportResponse> {
     const session = await this.repository.findById(sessionId)
     if (!session) throw new Error('Session not found')
 
@@ -45,7 +47,12 @@ export class CashSessionReportService {
           t.total += value
           return t
         },
-        { service: 0, product: 0, total: 0, byService: {} as Record<string, number> },
+        {
+          service: 0,
+          product: 0,
+          total: 0,
+          byService: {} as Record<string, number>,
+        },
       )
 
       if (sale.coupon) {
@@ -62,8 +69,10 @@ export class CashSessionReportService {
               (totals.byService[name] / totalBefore) * sale.coupon.discount
             totals.byService[name] -= disc
           }
-          const serviceDisc = (totals.service / totalBefore) * sale.coupon.discount
-          const productDisc = (totals.product / totalBefore) * sale.coupon.discount
+          const serviceDisc =
+            (totals.service / totalBefore) * sale.coupon.discount
+          const productDisc =
+            (totals.product / totalBefore) * sale.coupon.discount
           totals.service -= serviceDisc
           totals.product -= productDisc
         }
@@ -85,10 +94,16 @@ export class CashSessionReportService {
       totalIn: Number(additions.toFixed(2)),
       totalOut: Number(withdrawals.toFixed(2)),
       totalByService: Object.fromEntries(
-        Object.entries(totalByService).map(([k, v]) => [k, Number(v.toFixed(2))]),
+        Object.entries(totalByService).map(([k, v]) => [
+          k,
+          Number(v.toFixed(2)),
+        ]),
       ),
       barberCommissions: Object.fromEntries(
-        Object.entries(barberCommissions).map(([k, v]) => [k, Number(v.toFixed(2))]),
+        Object.entries(barberCommissions).map(([k, v]) => [
+          k,
+          Number(v.toFixed(2)),
+        ]),
       ),
       ownerTotal: Number(ownerTotal.toFixed(2)),
     }

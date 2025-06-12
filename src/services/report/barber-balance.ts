@@ -1,4 +1,4 @@
-import { SaleRepository } from '@/repositories/sale-repository'
+import { TransactionFull } from '@/repositories/prisma/prisma-transaction-repository'
 import { TransactionRepository } from '@/repositories/transaction-repository'
 
 interface BarberBalanceRequest {
@@ -19,15 +19,11 @@ interface BarberBalanceResponse {
 }
 
 export class BarberBalanceService {
-  constructor(
-    private saleRepository: SaleRepository,
-    private transactionRepository: TransactionRepository,
-  ) {}
+  constructor(private transactionRepository: TransactionRepository) {}
 
   async execute({
     barberId,
   }: BarberBalanceRequest): Promise<BarberBalanceResponse> {
-    const sales = await this.saleRepository.findManyByBarber(barberId)
     const historySales: HistorySales[] = []
 
     function setHistory(
@@ -48,15 +44,16 @@ export class BarberBalanceService {
       }
     }
 
-    const salesTotal = sales.reduce((acc, sale) => {
+    function saleTotal(sale: TransactionFull['sale']) {
+      if (!sale) return 0
       const items = sale.items.filter((i) => i.barberId === barberId)
       const percentage = sale.user.profile?.commissionPercentage ?? 100
 
       const serviceShare = items.reduce((totals, item) => {
         if (!item.service.isProduct) {
-          const valueBarber = (item.price * percentage) / 100
+          const valueBarber = ((item.price ?? 0) * percentage) / 100
           setHistory(
-            item.price,
+            item.price ?? 0,
             percentage,
             valueBarber,
             item.service.name,
@@ -66,26 +63,35 @@ export class BarberBalanceService {
         }
         return totals
       }, 0)
-      return acc + serviceShare
-    }, 0)
-    const transactions =
-      await this.transactionRepository.findManyByUser(barberId)
+      return serviceShare
+    }
+
+    const transactions = await this.transactionRepository.findMany({
+      sale: { items: { some: { barberId } } },
+    })
+
     const { additions, withdrawals } = transactions.reduce(
-      (totals, t) => {
-        if (t.type === 'ADDITION') {
-          setHistory(t.amount, 100, t.amount, 'ADDITION', undefined)
-          totals.additions += t.amount
+      (totals, transaction) => {
+        if (transaction.type === 'ADDITION') {
+          const totalSale = saleTotal(transaction.sale)
+          totals.additions += totalSale
         }
-        if (t.type === 'WITHDRAWAL') {
-          setHistory(t.amount * -1, 100, t.amount * -1, 'WITHDRAWAL', undefined)
-          totals.withdrawals += t.amount
+        if (transaction.type === 'WITHDRAWAL') {
+          setHistory(
+            transaction.amount * -1,
+            100,
+            transaction.amount * -1,
+            'WITHDRAWAL',
+            undefined,
+          )
+          totals.withdrawals += transaction.amount
         }
         return totals
       },
       { additions: 0, withdrawals: 0 },
     )
 
-    const balance = Number((salesTotal + additions - withdrawals).toFixed(2))
+    const balance = Number((additions - withdrawals).toFixed(2))
 
     return { balance, historySales }
   }

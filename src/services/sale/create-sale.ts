@@ -4,7 +4,7 @@ import {
 } from '../../repositories/sale-repository'
 import { ServiceRepository } from '../../repositories/service-repository'
 import { CouponRepository } from '../../repositories/coupon-repository'
-import { PaymentMethod, TransactionType } from '@prisma/client'
+import { PaymentMethod, SaleItem, TransactionType } from '@prisma/client'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { CashRegisterRepository } from '@/repositories/cash-register-repository'
 import { TransactionRepository } from '@/repositories/transaction-repository'
@@ -22,7 +22,6 @@ interface CreateSaleRequest {
   method: PaymentMethod
   items: CreateSaleItem[]
   couponCode?: string
-  total?: number
 }
 
 interface CreateSaleResponse {
@@ -44,24 +43,20 @@ export class CreateSaleService {
     method,
     items,
     couponCode,
-    total,
   }: CreateSaleRequest): Promise<CreateSaleResponse> {
-    const saleItems: any[] = []
+    const saleItems: SaleItem[] = []
     const tempItems: { price: number; ownDiscount: boolean; data: any }[] = []
     const user = await this.barberUserRepository.findById(userId)
     const session = await this.cashRegisterRepository.findOpenByUnit(
       user?.unitId as string,
     )
     if (!session) throw new Error('Cash register closed')
-
     for (const item of items) {
       const service = await this.serviceRepository.findById(item.serviceId)
       if (!service) throw new Error('Service not found')
-
       let price = service.price * item.quantity
       let itemCouponConnect: any
       let ownDiscount = false
-
       if (typeof item.price === 'number') {
         price = item.price
         ownDiscount = true
@@ -129,7 +124,6 @@ export class CreateSaleService {
     }
 
     const calculatedTotal = tempItems.reduce((acc, i) => acc + i.price, 0)
-    if (typeof total !== 'number') total = calculatedTotal
 
     const transaction = await this.transactionRepository.create({
       user: { connect: { id: userId } },
@@ -137,12 +131,12 @@ export class CreateSaleService {
       session: { connect: { id: session.id } },
       type: TransactionType.ADDITION,
       description: 'Sale',
-      amount: total,
+      amount: calculatedTotal,
     })
 
     try {
       const sale = await this.saleRepository.create({
-        total,
+        total: calculatedTotal,
         method,
         user: { connect: { id: userId } },
         unit: { connect: { id: user?.unitId } },

@@ -33,9 +33,6 @@ export class OwnerBalanceService {
     const owner = await this.userRepository.findById(ownerId)
     if (!owner) throw new Error('Owner not found')
     const orgId = owner.organizationId
-    const sales = await this.saleRepository.findMany({
-      unit: { organizationId: orgId },
-    })
     const historySales: HistorySales[] = []
 
     function setHistory(
@@ -58,57 +55,71 @@ export class OwnerBalanceService {
       }
     }
 
-    const salesTotal = sales.reduce((acc, sale) => {
-      const totals = sale.items.reduce(
-        (t, item) => {
-          let value = item.price
-          let percentageOwner = 100
-
-          if (item.service.isProduct) t.product += value
-          else {
-            const barberPorcent =
-              item.barber?.profile?.commissionPercentage ?? 100
-            const valueBarber = (item.price * barberPorcent) / 100
-            percentageOwner = 100 - barberPorcent
-            value -= valueBarber
-            t.service += value
-          }
-
-          setHistory(
-            item.price,
-            percentageOwner,
-            value,
-            item.service.name,
-            item.quantity,
-            item.coupon?.code ?? sale.coupon?.code ?? undefined,
-          )
-
-          t.total += value
-          return t
-        },
-        { service: 0, product: 0, total: 0 },
-      )
-
-      return acc + (totals.service + totals.product)
-    }, 0)
-
     const transactions = await this.transactionRepository.findMany({
       unit: { organizationId: orgId },
     })
     const additions = transactions
       .filter((t) => t.type === 'ADDITION')
-      .reduce((acc, t) => {
-        setHistory(t.amount, 100, t.amount, 'ADDITION', 1, undefined)
-        return acc + t.amount
+      .reduce((acc, transaction) => {
+        if (transaction.sale) {
+          const totals = transaction.sale.items.reduce(
+            (t, item) => {
+              let value = item.price ?? 0
+              let percentageOwner = 100
+
+              if (item.service.isProduct) t.product += value ?? 0
+              else {
+                const barberPorcent =
+                  item.barber?.profile?.commissionPercentage ?? 100
+                const valueBarber = ((value ?? 0) * barberPorcent) / 100
+                percentageOwner = 100 - barberPorcent
+                value -= valueBarber
+                t.service += value
+              }
+              setHistory(
+                Number((item.price ?? 0).toFixed(2)),
+                Number(percentageOwner.toFixed(2)),
+                Number(value.toFixed(2)),
+                item.service.name,
+                item.quantity,
+                item?.coupon?.code ??
+                  transaction.sale?.coupon?.code ??
+                  undefined,
+              )
+
+              t.total += Number(value.toFixed(2))
+              return t
+            },
+            { service: 0, product: 0, total: 0 },
+          )
+          return acc + totals.service
+        } else {
+          setHistory(
+            transaction.amount,
+            100,
+            transaction.amount,
+            'ADDITION',
+            1,
+            undefined,
+          )
+          return acc + transaction.amount
+        }
       }, 0)
     const withdrawals = transactions
       .filter((t) => t.type === 'WITHDRAWAL')
       .reduce((acc, t) => {
-        setHistory(t.amount * -1, 100, t.amount * -1, 'ADDITION', 1, undefined)
+        setHistory(
+          t.amount * -1,
+          100,
+          t.amount * -1,
+          'WITHDRAWAL',
+          1,
+          undefined,
+        )
         return acc + t.amount
       }, 0)
 
-    const balance = Number((salesTotal + additions - withdrawals).toFixed(2))
+    const balance = Number((0 + additions - withdrawals).toFixed(2))
     return { balance, historySales }
   }
 }
