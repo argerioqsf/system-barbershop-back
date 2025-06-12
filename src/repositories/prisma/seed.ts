@@ -178,6 +178,17 @@ async function main() {
     },
   })
 
+  const transaction = await prisma.transaction.create({
+    data: {
+      userId: client.id,
+      unitId: mainUnit.id,
+      cashRegisterSessionId: cashSession.id,
+      type: TransactionType.ADDITION,
+      description: 'Sale',
+      amount: 35,
+    },
+  })
+
   const sale = await prisma.sale.create({
     data: {
       userId: client.id,
@@ -201,17 +212,7 @@ async function main() {
           },
         ],
       },
-    },
-  })
-
-  await prisma.transaction.create({
-    data: {
-      userId: client.id,
-      unitId: mainUnit.id,
-      cashRegisterSessionId: cashSession.id,
-      type: TransactionType.ADDITION,
-      description: 'Sale',
-      amount: 35,
+      transaction: { connect: { id: transaction.id } },
     },
   })
 

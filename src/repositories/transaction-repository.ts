@@ -6,4 +6,5 @@ export interface TransactionRepository {
   findMany(where?: Prisma.TransactionWhereInput): Promise<Transaction[]>
   findManyByUnit(unitId: string): Promise<Transaction[]>
   findManyBySession(sessionId: string): Promise<Transaction[]>
+  delete(id: string): Promise<void>
 }

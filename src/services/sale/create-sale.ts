@@ -131,17 +131,7 @@ export class CreateSaleService {
     const calculatedTotal = tempItems.reduce((acc, i) => acc + i.price, 0)
     if (typeof total !== 'number') total = calculatedTotal
 
-    const sale = await this.saleRepository.create({
-      total,
-      method,
-      user: { connect: { id: userId } },
-      unit: { connect: { id: user?.unitId } },
-      session: { connect: { id: session.id } },
-      items: { create: saleItems },
-      coupon: couponConnect,
-    })
-
-    await this.transactionRepository.create({
+    const transaction = await this.transactionRepository.create({
       user: { connect: { id: userId } },
       unit: { connect: { id: user?.unitId } },
       session: { connect: { id: session.id } },
@@ -150,6 +140,22 @@ export class CreateSaleService {
       amount: total,
     })
 
-    return { sale }
+    try {
+      const sale = await this.saleRepository.create({
+        total,
+        method,
+        user: { connect: { id: userId } },
+        unit: { connect: { id: user?.unitId } },
+        session: { connect: { id: session.id } },
+        items: { create: saleItems },
+        coupon: couponConnect,
+        transaction: { connect: { id: transaction.id } },
+      })
+
+      return { sale }
+    } catch (error) {
+      await this.transactionRepository.delete(transaction.id)
+      throw error
+    }
   }
 }

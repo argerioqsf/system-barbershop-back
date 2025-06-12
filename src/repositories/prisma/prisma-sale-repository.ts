@@ -1,5 +1,13 @@
 import { prisma } from '@/lib/prisma'
-import { Prisma, Sale, SaleItem, Service, User, Coupon } from '@prisma/client'
+import {
+  Prisma,
+  Sale,
+  SaleItem,
+  Service,
+  User,
+  Coupon,
+  Transaction,
+} from '@prisma/client'
 import { SaleRepository, DetailedSale } from '../sale-repository'
 
 export class PrismaSaleRepository implements SaleRepository {
@@ -17,6 +25,7 @@ export class PrismaSaleRepository implements SaleRepository {
         user: { include: { profile: true } },
         coupon: true,
         session: true,
+        transaction: true,
       },
     })
   }
@@ -35,6 +44,7 @@ export class PrismaSaleRepository implements SaleRepository {
         user: { include: { profile: true } },
         coupon: true,
         session: true,
+        transaction: true,
       },
     })
   }
@@ -53,6 +63,7 @@ export class PrismaSaleRepository implements SaleRepository {
         user: { include: { profile: true } },
         coupon: true,
         session: true,
+        transaction: true,
       },
     })
   }
@@ -71,6 +82,7 @@ export class PrismaSaleRepository implements SaleRepository {
         user: { include: { profile: true } },
         coupon: true,
         session: true,
+        transaction: true,
       },
     })
   }
@@ -89,6 +101,7 @@ export class PrismaSaleRepository implements SaleRepository {
         user: { include: { profile: true } },
         coupon: true,
         session: true,
+        transaction: true,
       },
     })
   }
@@ -107,6 +120,7 @@ export class PrismaSaleRepository implements SaleRepository {
         user: { include: { profile: true } },
         coupon: true,
         session: true,
+        transaction: true,
       },
     })
   }
@@ -125,6 +139,7 @@ export class PrismaSaleRepository implements SaleRepository {
         user: { include: { profile: true } },
         coupon: true,
         session: true,
+        transaction: true,
       },
     })
   }
