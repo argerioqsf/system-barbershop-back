@@ -13,4 +13,6 @@ export interface ProfilesRepository {
     where?: Prisma.ProfileWhereInput,
     orderBy?: Prisma.ProfileOrderByWithRelationInput,
   ): Promise<(Profile & { user: Omit<User, 'password'> })[]>
+
+  incrementBalance(userId: string, amount: number): Promise<void>
 }

@@ -1,6 +1,7 @@
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { CashRegisterRepository } from '@/repositories/cash-register-repository'
 import { TransactionRepository } from '@/repositories/transaction-repository'
+import { ProfilesRepository } from '@/repositories/profiles-repository'
 import { Transaction, TransactionType } from '@prisma/client'
 
 interface CreateTransactionRequest {
@@ -19,6 +20,7 @@ export class CreateTransactionService {
     private repository: TransactionRepository,
     private barberUserRepository: BarberUsersRepository,
     private cashRegisterRepository: CashRegisterRepository,
+    private profileRepository: ProfilesRepository,
   ) {}
 
   async execute(
@@ -37,6 +39,8 @@ export class CreateTransactionService {
       amount: data.amount,
       session: { connect: { id: session.id } },
     })
+    const increment = data.type === 'ADDITION' ? data.amount : -data.amount
+    await this.profileRepository.incrementBalance(data.userId, increment)
     return { transaction }
   }
 }

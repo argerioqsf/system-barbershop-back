@@ -13,6 +13,8 @@ import {
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { CashRegisterRepository } from '@/repositories/cash-register-repository'
 import { TransactionRepository } from '@/repositories/transaction-repository'
+import { OrganizationRepository } from '@/repositories/organization-repository'
+import { ProfilesRepository } from '@/repositories/profiles-repository'
 import { ServiceNotFromUserUnitError } from '../@errors/service-not-from-user-unit-error'
 import { BarberNotFromUserUnitError } from '../@errors/barber-not-from-user-unit-error'
 import { CouponNotFromUserUnitError } from '../@errors/coupon-not-from-user-unit-error'
@@ -45,6 +47,8 @@ export class CreateSaleService {
     private barberUserRepository: BarberUsersRepository,
     private cashRegisterRepository: CashRegisterRepository,
     private transactionRepository: TransactionRepository,
+    private organizationRepository: OrganizationRepository,
+    private profileRepository: ProfilesRepository,
   ) {}
 
   async execute({
@@ -204,6 +208,29 @@ export class CreateSaleService {
         coupon: couponConnect,
         transaction: { connect: { id: transaction.id } },
       })
+
+      const org = await this.organizationRepository.findById(user?.organizationId as string)
+      const ownerId = org?.ownerId
+      const barberTotals: Record<string, number> = {}
+      let ownerShare = 0
+      for (const item of sale.items) {
+        let value = item.price ?? 0
+        if (item.service.isProduct) continue
+        if (item.barberId) {
+          const perc = item.porcentagemBarbeiro ?? 100
+          const valueBarber = (value * perc) / 100
+          barberTotals[item.barberId] = (barberTotals[item.barberId] || 0) + valueBarber
+          ownerShare += value - valueBarber
+        } else {
+          ownerShare += value
+        }
+      }
+      for (const [barberId, amount] of Object.entries(barberTotals)) {
+        await this.profileRepository.incrementBalance(barberId, amount)
+      }
+      if (ownerId) {
+        await this.profileRepository.incrementBalance(ownerId, ownerShare)
+      }
 
       return { sale }
     } catch (error) {

@@ -59,6 +59,7 @@ async function main() {
           birthday: '1980-04-15',
           pix: 'ownerpix',
           role: Role.OWNER,
+          totalBalance: 0,
         },
       },
       unit: { connect: { id: mainUnit.id } },
@@ -80,6 +81,7 @@ async function main() {
           birthday: '1980-04-15',
           pix: 'ownerpix',
           role: Role.OWNER,
+          totalBalance: 0,
         },
       },
       unit: { connect: { id: Unit2.id } },
@@ -106,6 +108,7 @@ async function main() {
           birthday: '2000-01-01',
           pix: 'adminpix',
           role: Role.ADMIN,
+          totalBalance: 0,
         },
       },
       unit: { connect: { id: mainUnit.id } },
@@ -128,6 +131,7 @@ async function main() {
           pix: 'barberpix',
           commissionPercentage: 70,
           role: Role.BARBER,
+          totalBalance: 0,
         },
       },
       unit: { connect: { id: mainUnit.id } },
@@ -149,6 +153,7 @@ async function main() {
           birthday: '2001-07-20',
           pix: 'clientpix',
           role: Role.CLIENT,
+          totalBalance: 0,
         },
       },
       unit: { connect: { id: mainUnit.id } },
@@ -216,6 +221,10 @@ async function main() {
       amount: 100,
     },
   })
+  await prisma.profile.update({
+    where: { userId: admin.id },
+    data: { totalBalance: { increment: 100 } },
+  })
 
   const transaction = await prisma.transaction.create({
     data: {
@@ -226,6 +235,10 @@ async function main() {
       description: 'Sale',
       amount: 35,
     },
+  })
+  await prisma.profile.update({
+    where: { userId: client.id },
+    data: { totalBalance: { increment: 35 } },
   })
 
   const sale = await prisma.sale.create({
@@ -259,6 +272,16 @@ async function main() {
       },
       transaction: { connect: { id: transaction.id } },
     },
+  })
+  const shareBarber = (25 * 70) / 100
+  const shareOwner = 25 - shareBarber
+  await prisma.profile.update({
+    where: { userId: barber.id },
+    data: { totalBalance: { increment: shareBarber } },
+  })
+  await prisma.profile.update({
+    where: { userId: owner.id },
+    data: { totalBalance: { increment: shareOwner } },
   })
 
   await prisma.coupon.create({
