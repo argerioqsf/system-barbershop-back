@@ -44,6 +44,7 @@ model User {
   appointments        Appointment[]         @relation("ClientAppointments")
   barberAppointments  Appointment[]         @relation("BarberAppointments")
   sales               Sale[]
+  clientSales         Sale[]                @relation("SaleClient")
   saleItems           SaleItem[]
   transactions        Transaction[]
   sessions            CashRegisterSession[]
@@ -108,53 +109,58 @@ model Service {
 }
 
 model Transaction {
-  id          String          @id @default(uuid())
-  userId      String
-  unitId      String
+  id                    String          @id @default(uuid())
+  userId                String
+  unitId                String
   cashRegisterSessionId String?
-  type        TransactionType
-  description String
-  amount      Float
-  createdAt   DateTime        @default(now())
+  type                  TransactionType
+  description           String
+  amount                Float
+  createdAt             DateTime        @default(now())
 
   sale Sale?
 
-  user User @relation(fields: [userId], references: [id])
-  unit Unit @relation(fields: [unitId], references: [id])
+  user    User                 @relation(fields: [userId], references: [id])
+  unit    Unit                 @relation(fields: [unitId], references: [id])
   session CashRegisterSession? @relation(fields: [cashRegisterSessionId], references: [id])
 
   @@map("transactions")
 }
 
 model Sale {
-  id        String        @id @default(uuid())
-  userId    String
-  unitId    String
-  sessionId String?
-  couponId  String?
-  transactionId String @unique
-  total     Float
-  method    PaymentMethod
-  createdAt DateTime      @default(now())
+  id            String        @id @default(uuid())
+  userId        String
+  clientId      String
+  unitId        String
+  sessionId     String?
+  couponId      String?
+  transactionId String        @unique
+  total         Float
+  method        PaymentMethod
+  createdAt     DateTime      @default(now())
 
-  user   User       @relation(fields: [userId], references: [id])
-  items  SaleItem[]
-  unit   Unit       @relation(fields: [unitId], references: [id])
-  coupon Coupon?    @relation(fields: [couponId], references: [id])
-  session CashRegisterSession? @relation(fields: [sessionId], references: [id])
-  transaction Transaction @relation(fields: [transactionId], references: [id])
+  user        User                 @relation(fields: [userId], references: [id])
+  client      User                 @relation("SaleClient", fields: [clientId], references: [id])
+  items       SaleItem[]
+  unit        Unit                 @relation(fields: [unitId], references: [id])
+  coupon      Coupon?              @relation(fields: [couponId], references: [id])
+  session     CashRegisterSession? @relation(fields: [sessionId], references: [id])
+  transaction Transaction          @relation(fields: [transactionId], references: [id])
 
   @@map("sales")
 }
 
 model SaleItem {
-  id        String @id @default(uuid())
-  saleId    String
-  serviceId String
-  quantity  Int    @default(1)
-  barberId  String?
-  couponId  String?
-  price     Float?
+  id                  String        @id @default(uuid())
+  saleId              String
+  serviceId           String
+  quantity            Int           @default(1)
+  barberId            String?
+  couponId            String?
+  price               Float
+  discount            Float?
+  discountType        DiscountType?
+  porcentagemBarbeiro Float?
 
   sale    Sale    @relation(fields: [saleId], references: [id])
   service Service @relation(fields: [serviceId], references: [id])
@@ -173,9 +179,9 @@ model CashRegisterSession {
   initialAmount Float
   finalAmount   Float?
 
-  user User @relation(fields: [openedById], references: [id])
-  unit Unit @relation(fields: [unitId], references: [id])
-  sales Sale[]
+  user         User          @relation(fields: [openedById], references: [id])
+  unit         Unit          @relation(fields: [unitId], references: [id])
+  sales        Sale[]
   transactions Transaction[]
 
   @@map("cash_register_sessions")

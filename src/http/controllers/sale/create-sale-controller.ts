@@ -17,6 +17,7 @@ export async function CreateSaleController(
         price: z.number().optional(),
       }),
     ),
+    clientId: z.string(),
     couponCode: z.string().optional(),
   })
   const data = bodySchema.parse(request.body)

@@ -191,7 +191,8 @@ async function main() {
 
   const sale = await prisma.sale.create({
     data: {
-      user: { connect: { id: client.id } },
+      user: { connect: { id: admin.id } },
+      client: { connect: { id: client.id } },
       unit: { connect: { id: mainUnit.id } },
       session: { connect: { id: cashSession.id } },
       total: 35,
@@ -203,12 +204,17 @@ async function main() {
             quantity: 1,
             barberId: barber.id,
             price: 25,
+            discount: 5,
+            discountType: DiscountType.VALUE,
+            porcentagemBarbeiro: 70,
           },
           {
             serviceId: shampoo.id,
             quantity: 1,
             couponId: itemCoupon.id,
             price: 10,
+            discount: 5,
+            discountType: DiscountType.VALUE,
           },
         ],
       },

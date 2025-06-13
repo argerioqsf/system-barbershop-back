@@ -26,6 +26,7 @@ interface CreateSaleRequest {
   userId: string
   method: PaymentMethod
   items: CreateSaleItem[]
+  clientId: string
   couponCode?: string
 }
 
@@ -47,6 +48,7 @@ export class CreateSaleService {
     userId,
     method,
     items,
+    clientId,
     couponCode,
   }: CreateSaleRequest): Promise<CreateSaleResponse> {
     const saleItems: SaleItem[] = []
@@ -67,6 +69,7 @@ export class CreateSaleService {
     for (const item of items) {
       const service = await this.serviceRepository.findById(item.serviceId)
       if (!service) throw new Error('Service not found')
+
       const basePrice = service.price * item.quantity
       let price = basePrice
       let discount = 0
