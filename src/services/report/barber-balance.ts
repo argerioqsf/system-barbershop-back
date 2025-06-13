@@ -1,3 +1,4 @@
+import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { TransactionFull } from '@/repositories/prisma/prisma-transaction-repository'
 import { TransactionRepository } from '@/repositories/transaction-repository'
 
@@ -19,7 +20,10 @@ interface BarberBalanceResponse {
 }
 
 export class BarberBalanceService {
-  constructor(private transactionRepository: TransactionRepository) {}
+  constructor(
+    private transactionRepository: TransactionRepository,
+    private userRepository: BarberUsersRepository,
+  ) {}
 
   async execute({
     barberId,
@@ -64,8 +68,10 @@ export class BarberBalanceService {
       return serviceShare
     }
 
+    const barber = await this.userRepository.findById(barberId)
     const transactionsSales = await this.transactionRepository.findMany({
       sale: { items: { some: { barberId } } },
+      unit: { organizationId: barber?.unit?.organizationId },
     })
     const transactionsBarber =
       await this.transactionRepository.findManyByUser(barberId)

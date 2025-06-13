@@ -1,4 +1,7 @@
-import { CashRegisterRepository, DetailedCashSession } from '@/repositories/cash-register-repository'
+import {
+  CashRegisterRepository,
+  DetailedCashSession,
+} from '@/repositories/cash-register-repository'
 
 interface ListSessionsResponse {
   sessions: DetailedCashSession[]

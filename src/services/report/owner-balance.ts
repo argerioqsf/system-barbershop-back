@@ -22,7 +22,6 @@ interface OwnerBalanceResponse {
 
 export class OwnerBalanceService {
   constructor(
-    private saleRepository: SaleRepository,
     private transactionRepository: TransactionRepository,
     private userRepository: BarberUsersRepository,
   ) {}

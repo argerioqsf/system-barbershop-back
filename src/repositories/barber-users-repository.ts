@@ -1,4 +1,4 @@
-import { Prisma, Profile, User } from '@prisma/client'
+import { Prisma, Profile, Unit, User } from '@prisma/client'
 
 export interface BarberUsersRepository {
   create(
@@ -6,7 +6,9 @@ export interface BarberUsersRepository {
     profile: Prisma.ProfileCreateInput,
   ): Promise<{ user: User; profile: Profile }>
   findMany(): Promise<(User & { profile: Profile | null })[]>
-  findById(id: string): Promise<(User & { profile: Profile | null }) | null>
+  findById(
+    id: string,
+  ): Promise<(User & { profile: Profile | null; unit: Unit | null }) | null>
   findByEmail(email: string): Promise<User | null>
   delete(id: string): Promise<void>
 }
