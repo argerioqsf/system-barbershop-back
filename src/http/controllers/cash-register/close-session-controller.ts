@@ -8,7 +8,6 @@ export async function CloseSessionController(
 ) {
   const bodySchema = z.object({
     sessionId: z.string(),
-    finalAmount: z.number(),
   })
   const data = bodySchema.parse(request.body)
   const service = makeCloseSessionService()
