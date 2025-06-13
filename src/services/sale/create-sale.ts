@@ -13,6 +13,9 @@ import {
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { CashRegisterRepository } from '@/repositories/cash-register-repository'
 import { TransactionRepository } from '@/repositories/transaction-repository'
+import { ServiceNotFromUserUnitError } from '../@errors/service-not-from-user-unit-error'
+import { BarberNotFromUserUnitError } from '../@errors/barber-not-from-user-unit-error'
+import { CouponNotFromUserUnitError } from '../@errors/coupon-not-from-user-unit-error'
 
 interface CreateSaleItem {
   serviceId: string
@@ -69,6 +72,9 @@ export class CreateSaleService {
     for (const item of items) {
       const service = await this.serviceRepository.findById(item.serviceId)
       if (!service) throw new Error('Service not found')
+      if (service.unitId !== user?.unitId) {
+        throw new ServiceNotFromUserUnitError()
+      }
 
       const basePrice = service.price * item.quantity
       let price = basePrice
@@ -80,6 +86,9 @@ export class CreateSaleService {
 
       if (item.barberId) {
         const barber = await this.barberUserRepository.findById(item.barberId)
+        if (barber && barber.unitId !== user?.unitId) {
+          throw new BarberNotFromUserUnitError()
+        }
         porcentagemBarbeiro = barber?.profile?.commissionPercentage
       }
 
@@ -93,6 +102,9 @@ export class CreateSaleService {
       } else if (item.couponCode) {
         const coupon = await this.couponRepository.findByCode(item.couponCode)
         if (!coupon) throw new Error('Coupon not found')
+        if (coupon.unitId !== user?.unitId) {
+          throw new CouponNotFromUserUnitError()
+        }
         if (coupon.quantity <= 0) throw new Error('Coupon exhausted')
         const discountAmount =
           coupon.discountType === 'PERCENTAGE'
@@ -130,6 +142,9 @@ export class CreateSaleService {
     if (couponCode) {
       const coupon = await this.couponRepository.findByCode(couponCode)
       if (!coupon) throw new Error('Coupon not found')
+      if (coupon.unitId !== user?.unitId) {
+        throw new CouponNotFromUserUnitError()
+      }
       if (coupon.quantity <= 0) throw new Error('Coupon exhausted')
 
       const affectedTotal = tempItems
