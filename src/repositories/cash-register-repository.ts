@@ -25,7 +25,9 @@ export interface CashRegisterRepository {
     id: string,
     data: Prisma.CashRegisterSessionUpdateInput,
   ): Promise<CashRegisterSession>
-  findMany(): Promise<DetailedCashSession[]>
+  findMany(
+    where?: Prisma.CashRegisterSessionWhereInput,
+  ): Promise<DetailedCashSession[]>
   findManyByUnit(unitId: string): Promise<DetailedCashSession[]>
   findOpenByUser(userId: string): Promise<CashRegisterSession | null>
   findOpenByUnit(unitId: string): Promise<CashRegisterSession | null>

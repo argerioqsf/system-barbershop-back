@@ -1,3 +1,4 @@
+import { UserToken } from '@/http/controllers/authenticate-controller'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { Profile, User } from '@prisma/client'
 
@@ -8,8 +9,21 @@ interface ListUsersResponse {
 export class ListUsersService {
   constructor(private repository: BarberUsersRepository) {}
 
-  async execute(): Promise<ListUsersResponse> {
-    const users = await this.repository.findMany()
+  async execute(userToken: UserToken): Promise<ListUsersResponse> {
+    if (!userToken.sub) throw new Error('User not found')
+    let users = []
+
+    if (userToken.role === 'OWNER') {
+      users = await this.repository.findMany({
+        unit: { organizationId: userToken.organizationId },
+      })
+    } else if (userToken.role === 'ADMIN') {
+      users = await this.repository.findMany()
+    } else {
+      users = await this.repository.findMany({
+        unitId: userToken.unitId,
+      })
+    }
     return { users }
   }
 }

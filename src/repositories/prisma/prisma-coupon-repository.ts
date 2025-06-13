@@ -7,8 +7,8 @@ export class PrismaCouponRepository implements CouponRepository {
     return prisma.coupon.create({ data })
   }
 
-  async findMany(): Promise<Coupon[]> {
-    return prisma.coupon.findMany()
+  async findMany(where: Prisma.CouponWhereInput = {}): Promise<Coupon[]> {
+    return prisma.coupon.findMany({ where })
   }
 
   async findById(id: string): Promise<Coupon | null> {

@@ -3,16 +3,26 @@ import { FastifyReply, FastifyRequest } from 'fastify'
 import { Role } from '@prisma/client'
 import { z } from 'zod'
 
-export async function UpdateBarberUserController(request: FastifyRequest, reply: FastifyReply) {
+export async function UpdateBarberUserController(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
   const paramsSchema = z.object({ id: z.string() })
   const bodySchema = z.object({
-    name: z.string(),
-    phone: z.string(),
-    cpf: z.string(),
-    genre: z.string(),
-    birthday: z.string(),
-    pix: z.string(),
-    role: z.nativeEnum(Role),
+    name: z.string().optional(),
+    phone: z.string().optional(),
+    cpf: z.string().optional(),
+    genre: z.string().optional(),
+    birthday: z.string().optional(),
+    pix: z.string().optional(),
+    role: z.nativeEnum(Role).optional(),
+    active: z
+      .union([z.boolean(), z.string()])
+      .transform((val) => {
+        if (typeof val === 'boolean') return val
+        return val === 'true'
+      })
+      .optional(),
   })
 
   const { id } = paramsSchema.parse(request.params)

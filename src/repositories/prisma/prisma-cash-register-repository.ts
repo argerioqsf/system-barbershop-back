@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { Prisma, CashRegisterSession, User } from '@prisma/client'
+import { Prisma, CashRegisterSession } from '@prisma/client'
 import {
   CashRegisterRepository,
   DetailedCashSession,
@@ -20,8 +20,11 @@ export class PrismaCashRegisterRepository implements CashRegisterRepository {
     return prisma.cashRegisterSession.update({ where: { id }, data })
   }
 
-  async findMany(): Promise<DetailedCashSession[]> {
+  async findMany(
+    where: Prisma.CashRegisterSessionWhereInput = {},
+  ): Promise<DetailedCashSession[]> {
     return prisma.cashRegisterSession.findMany({
+      where,
       include: { user: true, sales: true, transactions: true },
     })
   }

@@ -5,6 +5,13 @@ import { Role } from '@prisma/client'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
+export interface UserToken {
+  unitId: string
+  organizationId: string
+  role: Role
+  sub: string
+}
+
 export async function authenticate(
   request: FastifyRequest,
   replay: FastifyReply,
@@ -24,7 +31,14 @@ export async function authenticate(
       password,
     })
 
-    const token = await replay.jwtSign({ unitId: user.unitId }, { sign: { sub: user.id } })
+    const token = await replay.jwtSign(
+      {
+        unitId: user.unitId,
+        organizationId: user.organizationId,
+        role: user.profile?.role,
+      },
+      { sign: { sub: user.id } },
+    )
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password: _, ...userWithoutPassword } = user

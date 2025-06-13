@@ -164,8 +164,11 @@ export class PrismaUsersRepository implements UsersRepository {
     return userIndicator
   }
 
-  async findById(id: string): Promise<
-    (Omit<User, 'password'> & { profile: Omit<Profile, 'userId'> | null }) | null
+  async findById(
+    id: string,
+  ): Promise<
+    | (Omit<User, 'password'> & { profile: Omit<Profile, 'userId'> | null })
+    | null
   > {
     const user = await prisma.user.findUnique({
       where: { id },
@@ -173,7 +176,9 @@ export class PrismaUsersRepository implements UsersRepository {
     })
     if (!user) return null
     const { password: _pw, ...rest } = user
-    return rest as Omit<User, 'password'> & { profile: Omit<Profile, 'userId'> | null }
+    return rest as Omit<User, 'password'> & {
+      profile: Omit<Profile, 'userId'> | null
+    }
   }
 
   async findByEmail(

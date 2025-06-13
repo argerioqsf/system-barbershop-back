@@ -1,13 +1,15 @@
 import { makeListUsersService } from '@/services/@factories/barber-user/make-list-users'
 import { makeBarberBalance } from '@/services/@factories/report/make-barber-balance'
 import { FastifyReply, FastifyRequest } from 'fastify'
+import { UserToken } from '../authenticate-controller'
 
 export async function ListBarberUsersController(
-  _: FastifyRequest,
+  request: FastifyRequest,
   reply: FastifyReply,
 ) {
   const service = makeListUsersService()
-  const { users } = await service.execute()
+  const user = request.user as UserToken
+  const { users } = await service.execute(user)
   const balanceService = makeBarberBalance()
   const usersWithBalance = await Promise.all(
     users.map(async (user) => {

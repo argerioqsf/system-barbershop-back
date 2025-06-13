@@ -14,8 +14,29 @@ export class PrismaBarberUsersRepository implements BarberUsersRepository {
     return { user, profile }
   }
 
-  async findMany(): Promise<(User & { profile: Profile | null })[]> {
-    return prisma.user.findMany({ include: { profile: true } })
+  async update(
+    id: string,
+    userData: Prisma.UserUpdateInput,
+    profileData: Prisma.ProfileUpdateInput,
+  ): Promise<{ user: User; profile: Profile | null }> {
+    const user = await prisma.user.update({
+      where: { id },
+      data: {
+        ...userData,
+        profile: {
+          update: profileData,
+        },
+      },
+      include: { profile: true },
+    })
+
+    return { user, profile: user.profile }
+  }
+
+  async findMany(
+    where: Prisma.UserWhereInput = {},
+  ): Promise<(User & { profile: Profile | null })[]> {
+    return prisma.user.findMany({ where, include: { profile: true } })
   }
 
   async findById(

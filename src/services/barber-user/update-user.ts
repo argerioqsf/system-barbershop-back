@@ -3,13 +3,15 @@ import { Profile, Role, User } from '@prisma/client'
 
 interface UpdateUserRequest {
   id: string
-  name: string
-  phone: string
-  cpf: string
-  genre: string
-  birthday: string
-  pix: string
-  role: Role
+  name?: string
+  phone?: string
+  cpf?: string
+  genre?: string
+  birthday?: string
+  pix?: string
+  role?: Role
+  active?: boolean
+  email?: string
 }
 
 interface UpdateUserResponse {
@@ -26,16 +28,12 @@ export class UpdateUserService {
       throw new Error('User not found')
     }
 
-    await this.repository.delete(data.id)
-    const { user, profile } = await this.repository.create(
+    const { user, profile } = await this.repository.update(
+      data.id,
       {
-        id: data.id,
         name: data.name,
-        email: existing.email,
-        password: existing.password,
-        active: existing.active,
-        organization: { connect: { id: existing.organizationId } },
-        unit: { connect: { id: existing.unitId } },
+        email: data.email,
+        active: data.active,
       },
       {
         phone: data.phone,

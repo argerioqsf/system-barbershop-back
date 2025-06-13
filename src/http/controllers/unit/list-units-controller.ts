@@ -1,16 +1,14 @@
 import { makeListUnitsService } from '@/services/@factories/unit/make-list-units'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
+import { UserToken } from '../authenticate-controller'
 
 export async function ListUnitsController(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
-  const querySchema = z.object({
-    organizationId: z.string(),
-  })
-  const { organizationId } = querySchema.parse(request.query)
   const service = makeListUnitsService()
-  const { units } = await service.execute(organizationId)
+  const user = request.user as UserToken
+  const { units } = await service.execute(user)
   return reply.status(200).send(units)
 }

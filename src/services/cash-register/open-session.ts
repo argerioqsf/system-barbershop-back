@@ -1,10 +1,10 @@
+import { UserToken } from '@/http/controllers/authenticate-controller'
 import { CashRegisterRepository } from '@/repositories/cash-register-repository'
 import { TransactionRepository } from '@/repositories/transaction-repository'
 import { CashRegisterSession, TransactionType } from '@prisma/client'
 
 interface OpenSessionRequest {
-  userId: string
-  unitId: string
+  user: UserToken
   initialAmount: number
 }
 
@@ -19,23 +19,23 @@ export class OpenSessionService {
   ) {}
 
   async execute({
-    userId,
-    unitId,
+    user,
     initialAmount,
   }: OpenSessionRequest): Promise<OpenSessionResponse> {
-    const existing = await this.repository.findOpenByUnit(unitId)
+    if (!user) throw new Error('User not found')
+    const existing = await this.repository.findOpenByUnit(user.unitId)
     if (existing) throw new Error('Cash register already open for this unit')
 
     const session = await this.repository.create({
-      openedBy: { connect: { id: userId } },
-      unit: { connect: { id: unitId } },
+      user: { connect: { id: user.sub } },
+      unit: { connect: { id: user.unitId } },
       initialAmount,
     })
 
     if (initialAmount > 0) {
       await this.transactionRepository.create({
-        user: { connect: { id: userId } },
-        unit: { connect: { id: unitId } },
+        user: { connect: { id: user.sub } },
+        unit: { connect: { id: user.unitId } },
         session: { connect: { id: session.id } },
         type: TransactionType.ADDITION,
         description: 'Initial amount',
