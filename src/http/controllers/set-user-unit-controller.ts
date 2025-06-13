@@ -4,6 +4,7 @@ import { UserNotFoundError } from '@/services/@errors/user-not-found-error'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { UnitNotFromOrganizationError } from '@/services/users/set-user-unit'
+import { UserToken } from './authenticate-controller'
 
 export async function SetUserUnitController(
   request: FastifyRequest,
@@ -11,11 +12,11 @@ export async function SetUserUnitController(
 ) {
   const bodySchema = z.object({ unitId: z.string() })
   const { unitId } = bodySchema.parse(request.body)
-  const userId = request.user.sub
+  const user = request.user as UserToken
 
   try {
     const service = makeSetUserUnitService()
-    await service.execute({ userId, unitId })
+    await service.execute({ user, unitId })
   } catch (error) {
     if (
       error instanceof UnitNotFoundError ||
