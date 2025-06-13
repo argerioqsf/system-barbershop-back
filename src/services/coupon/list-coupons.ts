@@ -1,3 +1,4 @@
+import { UserToken } from '@/http/controllers/authenticate-controller'
 import { CouponRepository } from '@/repositories/coupon-repository'
 import { Coupon } from '@prisma/client'
 
@@ -8,8 +9,21 @@ interface ListCouponsResponse {
 export class ListCouponsService {
   constructor(private repository: CouponRepository) {}
 
-  async execute(): Promise<ListCouponsResponse> {
-    const coupons = await this.repository.findMany()
+  async execute(userToken: UserToken): Promise<ListCouponsResponse> {
+    if (!userToken.sub) throw new Error('User not found')
+    let coupons = await this.repository.findMany()
+
+    if (userToken.role === 'OWNER') {
+      coupons = await this.repository.findMany({
+        unit: { organizationId: userToken.organizationId },
+      })
+    } else if (userToken.role === 'ADMIN') {
+      coupons = await this.repository.findMany()
+    } else {
+      coupons = await this.repository.findMany({
+        unitId: userToken.unitId,
+      })
+    }
     return { coupons }
   }
 }
