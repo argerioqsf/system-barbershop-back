@@ -8,6 +8,7 @@ interface CreateCouponRequest {
   discountType: 'PERCENTAGE' | 'VALUE'
   imageUrl?: string | null
   quantity?: number
+  unitId: string
 }
 
 interface CreateCouponResponse {
@@ -18,7 +19,15 @@ export class CreateCouponService {
   constructor(private repository: CouponRepository) {}
 
   async execute(data: CreateCouponRequest): Promise<CreateCouponResponse> {
-    const coupon = await this.repository.create(data)
+    const coupon = await this.repository.create({
+      code: data.code,
+      description: data.description,
+      discount: data.discount,
+      discountType: data.discountType,
+      imageUrl: data.imageUrl,
+      quantity: data.quantity,
+      unit: { connect: { id: data.unitId } },
+    })
     return { coupon }
   }
 }
