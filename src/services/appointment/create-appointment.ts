@@ -17,7 +17,9 @@ interface CreateAppointmentResponse {
 export class CreateAppointmentService {
   constructor(private repository: AppointmentRepository) {}
 
-  async execute(data: CreateAppointmentRequest): Promise<CreateAppointmentResponse> {
+  async execute(
+    data: CreateAppointmentRequest,
+  ): Promise<CreateAppointmentResponse> {
     const appointment = await this.repository.create({
       client: { connect: { id: data.clientId } },
       barber: { connect: { id: data.barberId } },

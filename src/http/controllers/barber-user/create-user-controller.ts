@@ -2,8 +2,12 @@ import { makeRegisterUserService } from '@/services/@factories/barber-user/make-
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { Role } from '@prisma/client'
 import { z } from 'zod'
+import { UserToken } from '../authenticate-controller'
 
-export async function CreateBarberUserController(request: FastifyRequest, reply: FastifyReply) {
+export async function CreateBarberUserController(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
   const bodySchema = z.object({
     name: z.string(),
     email: z.string().email(),
@@ -14,12 +18,16 @@ export async function CreateBarberUserController(request: FastifyRequest, reply:
     birthday: z.string(),
     pix: z.string(),
     role: z.nativeEnum(Role),
-    organizationId: z.string(),
-    unitId: z.string(),
   })
 
   const data = bodySchema.parse(request.body)
   const service = makeRegisterUserService()
-  const { user, profile } = await service.execute(data)
+  const unitId = (request.user as UserToken).unitId
+  const organizationId = (request.user as UserToken).organizationId
+  const { user, profile } = await service.execute({
+    ...data,
+    unitId,
+    organizationId,
+  })
   return reply.status(201).send({ user, profile })
 }

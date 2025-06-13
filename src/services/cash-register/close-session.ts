@@ -2,7 +2,7 @@ import { CashRegisterRepository } from '@/repositories/cash-register-repository'
 import { CashRegisterSession, TransactionType } from '@prisma/client'
 
 interface CloseSessionRequest {
-  sessionId: string
+  unitId: string
 }
 
 interface CloseSessionResponse {
@@ -13,12 +13,12 @@ export class CloseSessionService {
   constructor(private repository: CashRegisterRepository) {}
 
   async execute({
-    sessionId,
+    unitId,
   }: CloseSessionRequest): Promise<CloseSessionResponse> {
-    const sessionData = await this.repository.findById(sessionId)
-    if (!sessionData) throw new Error('Session not found')
+    const sessionOpen = await this.repository.findOpenByUnit(unitId)
+    if (!sessionOpen) throw new Error('Cash register not opened')
 
-    const finalAmount = sessionData.transactions.reduce(
+    const finalAmount = sessionOpen.transactions.reduce(
       (total, transaction) => {
         if (transaction.type === TransactionType.ADDITION)
           return total + transaction.amount
@@ -29,7 +29,7 @@ export class CloseSessionService {
       0,
     )
 
-    const session = await this.repository.close(sessionId, {
+    const session = await this.repository.close(sessionOpen.id, {
       finalAmount,
       closedAt: new Date(),
     })

@@ -1,6 +1,7 @@
 import { makeCreateService } from '@/services/@factories/barbershop/make-create-service'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
+import { UserToken } from '../authenticate-controller'
 
 export async function CreateServiceController(
   request: FastifyRequest,
@@ -27,7 +28,7 @@ export async function CreateServiceController(
     : undefined
 
   const serviceCreator = makeCreateService()
-  const unitId = (request.user as any).unitId
+  const unitId = (request.user as UserToken).unitId
   const { service } = await serviceCreator.execute({
     ...data,
     imageUrl,

@@ -5,7 +5,7 @@ import { BarberUsersRepository } from '../barber-users-repository'
 export class PrismaBarberUsersRepository implements BarberUsersRepository {
   async create(
     data: Prisma.UserCreateInput,
-    profileData: Prisma.ProfileCreateInput,
+    profileData: Omit<Prisma.ProfileCreateInput, 'user'>,
   ): Promise<{ user: User; profile: Profile }> {
     const user = await prisma.user.create({ data })
     const profile = await prisma.profile.create({

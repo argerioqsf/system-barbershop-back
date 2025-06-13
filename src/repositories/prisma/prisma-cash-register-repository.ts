@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { Prisma, CashRegisterSession } from '@prisma/client'
+import { Prisma, CashRegisterSession, Transaction } from '@prisma/client'
 import {
   CashRegisterRepository,
   DetailedCashSession,
@@ -32,7 +32,7 @@ export class PrismaCashRegisterRepository implements CashRegisterRepository {
   async findManyByUnit(unitId: string): Promise<DetailedCashSession[]> {
     return prisma.cashRegisterSession.findMany({
       where: { unitId },
-      include: { user: true, sales: true },
+      include: { user: true, sales: true, transactions: true },
     })
   }
 
@@ -42,9 +42,12 @@ export class PrismaCashRegisterRepository implements CashRegisterRepository {
     })
   }
 
-  async findOpenByUnit(unitId: string): Promise<CashRegisterSession | null> {
+  async findOpenByUnit(
+    unitId: string,
+  ): Promise<(CashRegisterSession & { transactions: Transaction[] }) | null> {
     return prisma.cashRegisterSession.findFirst({
       where: { unitId, closedAt: null },
+      include: { transactions: true },
     })
   }
 
