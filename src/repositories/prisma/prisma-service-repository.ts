@@ -12,6 +12,10 @@ export class PrismaServiceRepository implements ServiceRepository {
     return prisma.service.findMany({ where: { unitId } })
   }
 
+  async findMany(where: Prisma.ServiceWhereInput = {}): Promise<Service[]> {
+    return prisma.service.findMany({ where })
+  }
+
   async findById(id: string): Promise<Service | null> {
     const service = await prisma.service.findUnique({ where: { id } })
     return service
