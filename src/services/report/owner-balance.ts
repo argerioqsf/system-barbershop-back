@@ -43,16 +43,14 @@ export class OwnerBalanceService {
       quantity: number,
       coupon?: string,
     ) {
-      if (valueService > 0) {
-        historySales.push({
-          valueService,
-          percentage,
-          valueOwner,
-          coupon,
-          nameService,
-          quantity,
-        })
-      }
+      historySales.push({
+        valueService,
+        percentage,
+        valueOwner,
+        coupon,
+        nameService,
+        quantity,
+      })
     }
 
     const transactions = await this.transactionRepository.findMany({
@@ -69,8 +67,7 @@ export class OwnerBalanceService {
 
               if (item.service.isProduct) t.product += value ?? 0
               else {
-                const barberPorcent =
-                  item.barber?.profile?.commissionPercentage ?? 100
+                const barberPorcent = item.porcentagemBarbeiro ?? 100
                 const valueBarber = ((value ?? 0) * barberPorcent) / 100
                 percentageOwner = 100 - barberPorcent
                 value -= valueBarber

@@ -33,24 +33,22 @@ export class BarberBalanceService {
       nameService: string,
       coupon?: string,
     ) {
-      if (valueService > 0) {
-        historySales.push({
-          valueService,
-          percentage,
-          valueBarber,
-          coupon,
-          nameService,
-        })
-      }
+      historySales.push({
+        valueService,
+        percentage,
+        valueBarber,
+        coupon,
+        nameService,
+      })
     }
 
     function saleTotal(sale: TransactionFull['sale']) {
       if (!sale) return 0
       const items = sale.items.filter((i) => i.barberId === barberId)
-      const percentage = sale.user.profile?.commissionPercentage ?? 100
 
       const serviceShare = items.reduce((totals, item) => {
         if (!item.service.isProduct) {
+          const percentage = item.porcentagemBarbeiro ?? 100
           const valueBarber = ((item.price ?? 0) * percentage) / 100
           setHistory(
             item.price ?? 0,
