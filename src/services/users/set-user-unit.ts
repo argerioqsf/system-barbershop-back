@@ -2,6 +2,7 @@ import { UsersRepository } from '@/repositories/users-repository'
 import { UnitRepository } from '@/repositories/unit-repository'
 import { UnitNotFoundError } from '../@errors/unit-not-found-error'
 import { UserNotFoundError } from '../@errors/user-not-found-error'
+import { UserToken } from '@/http/controllers/authenticate-controller'
 
 export class UnitNotFromOrganizationError extends Error {
   constructor() {
@@ -10,7 +11,7 @@ export class UnitNotFromOrganizationError extends Error {
 }
 
 interface SetUserUnitRequest {
-  userId: string
+  user: UserToken
   unitId: string
 }
 
@@ -20,8 +21,7 @@ export class SetUserUnitService {
     private unitRepository: UnitRepository,
   ) {}
 
-  async execute({ userId, unitId }: SetUserUnitRequest): Promise<void> {
-    const user = await this.usersRepository.findById(userId)
+  async execute({ user, unitId }: SetUserUnitRequest): Promise<void> {
     if (!user) throw new UserNotFoundError()
 
     const unit = await this.unitRepository.findById(unitId)
@@ -31,7 +31,7 @@ export class SetUserUnitService {
       throw new UnitNotFromOrganizationError()
     }
 
-    await this.usersRepository.update(userId, {
+    await this.usersRepository.update(user.sub, {
       unit: { connect: { id: unitId } },
     })
   }
