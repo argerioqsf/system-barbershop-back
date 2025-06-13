@@ -20,10 +20,23 @@ async function main() {
     },
   })
 
+  const organization2 = await prisma.organization.create({
+    data: {
+      name: 'Argerio BarberShop',
+    },
+  })
+
   const mainUnit = await prisma.unit.create({
     data: {
       name: 'Main Unit',
       organization: { connect: { id: organization.id } },
+    },
+  })
+
+  const Unit2 = await prisma.unit.create({
+    data: {
+      name: 'Unit 2',
+      organization: { connect: { id: organization2.id } },
     },
   })
 
@@ -45,6 +58,27 @@ async function main() {
         },
       },
       unit: { connect: { id: mainUnit.id } },
+    },
+  })
+
+  const owner2 = await prisma.user.create({
+    data: {
+      name: 'Owner',
+      email: 'owner2@barbershop.com',
+      password: passwordHash,
+      active: true,
+      organization: { connect: { id: organization2.id } },
+      profile: {
+        create: {
+          phone: '969855555',
+          cpf: '33344455566',
+          genre: 'M',
+          birthday: '1980-04-15',
+          pix: 'ownerpix',
+          role: Role.OWNER,
+        },
+      },
+      unit: { connect: { id: Unit2.id } },
     },
   })
 
@@ -236,7 +270,9 @@ async function main() {
 
   console.log({
     organization,
+    organization2,
     mainUnit,
+    Unit2,
     admin,
     barber,
     client,
@@ -246,6 +282,7 @@ async function main() {
     cashSession,
     sale,
     itemCoupon,
+    owner2,
   })
 }
 
