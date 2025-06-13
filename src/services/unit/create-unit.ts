@@ -3,6 +3,7 @@ import { Unit } from '@prisma/client'
 
 interface CreateUnitRequest {
   name: string
+  slug: string
   organizationId: string
 }
 
@@ -16,6 +17,7 @@ export class CreateUnitService {
   async execute(data: CreateUnitRequest): Promise<CreateUnitResponse> {
     const unit = await this.repository.create({
       name: data.name,
+      slug: data.slug,
       organization: { connect: { id: data.organizationId } },
     })
     return { unit }

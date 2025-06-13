@@ -4,6 +4,7 @@ import { Unit } from '@prisma/client'
 interface UpdateUnitRequest {
   id: string
   name: string
+  slug?: string
 }
 
 interface UpdateUnitResponse {
@@ -14,7 +15,11 @@ export class UpdateUnitService {
   constructor(private repository: UnitRepository) {}
 
   async execute(data: UpdateUnitRequest): Promise<UpdateUnitResponse> {
-    const unit = await this.repository.update(data.id, { name: data.name })
+    const { id, name, slug } = data
+    const unit = await this.repository.update(id, {
+      name,
+      ...(slug ? { slug } : {}),
+    })
     return { unit }
   }
 }

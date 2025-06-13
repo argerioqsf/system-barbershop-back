@@ -220,6 +220,7 @@ model PasswordResetToken {
 model Organization {
   id        String   @id @default(uuid())
   name      String
+  slug      String   @unique
   ownerId   String?
   owner     User?    @relation("OrganizationOwner", fields: [ownerId], references: [id])
   users     User[]
@@ -232,6 +233,7 @@ model Organization {
 model Unit {
   id             String                @id @default(uuid())
   name           String
+  slug           String                @unique
   organizationId String
   services       Service[]
   appointments   Appointment[]

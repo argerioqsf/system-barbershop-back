@@ -8,9 +8,10 @@ export async function CreateOrganizationController(
 ) {
   const bodySchema = z.object({
     name: z.string(),
+    slug: z.string(),
   })
-  const { name } = bodySchema.parse(request.body)
+  const { name, slug } = bodySchema.parse(request.body)
   const service = makeCreateOrganizationService()
-  const { organization } = await service.execute({ name })
+  const { organization } = await service.execute({ name, slug })
   return reply.status(201).send(organization)
 }

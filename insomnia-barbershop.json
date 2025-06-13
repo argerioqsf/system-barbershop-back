@@ -477,7 +477,7 @@
       "url": "{{ baseURL }}/organizations",
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"name\": \"\"\n}"
+        "text": "{\n  \"name\": \"\",\n  \"slug\": \"\"\n}"
       },
       "headers": [
         {
@@ -527,7 +527,7 @@
       "url": "{{ baseURL }}/organizations/{{ organizationId }}",
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"name\": \"New Name\"\n}"
+        "text": "{\n  \"name\": \"New Name\",\n  \"slug\": \"new-slug\"\n}"
       },
       "headers": [
         {
@@ -569,7 +569,7 @@
       "url": "{{ baseURL }}/units",
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"name\": \"\",\n  \"organizationId\": \"\"\n}"
+        "text": "{\n  \"name\": \"\",\n  \"slug\": \"\",\n  \"organizationId\": \"\"\n}"
       },
       "headers": [
         {
@@ -619,7 +619,7 @@
       "url": "{{ baseURL }}/units/{{ unitId }}",
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"name\": \"New Unit\"\n}"
+        "text": "{\n  \"name\": \"New Unit\",\n  \"slug\": \"new-unit\"\n}"
       },
       "headers": [
         {
