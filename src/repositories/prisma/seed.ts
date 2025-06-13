@@ -145,6 +145,7 @@ async function main() {
       discount: 5,
       discountType: DiscountType.VALUE,
       quantity: 10,
+      unit: { connect: { id: mainUnit.id } },
     },
   })
 
@@ -229,6 +230,7 @@ async function main() {
       discount: 10,
       discountType: DiscountType.PERCENTAGE,
       quantity: 10,
+      unit: { connect: { id: mainUnit.id } },
     },
   })
 

@@ -13,6 +13,7 @@ export async function CreateCouponController(
     discountType: z.enum(['PERCENTAGE', 'VALUE']).default('PERCENTAGE'),
     imageUrl: z.string().optional(),
     quantity: z.number().optional(),
+    unitId: z.string(),
   })
   const data = bodySchema.parse(request.body)
   const service = makeCreateCouponService()
