@@ -393,7 +393,7 @@
       "url": "{{ baseURL }}/sales",
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"method\": \"CASH\",\n  \"items\": [\n    {\n      \"serviceId\": \"\",\n      \"quantity\": 1,\n      \"barberId\": \"\",\n      \"couponCode\": \"\",\n      \"price\": 0\n    }\n  ]\n}"
+        "text": "{\n  \"method\": \"CASH\",\n  \"items\": [\n    {\n      \"serviceId\": \"\",\n      \"quantity\": 1,\n      \"barberId\": \"\",\n      \"couponCode\": \"\",\n      \"price\": 0\n    }\n  ],\n  \"clientId\": \"\"\n}"
       },
       "headers": [
         {
@@ -735,8 +735,8 @@
           "value": "Bearer {{ token }}"
         }
       ]
-    }
-    ,{
+    },
+    {
       "_id": "req_cash_session_report",
       "_type": "request",
       "parentId": "fld_reports",
@@ -744,7 +744,10 @@
       "method": "GET",
       "url": "{{ baseURL }}/reports/cash-session/{sessionId}",
       "headers": [
-        {"name": "Authorization", "value": "Bearer {{ token }}"}
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     }
   ]

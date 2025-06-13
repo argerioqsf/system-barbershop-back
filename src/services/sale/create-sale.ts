@@ -4,7 +4,7 @@ import {
 } from '../../repositories/sale-repository'
 import { ServiceRepository } from '../../repositories/service-repository'
 import { CouponRepository } from '../../repositories/coupon-repository'
-import { PaymentMethod, SaleItem, TransactionType } from '@prisma/client'
+import { PaymentMethod, SaleItem, TransactionType, DiscountType } from '@prisma/client'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { CashRegisterRepository } from '@/repositories/cash-register-repository'
 import { TransactionRepository } from '@/repositories/transaction-repository'
@@ -21,6 +21,7 @@ interface CreateSaleRequest {
   userId: string
   method: PaymentMethod
   items: CreateSaleItem[]
+  clientId: string
   couponCode?: string
 }
 
@@ -42,10 +43,19 @@ export class CreateSaleService {
     userId,
     method,
     items,
+    clientId,
     couponCode,
   }: CreateSaleRequest): Promise<CreateSaleResponse> {
     const saleItems: SaleItem[] = []
-    const tempItems: { price: number; ownDiscount: boolean; data: any }[] = []
+    const tempItems: {
+      basePrice: number
+      price: number
+      discount: number
+      discountType?: DiscountType
+      porcentagemBarbeiro?: number
+      ownDiscount: boolean
+      data: any
+    }[] = []
     const user = await this.barberUserRepository.findById(userId)
     const session = await this.cashRegisterRepository.findOpenByUnit(
       user?.unitId as string,
@@ -54,11 +64,24 @@ export class CreateSaleService {
     for (const item of items) {
       const service = await this.serviceRepository.findById(item.serviceId)
       if (!service) throw new Error('Service not found')
-      let price = service.price * item.quantity
+
+      const basePrice = service.price * item.quantity
+      let price = basePrice
+      let discount = 0
+      let discountType: DiscountType | undefined
       let itemCouponConnect: any
       let ownDiscount = false
+      let porcentagemBarbeiro: number | undefined
+
+      if (item.barberId) {
+        const barber = await this.barberUserRepository.findById(item.barberId)
+        porcentagemBarbeiro = barber?.profile?.commissionPercentage
+      }
+
       if (typeof item.price === 'number') {
         price = item.price
+        discount = basePrice - price
+        discountType = DiscountType.VALUE
         ownDiscount = true
       } else if (item.couponCode) {
         const coupon = await this.couponRepository.findByCode(item.couponCode)
@@ -69,6 +92,8 @@ export class CreateSaleService {
             ? (price * coupon.discount) / 100
             : coupon.discount
         price = Math.max(price - discountAmount, 0)
+        discount = basePrice - price
+        discountType = coupon.discountType
         itemCouponConnect = { connect: { id: coupon.id } }
         await this.couponRepository.update(coupon.id, {
           quantity: { decrement: 1 },
@@ -77,7 +102,11 @@ export class CreateSaleService {
       }
 
       tempItems.push({
+        basePrice,
         price,
+        discount,
+        discountType,
+        porcentagemBarbeiro,
         ownDiscount,
         data: {
           service: { connect: { id: item.serviceId } },
@@ -103,14 +132,15 @@ export class CreateSaleService {
       for (const temp of tempItems) {
         if (temp.ownDiscount) continue
         if (coupon.discountType === 'PERCENTAGE') {
-          temp.price = Math.max(
-            temp.price - (temp.price * coupon.discount) / 100,
-            0,
-          )
+          const reduction = (temp.price * coupon.discount) / 100
+          temp.price = Math.max(temp.price - reduction, 0)
+          temp.discount += reduction
         } else if (affectedTotal > 0) {
           const part = (temp.price / affectedTotal) * coupon.discount
           temp.price = Math.max(temp.price - part, 0)
+          temp.discount += part
         }
+        temp.discountType = coupon.discountType
       }
 
       couponConnect = { connect: { id: coupon.id } }
@@ -120,7 +150,13 @@ export class CreateSaleService {
     }
 
     for (const temp of tempItems) {
-      saleItems.push({ ...temp.data, price: temp.price })
+      saleItems.push({
+        ...temp.data,
+        price: temp.price,
+        discount: temp.discount,
+        discountType: temp.discountType,
+        porcentagemBarbeiro: temp.porcentagemBarbeiro,
+      })
     }
 
     const calculatedTotal = tempItems.reduce((acc, i) => acc + i.price, 0)
@@ -139,6 +175,7 @@ export class CreateSaleService {
         total: calculatedTotal,
         method,
         user: { connect: { id: userId } },
+        client: { connect: { id: clientId } },
         unit: { connect: { id: user?.unitId } },
         session: { connect: { id: session.id } },
         items: { create: saleItems },
