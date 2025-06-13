@@ -8,13 +8,14 @@ export async function UpdateOrganizationController(
 ) {
   const bodySchema = z.object({
     name: z.string(),
+    slug: z.string().optional(),
   })
   const paramsSchema = z.object({
     id: z.string(),
   })
-  const { name } = bodySchema.parse(request.body)
+  const { name, slug } = bodySchema.parse(request.body)
   const { id } = paramsSchema.parse(request.params)
   const service = makeUpdateOrganizationService()
-  const { organization } = await service.execute({ id, name })
+  const { organization } = await service.execute({ id, name, slug })
   return reply.status(200).send(organization)
 }

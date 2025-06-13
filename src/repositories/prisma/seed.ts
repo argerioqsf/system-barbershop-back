@@ -17,18 +17,21 @@ async function main() {
   const organization = await prisma.organization.create({
     data: {
       name: 'Lobo BarberShop',
+      slug: 'lobo-barbershop',
     },
   })
 
   const organization2 = await prisma.organization.create({
     data: {
       name: 'Argerio BarberShop',
+      slug: 'argerio-barbershop',
     },
   })
 
   const mainUnit = await prisma.unit.create({
     data: {
       name: 'Main Unit',
+      slug: 'main-unit',
       organization: { connect: { id: organization.id } },
     },
   })
@@ -36,6 +39,7 @@ async function main() {
   const Unit2 = await prisma.unit.create({
     data: {
       name: 'Unit 2',
+      slug: 'unit-2',
       organization: { connect: { id: organization2.id } },
     },
   })

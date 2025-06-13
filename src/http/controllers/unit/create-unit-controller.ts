@@ -8,6 +8,7 @@ export async function CreateUnitController(
 ) {
   const bodySchema = z.object({
     name: z.string(),
+    slug: z.string(),
     organizationId: z.string(),
   })
   const data = bodySchema.parse(request.body)
