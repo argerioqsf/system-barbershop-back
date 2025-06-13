@@ -11,16 +11,28 @@ export async function CreateServiceController(
     description: z.string().optional(),
     cost: z.coerce.number(),
     price: z.coerce.number(),
-    isProduct: z.coerce.boolean().optional(),
+    isProduct: z
+      .union([z.boolean(), z.string()])
+      .transform((val) => {
+        if (typeof val === 'boolean') return val
+        return val === 'true'
+      })
+      .optional(),
   })
 
   const data = bodySchema.parse(request.body)
 
-  const imageUrl = request.file ? `/uploads/${request.file.filename}` : undefined
+  const imageUrl = request.file
+    ? `/uploads/${request.file.filename}`
+    : undefined
 
   const serviceCreator = makeCreateService()
   const unitId = (request.user as any).unitId
-  const { service } = await serviceCreator.execute({ ...data, imageUrl, unitId })
+  const { service } = await serviceCreator.execute({
+    ...data,
+    imageUrl,
+    unitId,
+  })
 
   return reply.status(201).send(service)
 }

@@ -1,4 +1,4 @@
-import { DetailedSale, SaleRepository } from '@/repositories/sale-repository'
+import { SaleRepository } from '@/repositories/sale-repository'
 import { TransactionRepository } from '@/repositories/transaction-repository'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 
@@ -53,24 +53,37 @@ export class OwnerBalanceService {
       })
     }
 
-    const transactions = await this.transactionRepository.findMany({
+    const transactionsSales = await this.transactionRepository.findMany({
       unit: { organizationId: orgId },
+      sale: {
+        isNot: null,
+      },
     })
+    const transactionsOwner =
+      await this.transactionRepository.findManyByUser(ownerId)
+    const transactions = Array.from(
+      new Map(
+        [...transactionsSales, ...transactionsOwner].map((tx) => [tx.id, tx]),
+      ).values(),
+    )
     const additions = transactions
       .filter((t) => t.type === 'ADDITION')
       .reduce((acc, transaction) => {
         if (transaction.sale) {
           const totals = transaction.sale.items.reduce(
             (t, item) => {
-              let value = item.price ?? 0
+              let value = item.price
               let percentageOwner = 100
 
               if (item.service.isProduct) t.product += value ?? 0
-              else {
+              else if (item.barberId) {
                 const barberPorcent = item.porcentagemBarbeiro ?? 100
                 const valueBarber = ((value ?? 0) * barberPorcent) / 100
                 percentageOwner = 100 - barberPorcent
                 value -= valueBarber
+                t.service += value
+              } else {
+                percentageOwner = 100
                 t.service += value
               }
               setHistory(

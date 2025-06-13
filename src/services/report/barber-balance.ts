@@ -64,15 +64,33 @@ export class BarberBalanceService {
       return serviceShare
     }
 
-    const transactions = await this.transactionRepository.findMany({
+    const transactionsSales = await this.transactionRepository.findMany({
       sale: { items: { some: { barberId } } },
     })
+    const transactionsBarber =
+      await this.transactionRepository.findManyByUser(barberId)
+    const transactions = Array.from(
+      new Map(
+        [...transactionsSales, ...transactionsBarber].map((tx) => [tx.id, tx]),
+      ).values(),
+    )
 
     const { additions, withdrawals } = transactions.reduce(
       (totals, transaction) => {
         if (transaction.type === 'ADDITION') {
-          const totalSale = saleTotal(transaction.sale)
-          totals.additions += totalSale
+          if (transaction.sale) {
+            const totalSale = saleTotal(transaction.sale)
+            totals.additions += totalSale
+          } else {
+            setHistory(
+              transaction.amount,
+              100,
+              transaction.amount,
+              'ADDITION',
+              undefined,
+            )
+            totals.additions += transaction.amount
+          }
         }
         if (transaction.type === 'WITHDRAWAL') {
           setHistory(
