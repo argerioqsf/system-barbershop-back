@@ -39,6 +39,10 @@ interface CreateSaleResponse {
   sale: DetailedSale
 }
 
+interface ConnectRelation {
+  connect: { id: string }
+}
+
 export class CreateSaleService {
   constructor(
     private saleRepository: SaleRepository,
@@ -59,11 +63,12 @@ export class CreateSaleService {
     couponCode,
   }: CreateSaleRequest): Promise<CreateSaleResponse> {
     const saleItems: SaleItem[] = []
+    let couponConnect: ConnectRelation | undefined
     const tempItems: {
       basePrice: number
       price: number
       discount: number
-      discountType?: DiscountType
+      discountType: DiscountType | null
       porcentagemBarbeiro?: number
       ownDiscount: boolean
       data: any
@@ -83,8 +88,8 @@ export class CreateSaleService {
       const basePrice = service.price * item.quantity
       let price = basePrice
       let discount = 0
-      let discountType: DiscountType | undefined
-      let itemCouponConnect: any
+      let discountType: DiscountType | null = null
+      let itemCouponConnect: { connect: { id: string } } | undefined
       let ownDiscount = false
       let porcentagemBarbeiro: number | undefined
 
@@ -142,7 +147,6 @@ export class CreateSaleService {
       })
     }
 
-    let couponConnect: any
     if (couponCode) {
       const coupon = await this.couponRepository.findByCode(couponCode)
       if (!coupon) throw new Error('Coupon not found')
@@ -151,19 +155,14 @@ export class CreateSaleService {
       }
       if (coupon.quantity <= 0) throw new Error('Coupon exhausted')
 
-      const affectedTotal = tempItems
-        .filter((i) => !i.ownDiscount)
-        .reduce((acc, i) => acc + i.price, 0)
-
       for (const temp of tempItems) {
         if (temp.ownDiscount) continue
         if (coupon.discountType === 'PERCENTAGE') {
           const reduction = (temp.price * coupon.discount) / 100
           temp.price = Math.max(temp.price - reduction, 0)
           temp.discount = coupon.discount
-        } else if (affectedTotal > 0) {
-          const part = (temp.price / affectedTotal) * coupon.discount
-          temp.price = Math.max(temp.price - part, 0)
+        } else {
+          temp.price = Math.max(temp.price - coupon.discount, 0)
           temp.discount = coupon.discount
         }
         temp.discountType = coupon.discountType
@@ -181,7 +180,7 @@ export class CreateSaleService {
         price: temp.price,
         discount: temp.discount,
         discountType: temp.discountType,
-        porcentagemBarbeiro: temp.porcentagemBarbeiro,
+        porcentagemBarbeiro: temp.porcentagemBarbeiro ?? null,
       })
     }
 
@@ -209,17 +208,21 @@ export class CreateSaleService {
         transaction: { connect: { id: transaction.id } },
       })
 
-      const org = await this.organizationRepository.findById(user?.organizationId as string)
+      const org = await this.organizationRepository.findById(
+        user?.organizationId as string,
+      )
       const ownerId = org?.ownerId
       const barberTotals: Record<string, number> = {}
       let ownerShare = 0
       for (const item of sale.items) {
-        let value = item.price ?? 0
-        if (item.service.isProduct) continue
-        if (item.barberId) {
+        const value = item.price ?? 0
+        if (item.service.isProduct) {
+          ownerShare += value
+        } else if (item.barberId) {
           const perc = item.porcentagemBarbeiro ?? 100
           const valueBarber = (value * perc) / 100
-          barberTotals[item.barberId] = (barberTotals[item.barberId] || 0) + valueBarber
+          barberTotals[item.barberId] =
+            (barberTotals[item.barberId] || 0) + valueBarber
           ownerShare += value - valueBarber
         } else {
           ownerShare += value
