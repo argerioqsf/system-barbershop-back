@@ -14,6 +14,9 @@ export async function CreateTransactionController(
   const data = bodySchema.parse(request.body)
   const userId = request.user.sub
   const service = makeCreateTransaction()
-  const { transaction } = await service.execute({ ...data, userId })
-  return reply.status(201).send(transaction)
+  const { transaction, surplusValue } = await service.execute({
+    ...data,
+    userId,
+  })
+  return reply.status(201).send({ transaction, surplusValue })
 }

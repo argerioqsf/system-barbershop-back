@@ -18,6 +18,7 @@ import { ProfilesRepository } from '@/repositories/profiles-repository'
 import { ServiceNotFromUserUnitError } from '../@errors/service-not-from-user-unit-error'
 import { BarberNotFromUserUnitError } from '../@errors/barber-not-from-user-unit-error'
 import { CouponNotFromUserUnitError } from '../@errors/coupon-not-from-user-unit-error'
+import { UnitRepository } from '@/repositories/unit-repository'
 
 interface CreateSaleItem {
   serviceId: string
@@ -53,6 +54,7 @@ export class CreateSaleService {
     private transactionRepository: TransactionRepository,
     private organizationRepository: OrganizationRepository,
     private profileRepository: ProfilesRepository,
+    private unitRepository: UnitRepository,
   ) {}
 
   async execute({
@@ -211,7 +213,7 @@ export class CreateSaleService {
       const org = await this.organizationRepository.findById(
         user?.organizationId as string,
       )
-      const ownerId = org?.ownerId
+      if (!org) throw new Error('Org not found')
       const barberTotals: Record<string, number> = {}
       let ownerShare = 0
       for (const item of sale.items) {
@@ -229,11 +231,35 @@ export class CreateSaleService {
         }
       }
       for (const [barberId, amount] of Object.entries(barberTotals)) {
+        const userBarber = sale.items.find(
+          (item) => item.barber?.id === barberId,
+        )
+        if (!userBarber) throw new Error('Barber not found')
+        if (
+          userBarber &&
+          userBarber.barber &&
+          userBarber.barber.profile &&
+          userBarber.barber.profile.totalBalance < 0
+        ) {
+          const balanceBarber = userBarber.barber.profile.totalBalance
+          const valueCalculated = balanceBarber + amount
+          if (valueCalculated <= 0) {
+            await this.unitRepository.incrementBalance(sale.unitId, amount)
+          } else {
+            await this.unitRepository.incrementBalance(
+              sale.unitId,
+              balanceBarber * -1,
+            )
+            await this.organizationRepository.incrementBalance(
+              org.id,
+              balanceBarber * -1,
+            )
+          }
+        }
         await this.profileRepository.incrementBalance(barberId, amount)
       }
-      if (ownerId) {
-        await this.profileRepository.incrementBalance(ownerId, ownerShare)
-      }
+      await this.unitRepository.incrementBalance(sale.unitId, ownerShare)
+      await this.organizationRepository.incrementBalance(org.id, ownerShare)
 
       return { sale }
     } catch (error) {

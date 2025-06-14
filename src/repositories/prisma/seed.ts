@@ -221,10 +221,6 @@ async function main() {
       amount: 100,
     },
   })
-  await prisma.profile.update({
-    where: { userId: admin.id },
-    data: { totalBalance: { increment: 100 } },
-  })
   await prisma.unit.update({
     where: { id: mainUnit.id },
     data: { totalBalance: { increment: 100 } },
@@ -243,10 +239,6 @@ async function main() {
       description: 'Sale',
       amount: 35,
     },
-  })
-  await prisma.profile.update({
-    where: { userId: client.id },
-    data: { totalBalance: { increment: 35 } },
   })
   await prisma.unit.update({
     where: { id: mainUnit.id },

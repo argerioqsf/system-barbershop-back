@@ -7,6 +7,7 @@ import { PrismaCashRegisterRepository } from '@/repositories/prisma/prisma-cash-
 import { PrismaTransactionRepository } from '@/repositories/prisma/prisma-transaction-repository'
 import { PrismaOrganizationRepository } from '@/repositories/prisma/prisma-organization-repository'
 import { PrismaProfilesRepository } from '@/repositories/prisma/prisma-profile-repository'
+import { PrismaUnitRepository } from '@/repositories/prisma/prisma-unit-repository'
 
 export function makeCreateSale() {
   const repository = new PrismaSaleRepository()
@@ -17,6 +18,7 @@ export function makeCreateSale() {
   const transactionRepository = new PrismaTransactionRepository()
   const organizationRepository = new PrismaOrganizationRepository()
   const profileRepository = new PrismaProfilesRepository()
+  const unitRepository = new PrismaUnitRepository()
   const service = new CreateSaleService(
     repository,
     serviceRepository,
@@ -26,6 +28,7 @@ export function makeCreateSale() {
     transactionRepository,
     organizationRepository,
     profileRepository,
+    unitRepository,
   )
   return service
 }

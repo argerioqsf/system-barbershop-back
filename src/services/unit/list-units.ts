@@ -11,7 +11,7 @@ export class ListUnitsService {
 
   async execute(userToken: UserToken): Promise<ListUnitsResponse> {
     if (!userToken.sub) throw new Error('User not found')
-    let units = []
+    let units: Unit[] = []
     if (userToken.role === 'ADMIN') {
       units = await this.repository.findMany()
     } else {
