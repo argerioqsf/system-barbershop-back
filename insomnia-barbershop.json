@@ -477,7 +477,7 @@
       "url": "{{ baseURL }}/organizations",
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"name\": \"\",\n  \"slug\": \"\"\n}"
+        "text": "{\n  \"name\": \"\",\n  \"slug\": \"\",\n  \"totalBalance\": 0\n}"
       },
       "headers": [
         {
@@ -569,7 +569,7 @@
       "url": "{{ baseURL }}/units",
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"name\": \"\",\n  \"slug\": \"\",\n  \"organizationId\": \"\"\n}"
+        "text": "{\n  \"name\": \"\",\n  \"slug\": \"\",\n  \"organizationId\": \"\",\n  \"totalBalance\": 0\n}"
       },
       "headers": [
         {

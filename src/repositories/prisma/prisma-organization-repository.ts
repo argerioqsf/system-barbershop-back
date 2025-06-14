@@ -25,4 +25,11 @@ export class PrismaOrganizationRepository implements OrganizationRepository {
   async delete(id: string): Promise<void> {
     await prisma.organization.delete({ where: { id } })
   }
+
+  async incrementBalance(id: string, amount: number): Promise<void> {
+    await prisma.organization.update({
+      where: { id },
+      data: { totalBalance: { increment: amount } },
+    })
+  }
 }

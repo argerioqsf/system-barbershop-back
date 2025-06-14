@@ -225,6 +225,14 @@ async function main() {
     where: { userId: admin.id },
     data: { totalBalance: { increment: 100 } },
   })
+  await prisma.unit.update({
+    where: { id: mainUnit.id },
+    data: { totalBalance: { increment: 100 } },
+  })
+  await prisma.organization.update({
+    where: { id: organization.id },
+    data: { totalBalance: { increment: 100 } },
+  })
 
   const transaction = await prisma.transaction.create({
     data: {
@@ -238,6 +246,14 @@ async function main() {
   })
   await prisma.profile.update({
     where: { userId: client.id },
+    data: { totalBalance: { increment: 35 } },
+  })
+  await prisma.unit.update({
+    where: { id: mainUnit.id },
+    data: { totalBalance: { increment: 35 } },
+  })
+  await prisma.organization.update({
+    where: { id: organization.id },
     data: { totalBalance: { increment: 35 } },
   })
 
@@ -282,6 +298,14 @@ async function main() {
   await prisma.profile.update({
     where: { userId: owner.id },
     data: { totalBalance: { increment: shareOwner } },
+  })
+  await prisma.unit.update({
+    where: { id: mainUnit.id },
+    data: { totalBalance: { increment: 35 } },
+  })
+  await prisma.organization.update({
+    where: { id: organization.id },
+    data: { totalBalance: { increment: 35 } },
   })
 
   await prisma.coupon.create({

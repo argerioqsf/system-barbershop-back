@@ -6,4 +6,5 @@ export interface OrganizationRepository {
   findMany(): Promise<Organization[]>;
   update(id: string, data: Prisma.OrganizationUpdateInput): Promise<Organization>;
   delete(id: string): Promise<void>;
+  incrementBalance(id: string, amount: number): Promise<void>;
 }
