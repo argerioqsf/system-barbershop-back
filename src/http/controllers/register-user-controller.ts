@@ -19,6 +19,7 @@ export async function registerUser(
     pix: z.string(),
     role: z.nativeEnum(Role),
     organizationId: z.string(),
+    unitId: z.string(),
   })
 
   const data = registerBodySchema.parse(request.body)

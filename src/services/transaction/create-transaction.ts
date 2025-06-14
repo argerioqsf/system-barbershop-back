@@ -35,19 +35,25 @@ export class CreateTransactionService {
     const user = await this.barberUserRepository.findById(data.userId)
     if (!user) throw new Error('User not found')
 
-    const session = await this.cashRegisterRepository.findOpenByUnit(user.unitId)
+    const session = await this.cashRegisterRepository.findOpenByUnit(
+      user.unitId,
+    )
     if (!session) throw new Error('Cash register closed')
 
     let affectedUser
     if (data.affectedUserId) {
-      affectedUser = await this.barberUserRepository.findById(data.affectedUserId)
+      affectedUser = await this.barberUserRepository.findById(
+        data.affectedUserId,
+      )
       if (!affectedUser) throw new Error('Affected user not found')
     }
 
     const transaction = await this.repository.create({
       user: { connect: { id: user.id } },
       unit: { connect: { id: user.unitId } },
-      ...(affectedUser && { affectedUser: { connect: { id: affectedUser.id } } }),
+      ...(affectedUser && {
+        affectedUser: { connect: { id: affectedUser.id } },
+      }),
       type: data.type,
       description: data.description,
       amount: data.amount,
@@ -61,52 +67,63 @@ export class CreateTransactionService {
     if (data.type === 'ADDITION' && data.amount < 0) {
       throw new Error('Negative values ​​cannot be passed on additions')
     }
+    const effectiveUser = affectedUser ?? user
     if (increment < 0) {
-      if (affectedUser) {
-        const balanceUnit = affectedUser.unit?.totalBalance ?? 0
-        const balanceUser = affectedUser.profile?.totalBalance ?? 0
-        surplusValue =
-          -increment > balanceUser
-            ? balanceUser < 0
-              ? increment
-              : balanceUser - -increment
-            : undefined
-        const remainingBalance =
-          balanceUser > 0 ? balanceUser - -increment : increment
-        if (remainingBalance < 0) {
-          const remainingBalanceRelative = -remainingBalance
-          if (
-            remainingBalanceRelative > balanceUnit &&
-            !affectedUser.unit?.allowsLoan
-          ) {
-            throw new Error('Withdrawal amount greater than unit balance')
-          }
-          await this.profileRepository.incrementBalance(affectedUser.id, increment)
-          await this.unitRepository.incrementBalance(
-            affectedUser.unitId,
-            remainingBalance,
-          )
-          await this.organizationRepository.incrementBalance(
-            affectedUser.organizationId,
-            remainingBalance,
-          )
-        } else {
-          await this.profileRepository.incrementBalance(affectedUser.id, increment)
+      // if (affectedUser) {
+      const balanceUnit = effectiveUser.unit?.totalBalance ?? 0
+      const balanceUser = effectiveUser.profile?.totalBalance ?? 0
+      surplusValue =
+        -increment > balanceUser
+          ? balanceUser < 0
+            ? increment
+            : balanceUser - -increment
+          : undefined
+      const remainingBalance =
+        balanceUser > 0 ? balanceUser - -increment : increment
+      if (remainingBalance < 0) {
+        if (!effectiveUser.unit?.allowsLoan) {
+          throw new Error('Insufficient balance for withdrawal')
         }
-      } else {
-        const balanceUnit = user.unit?.totalBalance ?? 0
-        if (-increment > balanceUnit && !user.unit?.allowsLoan) {
+        const remainingBalanceRelative = -remainingBalance
+        if (remainingBalanceRelative > balanceUnit) {
           throw new Error('Withdrawal amount greater than unit balance')
         }
-        await this.unitRepository.incrementBalance(user.unitId, increment)
+        await this.profileRepository.incrementBalance(
+          effectiveUser.id,
+          increment,
+        )
+        await this.unitRepository.incrementBalance(
+          effectiveUser.unitId,
+          remainingBalance,
+        )
         await this.organizationRepository.incrementBalance(
-          user.organizationId,
+          effectiveUser.organizationId,
+          remainingBalance,
+        )
+      } else {
+        await this.profileRepository.incrementBalance(
+          effectiveUser.id,
           increment,
         )
       }
+      // }
+      // else {
+      //   const balanceUnit = user.unit?.totalBalance ?? 0
+      //   if (-increment > balanceUnit && !user.unit?.allowsLoan) {
+      //     throw new Error('Withdrawal amount greater than unit balance')
+      //   }
+      //   await this.unitRepository.incrementBalance(user.unitId, increment)
+      //   await this.organizationRepository.incrementBalance(
+      //     user.organizationId,
+      //     increment,
+      //   )
+      // }
     } else {
       if (affectedUser) {
-        await this.profileRepository.incrementBalance(affectedUser.id, increment)
+        await this.profileRepository.incrementBalance(
+          affectedUser.id,
+          increment,
+        )
       }
       await this.unitRepository.incrementBalance(user.unitId, increment)
       await this.organizationRepository.incrementBalance(
