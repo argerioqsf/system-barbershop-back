@@ -226,6 +226,7 @@ model Organization {
   owner     User?    @relation("OrganizationOwner", fields: [ownerId], references: [id])
   users     User[]
   units     Unit[]
+  totalBalance Float    @default(0)
   createdAt DateTime @default(now())
 
   @@map("organizations")
@@ -236,6 +237,7 @@ model Unit {
   name           String
   slug           String                @unique
   organizationId String
+  totalBalance   Float                 @default(0)
   services       Service[]
   appointments   Appointment[]
   sales          Sale[]

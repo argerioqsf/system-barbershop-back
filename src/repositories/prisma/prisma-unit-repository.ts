@@ -26,4 +26,11 @@ export class PrismaUnitRepository implements UnitRepository {
   async delete(id: string): Promise<void> {
     await prisma.unit.delete({ where: { id } })
   }
+
+  async incrementBalance(id: string, amount: number): Promise<void> {
+    await prisma.unit.update({
+      where: { id },
+      data: { totalBalance: { increment: amount } },
+    })
+  }
 }

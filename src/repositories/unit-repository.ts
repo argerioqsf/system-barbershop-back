@@ -7,4 +7,5 @@ export interface UnitRepository {
   findMany(): Promise<Unit[]>
   update(id: string, data: Prisma.UnitUpdateInput): Promise<Unit>
   delete(id: string): Promise<void>
+  incrementBalance(id: string, amount: number): Promise<void>
 }
