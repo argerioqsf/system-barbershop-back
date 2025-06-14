@@ -11,6 +11,7 @@ export async function CreateUnitController(
     name: z.string(),
     slug: z.string(),
     organizationId: z.string().optional(),
+    allowsLoan: z.boolean().optional(),
   })
   const data = bodySchema.parse(request.body)
   const service = makeCreateUnitService()

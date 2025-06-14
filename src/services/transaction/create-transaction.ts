@@ -8,6 +8,7 @@ import { OrganizationRepository } from '@/repositories/organization-repository'
 
 interface CreateTransactionRequest {
   userId: string
+  affectedUserId?: string
   type: TransactionType
   description: string
   amount: number
@@ -33,13 +34,20 @@ export class CreateTransactionService {
   ): Promise<CreateTransactionResponse> {
     const user = await this.barberUserRepository.findById(data.userId)
     if (!user) throw new Error('User not found')
-    const session = await this.cashRegisterRepository.findOpenByUnit(
-      user?.unitId as string,
-    )
+
+    const session = await this.cashRegisterRepository.findOpenByUnit(user.unitId)
     if (!session) throw new Error('Cash register closed')
+
+    let affectedUser
+    if (data.affectedUserId) {
+      affectedUser = await this.barberUserRepository.findById(data.affectedUserId)
+      if (!affectedUser) throw new Error('Affected user not found')
+    }
+
     const transaction = await this.repository.create({
       user: { connect: { id: user.id } },
       unit: { connect: { id: user.unitId } },
+      ...(affectedUser && { affectedUser: { connect: { id: affectedUser.id } } }),
       type: data.type,
       description: data.description,
       amount: data.amount,
@@ -54,35 +62,52 @@ export class CreateTransactionService {
       throw new Error('Negative values ​​cannot be passed on additions')
     }
     if (increment < 0) {
-      const balanceUnit = user.unit?.totalBalance ?? 0
-      const balanceUser = user.profile?.totalBalance ?? 0
-      surplusValue =
-        -1 * increment > balanceUser
-          ? balanceUser < 0
-            ? increment
-            : balanceUser - increment * -1
-          : undefined
-      const incrementRelative = -1 * increment
-      const remainingBalance =
-        balanceUser > 0 ? balanceUser - incrementRelative : increment
-      if (remainingBalance < 0) {
-        const remainingBalanceRelative = remainingBalance * -1
-        if (remainingBalanceRelative > balanceUnit) {
+      if (affectedUser) {
+        const balanceUnit = affectedUser.unit?.totalBalance ?? 0
+        const balanceUser = affectedUser.profile?.totalBalance ?? 0
+        surplusValue =
+          -increment > balanceUser
+            ? balanceUser < 0
+              ? increment
+              : balanceUser - -increment
+            : undefined
+        const remainingBalance =
+          balanceUser > 0 ? balanceUser - -increment : increment
+        if (remainingBalance < 0) {
+          const remainingBalanceRelative = -remainingBalance
+          if (
+            remainingBalanceRelative > balanceUnit &&
+            !affectedUser.unit?.allowsLoan
+          ) {
+            throw new Error('Withdrawal amount greater than unit balance')
+          }
+          await this.profileRepository.incrementBalance(affectedUser.id, increment)
+          await this.unitRepository.incrementBalance(
+            affectedUser.unitId,
+            remainingBalance,
+          )
+          await this.organizationRepository.incrementBalance(
+            affectedUser.organizationId,
+            remainingBalance,
+          )
+        } else {
+          await this.profileRepository.incrementBalance(affectedUser.id, increment)
+        }
+      } else {
+        const balanceUnit = user.unit?.totalBalance ?? 0
+        if (-increment > balanceUnit && !user.unit?.allowsLoan) {
           throw new Error('Withdrawal amount greater than unit balance')
         }
-        await this.profileRepository.incrementBalance(user.id, increment)
-        await this.unitRepository.incrementBalance(
-          user.unitId,
-          remainingBalance,
-        )
+        await this.unitRepository.incrementBalance(user.unitId, increment)
         await this.organizationRepository.incrementBalance(
           user.organizationId,
-          remainingBalance,
+          increment,
         )
-      } else {
-        await this.profileRepository.incrementBalance(user.id, increment)
       }
     } else {
+      if (affectedUser) {
+        await this.profileRepository.incrementBalance(affectedUser.id, increment)
+      }
       await this.unitRepository.incrementBalance(user.unitId, increment)
       await this.organizationRepository.incrementBalance(
         user.organizationId,

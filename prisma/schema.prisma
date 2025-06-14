@@ -47,6 +47,7 @@ model User {
   clientSales         Sale[]                @relation("SaleClient")
   saleItems           SaleItem[]
   transactions        Transaction[]
+  affectedTransactions Transaction[] @relation("AffectedUser")
   sessions            CashRegisterSession[]
   passwordResetTokens PasswordResetToken[]
   ownedOrganizations  Organization[]        @relation("OrganizationOwner")
@@ -112,6 +113,7 @@ model Service {
 model Transaction {
   id                    String          @id @default(uuid())
   userId                String
+  affectedUserId        String?
   unitId                String
   cashRegisterSessionId String?
   type                  TransactionType
@@ -122,6 +124,7 @@ model Transaction {
   sale Sale?
 
   user    User                 @relation(fields: [userId], references: [id])
+  affectedUser User?           @relation("AffectedUser", fields: [affectedUserId], references: [id])
   unit    Unit                 @relation(fields: [unitId], references: [id])
   session CashRegisterSession? @relation(fields: [cashRegisterSessionId], references: [id])
 
@@ -238,6 +241,7 @@ model Unit {
   slug           String                @unique
   organizationId String
   totalBalance   Float                 @default(0)
+  allowsLoan     Boolean               @default(false)
   services       Service[]
   appointments   Appointment[]
   sales          Sale[]

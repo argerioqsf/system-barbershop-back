@@ -30,6 +30,20 @@ export async function UpdateBarberUserController(
   const { id } = paramsSchema.parse(request.params)
   const data = bodySchema.parse(request.body)
   const service = makeUpdateUserService()
+  const userToken = request.user as { sub: string; organizationId: string; unitId: string; role: Role }
   const result = await service.execute({ id, ...data })
+
+  if (id === userToken.sub && (data.unitId || data.role)) {
+    const token = await reply.jwtSign(
+      {
+        unitId: result.user.unitId,
+        organizationId: result.user.organizationId,
+        role: result.profile?.role ?? userToken.role,
+      },
+      { sign: { sub: result.user.id } },
+    )
+    return reply.status(200).send({ ...result, token })
+  }
+
   return reply.status(200).send(result)
 }

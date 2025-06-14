@@ -9,13 +9,14 @@ export async function UpdateUnitController(
   const bodySchema = z.object({
     name: z.string(),
     slug: z.string().optional(),
+    allowsLoan: z.boolean().optional(),
   })
   const paramsSchema = z.object({
     id: z.string(),
   })
-  const { name, slug } = bodySchema.parse(request.body)
+  const { name, slug, allowsLoan } = bodySchema.parse(request.body)
   const { id } = paramsSchema.parse(request.params)
   const service = makeUpdateUnitService()
-  const { unit } = await service.execute({ id, name, slug })
+  const { unit } = await service.execute({ id, name, slug, allowsLoan })
   return reply.status(200).send(unit)
 }
