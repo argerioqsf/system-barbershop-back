@@ -1,4 +1,5 @@
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
+import { UnitRepository } from '@/repositories/unit-repository'
 import { Profile, Role, User } from '@prisma/client'
 import { hash } from 'bcryptjs'
 
@@ -12,7 +13,6 @@ interface RegisterUserRequest {
   birthday: string
   pix: string
   role: Role
-  organizationId: string
   unitId: string
 }
 
@@ -22,15 +22,19 @@ interface RegisterUserResponse {
 }
 
 export class RegisterUserService {
-  constructor(private repository: BarberUsersRepository) {}
+  constructor(
+    private repository: BarberUsersRepository,
+    private unitRepository: UnitRepository,
+  ) {}
 
   async execute(data: RegisterUserRequest): Promise<RegisterUserResponse> {
-    const password_hash = await hash(data.password, 6)
-
     const existing = await this.repository.findByEmail(data.email)
     if (existing) {
       throw new Error('User already exists')
     }
+    const password_hash = await hash(data.password, 6)
+    const unit = await this.unitRepository.findById(data.unitId)
+    if (!unit) throw new Error('Unit not exists')
 
     const { user, profile } = await this.repository.create(
       {
@@ -38,8 +42,8 @@ export class RegisterUserService {
         email: data.email,
         password: password_hash,
         active: false,
-        organization: { connect: { id: data.organizationId } },
-        unit: { connect: { id: data.unitId } },
+        organization: { connect: { id: unit.organizationId } },
+        unit: { connect: { id: unit.id } },
       },
       {
         phone: data.phone,

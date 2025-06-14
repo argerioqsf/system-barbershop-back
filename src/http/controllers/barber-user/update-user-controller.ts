@@ -16,6 +16,8 @@ export async function UpdateBarberUserController(
     birthday: z.string().optional(),
     pix: z.string().optional(),
     role: z.nativeEnum(Role).optional(),
+    unitId: z.string().optional(),
+    commissionPercentage: z.number().optional(),
     active: z
       .union([z.boolean(), z.string()])
       .transform((val) => {

@@ -17,17 +17,20 @@ export async function CreateBarberUserController(
     genre: z.string(),
     birthday: z.string(),
     pix: z.string(),
+    unitId: z.string().optional(),
     role: z.nativeEnum(Role),
   })
 
   const data = bodySchema.parse(request.body)
   const service = makeRegisterUserService()
-  const unitId = (request.user as UserToken).unitId
-  const organizationId = (request.user as UserToken).organizationId
+  const userToken = request.user as UserToken
+  let unitId = userToken.unitId
+  if (userToken.role === 'ADMIN') {
+    unitId = data.unitId ?? unitId
+  }
   const { user, profile } = await service.execute({
     ...data,
     unitId,
-    organizationId,
   })
   return reply.status(201).send({ user, profile })
 }
