@@ -67,6 +67,7 @@ model Profile {
   pix                  String
   role                 Role     @default(CLIENT)
   commissionPercentage Float    @default(100)
+  totalBalance         Float    @default(0)
   userId               String   @unique
   user                 User     @relation(fields: [userId], references: [id])
   createdAt            DateTime @default(now())
