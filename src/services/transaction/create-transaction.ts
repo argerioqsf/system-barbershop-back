@@ -111,32 +111,40 @@ export class CreateTransactionService {
           )
         }
       } else {
-        if (balanceUser < 0) {
-          const remainingBalance = balanceUser - increment
-          const valueForPay = remainingBalance < 0 ? increment : balanceUser
-          await this.unitRepository.incrementBalance(
-            effectiveUser.unitId,
-            valueForPay,
-          )
-          await this.organizationRepository.incrementBalance(
-            effectiveUser.organizationId,
-            valueForPay,
-          )
-          await this.profileRepository.incrementBalance(
-            effectiveUser.id,
-            valueForPay,
-          )
+        if (affectedUser) {
+          if (balanceUser < 0) {
+            const remainingBalance = balanceUser - increment
+            const valueForPay = remainingBalance < 0 ? increment : balanceUser
+            await this.unitRepository.incrementBalance(
+              affectedUser.unitId,
+              valueForPay,
+            )
+            await this.organizationRepository.incrementBalance(
+              affectedUser.organizationId,
+              valueForPay,
+            )
+            await this.profileRepository.incrementBalance(
+              affectedUser.id,
+              valueForPay,
+            )
+          } else {
+            await this.unitRepository.incrementBalance(
+              affectedUser.unitId,
+              increment,
+            )
+            await this.organizationRepository.incrementBalance(
+              affectedUser.organizationId,
+              increment,
+            )
+            await this.profileRepository.incrementBalance(
+              affectedUser.id,
+              increment,
+            )
+          }
         } else {
-          await this.unitRepository.incrementBalance(
-            effectiveUser.unitId,
-            increment,
-          )
+          await this.unitRepository.incrementBalance(user.unitId, increment)
           await this.organizationRepository.incrementBalance(
-            effectiveUser.organizationId,
-            increment,
-          )
-          await this.profileRepository.incrementBalance(
-            effectiveUser.id,
+            user.organizationId,
             increment,
           )
         }
