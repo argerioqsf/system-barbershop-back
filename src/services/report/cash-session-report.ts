@@ -36,10 +36,11 @@ export class CashSessionReportService {
     for (const sale of session.sales) {
       const totals = sale.items.reduce(
         (t, item) => {
-          const value = item.service.price * item.quantity
-          if (item.service.isProduct) {
+          const price = item.service?.price ?? item.product?.price ?? 0
+          const value = price * item.quantity
+          if (item.product) {
             t.product += value
-          } else {
+          } else if (item.service) {
             t.service += value
             t.byService[item.service.name] =
               (t.byService[item.service.name] || 0) + value

@@ -9,6 +9,7 @@ import { ZodError } from 'zod'
 import { env } from './env'
 import { profileRoute } from './http/controllers/profile/route'
 import { barberShopServiceRoute } from './http/controllers/barber-shop/route'
+import { productRoute } from './http/controllers/product/route'
 import { appointmentRoute } from './http/controllers/appointment/route'
 import { barberUserRoute } from './http/controllers/barber-user/route'
 import { couponRoute } from './http/controllers/coupon/route'
@@ -115,6 +116,7 @@ app.register(fastifyJwt, {
 app.register(authRoute)
 app.register(sessionRoute)
 app.register(profileRoute)
+app.register(productRoute)
 app.register(barberShopServiceRoute)
 app.register(appointmentRoute)
 app.register(barberUserRoute)

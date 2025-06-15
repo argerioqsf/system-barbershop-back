@@ -1,32 +1,26 @@
-import { makeCreateService } from '@/services/@factories/barbershop/make-create-service'
+import { makeCreateProductService } from '@/services/@factories/product/make-create-product'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { UserToken } from '../authenticate-controller'
 
-export async function CreateServiceController(
+export async function CreateProductController(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
   const bodySchema = z.object({
     name: z.string(),
     description: z.string().optional(),
+    quantity: z.coerce.number().optional(),
     cost: z.coerce.number(),
     price: z.coerce.number(),
   })
-
   const data = bodySchema.parse(request.body)
 
-  const imageUrl = request.file
-    ? `/uploads/${request.file.filename}`
-    : undefined
+  const imageUrl = request.file ? `/uploads/${request.file.filename}` : undefined
 
-  const serviceCreator = makeCreateService()
+  const service = makeCreateProductService()
   const unitId = (request.user as UserToken).unitId
-  const { service } = await serviceCreator.execute({
-    ...data,
-    imageUrl,
-    unitId,
-  })
+  const { product } = await service.execute({ ...data, imageUrl, unitId })
 
-  return reply.status(201).send(service)
+  return reply.status(201).send(product)
 }

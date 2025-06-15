@@ -3,6 +3,7 @@ import {
   DetailedSale,
 } from '../../repositories/sale-repository'
 import { ServiceRepository } from '../../repositories/service-repository'
+import { ProductRepository } from '../../repositories/product-repository'
 import { CouponRepository } from '../../repositories/coupon-repository'
 import {
   DiscountType,
@@ -21,7 +22,8 @@ import { CouponNotFromUserUnitError } from '../@errors/coupon-not-from-user-unit
 import { UnitRepository } from '@/repositories/unit-repository'
 
 interface CreateSaleItem {
-  serviceId: string
+  serviceId?: string
+  productId?: string
   quantity: number
   barberId?: string
   couponCode?: string
@@ -48,6 +50,7 @@ export class CreateSaleService {
   constructor(
     private saleRepository: SaleRepository,
     private serviceRepository: ServiceRepository,
+    private productRepository: ProductRepository,
     private couponRepository: CouponRepository,
     private barberUserRepository: BarberUsersRepository,
     private cashRegisterRepository: CashRegisterRepository,
@@ -80,14 +83,32 @@ export class CreateSaleService {
       user?.unitId as string,
     )
     if (!session) throw new Error('Cash register closed')
+    const productsToUpdate: { id: string; quantity: number }[] = []
     for (const item of items) {
-      const service = await this.serviceRepository.findById(item.serviceId)
-      if (!service) throw new Error('Service not found')
-      if (service.unitId !== user?.unitId) {
-        throw new ServiceNotFromUserUnitError()
+      if ((item.serviceId ? 1 : 0) + (item.productId ? 1 : 0) !== 1) {
+        throw new Error('Item must have serviceId or productId')
       }
-
-      const basePrice = service.price * item.quantity
+      let basePrice = 0
+      const dataItem: any = { quantity: item.quantity }
+      if (item.serviceId) {
+        const service = await this.serviceRepository.findById(item.serviceId)
+        if (!service) throw new Error('Service not found')
+        if (service.unitId !== user?.unitId) {
+          throw new ServiceNotFromUserUnitError()
+        }
+        basePrice = service.price * item.quantity
+        dataItem.service = { connect: { id: item.serviceId } }
+      } else if (item.productId) {
+        const product = await this.productRepository.findById(item.productId)
+        if (!product) throw new Error('Product not found')
+        if (product.unitId !== user?.unitId) {
+          throw new ServiceNotFromUserUnitError()
+        }
+        if (product.quantity < item.quantity) throw new Error('Insufficient stock')
+        basePrice = product.price * item.quantity
+        dataItem.product = { connect: { id: item.productId } }
+        productsToUpdate.push({ id: item.productId, quantity: item.quantity })
+      }
       let price = basePrice
       let discount = 0
       let discountType: DiscountType | null = null
@@ -139,8 +160,7 @@ export class CreateSaleService {
         porcentagemBarbeiro,
         ownDiscount,
         data: {
-          service: { connect: { id: item.serviceId } },
-          quantity: item.quantity,
+          ...dataItem,
           barber: item.barberId
             ? { connect: { id: item.barberId } }
             : undefined,
@@ -223,7 +243,7 @@ export class CreateSaleService {
       let ownerShare = 0
       for (const item of sale.items) {
         const value = item.price ?? 0
-        if (item.service.isProduct) {
+        if (item.product) {
           ownerShare += value
         } else if (item.barberId) {
           const perc = item.porcentagemBarbeiro ?? 100
@@ -261,7 +281,12 @@ export class CreateSaleService {
             )
           }
         }
-        await this.profileRepository.incrementBalance(barberId, amount)
+      await this.profileRepository.incrementBalance(barberId, amount)
+      }
+      for (const prod of productsToUpdate) {
+        await this.productRepository.update(prod.id, {
+          quantity: { decrement: prod.quantity },
+        })
       }
       await this.unitRepository.incrementBalance(sale.unitId, ownerShare)
       await this.organizationRepository.incrementBalance(org.id, ownerShare)

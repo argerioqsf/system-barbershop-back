@@ -4,6 +4,7 @@ import {
   Sale,
   SaleItem,
   Service,
+  Product,
   User,
   Coupon,
   Transaction,
@@ -19,6 +20,8 @@ export class PrismaSaleRepository implements SaleRepository {
         items: {
           include: {
             service: true,
+            product: true,
+            product: true,
             barber: { include: { profile: true } },
             coupon: true,
           },
@@ -39,6 +42,7 @@ export class PrismaSaleRepository implements SaleRepository {
         items: {
           include: {
             service: true,
+            product: true,
             barber: { include: { profile: true } },
             coupon: true,
           },
@@ -59,6 +63,7 @@ export class PrismaSaleRepository implements SaleRepository {
         items: {
           include: {
             service: true,
+            product: true,
             barber: { include: { profile: true } },
             coupon: true,
           },
@@ -79,6 +84,7 @@ export class PrismaSaleRepository implements SaleRepository {
         items: {
           include: {
             service: true,
+            product: true,
             barber: { include: { profile: true } },
             coupon: true,
           },
@@ -99,6 +105,7 @@ export class PrismaSaleRepository implements SaleRepository {
         items: {
           include: {
             service: true,
+            product: true,
             barber: { include: { profile: true } },
             coupon: true,
           },
@@ -119,6 +126,7 @@ export class PrismaSaleRepository implements SaleRepository {
         items: {
           include: {
             service: true,
+            product: true,
             barber: { include: { profile: true } },
             coupon: true,
           },
@@ -139,6 +147,7 @@ export class PrismaSaleRepository implements SaleRepository {
         items: {
           include: {
             service: true,
+            product: true,
             barber: { include: { profile: true } },
             coupon: true,
           },

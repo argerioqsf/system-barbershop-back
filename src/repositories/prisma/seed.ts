@@ -170,13 +170,13 @@ async function main() {
     },
   })
 
-  const shampoo = await prisma.service.create({
+  const shampoo = await prisma.product.create({
     data: {
       name: 'Shampoo',
       description: 'Hair shampoo',
       cost: 5,
       price: 15,
-      isProduct: true,
+      quantity: 10,
       unit: { connect: { id: mainUnit.id } },
     },
   })
@@ -269,7 +269,7 @@ async function main() {
             porcentagemBarbeiro: 70,
           },
           {
-            serviceId: shampoo.id,
+            productId: shampoo.id,
             quantity: 1,
             couponId: itemCoupon.id,
             price: 10,
@@ -280,6 +280,10 @@ async function main() {
       },
       transaction: { connect: { id: transaction.id } },
     },
+  })
+  await prisma.product.update({
+    where: { id: shampoo.id },
+    data: { quantity: { decrement: 1 } },
   })
   const shareBarber = (25 * 70) / 100
   const shareOwner = 25 - shareBarber
