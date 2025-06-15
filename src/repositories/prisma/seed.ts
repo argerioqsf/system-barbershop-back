@@ -3,6 +3,7 @@ import {
   PrismaClient,
   Role,
   PaymentMethod,
+  PaymentStatus,
   TransactionType,
   DiscountType,
 } from '@prisma/client'
@@ -257,6 +258,7 @@ async function main() {
       session: { connect: { id: cashSession.id } },
       total: 35,
       method: PaymentMethod.CASH,
+      paymentStatus: PaymentStatus.PAID,
       items: {
         create: [
           {
@@ -279,6 +281,27 @@ async function main() {
         ],
       },
       transaction: { connect: { id: transaction.id } },
+    },
+  })
+  const pendingSale = await prisma.sale.create({
+    data: {
+      user: { connect: { id: admin.id } },
+      client: { connect: { id: client.id } },
+      unit: { connect: { id: mainUnit.id } },
+      total: 20,
+      method: PaymentMethod.CASH,
+      paymentStatus: PaymentStatus.PENDING,
+      items: {
+        create: [
+          {
+            serviceId: haircut.id,
+            quantity: 1,
+            barberId: barber.id,
+            price: 20,
+            porcentagemBarbeiro: 70,
+          },
+        ],
+      },
     },
   })
   await prisma.product.update({
@@ -328,6 +351,7 @@ async function main() {
     appointment,
     cashSession,
     sale,
+    pendingSale,
     itemCoupon,
     owner2,
   })

@@ -32,6 +32,11 @@ enum DiscountType {
   VALUE
 }
 
+enum PaymentStatus {
+  PAID
+  PENDING
+}
+
 model User {
   id                   String                @id @default(uuid())
   name                 String
@@ -153,9 +158,10 @@ model Sale {
   unitId        String
   sessionId     String?
   couponId      String?
-  transactionId String        @unique
+  transactionId String?       @unique
   total         Float
   method        PaymentMethod
+  paymentStatus PaymentStatus @default(PAID)
   createdAt     DateTime      @default(now())
 
   user        User                 @relation(fields: [userId], references: [id])
@@ -164,7 +170,7 @@ model Sale {
   unit        Unit                 @relation(fields: [unitId], references: [id])
   coupon      Coupon?              @relation(fields: [couponId], references: [id])
   session     CashRegisterSession? @relation(fields: [sessionId], references: [id])
-  transaction Transaction          @relation(fields: [transactionId], references: [id])
+  transaction Transaction?         @relation(fields: [transactionId], references: [id])
 
   @@map("sales")
 }

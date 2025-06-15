@@ -10,6 +10,8 @@ import {
   PaymentMethod,
   SaleItem,
   TransactionType,
+  PaymentStatus,
+  Transaction,
 } from '@prisma/client'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { CashRegisterRepository } from '@/repositories/cash-register-repository'
@@ -36,6 +38,7 @@ interface CreateSaleRequest {
   items: CreateSaleItem[]
   clientId: string
   couponCode?: string
+  paymentStatus?: PaymentStatus
 }
 
 interface CreateSaleResponse {
@@ -66,6 +69,7 @@ export class CreateSaleService {
     items,
     clientId,
     couponCode,
+    paymentStatus = PaymentStatus.PAID,
   }: CreateSaleRequest): Promise<CreateSaleResponse> {
     const saleItems: SaleItem[] = []
     let couponConnect: ConnectRelation | undefined
@@ -82,7 +86,8 @@ export class CreateSaleService {
     const session = await this.cashRegisterRepository.findOpenByUnit(
       user?.unitId as string,
     )
-    if (!session) throw new Error('Cash register closed')
+    if (!session && paymentStatus === PaymentStatus.PAID)
+      throw new Error('Cash register closed')
     const productsToUpdate: { id: string; quantity: number }[] = []
     for (const item of items) {
       if ((item.serviceId ? 1 : 0) + (item.productId ? 1 : 0) !== 1) {
@@ -214,87 +219,96 @@ export class CreateSaleService {
 
     const calculatedTotal = tempItems.reduce((acc, i) => acc + i.price, 0)
 
-    const transaction = await this.transactionRepository.create({
-      user: { connect: { id: userId } },
-      unit: { connect: { id: user?.unitId } },
-      session: { connect: { id: session.id } },
-      type: TransactionType.ADDITION,
-      description: 'Sale',
-      amount: calculatedTotal,
-    })
+    let transaction: Transaction | null = null
+    if (paymentStatus === PaymentStatus.PAID) {
+      transaction = await this.transactionRepository.create({
+        user: { connect: { id: userId } },
+        unit: { connect: { id: user?.unitId } },
+        session: { connect: { id: session!.id } },
+        type: TransactionType.ADDITION,
+        description: 'Sale',
+        amount: calculatedTotal,
+      })
+    }
 
     try {
       const sale = await this.saleRepository.create({
         total: calculatedTotal,
         method,
+        paymentStatus,
         user: { connect: { id: userId } },
         client: { connect: { id: clientId } },
         unit: { connect: { id: user?.unitId } },
-        session: { connect: { id: session.id } },
+        session:
+          paymentStatus === PaymentStatus.PAID && session
+            ? { connect: { id: session.id } }
+            : undefined,
         items: { create: saleItems },
         coupon: couponConnect,
-        transaction: { connect: { id: transaction.id } },
+        transaction: transaction ? { connect: { id: transaction.id } } : undefined,
       })
 
-      const org = await this.organizationRepository.findById(
-        user?.organizationId as string,
-      )
-      if (!org) throw new Error('Org not found')
-      const barberTotals: Record<string, number> = {}
-      let ownerShare = 0
-      for (const item of sale.items) {
-        const value = item.price ?? 0
-        if (item.product) {
-          ownerShare += value
-        } else if (item.barberId) {
-          const perc = item.porcentagemBarbeiro ?? 100
-          const valueBarber = (value * perc) / 100
-          barberTotals[item.barberId] =
-            (barberTotals[item.barberId] || 0) + valueBarber
-          ownerShare += value - valueBarber
-        } else {
-          ownerShare += value
-        }
-      }
-      for (const [barberId, amount] of Object.entries(barberTotals)) {
-        const userBarber = sale.items.find(
-          (item) => item.barber?.id === barberId,
+      if (paymentStatus === PaymentStatus.PAID) {
+        const org = await this.organizationRepository.findById(
+          user?.organizationId as string,
         )
-        if (!userBarber) throw new Error('Barber not found')
-        if (
-          userBarber &&
-          userBarber.barber &&
-          userBarber.barber.profile &&
-          userBarber.barber.profile.totalBalance < 0
-        ) {
-          const balanceBarber = userBarber.barber.profile.totalBalance
-          const valueCalculated = balanceBarber + amount
-          if (valueCalculated <= 0) {
-            await this.unitRepository.incrementBalance(sale.unitId, amount)
+        if (!org) throw new Error('Org not found')
+        const barberTotals: Record<string, number> = {}
+        let ownerShare = 0
+        for (const item of sale.items) {
+          const value = item.price ?? 0
+          if (item.product) {
+            ownerShare += value
+          } else if (item.barberId) {
+            const perc = item.porcentagemBarbeiro ?? 100
+            const valueBarber = (value * perc) / 100
+            barberTotals[item.barberId] =
+              (barberTotals[item.barberId] || 0) + valueBarber
+            ownerShare += value - valueBarber
           } else {
-            await this.unitRepository.incrementBalance(
-              sale.unitId,
-              balanceBarber * -1,
-            )
-            await this.organizationRepository.incrementBalance(
-              org.id,
-              balanceBarber * -1,
-            )
+            ownerShare += value
           }
         }
-        await this.profileRepository.incrementBalance(barberId, amount)
+        for (const [barberId, amount] of Object.entries(barberTotals)) {
+          const userBarber = sale.items.find(
+            (item) => item.barber?.id === barberId,
+          )
+          if (!userBarber) throw new Error('Barber not found')
+          if (
+            userBarber &&
+            userBarber.barber &&
+            userBarber.barber.profile &&
+            userBarber.barber.profile.totalBalance < 0
+          ) {
+            const balanceBarber = userBarber.barber.profile.totalBalance
+            const valueCalculated = balanceBarber + amount
+            if (valueCalculated <= 0) {
+              await this.unitRepository.incrementBalance(sale.unitId, amount)
+            } else {
+              await this.unitRepository.incrementBalance(
+                sale.unitId,
+                balanceBarber * -1,
+              )
+              await this.organizationRepository.incrementBalance(
+                org.id,
+                balanceBarber * -1,
+              )
+            }
+          }
+          await this.profileRepository.incrementBalance(barberId, amount)
+        }
+        await this.unitRepository.incrementBalance(sale.unitId, ownerShare)
+        await this.organizationRepository.incrementBalance(org.id, ownerShare)
       }
       for (const prod of productsToUpdate) {
         await this.productRepository.update(prod.id, {
           quantity: { decrement: prod.quantity },
         })
       }
-      await this.unitRepository.incrementBalance(sale.unitId, ownerShare)
-      await this.organizationRepository.incrementBalance(org.id, ownerShare)
 
       return { sale }
     } catch (error) {
-      await this.transactionRepository.delete(transaction.id)
+      if (transaction) await this.transactionRepository.delete(transaction.id)
       throw error
     }
   }

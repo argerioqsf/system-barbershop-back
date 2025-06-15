@@ -503,7 +503,7 @@
       "url": "{{ baseURL }}/sales",
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"method\": \"CASH\",\n  \"items\": [\n    {\n      \"serviceId\": \"\",\n      \"quantity\": 1,\n      \"barberId\": \"\",\n      \"couponCode\": \"\",\n      \"price\": 0\n    }\n  ],\n  \"clientId\": \"\"\n}"
+        "text": "{\n  \"method\": \"CASH\",\n  \"items\": [\n    {\n      \"serviceId\": \"\",\n      \"quantity\": 1,\n      \"barberId\": \"\",\n      \"couponCode\": \"\",\n      \"price\": 0\n    }\n  ],\n  \"clientId\": \"\",\n  \"paymentStatus\": \"PAID\"\n}"
       },
       "headers": [
         {
@@ -524,6 +524,28 @@
       "method": "GET",
       "url": "{{ baseURL }}/sales",
       "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_set_sale_status",
+      "_type": "request",
+      "parentId": "fld_sales",
+      "name": "Set sale status",
+      "method": "PATCH",
+      "url": "{{ baseURL }}/sales/{{ saleId }}/status",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"paymentStatus\": \"PAID\"\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
         {
           "name": "Authorization",
           "value": "Bearer {{ token }}"
