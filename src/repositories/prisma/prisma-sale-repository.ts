@@ -1,15 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import {
-  Prisma,
-  Sale,
-  SaleItem,
-  Service,
-  Product,
-  User,
-  Coupon,
-  Transaction,
-  DiscountType,
-} from '@prisma/client'
+import { Prisma } from '@prisma/client'
 import { SaleRepository, DetailedSale } from '../sale-repository'
 
 export class PrismaSaleRepository implements SaleRepository {
@@ -20,7 +10,6 @@ export class PrismaSaleRepository implements SaleRepository {
         items: {
           include: {
             service: true,
-            product: true,
             product: true,
             barber: { include: { profile: true } },
             coupon: true,
