@@ -150,6 +150,10 @@ export class CreateSaleService {
     }
 
     if (couponCode) {
+      const affectedTotal = tempItems
+        .filter((i) => !i.ownDiscount)
+        .reduce((acc, i) => acc + i.price, 0)
+
       const coupon = await this.couponRepository.findByCode(couponCode)
       if (!coupon) throw new Error('Coupon not found')
       if (coupon.unitId !== user?.unitId) {
@@ -163,9 +167,10 @@ export class CreateSaleService {
           const reduction = (temp.price * coupon.discount) / 100
           temp.price = Math.max(temp.price - reduction, 0)
           temp.discount = coupon.discount
-        } else {
-          temp.price = Math.max(temp.price - coupon.discount, 0)
-          temp.discount = coupon.discount
+        } else if (affectedTotal > 0) {
+          const part = (temp.price / affectedTotal) * coupon.discount
+          temp.price = Math.max(temp.price - part, 0)
+          temp.discount = part
         }
         temp.discountType = coupon.discountType
       }
