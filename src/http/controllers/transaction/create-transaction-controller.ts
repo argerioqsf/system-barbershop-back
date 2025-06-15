@@ -15,12 +15,7 @@ export async function CreateTransactionController(
   })
   const data = bodySchema.parse(request.body)
   const user = request.user as UserToken
-  if (
-    data.affectedUserId &&
-    data.affectedUserId !== user.sub &&
-    user.role !== 'ADMIN' &&
-    user.role !== 'OWNER'
-  ) {
+  if (data.affectedUserId && user.role !== 'ADMIN' && user.role !== 'OWNER') {
     return reply.status(403).send({ message: 'Unauthorized' })
   }
   const userId = user.sub

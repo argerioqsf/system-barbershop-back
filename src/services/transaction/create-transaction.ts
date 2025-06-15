@@ -2,7 +2,7 @@ import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { CashRegisterRepository } from '@/repositories/cash-register-repository'
 import { TransactionRepository } from '@/repositories/transaction-repository'
 import { ProfilesRepository } from '@/repositories/profiles-repository'
-import { Transaction, TransactionType, User } from '@prisma/client'
+import { Transaction, TransactionType } from '@prisma/client'
 import { UnitRepository } from '@/repositories/unit-repository'
 import { OrganizationRepository } from '@/repositories/organization-repository'
 
@@ -59,89 +59,91 @@ export class CreateTransactionService {
       amount: data.amount,
       session: { connect: { id: session.id } },
     })
-
     let surplusValue: number | undefined
-
-    const increment = data.type === 'ADDITION' ? data.amount : -data.amount
-    if (data.type === 'WITHDRAWAL' && data.amount < 0) {
-      throw new Error('Negative values ​​cannot be passed on withdrawals')
-    }
-    if (data.type === 'ADDITION' && data.amount < 0) {
-      throw new Error('Negative values ​​cannot be passed on additions')
-    }
-
-    const effectiveUser = affectedUser ?? user
-    const balanceUnit = effectiveUser.unit?.totalBalance ?? 0
-    const balanceUser = effectiveUser.profile?.totalBalance ?? 0
-
-    if (increment < 0) {
-      // if (affectedUser) {
-      surplusValue =
-        -increment > balanceUser
-          ? balanceUser < 0
-            ? increment
-            : balanceUser - -increment
-          : undefined
-
-      const remainingBalance =
-        balanceUser > 0 ? balanceUser - -increment : increment
-
-      if (remainingBalance < 0) {
-        if (!effectiveUser.unit?.allowsLoan) {
-          throw new Error('Insufficient balance for withdrawal')
-        }
-        const remainingBalanceRelative = -remainingBalance
-        if (remainingBalanceRelative > balanceUnit) {
-          throw new Error('Withdrawal amount greater than unit balance')
-        }
-        await this.profileRepository.incrementBalance(
-          effectiveUser.id,
-          increment,
-        )
-        await this.unitRepository.incrementBalance(
-          effectiveUser.unitId,
-          remainingBalance,
-        )
-        await this.organizationRepository.incrementBalance(
-          effectiveUser.organizationId,
-          remainingBalance,
-        )
-      } else {
-        await this.profileRepository.incrementBalance(
-          effectiveUser.id,
-          increment,
-        )
+    try {
+      const increment = data.type === 'ADDITION' ? data.amount : -data.amount
+      if (data.type === 'WITHDRAWAL' && data.amount < 0) {
+        throw new Error('Negative values ​​cannot be passed on withdrawals')
       }
-    } else {
-      if (balanceUser < 0) {
-        const remainingBalance = balanceUser - increment
-        const valueForPay = remainingBalance < 0 ? increment : balanceUser
-        await this.unitRepository.incrementBalance(
-          effectiveUser.unitId,
-          valueForPay,
-        )
-        await this.organizationRepository.incrementBalance(
-          effectiveUser.organizationId,
-          valueForPay,
-        )
-        await this.profileRepository.incrementBalance(
-          effectiveUser.id,
-          valueForPay,
-        )
-      } else {
-        await this.unitRepository.incrementBalance(
-          effectiveUser.unitId,
-          increment,
-        )
-        await this.organizationRepository.incrementBalance(
-          effectiveUser.organizationId,
-          increment,
-        )
-        await this.profileRepository.incrementBalance(
-          effectiveUser.id,
-          increment,
-        )
+      if (data.type === 'ADDITION' && data.amount < 0) {
+        throw new Error('Negative values ​​cannot be passed on additions')
       }
+
+      const effectiveUser = affectedUser ?? user
+      const balanceUnit = effectiveUser.unit?.totalBalance ?? 0
+      const balanceUser = effectiveUser.profile?.totalBalance ?? 0
+
+      if (increment < 0) {
+        surplusValue =
+          -increment > balanceUser
+            ? balanceUser < 0
+              ? increment
+              : balanceUser - -increment
+            : undefined
+
+        const remainingBalance =
+          balanceUser > 0 ? balanceUser - -increment : increment
+
+        if (remainingBalance < 0) {
+          if (!effectiveUser.unit?.allowsLoan) {
+            throw new Error('Insufficient balance for withdrawal')
+          }
+          const remainingBalanceRelative = -remainingBalance
+          if (remainingBalanceRelative > balanceUnit) {
+            throw new Error('Withdrawal amount greater than unit balance')
+          }
+          await this.profileRepository.incrementBalance(
+            effectiveUser.id,
+            increment,
+          )
+          await this.unitRepository.incrementBalance(
+            effectiveUser.unitId,
+            remainingBalance,
+          )
+          await this.organizationRepository.incrementBalance(
+            effectiveUser.organizationId,
+            remainingBalance,
+          )
+        } else {
+          await this.profileRepository.incrementBalance(
+            effectiveUser.id,
+            increment,
+          )
+        }
+      } else {
+        if (balanceUser < 0) {
+          const remainingBalance = balanceUser - increment
+          const valueForPay = remainingBalance < 0 ? increment : balanceUser
+          await this.unitRepository.incrementBalance(
+            effectiveUser.unitId,
+            valueForPay,
+          )
+          await this.organizationRepository.incrementBalance(
+            effectiveUser.organizationId,
+            valueForPay,
+          )
+          await this.profileRepository.incrementBalance(
+            effectiveUser.id,
+            valueForPay,
+          )
+        } else {
+          await this.unitRepository.incrementBalance(
+            effectiveUser.unitId,
+            increment,
+          )
+          await this.organizationRepository.incrementBalance(
+            effectiveUser.organizationId,
+            increment,
+          )
+          await this.profileRepository.incrementBalance(
+            effectiveUser.id,
+            increment,
+          )
+        }
+      }
+    } catch (error) {
+      await this.repository.delete(transaction.id)
+      throw error
     }
     return { transaction, surplusValue }
   }

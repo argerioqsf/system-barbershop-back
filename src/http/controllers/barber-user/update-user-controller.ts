@@ -30,7 +30,12 @@ export async function UpdateBarberUserController(
   const { id } = paramsSchema.parse(request.params)
   const data = bodySchema.parse(request.body)
   const service = makeUpdateUserService()
-  const userToken = request.user as { sub: string; organizationId: string; unitId: string; role: Role }
+  const userToken = request.user as {
+    sub: string
+    organizationId: string
+    unitId: string
+    role: Role
+  }
   const result = await service.execute({ id, ...data })
 
   if (id === userToken.sub && (data.unitId || data.role)) {

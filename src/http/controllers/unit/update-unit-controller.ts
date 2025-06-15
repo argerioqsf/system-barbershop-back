@@ -7,9 +7,15 @@ export async function UpdateUnitController(
   reply: FastifyReply,
 ) {
   const bodySchema = z.object({
-    name: z.string(),
+    name: z.string().optional(),
     slug: z.string().optional(),
-    allowsLoan: z.boolean().optional(),
+    allowsLoan: z
+      .union([z.boolean(), z.string()])
+      .transform((val) => {
+        if (typeof val === 'boolean') return val
+        return val === 'true'
+      })
+      .optional(),
   })
   const paramsSchema = z.object({
     id: z.string(),

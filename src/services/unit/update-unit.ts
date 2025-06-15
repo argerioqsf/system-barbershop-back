@@ -3,7 +3,7 @@ import { Unit } from '@prisma/client'
 
 interface UpdateUnitRequest {
   id: string
-  name: string
+  name?: string
   slug?: string
   allowsLoan?: boolean
 }
