@@ -104,7 +104,8 @@ export class CreateSaleService {
         if (product.unitId !== user?.unitId) {
           throw new ServiceNotFromUserUnitError()
         }
-        if (product.quantity < item.quantity) throw new Error('Insufficient stock')
+        if (product.quantity < item.quantity)
+          throw new Error('Insufficient stock')
         basePrice = product.price * item.quantity
         dataItem.product = { connect: { id: item.productId } }
         productsToUpdate.push({ id: item.productId, quantity: item.quantity })
@@ -281,7 +282,7 @@ export class CreateSaleService {
             )
           }
         }
-      await this.profileRepository.incrementBalance(barberId, amount)
+        await this.profileRepository.incrementBalance(barberId, amount)
       }
       for (const prod of productsToUpdate) {
         await this.productRepository.update(prod.id, {

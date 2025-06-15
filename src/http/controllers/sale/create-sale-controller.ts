@@ -10,7 +10,8 @@ export async function CreateSaleController(
     method: z.enum(['CASH', 'PIX', 'CREDIT_CARD', 'DEBIT_CARD']),
     items: z.array(
       z.object({
-        serviceId: z.string(),
+        serviceId: z.string().optional(),
+        productId: z.string().optional(),
         quantity: z.number().min(1),
         barberId: z.string().optional(),
         couponCode: z.string().optional(),

@@ -10,7 +10,11 @@ import { DeleteProductController } from './delete-product-controller'
 export async function productRoute(app: FastifyInstance) {
   app.addHook('onRequest', verifyJWT)
 
-  app.post('/products', { preHandler: upload.single('image') }, CreateProductController)
+  app.post(
+    '/products',
+    { preHandler: upload.single('image') },
+    CreateProductController,
+  )
   app.get('/products', ListProductsController)
   app.get('/products/:id', GetProductController)
   app.patch('/products/:id', UpdateProductController)
