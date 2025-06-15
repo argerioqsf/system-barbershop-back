@@ -33,25 +33,25 @@ enum DiscountType {
 }
 
 model User {
-  id                  String                @id @default(uuid())
-  name                String
-  email               String                @unique
-  password            String
-  active              Boolean               @default(false)
-  organizationId      String
-  unitId              String
-  profile             Profile?
-  appointments        Appointment[]         @relation("ClientAppointments")
-  barberAppointments  Appointment[]         @relation("BarberAppointments")
-  sales               Sale[]
-  clientSales         Sale[]                @relation("SaleClient")
-  saleItems           SaleItem[]
-  transactions        Transaction[]
-  affectedTransactions Transaction[] @relation("AffectedUser")
-  sessions            CashRegisterSession[]
-  passwordResetTokens PasswordResetToken[]
-  ownedOrganizations  Organization[]        @relation("OrganizationOwner")
-  createdAt           DateTime              @default(now())
+  id                   String                @id @default(uuid())
+  name                 String
+  email                String                @unique
+  password             String
+  active               Boolean               @default(false)
+  organizationId       String
+  unitId               String
+  profile              Profile?
+  appointments         Appointment[]         @relation("ClientAppointments")
+  barberAppointments   Appointment[]         @relation("BarberAppointments")
+  sales                Sale[]
+  clientSales          Sale[]                @relation("SaleClient")
+  saleItems            SaleItem[]
+  transactions         Transaction[]
+  affectedTransactions Transaction[]         @relation("AffectedUser")
+  sessions             CashRegisterSession[]
+  passwordResetTokens  PasswordResetToken[]
+  ownedOrganizations   Organization[]        @relation("OrganizationOwner")
+  createdAt            DateTime              @default(now())
 
   organization Organization @relation(fields: [organizationId], references: [id])
   unit         Unit         @relation(fields: [unitId], references: [id])
@@ -100,7 +100,6 @@ model Service {
   imageUrl     String?
   cost         Float
   price        Float
-  isProduct    Boolean       @default(false)
   unitId       String
   appointments Appointment[]
   saleItems    SaleItem[]
@@ -108,6 +107,22 @@ model Service {
   unit Unit @relation(fields: [unitId], references: [id])
 
   @@map("services")
+}
+
+model Product {
+  id          String     @id @default(uuid())
+  name        String
+  description String?
+  imageUrl    String?
+  quantity    Int        @default(0)
+  cost        Float
+  price       Float
+  unitId      String
+  saleItems   SaleItem[]
+
+  unit Unit @relation(fields: [unitId], references: [id])
+
+  @@map("products")
 }
 
 model Transaction {
@@ -123,10 +138,10 @@ model Transaction {
 
   sale Sale?
 
-  user    User                 @relation(fields: [userId], references: [id])
-  affectedUser User?           @relation("AffectedUser", fields: [affectedUserId], references: [id])
-  unit    Unit                 @relation(fields: [unitId], references: [id])
-  session CashRegisterSession? @relation(fields: [cashRegisterSessionId], references: [id])
+  user         User                 @relation(fields: [userId], references: [id])
+  affectedUser User?                @relation("AffectedUser", fields: [affectedUserId], references: [id])
+  unit         Unit                 @relation(fields: [unitId], references: [id])
+  session      CashRegisterSession? @relation(fields: [cashRegisterSessionId], references: [id])
 
   @@map("transactions")
 }
@@ -157,7 +172,8 @@ model Sale {
 model SaleItem {
   id                  String        @id @default(uuid())
   saleId              String
-  serviceId           String
+  serviceId           String?
+  productId           String?
   quantity            Int           @default(1)
   barberId            String?
   couponId            String?
@@ -166,10 +182,11 @@ model SaleItem {
   discountType        DiscountType?
   porcentagemBarbeiro Float?
 
-  sale    Sale    @relation(fields: [saleId], references: [id])
-  service Service @relation(fields: [serviceId], references: [id])
-  barber  User?   @relation(fields: [barberId], references: [id])
-  coupon  Coupon? @relation(fields: [couponId], references: [id])
+  sale    Sale     @relation(fields: [saleId], references: [id])
+  service Service? @relation(fields: [serviceId], references: [id])
+  product Product? @relation(fields: [productId], references: [id])
+  barber  User?    @relation(fields: [barberId], references: [id])
+  coupon  Coupon?  @relation(fields: [couponId], references: [id])
 
   @@map("sale_items")
 }
@@ -222,15 +239,15 @@ model PasswordResetToken {
 }
 
 model Organization {
-  id        String   @id @default(uuid())
-  name      String
-  slug      String   @unique
-  ownerId   String?
-  owner     User?    @relation("OrganizationOwner", fields: [ownerId], references: [id])
-  users     User[]
-  units     Unit[]
+  id           String   @id @default(uuid())
+  name         String
+  slug         String   @unique
+  ownerId      String?
+  owner        User?    @relation("OrganizationOwner", fields: [ownerId], references: [id])
+  users        User[]
+  units        Unit[]
   totalBalance Float    @default(0)
-  createdAt DateTime @default(now())
+  createdAt    DateTime @default(now())
 
   @@map("organizations")
 }
@@ -243,6 +260,7 @@ model Unit {
   totalBalance   Float                 @default(0)
   allowsLoan     Boolean               @default(false)
   services       Service[]
+  products       Product[]
   appointments   Appointment[]
   sales          Sale[]
   transactions   Transaction[]

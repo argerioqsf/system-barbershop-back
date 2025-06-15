@@ -7,7 +7,6 @@ interface CreateServiceRequest {
   imageUrl?: string | null
   cost: number
   price: number
-  isProduct?: boolean
   unitId: string
 }
 
@@ -25,7 +24,6 @@ export class CreateServiceService {
       imageUrl: data.imageUrl,
       cost: data.cost,
       price: data.price,
-      isProduct: data.isProduct ?? false,
       unit: { connect: { id: data.unitId } },
     })
     return { service }

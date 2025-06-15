@@ -51,7 +51,7 @@ export class BarberBalanceService {
       const items = sale.items.filter((i) => i.barberId === barberId)
 
       const serviceShare = items.reduce((totals, item) => {
-        if (!item.service.isProduct) {
+        if (!item.product) {
           const percentage = item.porcentagemBarbeiro ?? 100
           const valueBarber = ((item.price ?? 0) * percentage) / 100
           setHistory(

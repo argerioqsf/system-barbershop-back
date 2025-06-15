@@ -153,10 +153,6 @@
             "value": "20"
           },
           {
-            "name": "isProduct",
-            "value": "false"
-          },
-          {
             "name": "unitId",
             "value": ""
           },
@@ -181,6 +177,120 @@
       "name": "List services",
       "method": "GET",
       "url": "{{ baseURL }}/services",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "fld_products",
+      "_type": "request_group",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Products"
+    },
+    {
+      "_id": "req_create_product",
+      "_type": "request",
+      "parentId": "fld_products",
+      "name": "Create product",
+      "method": "POST",
+      "url": "{{ baseURL }}/products",
+      "body": {
+        "mimeType": "multipart/form-data",
+        "params": [
+          {
+            "name": "name",
+            "value": "Shampoo"
+          },
+          {
+            "name": "description",
+            "value": "Hair shampoo"
+          },
+          {
+            "name": "quantity",
+            "value": "10"
+          },
+          {
+            "name": "cost",
+            "value": "5"
+          },
+          {
+            "name": "price",
+            "value": "15"
+          },
+          {
+            "name": "image",
+            "value": "",
+            "type": "file"
+          }
+        ]
+      },
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_list_products",
+      "_type": "request",
+      "parentId": "fld_products",
+      "name": "List products",
+      "method": "GET",
+      "url": "{{ baseURL }}/products",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_get_product",
+      "_type": "request",
+      "parentId": "fld_products",
+      "name": "Get product",
+      "method": "GET",
+      "url": "{{ baseURL }}/products/{id}",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_update_product",
+      "_type": "request",
+      "parentId": "fld_products",
+      "name": "Update product",
+      "method": "PATCH",
+      "url": "{{ baseURL }}/products/{id}",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Shampoo\",\n  \"quantity\": 5\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_delete_product",
+      "_type": "request",
+      "parentId": "fld_products",
+      "name": "Delete product",
+      "method": "DELETE",
+      "url": "{{ baseURL }}/products/{id}",
       "headers": [
         {
           "name": "Authorization",

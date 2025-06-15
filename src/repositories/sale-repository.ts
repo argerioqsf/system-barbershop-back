@@ -3,6 +3,7 @@ import {
   Sale,
   SaleItem,
   Service,
+  Product,
   User,
   Coupon,
   Profile,
@@ -12,7 +13,8 @@ import {
 } from '@prisma/client'
 
 export type DetailedSaleItem = SaleItem & {
-  service: Service
+  service: Service | null
+  product: Product | null
   barber: (User & { profile: Profile | null }) | null
   coupon: Coupon | null
   price: number
