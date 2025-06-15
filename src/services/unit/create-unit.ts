@@ -6,6 +6,7 @@ interface CreateUnitRequest {
   name: string
   slug: string
   organizationId?: string
+  allowsLoan?: boolean
   userToken: UserToken
 }
 
@@ -28,6 +29,7 @@ export class CreateUnitService {
     const unit = await this.repository.create({
       name: data.name,
       slug: data.slug,
+      allowsLoan: data.allowsLoan ?? false,
       organization: { connect: { id: organizationId } },
     })
     return { unit }

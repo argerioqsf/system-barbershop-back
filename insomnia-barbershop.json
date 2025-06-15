@@ -435,7 +435,7 @@
       "url": "{{ baseURL }}/transactions",
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"userId\": \"\",\n  \"unitId\": \"\",\n  \"type\": \"ADDITION\",\n  \"description\": \"\",\n  \"amount\": 0\n}"
+        "text": "{\n  \"userId\": \"\",\n  \"unitId\": \"\",\n  \"affectedUserId\": \"\",\n  \"type\": \"ADDITION\",\n  \"description\": \"\",\n  \"amount\": 0\n}"
       },
       "headers": [
         {
@@ -569,7 +569,7 @@
       "url": "{{ baseURL }}/units",
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"name\": \"\",\n  \"slug\": \"\",\n  \"organizationId\": \"\",\n  \"totalBalance\": 0\n}"
+        "text": "{\n  \"name\": \"\",\n  \"slug\": \"\",\n  \"organizationId\": \"\",\n  \"totalBalance\": 0,\n  \"allowsLoan\": false\n}"
       },
       "headers": [
         {
@@ -619,7 +619,7 @@
       "url": "{{ baseURL }}/units/{{ unitId }}",
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"name\": \"New Unit\",\n  \"slug\": \"new-unit\"\n}"
+        "text": "{\n  \"name\": \"New Unit\",\n  \"slug\": \"new-unit\",\n  \"allowsLoan\": false\n}"
       },
       "headers": [
         {

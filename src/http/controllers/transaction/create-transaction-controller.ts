@@ -1,6 +1,7 @@
 import { makeCreateTransaction } from '@/services/@factories/transaction/make-create-transaction'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
+import { UserToken } from '../authenticate-controller'
 
 export async function CreateTransactionController(
   request: FastifyRequest,
@@ -10,13 +11,19 @@ export async function CreateTransactionController(
     type: z.enum(['ADDITION', 'WITHDRAWAL']),
     description: z.string(),
     amount: z.number(),
+    affectedUserId: z.string().optional(),
   })
   const data = bodySchema.parse(request.body)
-  const userId = request.user.sub
+  const user = request.user as UserToken
+  if (data.affectedUserId && user.role !== 'ADMIN' && user.role !== 'OWNER') {
+    return reply.status(403).send({ message: 'Unauthorized' })
+  }
+  const userId = user.sub
   const service = makeCreateTransaction()
   const { transaction, surplusValue } = await service.execute({
     ...data,
     userId,
+    affectedUserId: data.affectedUserId,
   })
   return reply.status(201).send({ transaction, surplusValue })
 }

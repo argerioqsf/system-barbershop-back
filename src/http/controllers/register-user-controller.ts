@@ -19,9 +19,14 @@ export async function registerUser(
     pix: z.string(),
     role: z.nativeEnum(Role),
     organizationId: z.string(),
+    unitId: z.string(),
   })
 
   const data = registerBodySchema.parse(request.body)
+
+  if (data.role === 'ADMIN' || data.role === 'OWNER') {
+    return replay.status(403).send({ message: 'Unauthorized role' })
+  }
 
   try {
     const registerService = makeRegisterService()

@@ -28,5 +28,10 @@ export async function SetUserUnitController(
     throw error
   }
 
-  return reply.status(200).send()
+  const token = await reply.jwtSign(
+    { unitId, organizationId: user.organizationId, role: user.role },
+    { sign: { sub: user.sub } },
+  )
+
+  return reply.status(200).send({ token })
 }

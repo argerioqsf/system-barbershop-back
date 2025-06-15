@@ -24,6 +24,12 @@ export async function CreateBarberUserController(
   const data = bodySchema.parse(request.body)
   const service = makeRegisterUserService()
   const userToken = request.user as UserToken
+  if (
+    (data.role === 'ADMIN' || data.role === 'OWNER') &&
+    userToken.role !== 'ADMIN'
+  ) {
+    return reply.status(403).send({ message: 'Unauthorized' })
+  }
   let unitId = userToken.unitId
   if (userToken.role === 'ADMIN') {
     unitId = data.unitId ?? unitId
