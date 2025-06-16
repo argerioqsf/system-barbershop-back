@@ -1,8 +1,4 @@
-export interface DistributeProfitsDeps {
-  organizationRepository: import('@/repositories/organization-repository').OrganizationRepository
-  profileRepository: import('@/repositories/profiles-repository').ProfilesRepository
-  unitRepository: import('@/repositories/unit-repository').UnitRepository
-}
+import { DistributeProfitsDeps } from './types'
 
 import { DetailedSale } from '@/repositories/sale-repository'
 

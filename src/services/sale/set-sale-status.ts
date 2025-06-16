@@ -7,16 +7,8 @@ import { ProfilesRepository } from '@/repositories/profiles-repository'
 import { UnitRepository } from '@/repositories/unit-repository'
 import { PaymentStatus, TransactionType } from '@prisma/client'
 import { distributeProfits } from './profit-distribution'
+import { SetSaleStatusRequest, SetSaleStatusResponse } from './types'
 
-interface SetSaleStatusRequest {
-  saleId: string
-  userId: string
-  paymentStatus: PaymentStatus
-}
-
-interface SetSaleStatusResponse {
-  sale: DetailedSale
-}
 
 export class SetSaleStatusService {
   constructor(

@@ -1,9 +1,7 @@
 import { UserToken } from '@/http/controllers/authenticate-controller'
 import { SaleRepository, DetailedSale } from '@/repositories/sale-repository'
+import { ListSalesResponse } from './types'
 
-interface ListSalesResponse {
-  sales: DetailedSale[]
-}
 
 export class ListSalesService {
   constructor(private repository: SaleRepository) {}

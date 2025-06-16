@@ -7,8 +7,6 @@ import { ProductRepository } from '../../repositories/product-repository'
 import { CouponRepository } from '../../repositories/coupon-repository'
 import {
   DiscountType,
-  PaymentMethod,
-  SaleItem,
   TransactionType,
   PaymentStatus,
   Transaction,
@@ -23,68 +21,15 @@ import { BarberNotFromUserUnitError } from '../@errors/barber-not-from-user-unit
 import { CouponNotFromUserUnitError } from '../@errors/coupon-not-from-user-unit-error'
 import { UnitRepository } from '@/repositories/unit-repository'
 import { distributeProfits } from './profit-distribution'
-
-interface CreateSaleItem {
-  serviceId?: string
-  productId?: string
-  quantity: number
-  barberId?: string
-  couponCode?: string
-  price?: number
-}
-
-interface CreateSaleRequest {
-  userId: string
-  method: PaymentMethod
-  items: CreateSaleItem[]
-  clientId: string
-  couponCode?: string
-  paymentStatus?: PaymentStatus
-}
-
-interface CreateSaleResponse {
-  sale: DetailedSale
-}
-
-interface ConnectRelation {
-  connect: { id: string }
-}
-
-type DataItem = {
-  quantity: number
-  service?: { connect: { id?: string } }
-  product?: { connect: { id?: string } }
-}
-
-type TempItems = {
-  basePrice: number
-  price: number
-  discount: number
-  discountType: DiscountType | null
-  porcentagemBarbeiro?: number
-  ownDiscount: boolean
-  coupon?: { connect: { id: string | null } }
-  data: DataItem & {
-    barber?: { connect: { id: string } }
-    coupon?: { connect: { id: string } }
-  }
-}
-
-type SaleItemTemp = Omit<
-  SaleItem & {
-    coupon?: { connect: { id: string } }
-    service?: { connect: { id?: string } }
-    product?: { connect: { id?: string } }
-    barber?: { connect: { id: string } }
-  },
-  | 'id'
-  | 'saleId'
-  | 'serviceId'
-  | 'serviceId'
-  | 'productId'
-  | 'barberId'
-  | 'couponId'
->
+import {
+  CreateSaleItem,
+  CreateSaleRequest,
+  CreateSaleResponse,
+  ConnectRelation,
+  DataItem,
+  TempItems,
+  SaleItemTemp,
+} from './types'
 
 export class CreateSaleService {
   constructor(

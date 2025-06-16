@@ -1,12 +1,6 @@
 import { SaleRepository, DetailedSale } from '@/repositories/sale-repository'
+import { GetSaleRequest, GetSaleResponse } from './types'
 
-interface GetSaleRequest {
-  id: string
-}
-
-interface GetSaleResponse {
-  sale: DetailedSale | null
-}
 
 export class GetSaleService {
   constructor(private repository: SaleRepository) {}
