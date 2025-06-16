@@ -71,18 +71,23 @@ export class InMemoryUserRepository implements UsersRepository {
 
   async update(
     id: string,
-    data: Prisma.UserUpdateInput,
+    data: { unit: { connect: { id: string } } },
   ): Promise<Omit<User, 'password'>> {
     const index = this.items.findIndex((u) => u.id === id)
     if (index >= 0) {
       const current = this.items[index]
       const updated: User = { ...current }
-      if (data.unit && typeof data.unit === 'object' && 'connect' in data.unit) {
-        updated.unitId = (data.unit as any).connect.id
+      if (
+        data.unit &&
+        typeof data.unit === 'object' &&
+        'connect' in data.unit
+      ) {
+        updated.unitId = data.unit.connect.id
       }
       this.items[index] = {
         ...updated,
         ...(data as unknown as Partial<User>),
+        profile: null,
       }
       const { ...rest } = this.items[index]
       return rest
