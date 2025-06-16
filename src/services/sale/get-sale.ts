@@ -1,6 +1,5 @@
-import { SaleRepository, DetailedSale } from '@/repositories/sale-repository'
+import { SaleRepository } from '@/repositories/sale-repository'
 import { GetSaleRequest, GetSaleResponse } from './types'
-
 
 export class GetSaleService {
   constructor(private repository: SaleRepository) {}

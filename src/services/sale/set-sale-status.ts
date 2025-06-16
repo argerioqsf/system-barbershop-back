@@ -1,4 +1,4 @@
-import { SaleRepository, DetailedSale } from '@/repositories/sale-repository'
+import { SaleRepository } from '@/repositories/sale-repository'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { CashRegisterRepository } from '@/repositories/cash-register-repository'
 import { TransactionRepository } from '@/repositories/transaction-repository'
@@ -8,7 +8,6 @@ import { UnitRepository } from '@/repositories/unit-repository'
 import { PaymentStatus, TransactionType } from '@prisma/client'
 import { distributeProfits } from './profit-distribution'
 import { SetSaleStatusRequest, SetSaleStatusResponse } from './types'
-
 
 export class SetSaleStatusService {
   constructor(
