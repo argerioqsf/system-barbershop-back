@@ -1,9 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { ListAppointmentsService } from '../../../src/services/appointment/list-appointments'
 import { InMemoryAppointmentRepository } from '../../helpers/fake-repositories'
-
-const a1 = { id: 'a1', unitId: 'unit-1', service: {}, client: {}, barber: {}, date: new Date(), hour: '10', unit: { organizationId: 'org-1' } } as any
-const a2 = { id: 'a2', unitId: 'unit-2', service: {}, client: {}, barber: {}, date: new Date(), hour: '11', unit: { organizationId: 'org-2' } } as any
+import { appointment1 as a1, appointment2 as a2 } from '../../helpers/default-values'
 
 describe('List appointments service', () => {
   let repo: InMemoryAppointmentRepository

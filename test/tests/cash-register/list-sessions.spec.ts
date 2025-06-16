@@ -1,34 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { ListSessionsService } from '../../../src/services/cash-register/list-sessions'
 import { InMemoryCashRegisterRepository } from '../../helpers/fake-repositories'
-
-const s1 = {
-  id: 's1',
-  openedById: 'u1',
-  unitId: 'unit-1',
-  openedAt: new Date(),
-  closedAt: null,
-  initialAmount: 0,
-  finalAmount: null,
-  user: {},
-  sales: [],
-  transactions: [],
-  unit: { organizationId: 'org-1' },
-} as any
-
-const s2 = {
-  id: 's2',
-  openedById: 'u2',
-  unitId: 'unit-2',
-  openedAt: new Date(),
-  closedAt: null,
-  initialAmount: 0,
-  finalAmount: null,
-  user: {},
-  sales: [],
-  transactions: [],
-  unit: { organizationId: 'org-2' },
-} as any
+import { session1, session2 } from '../../helpers/default-values'
 
 describe('List sessions service', () => {
   let repo: InMemoryCashRegisterRepository
@@ -36,7 +9,7 @@ describe('List sessions service', () => {
 
   beforeEach(() => {
     repo = new InMemoryCashRegisterRepository()
-    repo.sessions.push(s1, s2)
+    repo.sessions.push(session1, session2)
     service = new ListSessionsService(repo)
   })
 

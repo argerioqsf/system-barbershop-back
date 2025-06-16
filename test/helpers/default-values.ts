@@ -290,3 +290,103 @@ export const namedUser = {
   createdAt: new Date(),
   profile: null,
 }
+
+export const sessionUser = { sub: 'u1', unitId: 'unit-1' } as any
+
+export function makeCashSession(
+  id: string,
+  unitId: string = 'unit-1',
+  organizationId: string = 'org-1',
+): any {
+  return {
+    id,
+    openedById: 'u1',
+    unitId,
+    openedAt: new Date(),
+    closedAt: null,
+    initialAmount: 0,
+    finalAmount: null,
+    user: {},
+    sales: [],
+    transactions: [],
+    unit: { organizationId },
+  } as any
+}
+
+export const baseRegisterUserData = {
+  name: 'John',
+  email: 'j@e.com',
+  password: '123',
+  phone: '1',
+  cpf: '2',
+  genre: 'M',
+  birthday: '2000',
+  pix: 'x',
+  role: 'BARBER' as any,
+}
+
+export const listUser1 = {
+  id: 'u1',
+  email: 'a@a.com',
+  profile: null,
+  unit: { id: 'unit-1' },
+  organizationId: 'org-1',
+} as any
+
+export const listUser2 = {
+  id: 'u2',
+  email: 'b@b.com',
+  profile: null,
+  unit: { id: 'unit-2' },
+  organizationId: 'org-2',
+} as any
+
+export const session1 = {
+  id: 's1',
+  openedById: 'u1',
+  unitId: 'unit-1',
+  openedAt: new Date(),
+  closedAt: null,
+  initialAmount: 0,
+  finalAmount: null,
+  user: {},
+  sales: [],
+  transactions: [],
+  unit: { organizationId: 'org-1' },
+} as any
+
+export const session2 = {
+  id: 's2',
+  openedById: 'u2',
+  unitId: 'unit-2',
+  openedAt: new Date(),
+  closedAt: null,
+  initialAmount: 0,
+  finalAmount: null,
+  user: {},
+  sales: [],
+  transactions: [],
+  unit: { organizationId: 'org-2' },
+} as any
+
+export const appointment1 = {
+  id: 'a1',
+  unitId: 'unit-1',
+  service: {},
+  client: {},
+  barber: {},
+  date: new Date(),
+  hour: '10',
+  unit: { organizationId: 'org-1' },
+} as any
+
+export const appointment2 = {
+  id: 'a2',
+  unitId: 'unit-2',
+  service: {},
+  client: {},
+  barber: {},
+  date: new Date(),
+  hour: '11',
+  unit: { organizationId: 'org-2' },
+} as any

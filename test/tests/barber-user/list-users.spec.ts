@@ -1,9 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { ListUsersService } from '../../../src/services/barber-user/list-users'
 import { InMemoryBarberUsersRepository } from '../../helpers/fake-repositories'
-
-const u1 = { id: 'u1', email: 'a@a.com', profile: null, unit: { id: 'unit-1' }, organizationId: 'org-1' } as any
-const u2 = { id: 'u2', email: 'b@b.com', profile: null, unit: { id: 'unit-2' }, organizationId: 'org-2' } as any
+import { listUser1 as u1, listUser2 as u2 } from '../../helpers/default-values'
 
 describe('List users service', () => {
   let repo: InMemoryBarberUsersRepository
