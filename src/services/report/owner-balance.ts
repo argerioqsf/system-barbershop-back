@@ -74,7 +74,7 @@ export class OwnerBalanceService {
               let value = item.price
               let percentageOwner = 100
 
-              if (item.product) t.product += value ?? 0
+              if (item.productId) t.product += value ?? 0
               else if (item.barberId) {
                 const barberPorcent = item.porcentagemBarbeiro ?? 100
                 const valueBarber = ((value ?? 0) * barberPorcent) / 100

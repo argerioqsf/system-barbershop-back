@@ -35,7 +35,15 @@ export async function CreateBarberUserController(
     unitId = data.unitId ?? unitId
   }
   const { user, profile } = await service.execute({
-    ...data,
+    name: data.name,
+    email: data.email,
+    password: data.password,
+    phone: data.phone,
+    cpf: data.cpf,
+    genre: data.genre,
+    birthday: data.birthday,
+    pix: data.pix,
+    role: data.role,
     unitId,
   })
   return reply.status(201).send({ user, profile })

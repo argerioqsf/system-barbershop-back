@@ -12,7 +12,6 @@ const bodySchema = z.object({
   birthday: z.string(),
   pix: z.string(),
   role: z.nativeEnum(Role),
-  city: z.string(),
 })
 
 export async function Create(request: FastifyRequest, reply: FastifyReply) {
@@ -23,7 +22,15 @@ export async function Create(request: FastifyRequest, reply: FastifyReply) {
   const userId = request.user.sub
 
   try {
-    const { profile } = await createProfileService.execute({ ...body, userId })
+    const { profile } = await createProfileService.execute({
+      phone: body.phone,
+      cpf: body.cpf,
+      genre: body.genre,
+      birthday: body.birthday,
+      pix: body.pix,
+      role: body.role,
+      userId,
+    })
 
     return reply.status(201).send(profile)
   } catch (error) {

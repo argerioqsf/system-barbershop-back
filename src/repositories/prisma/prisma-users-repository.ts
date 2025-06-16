@@ -4,114 +4,6 @@ import { Prisma, Profile, User } from '@prisma/client'
 import { UsersRepository } from '../users-repository'
 
 export class PrismaUsersRepository implements UsersRepository {
-  async mountSelectIndicator(
-    where: Prisma.UserWhereInput,
-  ): Promise<
-    Omit<
-      User & { profile: { id: string; amountToReceive: number | null } | null },
-      'email' | 'password' | 'active'
-    >[]
-  > {
-    const user = await prisma.user.findMany({
-      where: {
-        profile: {
-          role: 'indicator',
-        },
-        ...where,
-      },
-      select: {
-        id: true,
-        name: true,
-        profile: {
-          select: {
-            id: true,
-            amountToReceive: true,
-          },
-        },
-      },
-    })
-
-    return user
-  }
-
-  async mountSelectConsultant(
-    where: Prisma.UserWhereInput,
-  ): Promise<
-    Omit<
-      User & { profile: { id: string; amountToReceive: number | null } | null },
-      'email' | 'password' | 'active'
-    >[]
-  > {
-    const user = await prisma.user.findMany({
-      where: {
-        profile: {
-          role: 'consultant',
-        },
-        ...where,
-      },
-      select: {
-        id: true,
-        name: true,
-        profile: {
-          select: {
-            id: true,
-            amountToReceive: true,
-          },
-        },
-      },
-    })
-
-    return user
-  }
-
-  async countConsultant(where: Prisma.UserWhereInput): Promise<number> {
-    const users = await prisma.user.count({
-      where: {
-        ...where,
-      },
-    })
-
-    return users
-  }
-
-  async findManyConsultant(
-    page: number,
-    where: Prisma.UserWhereInput,
-  ): Promise<
-    (Omit<User, 'password'> & { profile: Omit<Profile, 'userId'> | null })[]
-  > {
-    const userIndicator = await prisma.user.findMany({
-      where: {
-        ...where,
-      },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        active: true,
-        profile: {
-          select: {
-            id: true,
-            cpf: true,
-            genre: true,
-            phone: true,
-            role: true,
-            pix: true,
-            birthday: true,
-            city: true,
-            contractLink: true,
-            contractSent: true,
-            amountToReceive: true,
-          },
-        },
-      },
-      take: pagination.total,
-      skip: (page - 1) * pagination.total,
-    })
-
-    return userIndicator
-  }
-
   async update(
     id: string,
     data: Prisma.UserUpdateInput,
@@ -141,6 +33,9 @@ export class PrismaUsersRepository implements UsersRepository {
         email: true,
         name: true,
         active: true,
+        organizationId: true,
+        unitId: true,
+        createdAt: true,
         profile: {
           select: {
             id: true,
@@ -150,10 +45,9 @@ export class PrismaUsersRepository implements UsersRepository {
             role: true,
             pix: true,
             birthday: true,
-            city: true,
-            contractLink: true,
-            contractSent: true,
-            amountToReceive: true,
+            commissionPercentage: true,
+            totalBalance: true,
+            createdAt: true,
           },
         },
       },
@@ -217,6 +111,9 @@ export class PrismaUsersRepository implements UsersRepository {
         email: true,
         name: true,
         active: true,
+        organizationId: true,
+        unitId: true,
+        createdAt: true,
         profile: {
           select: {
             id: true,
@@ -226,10 +123,9 @@ export class PrismaUsersRepository implements UsersRepository {
             role: true,
             pix: true,
             birthday: true,
-            city: true,
-            contractLink: true,
-            contractSent: true,
-            amountToReceive: true,
+            commissionPercentage: true,
+            totalBalance: true,
+            createdAt: true,
           },
         },
       },

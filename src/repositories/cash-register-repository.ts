@@ -3,6 +3,10 @@ import {
   CashRegisterSession,
   User,
   Sale,
+  SaleItem,
+  Service,
+  Profile,
+  Coupon,
   Transaction,
 } from '@prisma/client'
 
@@ -14,7 +18,17 @@ export type DetailedCashSession = CashRegisterSession & {
 
 export type CompleteCashSession = CashRegisterSession & {
   user: User
-  sales: Sale[]
+  sales: Array<
+    Sale & {
+      items: Array<
+        SaleItem & {
+          service: Service | null
+        }
+      >
+      user: User & { profile: Profile | null }
+      coupon: Coupon | null
+    }
+  >
   transactions: Transaction[]
 }
 

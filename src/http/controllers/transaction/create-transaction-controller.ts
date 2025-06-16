@@ -21,7 +21,9 @@ export async function CreateTransactionController(
   const userId = user.sub
   const service = makeCreateTransaction()
   const { transaction, surplusValue } = await service.execute({
-    ...data,
+    type: data.type,
+    description: data.description,
+    amount: data.amount,
     userId,
     affectedUserId: data.affectedUserId,
   })
