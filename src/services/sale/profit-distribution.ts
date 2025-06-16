@@ -22,7 +22,8 @@ export async function distributeProfits(
     } else if (item.barberId) {
       const perc = item.porcentagemBarbeiro ?? 100
       const valueBarber = (value * perc) / 100
-      barberTotals[item.barberId] = (barberTotals[item.barberId] || 0) + valueBarber
+      barberTotals[item.barberId] =
+        (barberTotals[item.barberId] || 0) + valueBarber
       ownerShare += value - valueBarber
     } else {
       ownerShare += value
@@ -43,7 +44,10 @@ export async function distributeProfits(
         await unitRepository.incrementBalance(sale.unitId, amount)
       } else {
         await unitRepository.incrementBalance(sale.unitId, balanceBarber * -1)
-        await organizationRepository.incrementBalance(org.id, balanceBarber * -1)
+        await organizationRepository.incrementBalance(
+          org.id,
+          balanceBarber * -1,
+        )
       }
     }
     await profileRepository.incrementBalance(barberId, amount)
