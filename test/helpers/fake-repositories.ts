@@ -14,16 +14,16 @@ import {
   Transaction,
   TransactionType,
 } from '@prisma/client'
-import { ServiceRepository } from '@/repositories/service-repository'
-import { ProductRepository } from '@/repositories/product-repository'
-import { CouponRepository } from '@/repositories/coupon-repository'
-import { SaleRepository, DetailedSale, DetailedSaleItem } from '@/repositories/sale-repository'
-import { BarberUsersRepository } from '@/repositories/barber-users-repository'
-import { CashRegisterRepository, CompleteCashSession } from '@/repositories/cash-register-repository'
-import { TransactionRepository } from '@/repositories/transaction-repository'
-import { OrganizationRepository } from '@/repositories/organization-repository'
-import { ProfilesRepository } from '@/repositories/profiles-repository'
-import { UnitRepository } from '@/repositories/unit-repository'
+import { ServiceRepository } from '../../src/repositories/service-repository'
+import { ProductRepository } from '../../src/repositories/product-repository'
+import { CouponRepository } from '../../src/repositories/coupon-repository'
+import { SaleRepository, DetailedSale, DetailedSaleItem } from '../../src/repositories/sale-repository'
+import { BarberUsersRepository } from '../../src/repositories/barber-users-repository'
+import { CashRegisterRepository, CompleteCashSession } from '../../src/repositories/cash-register-repository'
+import { TransactionRepository } from '../../src/repositories/transaction-repository'
+import { OrganizationRepository } from '../../src/repositories/organization-repository'
+import { ProfilesRepository } from '../../src/repositories/profiles-repository'
+import { UnitRepository } from '../../src/repositories/unit-repository'
 import { randomUUID } from 'crypto'
 
 export class FakeServiceRepository implements ServiceRepository {
