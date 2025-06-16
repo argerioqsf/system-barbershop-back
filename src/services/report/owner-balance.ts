@@ -89,7 +89,7 @@ export class OwnerBalanceService {
                 Number((item.price ?? 0).toFixed(2)),
                 Number(percentageOwner.toFixed(2)),
                 Number(value.toFixed(2)),
-                item.service?.name ?? '',
+                item.service?.name ?? item.product?.name ?? '',
                 item.quantity,
                 item?.coupon?.code ??
                   transaction.sale?.coupon?.code ??

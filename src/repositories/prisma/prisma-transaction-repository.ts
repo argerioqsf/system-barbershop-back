@@ -10,6 +10,7 @@ export type TransactionFull = Prisma.TransactionGetPayload<{
         items: {
           include: {
             service: true
+            product: true
             barber: {
               include: {
                 profile: true
