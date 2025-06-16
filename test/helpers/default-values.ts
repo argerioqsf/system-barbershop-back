@@ -1,4 +1,13 @@
-import { DiscountType, Service, Product, Coupon } from '@prisma/client'
+import {
+  DiscountType,
+  Service,
+  Product,
+  Coupon,
+  Organization,
+  Unit,
+  Profile,
+  User,
+} from '@prisma/client'
 
 export const defaultUser = {
   id: 'user-1',
@@ -92,4 +101,65 @@ export function makeCoupon(
     unitId: 'unit-1',
     createdAt: new Date(),
   }
+}
+
+export const defaultOrganization: Organization = {
+  id: 'org-1',
+  name: 'Org',
+  slug: 'org',
+  ownerId: null,
+  totalBalance: 0,
+  createdAt: new Date(),
+}
+
+export const defaultUnit: Unit = {
+  id: 'unit-1',
+  name: 'Unit',
+  slug: 'unit',
+  organizationId: 'org-1',
+  totalBalance: 0,
+  allowsLoan: false,
+}
+
+export const defaultProfile: Profile = {
+  id: 'profile-user',
+  phone: '',
+  cpf: '',
+  genre: '',
+  birthday: '',
+  pix: '',
+  role: 'BARBER' as any,
+  commissionPercentage: 100,
+  totalBalance: 0,
+  userId: defaultUser.id,
+  createdAt: new Date(),
+}
+
+export function makeProfile(
+  id: string,
+  userId: string,
+  balance = 0,
+): Profile & { user: Omit<User, 'password'> } {
+  return {
+    id,
+    phone: '',
+    cpf: '',
+    genre: '',
+    birthday: '',
+    pix: '',
+    role: 'BARBER' as any,
+    commissionPercentage: 100,
+    totalBalance: balance,
+    userId,
+    user: { ...defaultUser, id: userId },
+    createdAt: new Date(),
+  }
+}
+
+export function makeUser(
+  id: string,
+  profile: Profile,
+  unit: Unit,
+): User & { profile: Profile; unit: Unit } {
+  return { ...defaultUser, id, profile, unit }
 }
