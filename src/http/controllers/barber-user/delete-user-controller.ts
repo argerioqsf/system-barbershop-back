@@ -2,7 +2,10 @@ import { makeDeleteUserService } from '@/services/@factories/barber-user/make-de
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
-export async function DeleteBarberUserController(request: FastifyRequest, reply: FastifyReply) {
+export async function DeleteBarberUserController(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
   const paramsSchema = z.object({ id: z.string() })
   const { id } = paramsSchema.parse(request.params)
   const service = makeDeleteUserService()

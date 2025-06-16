@@ -13,7 +13,9 @@ interface GetUserProfileServiceResponse {
 export class GetUserProfileFromUserIdService {
   constructor(private profileRepository: ProfilesRepository) {}
 
-  async execute({ id }: GetUserProfileServiceRequest): Promise<GetUserProfileServiceResponse> {
+  async execute({
+    id,
+  }: GetUserProfileServiceRequest): Promise<GetUserProfileServiceResponse> {
     const profile = await this.profileRepository.findByUserId(id)
 
     if (!profile) {

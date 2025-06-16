@@ -1,4 +1,3 @@
-import { SaleRepository } from '@/repositories/sale-repository'
 import { TransactionRepository } from '@/repositories/transaction-repository'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 

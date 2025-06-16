@@ -26,7 +26,7 @@ export async function CreateServiceController(
     ...data,
     imageUrl,
     unitId,
-  } as any)
+  })
 
   return reply.status(201).send(service)
 }

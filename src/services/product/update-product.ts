@@ -13,7 +13,10 @@ interface UpdateProductResponse {
 export class UpdateProductService {
   constructor(private repository: ProductRepository) {}
 
-  async execute({ id, data }: UpdateProductRequest): Promise<UpdateProductResponse> {
+  async execute({
+    id,
+    data,
+  }: UpdateProductRequest): Promise<UpdateProductResponse> {
     const product = await this.repository.update(id, data)
     return { product }
   }

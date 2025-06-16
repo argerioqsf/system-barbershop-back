@@ -14,7 +14,9 @@ interface UpdateOrganizationResponse {
 export class UpdateOrganizationService {
   constructor(private repository: OrganizationRepository) {}
 
-  async execute(data: UpdateOrganizationRequest): Promise<UpdateOrganizationResponse> {
+  async execute(
+    data: UpdateOrganizationRequest,
+  ): Promise<UpdateOrganizationResponse> {
     const { id, name, slug } = data
     const organization = await this.repository.update(id, {
       name,

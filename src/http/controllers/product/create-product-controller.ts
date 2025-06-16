@@ -16,7 +16,9 @@ export async function CreateProductController(
   })
   const data = bodySchema.parse(request.body)
 
-  const imageUrl = request.file ? `/uploads/${request.file.filename}` : undefined
+  const imageUrl = request.file
+    ? `/uploads/${request.file.filename}`
+    : undefined
 
   const service = makeCreateProductService()
   const unitId = (request.user as UserToken).unitId

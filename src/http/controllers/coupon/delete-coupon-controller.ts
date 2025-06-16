@@ -2,7 +2,10 @@ import { makeDeleteCouponService } from '@/services/@factories/coupon/make-delet
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
-export async function DeleteCouponController(request: FastifyRequest, reply: FastifyReply) {
+export async function DeleteCouponController(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
   const paramsSchema = z.object({ id: z.string() })
   const { id } = paramsSchema.parse(request.params)
   const service = makeDeleteCouponService()

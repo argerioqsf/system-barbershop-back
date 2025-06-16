@@ -32,15 +32,22 @@ export class InMemoryProfilesRepository implements ProfilesRepository {
     return profile
   }
 
-  async findById(id: string): Promise<(Profile & { user: Omit<User, 'password'> }) | null> {
+  async findById(
+    id: string,
+  ): Promise<(Profile & { user: Omit<User, 'password'> }) | null> {
     return this.items.find((item) => item.id === id) ?? null
   }
 
-  async findByUserId(id: string): Promise<(Profile & { user: Omit<User, 'password'> }) | null> {
+  async findByUserId(
+    id: string,
+  ): Promise<(Profile & { user: Omit<User, 'password'> }) | null> {
     return this.items.find((item) => item.user.id === id) ?? null
   }
 
-  async update(id: string, data: Prisma.ProfileUncheckedUpdateInput): Promise<Profile> {
+  async update(
+    id: string,
+    data: Prisma.ProfileUncheckedUpdateInput,
+  ): Promise<Profile> {
     const index = this.items.findIndex((item) => item.id === id)
     if (index >= 0) {
       this.items[index] = {

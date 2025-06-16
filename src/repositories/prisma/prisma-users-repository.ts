@@ -69,7 +69,7 @@ export class PrismaUsersRepository implements UsersRepository {
       include: { profile: true },
     })
     if (!user) return null
-    const { password: _pw, ...rest } = user
+    const { ...rest } = user
     return rest as Omit<User, 'password'> & {
       profile: Omit<Profile, 'userId'> | null
     }

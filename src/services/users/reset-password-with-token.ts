@@ -15,7 +15,10 @@ export class ResetPasswordWithTokenService {
     private usersRepository: UsersRepository,
   ) {}
 
-  async execute({ token, password }: ResetPasswordWithTokenRequest): Promise<void> {
+  async execute({
+    token,
+    password,
+  }: ResetPasswordWithTokenRequest): Promise<void> {
     const tokenRecord = await this.tokenRepository.findByToken(token)
     if (!tokenRecord) throw new ResourceNotFoundError()
     if (tokenRecord.expiresAt < new Date()) {

@@ -26,17 +26,8 @@ export async function UpdateWithId(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
-  const {
-    active,
-    birthday,
-    cpf,
-    email,
-    genre,
-    name,
-    phone,
-    pix,
-    role,
-  } = bodySchema.parse(request.body)
+  const { active, birthday, cpf, email, genre, name, phone, pix, role } =
+    bodySchema.parse(request.body)
 
   const updateProfileUserService = MakeUpdateProfileUserService()
 

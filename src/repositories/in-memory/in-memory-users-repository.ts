@@ -6,19 +6,29 @@ export class InMemoryUserRepository implements UsersRepository {
 
   async findById(
     id: string,
-  ): Promise<(Omit<User, 'password'> & { profile: Omit<Profile, 'userId'> | null }) | null> {
+  ): Promise<
+    | (Omit<User, 'password'> & { profile: Omit<Profile, 'userId'> | null })
+    | null
+  > {
     const user = this.items.find((item) => item.id === id)
 
     if (!user) {
       return null
     }
 
-    const { password: _pw, profile, ...rest } = user
+    const { profile, ...rest } = user
 
-    return { ...rest, profile: profile ? { ...profile, userId: undefined } as Omit<Profile, 'userId'> : null }
+    return {
+      ...rest,
+      profile: profile
+        ? ({ ...profile, userId: undefined } as Omit<Profile, 'userId'>)
+        : null,
+    }
   }
 
-  async findByEmail(email: string): Promise<(User & { profile: Profile | null }) | null> {
+  async findByEmail(
+    email: string,
+  ): Promise<(User & { profile: Profile | null }) | null> {
     const user = this.items.find((item) => item.email === email)
 
     if (!user) {
@@ -44,23 +54,25 @@ export class InMemoryUserRepository implements UsersRepository {
     return user
   }
 
-  async findMany(
-    _page: number,
-    _where: Prisma.UserWhereInput,
-  ): Promise<
+  async findMany(): Promise<
     (Omit<User, 'password'> & { profile: Omit<Profile, 'userId'> | null })[]
   > {
-    return this.items.map(({ password: _pw, profile, ...rest }) => ({
+    return this.items.map(({ profile, ...rest }) => ({
       ...rest,
-      profile: profile ? ({ ...profile, userId: undefined } as Omit<Profile, 'userId'>) : null,
+      profile: profile
+        ? ({ ...profile, userId: undefined } as Omit<Profile, 'userId'>)
+        : null,
     }))
   }
 
-  async count(_where: Prisma.UserWhereInput): Promise<number> {
+  async count(): Promise<number> {
     return this.items.length
   }
 
-  async update(id: string, data: Prisma.UserUpdateInput): Promise<Omit<User, 'password'>> {
+  async update(
+    id: string,
+    data: Prisma.UserUpdateInput,
+  ): Promise<Omit<User, 'password'>> {
     const index = this.items.findIndex((u) => u.id === id)
     if (index >= 0) {
       const current = this.items[index]
@@ -68,7 +80,7 @@ export class InMemoryUserRepository implements UsersRepository {
         ...current,
         ...(data as unknown as Partial<User>),
       }
-      const { password: _pw, profile, ...rest } = this.items[index]
+      const { ...rest } = this.items[index]
       return rest
     }
     throw new Error('User not found')

@@ -49,6 +49,42 @@ interface ConnectRelation {
   connect: { id: string }
 }
 
+type DataItem = {
+  quantity: number
+  service?: { connect: { id?: string } }
+  product?: { connect: { id?: string } }
+}
+
+type TempItems = {
+  basePrice: number
+  price: number
+  discount: number
+  discountType: DiscountType | null
+  porcentagemBarbeiro?: number
+  ownDiscount: boolean
+  coupon?: { connect: { id: string | null } }
+  data: DataItem & {
+    barber?: { connect: { id: string } }
+    coupon?: { connect: { id: string } }
+  }
+}
+
+type SaleItemTemp = Omit<
+  SaleItem & {
+    coupon?: { connect: { id: string } }
+    service?: { connect: { id?: string } }
+    product?: { connect: { id?: string } }
+    barber?: { connect: { id: string } }
+  },
+  | 'id'
+  | 'saleId'
+  | 'serviceId'
+  | 'serviceId'
+  | 'productId'
+  | 'barberId'
+  | 'couponId'
+>
+
 export class CreateSaleService {
   constructor(
     private saleRepository: SaleRepository,
@@ -71,17 +107,9 @@ export class CreateSaleService {
     couponCode,
     paymentStatus = PaymentStatus.PENDING,
   }: CreateSaleRequest): Promise<CreateSaleResponse> {
-    const saleItems: SaleItem[] = []
+    const saleItems: SaleItemTemp[] = []
     let couponConnect: ConnectRelation | undefined
-    const tempItems: {
-      basePrice: number
-      price: number
-      discount: number
-      discountType: DiscountType | null
-      porcentagemBarbeiro?: number
-      ownDiscount: boolean
-      data: any
-    }[] = []
+    const tempItems: TempItems[] = []
     const user = await this.barberUserRepository.findById(userId)
     const session = await this.cashRegisterRepository.findOpenByUnit(
       user?.unitId as string,
@@ -94,7 +122,9 @@ export class CreateSaleService {
         throw new Error('Item must have serviceId or productId')
       }
       let basePrice = 0
-      const dataItem: any = { quantity: item.quantity }
+      const dataItem: DataItem = {
+        quantity: item.quantity,
+      }
       if (item.serviceId) {
         const service = await this.serviceRepository.findById(item.serviceId)
         if (!service) throw new Error('Service not found')
@@ -209,7 +239,11 @@ export class CreateSaleService {
 
     for (const temp of tempItems) {
       saleItems.push({
-        ...temp.data,
+        coupon: temp.data.coupon,
+        quantity: temp.data.quantity,
+        service: temp.data.service,
+        product: temp.data.product,
+        barber: temp.data.barber,
         price: temp.price,
         discount: temp.discount,
         discountType: temp.discountType,
@@ -224,7 +258,7 @@ export class CreateSaleService {
       transaction = await this.transactionRepository.create({
         user: { connect: { id: userId } },
         unit: { connect: { id: user?.unitId } },
-        session: { connect: { id: session!.id } },
+        session: session ? { connect: { id: session.id } } : undefined,
         type: TransactionType.ADDITION,
         description: 'Sale',
         amount: calculatedTotal,

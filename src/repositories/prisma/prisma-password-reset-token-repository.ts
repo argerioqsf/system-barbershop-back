@@ -2,8 +2,12 @@ import { prisma } from '@/lib/prisma'
 import { Prisma, PasswordResetToken } from '@prisma/client'
 import { PasswordResetTokenRepository } from '../password-reset-token-repository'
 
-export class PrismaPasswordResetTokenRepository implements PasswordResetTokenRepository {
-  async create(data: Prisma.PasswordResetTokenCreateInput): Promise<PasswordResetToken> {
+export class PrismaPasswordResetTokenRepository
+  implements PasswordResetTokenRepository
+{
+  async create(
+    data: Prisma.PasswordResetTokenCreateInput,
+  ): Promise<PasswordResetToken> {
     return prisma.passwordResetToken.create({ data })
   }
 

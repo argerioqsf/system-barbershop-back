@@ -19,7 +19,10 @@ export async function ResetWithTokenController(
     const service = makeResetPasswordWithTokenService()
     await service.execute({ token, password })
   } catch (error) {
-    if (error instanceof UserNotFoundError || error instanceof ResourceNotFoundError) {
+    if (
+      error instanceof UserNotFoundError ||
+      error instanceof ResourceNotFoundError
+    ) {
       return reply.status(400).send({ message: error.message })
     }
     throw error

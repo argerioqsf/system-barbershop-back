@@ -18,7 +18,7 @@ interface UpdateProfileUserRequest {
 }
 
 interface UpdateProfileUserResponse {
-  user: Omit<User, 'password'>
+  user: Omit<User, 'password'> | null
   profile: Profile
 }
 
@@ -58,7 +58,7 @@ export class UpdateProfileUserService {
 
     const updatedUser = await this.usersRepository.findById(data.id)
     return {
-      user: updatedUser!,
+      user: updatedUser,
       profile: updatedProfile,
     }
   }
