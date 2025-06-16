@@ -22,6 +22,7 @@ import { ServiceNotFromUserUnitError } from '../@errors/service-not-from-user-un
 import { BarberNotFromUserUnitError } from '../@errors/barber-not-from-user-unit-error'
 import { CouponNotFromUserUnitError } from '../@errors/coupon-not-from-user-unit-error'
 import { UnitRepository } from '@/repositories/unit-repository'
+import { distributeProfits } from './profit-distribution'
 
 interface CreateSaleItem {
   serviceId?: string
@@ -265,57 +266,6 @@ export class CreateSaleService {
     })
   }
 
-  private async distributeProfits(
-    sale: DetailedSale,
-    organizationId: string,
-  ): Promise<void> {
-    const org = await this.organizationRepository.findById(organizationId)
-    if (!org) throw new Error('Org not found')
-    const barberTotals: Record<string, number> = {}
-    let ownerShare = 0
-    for (const item of sale.items) {
-      const value = item.price ?? 0
-      if (item.product) {
-        ownerShare += value
-      } else if (item.barberId) {
-        const perc = item.porcentagemBarbeiro ?? 100
-        const valueBarber = (value * perc) / 100
-        barberTotals[item.barberId] =
-          (barberTotals[item.barberId] || 0) + valueBarber
-        ownerShare += value - valueBarber
-      } else {
-        ownerShare += value
-      }
-    }
-    for (const [barberId, amount] of Object.entries(barberTotals)) {
-      const userBarber = sale.items.find((item) => item.barber?.id === barberId)
-      if (!userBarber) throw new Error('Barber not found')
-      if (
-        userBarber &&
-        userBarber.barber &&
-        userBarber.barber.profile &&
-        userBarber.barber.profile.totalBalance < 0
-      ) {
-        const balanceBarber = userBarber.barber.profile.totalBalance
-        const valueCalculated = balanceBarber + amount
-        if (valueCalculated <= 0) {
-          await this.unitRepository.incrementBalance(sale.unitId, amount)
-        } else {
-          await this.unitRepository.incrementBalance(
-            sale.unitId,
-            balanceBarber * -1,
-          )
-          await this.organizationRepository.incrementBalance(
-            org.id,
-            balanceBarber * -1,
-          )
-        }
-      }
-      await this.profileRepository.incrementBalance(barberId, amount)
-    }
-    await this.unitRepository.incrementBalance(sale.unitId, ownerShare)
-    await this.organizationRepository.incrementBalance(org.id, ownerShare)
-  }
 
   private async updateProductsStock(
     products: { id: string; quantity: number }[],
@@ -393,7 +343,11 @@ export class CreateSaleService {
       })
 
       if (paymentStatus === PaymentStatus.PAID) {
-        await this.distributeProfits(sale, user?.organizationId as string)
+        await distributeProfits(sale, user?.organizationId as string, {
+          organizationRepository: this.organizationRepository,
+          profileRepository: this.profileRepository,
+          unitRepository: this.unitRepository,
+        })
       }
 
       await this.updateProductsStock(productsToUpdate)
