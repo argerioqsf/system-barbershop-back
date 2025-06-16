@@ -73,17 +73,18 @@ export class CreateSaleService {
       if (product.unitId !== userUnitId) {
         throw new ServiceNotFromUserUnitError()
       }
-      if (product.quantity < item.quantity) throw new Error('Insufficient stock')
+      if (product.quantity < item.quantity)
+        throw new Error('Insufficient stock')
       basePrice = product.price * item.quantity
       dataItem.product = { connect: { id: item.productId } }
       productsToUpdate.push({ id: item.productId, quantity: item.quantity })
     }
 
-    let price = basePrice
-    let discount = 0
-    let discountType: DiscountType | null = null
+    const price = basePrice
+    const discount = 0
+    const discountType: DiscountType | null = null
     let couponRel: { connect: { id: string } } | undefined
-    let ownDiscount = false
+    const ownDiscount = false
     let barberCommission: number | undefined
 
     if (item.barberId) {
@@ -94,6 +95,39 @@ export class CreateSaleService {
       barberCommission = barber?.profile?.commissionPercentage
     }
 
+    const resultLogicSalesCoupons = await this.applyCouponToSale(
+      item,
+      price,
+      basePrice,
+      discount,
+      discountType,
+      ownDiscount,
+      userUnitId,
+      couponRel,
+    )
+
+    return {
+      ...resultLogicSalesCoupons,
+      basePrice,
+      porcentagemBarbeiro: barberCommission,
+      data: {
+        ...dataItem,
+        barber: item.barberId ? { connect: { id: item.barberId } } : undefined,
+        coupon: resultLogicSalesCoupons.couponRel,
+      },
+    }
+  }
+
+  private async applyCouponToSale(
+    item: CreateSaleItem,
+    price: number,
+    basePrice: number,
+    discount: number,
+    discountType: DiscountType | null,
+    ownDiscount: boolean,
+    userUnitId: string,
+    couponRel: { connect: { id: string } } | undefined,
+  ) {
     if (typeof item.price === 'number') {
       price = item.price
       if (basePrice - price > 0) {
@@ -121,19 +155,12 @@ export class CreateSaleService {
       })
       ownDiscount = true
     }
-
     return {
-      basePrice,
       price,
       discount,
       discountType,
-      porcentagemBarbeiro: barberCommission,
       ownDiscount,
-      data: {
-        ...dataItem,
-        barber: item.barberId ? { connect: { id: item.barberId } } : undefined,
-        coupon: couponRel,
-      },
+      couponRel,
     }
   }
 
@@ -211,7 +238,6 @@ export class CreateSaleService {
     })
   }
 
-
   private async updateProductsStock(
     products: { id: string; quantity: number }[],
   ): Promise<void> {
@@ -284,7 +310,9 @@ export class CreateSaleService {
             : undefined,
         items: { create: saleItems },
         coupon: couponConnect,
-        transaction: transaction ? { connect: { id: transaction.id } } : undefined,
+        transaction: transaction
+          ? { connect: { id: transaction.id } }
+          : undefined,
       })
 
       if (paymentStatus === PaymentStatus.PAID) {
