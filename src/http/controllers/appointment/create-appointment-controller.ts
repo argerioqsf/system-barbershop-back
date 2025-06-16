@@ -20,7 +20,14 @@ export async function CreateAppointmentController(
 
   const service = makeCreateAppointment()
   const unitId = data.unitId ?? (request.user as UserToken).unitId
-  const { appointment } = await service.execute({ ...data, unitId })
+  const { appointment } = await service.execute({
+    clientId: data.clientId,
+    barberId: data.barberId,
+    serviceId: data.serviceId,
+    date: data.date,
+    hour: data.hour,
+    unitId,
+  })
 
   return reply.status(201).send(appointment)
 }

@@ -20,7 +20,15 @@ export async function CreateProductController(
 
   const service = makeCreateProductService()
   const unitId = (request.user as UserToken).unitId
-  const { product } = await service.execute({ ...data, imageUrl, unitId })
+  const { product } = await service.execute({
+    name: data.name,
+    description: data.description,
+    quantity: data.quantity,
+    cost: data.cost,
+    price: data.price,
+    imageUrl,
+    unitId,
+  })
 
   return reply.status(201).send(product)
 }

@@ -16,6 +16,12 @@ export async function CreateUnitController(
   const data = bodySchema.parse(request.body)
   const service = makeCreateUnitService()
   const userToken = request.user as UserToken
-  const { unit } = await service.execute({ ...data, userToken })
+  const { unit } = await service.execute({
+    name: data.name,
+    slug: data.slug,
+    organizationId: data.organizationId,
+    allowsLoan: data.allowsLoan,
+    userToken,
+  })
   return reply.status(201).send(unit)
 }

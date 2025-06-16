@@ -18,6 +18,14 @@ export async function CreateCouponController(
   const data = bodySchema.parse(request.body)
   const service = makeCreateCouponService()
   const unitId = (request.user as UserToken).unitId
-  const { coupon } = await service.execute({ ...data, unitId })
+  const { coupon } = await service.execute({
+    code: data.code,
+    description: data.description,
+    discount: data.discount,
+    discountType: data.discountType,
+    imageUrl: data.imageUrl,
+    quantity: data.quantity,
+    unitId,
+  })
   return reply.status(201).send(coupon)
 }

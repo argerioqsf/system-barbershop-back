@@ -36,9 +36,9 @@ export class CashSessionReportService {
     for (const sale of session.sales) {
       const totals = sale.items.reduce(
         (t, item) => {
-          const price = item.service?.price ?? item.product?.price ?? 0
+          const price = item.service?.price ?? 0
           const value = price * item.quantity
-          if (item.product) {
+          if (item.productId) {
             t.product += value
           } else if (item.service) {
             t.service += value
@@ -80,7 +80,7 @@ export class CashSessionReportService {
       }
 
       Object.entries(totals.byService).forEach(([name, value]) => {
-        totalByService[name] = (totalByService[name] || 0) + value
+        totalByService[name] = (totalByService[name] || 0) + (value as number)
       })
 
       const barberPerc = sale.user.profile?.commissionPercentage ?? 100

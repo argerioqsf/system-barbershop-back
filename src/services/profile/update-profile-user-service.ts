@@ -15,7 +15,6 @@ interface UpdateProfileUserRequest {
   birthday: string
   pix: string
   role: Role
-  city: string
 }
 
 interface UpdateProfileUserResponse {
@@ -55,7 +54,6 @@ export class UpdateProfileUserService {
       birthday: data.birthday,
       pix: data.pix,
       role: data.role,
-      city: data.city,
     })
 
     const updatedUser = await this.usersRepository.findById(data.id)

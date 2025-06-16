@@ -14,6 +14,8 @@ export class InMemoryProfilesRepository implements ProfilesRepository {
       birthday: data.birthday,
       pix: data.pix,
       role: data.role as Role,
+      commissionPercentage: 100,
+      totalBalance: 0,
       userId: data.userId,
       createdAt: new Date(),
     }
@@ -41,7 +43,10 @@ export class InMemoryProfilesRepository implements ProfilesRepository {
   async update(id: string, data: Prisma.ProfileUncheckedUpdateInput): Promise<Profile> {
     const index = this.items.findIndex((item) => item.id === id)
     if (index >= 0) {
-      this.items[index] = { ...this.items[index], ...data }
+      this.items[index] = {
+        ...this.items[index],
+        ...(data as unknown as Partial<Profile>),
+      }
       return { ...this.items[index] }
     }
     throw new Error('Profile not found')
@@ -49,5 +54,12 @@ export class InMemoryProfilesRepository implements ProfilesRepository {
 
   async findMany(): Promise<(Profile & { user: Omit<User, 'password'> })[]> {
     return this.items
+  }
+
+  async incrementBalance(userId: string, amount: number): Promise<void> {
+    const profile = this.items.find((item) => item.userId === userId)
+    if (profile) {
+      profile.totalBalance += amount
+    }
   }
 }

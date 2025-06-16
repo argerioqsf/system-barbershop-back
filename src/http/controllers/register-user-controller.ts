@@ -18,7 +18,6 @@ export async function registerUser(
     birthday: z.string(),
     pix: z.string(),
     role: z.nativeEnum(Role),
-    organizationId: z.string(),
     unitId: z.string(),
   })
 
@@ -31,7 +30,18 @@ export async function registerUser(
   try {
     const registerService = makeRegisterService()
 
-    await registerService.execute(data)
+    await registerService.execute({
+      name: data.name,
+      email: data.email,
+      password: data.password,
+      phone: data.phone,
+      cpf: data.cpf,
+      genre: data.genre,
+      birthday: data.birthday,
+      pix: data.pix,
+      role: data.role,
+      unitId: data.unitId,
+    })
   } catch (error) {
     if (error instanceof UserAlreadyExistsError) {
       return replay.status(409).send({ message: error.message })

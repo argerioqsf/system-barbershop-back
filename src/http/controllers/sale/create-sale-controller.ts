@@ -25,6 +25,13 @@ export async function CreateSaleController(
   const data = bodySchema.parse(request.body)
   const userId = request.user.sub
   const service = makeCreateSale()
-  const { sale } = await service.execute({ ...data, userId })
+  const { sale } = await service.execute({
+    method: data.method,
+    items: data.items,
+    clientId: data.clientId,
+    couponCode: data.couponCode,
+    paymentStatus: data.paymentStatus,
+    userId,
+  })
   return reply.status(201).send(sale)
 }
