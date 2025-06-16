@@ -2,7 +2,6 @@ import { UserToken } from '@/http/controllers/authenticate-controller'
 import { SaleRepository, DetailedSale } from '@/repositories/sale-repository'
 import { ListSalesResponse } from './types'
 
-
 export class ListSalesService {
   constructor(private repository: SaleRepository) {}
 

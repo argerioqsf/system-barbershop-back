@@ -1,11 +1,16 @@
+import {
+  DiscountType,
+  PaymentMethod,
+  PaymentStatus,
+  SaleItem,
+} from '@prisma/client'
+import { DetailedSale } from '@/repositories/sale-repository'
+
 export interface DistributeProfitsDeps {
   organizationRepository: import('@/repositories/organization-repository').OrganizationRepository
   profileRepository: import('@/repositories/profiles-repository').ProfilesRepository
   unitRepository: import('@/repositories/unit-repository').UnitRepository
 }
-
-import { DiscountType, PaymentMethod, PaymentStatus, SaleItem } from '@prisma/client'
-import { DetailedSale } from '@/repositories/sale-repository'
 
 export interface CreateSaleItem {
   serviceId?: string
@@ -84,4 +89,3 @@ export interface SetSaleStatusRequest {
 export interface SetSaleStatusResponse {
   sale: DetailedSale
 }
-

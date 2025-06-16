@@ -1,7 +1,4 @@
-import {
-  SaleRepository,
-  DetailedSale,
-} from '../../repositories/sale-repository'
+import { SaleRepository } from '../../repositories/sale-repository'
 import { ServiceRepository } from '../../repositories/service-repository'
 import { ProductRepository } from '../../repositories/product-repository'
 import { CouponRepository } from '../../repositories/coupon-repository'
