@@ -9,7 +9,14 @@ import {
   FakeUnitRepository,
   FakeOrganizationRepository,
 } from './helpers/fake-repositories'
-import { defaultUser } from './helpers/default-values'
+import {
+  defaultUser,
+  defaultOrganization,
+  defaultUnit,
+  defaultProfile,
+  makeProfile,
+  makeUser,
+} from './helpers/default-values'
 
 function setup(options?: {
   userBalance?: number
@@ -22,21 +29,14 @@ function setup(options?: {
   const cashRepo = new FakeCashRegisterRepository()
   const profileRepo = new FakeProfilesRepository()
   const organization = {
-    id: 'org-1',
-    name: 'Org',
-    slug: 'org',
-    ownerId: null,
-    totalBalance: options?.organizationBalance ?? 0,
-    createdAt: new Date(),
+    ...defaultOrganization,
+    totalBalance: options?.organizationBalance ?? defaultOrganization.totalBalance,
   }
   const organizationRepo = new FakeOrganizationRepository(organization)
   const unit = {
-    id: 'unit-1',
-    name: 'Unit',
-    slug: 'unit',
-    organizationId: 'org-1',
-    totalBalance: options?.unitBalance ?? 0,
-    allowsLoan: options?.allowsLoan ?? false,
+    ...defaultUnit,
+    totalBalance: options?.unitBalance ?? defaultUnit.totalBalance,
+    allowsLoan: options?.allowsLoan ?? defaultUnit.allowsLoan,
   }
   const unitRepo = new FakeUnitRepository(unit)
 
@@ -50,18 +50,9 @@ function setup(options?: {
   )
 
   const profile = {
-    id: 'profile-user',
-    phone: '',
-    cpf: '',
-    genre: '',
-    birthday: '',
-    pix: '',
-    role: 'BARBER' as any,
-    commissionPercentage: 100,
-    totalBalance: options?.userBalance ?? 0,
-    userId: defaultUser.id,
+    ...defaultProfile,
+    totalBalance: options?.userBalance ?? defaultProfile.totalBalance,
     user: { ...defaultUser },
-    createdAt: new Date(),
   }
   profileRepo.profiles.push(profile)
 
@@ -229,27 +220,9 @@ describe('Create transaction service', () => {
 
   it('adds value to affected user with positive balance', async () => {
     ctx = setup()
-    const affectedProfile = {
-      id: 'profile-2',
-      phone: '',
-      cpf: '',
-      genre: '',
-      birthday: '',
-      pix: '',
-      role: 'BARBER' as any,
-      commissionPercentage: 100,
-      totalBalance: 20,
-      userId: 'user-2',
-      user: { ...defaultUser, id: 'user-2' },
-      createdAt: new Date(),
-    }
+    const affectedProfile = makeProfile('profile-2', 'user-2', 20)
     ctx.profileRepo.profiles.push(affectedProfile)
-    const affectedUser = {
-      ...defaultUser,
-      id: 'user-2',
-      profile: affectedProfile,
-      unit: ctx.unitRepo.unit,
-    }
+    const affectedUser = makeUser('user-2', affectedProfile, ctx.unitRepo.unit)
     ctx.barberRepo.users.push(affectedUser)
 
     await ctx.createTransaction.execute({
@@ -267,27 +240,9 @@ describe('Create transaction service', () => {
 
   it('adds value to affected user with negative balance', async () => {
     ctx = setup()
-    const affectedProfile = {
-      id: 'profile-3',
-      phone: '',
-      cpf: '',
-      genre: '',
-      birthday: '',
-      pix: '',
-      role: 'BARBER' as any,
-      commissionPercentage: 100,
-      totalBalance: -30,
-      userId: 'user-3',
-      user: { ...defaultUser, id: 'user-3' },
-      createdAt: new Date(),
-    }
+    const affectedProfile = makeProfile('profile-3', 'user-3', -30)
     ctx.profileRepo.profiles.push(affectedProfile)
-    const affectedUser = {
-      ...defaultUser,
-      id: 'user-3',
-      profile: affectedProfile,
-      unit: ctx.unitRepo.unit,
-    }
+    const affectedUser = makeUser('user-3', affectedProfile, ctx.unitRepo.unit)
     ctx.barberRepo.users.push(affectedUser)
 
     await ctx.createTransaction.execute({
@@ -305,27 +260,9 @@ describe('Create transaction service', () => {
 
   it('withdraws from affected user with positive balance', async () => {
     ctx = setup()
-    const affectedProfile = {
-      id: 'profile-4',
-      phone: '',
-      cpf: '',
-      genre: '',
-      birthday: '',
-      pix: '',
-      role: 'BARBER' as any,
-      commissionPercentage: 100,
-      totalBalance: 50,
-      userId: 'user-4',
-      user: { ...defaultUser, id: 'user-4' },
-      createdAt: new Date(),
-    }
+    const affectedProfile = makeProfile('profile-4', 'user-4', 50)
     ctx.profileRepo.profiles.push(affectedProfile)
-    const affectedUser = {
-      ...defaultUser,
-      id: 'user-4',
-      profile: affectedProfile,
-      unit: ctx.unitRepo.unit,
-    }
+    const affectedUser = makeUser('user-4', affectedProfile, ctx.unitRepo.unit)
     ctx.barberRepo.users.push(affectedUser)
 
     await ctx.createTransaction.execute({
@@ -341,27 +278,9 @@ describe('Create transaction service', () => {
 
   it('withdraws from affected user with negative balance', async () => {
     ctx = setup({ unitBalance: 100, allowsLoan: true })
-    const affectedProfile = {
-      id: 'profile-5',
-      phone: '',
-      cpf: '',
-      genre: '',
-      birthday: '',
-      pix: '',
-      role: 'BARBER' as any,
-      commissionPercentage: 100,
-      totalBalance: -10,
-      userId: 'user-5',
-      user: { ...defaultUser, id: 'user-5' },
-      createdAt: new Date(),
-    }
+    const affectedProfile = makeProfile('profile-5', 'user-5', -10)
     ctx.profileRepo.profiles.push(affectedProfile)
-    const affectedUser = {
-      ...defaultUser,
-      id: 'user-5',
-      profile: affectedProfile,
-      unit: ctx.unitRepo.unit,
-    }
+    const affectedUser = makeUser('user-5', affectedProfile, ctx.unitRepo.unit)
     ctx.barberRepo.users.push(affectedUser)
 
     await ctx.createTransaction.execute({
