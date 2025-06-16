@@ -7,8 +7,6 @@ import { ProductRepository } from '../../repositories/product-repository'
 import { CouponRepository } from '../../repositories/coupon-repository'
 import {
   DiscountType,
-  PaymentMethod,
-  SaleItem,
   TransactionType,
   PaymentStatus,
   Transaction,
@@ -22,68 +20,16 @@ import { ServiceNotFromUserUnitError } from '../@errors/service-not-from-user-un
 import { BarberNotFromUserUnitError } from '../@errors/barber-not-from-user-unit-error'
 import { CouponNotFromUserUnitError } from '../@errors/coupon-not-from-user-unit-error'
 import { UnitRepository } from '@/repositories/unit-repository'
-
-interface CreateSaleItem {
-  serviceId?: string
-  productId?: string
-  quantity: number
-  barberId?: string
-  couponCode?: string
-  price?: number
-}
-
-interface CreateSaleRequest {
-  userId: string
-  method: PaymentMethod
-  items: CreateSaleItem[]
-  clientId: string
-  couponCode?: string
-  paymentStatus?: PaymentStatus
-}
-
-interface CreateSaleResponse {
-  sale: DetailedSale
-}
-
-interface ConnectRelation {
-  connect: { id: string }
-}
-
-type DataItem = {
-  quantity: number
-  service?: { connect: { id?: string } }
-  product?: { connect: { id?: string } }
-}
-
-type TempItems = {
-  basePrice: number
-  price: number
-  discount: number
-  discountType: DiscountType | null
-  porcentagemBarbeiro?: number
-  ownDiscount: boolean
-  coupon?: { connect: { id: string | null } }
-  data: DataItem & {
-    barber?: { connect: { id: string } }
-    coupon?: { connect: { id: string } }
-  }
-}
-
-type SaleItemTemp = Omit<
-  SaleItem & {
-    coupon?: { connect: { id: string } }
-    service?: { connect: { id?: string } }
-    product?: { connect: { id?: string } }
-    barber?: { connect: { id: string } }
-  },
-  | 'id'
-  | 'saleId'
-  | 'serviceId'
-  | 'serviceId'
-  | 'productId'
-  | 'barberId'
-  | 'couponId'
->
+import { distributeProfits } from './profit-distribution'
+import {
+  CreateSaleItem,
+  CreateSaleRequest,
+  CreateSaleResponse,
+  ConnectRelation,
+  DataItem,
+  TempItems,
+  SaleItemTemp,
+} from './types'
 
 export class CreateSaleService {
   constructor(
@@ -99,6 +45,209 @@ export class CreateSaleService {
     private unitRepository: UnitRepository,
   ) {}
 
+  private async buildItemData(
+    item: CreateSaleItem,
+    userUnitId: string,
+    productsToUpdate: { id: string; quantity: number }[],
+  ): Promise<TempItems> {
+    if ((item.serviceId ? 1 : 0) + (item.productId ? 1 : 0) !== 1) {
+      throw new Error('Item must have serviceId or productId')
+    }
+
+    let basePrice = 0
+    const dataItem: DataItem = {
+      quantity: item.quantity,
+    }
+
+    if (item.serviceId) {
+      const service = await this.serviceRepository.findById(item.serviceId)
+      if (!service) throw new Error('Service not found')
+      if (service.unitId !== userUnitId) {
+        throw new ServiceNotFromUserUnitError()
+      }
+      basePrice = service.price * item.quantity
+      dataItem.service = { connect: { id: item.serviceId } }
+    } else if (item.productId) {
+      const product = await this.productRepository.findById(item.productId)
+      if (!product) throw new Error('Product not found')
+      if (product.unitId !== userUnitId) {
+        throw new ServiceNotFromUserUnitError()
+      }
+      if (product.quantity < item.quantity)
+        throw new Error('Insufficient stock')
+      basePrice = product.price * item.quantity
+      dataItem.product = { connect: { id: item.productId } }
+      productsToUpdate.push({ id: item.productId, quantity: item.quantity })
+    }
+
+    const price = basePrice
+    const discount = 0
+    const discountType: DiscountType | null = null
+    let couponRel: { connect: { id: string } } | undefined
+    const ownDiscount = false
+    let barberCommission: number | undefined
+
+    if (item.barberId) {
+      const barber = await this.barberUserRepository.findById(item.barberId)
+      if (barber && barber.unitId !== userUnitId) {
+        throw new BarberNotFromUserUnitError()
+      }
+      barberCommission = barber?.profile?.commissionPercentage
+    }
+
+    const resultLogicSalesCoupons = await this.applyCouponToSale(
+      item,
+      price,
+      basePrice,
+      discount,
+      discountType,
+      ownDiscount,
+      userUnitId,
+      couponRel,
+    )
+
+    return {
+      ...resultLogicSalesCoupons,
+      basePrice,
+      porcentagemBarbeiro: barberCommission,
+      data: {
+        ...dataItem,
+        barber: item.barberId ? { connect: { id: item.barberId } } : undefined,
+        coupon: resultLogicSalesCoupons.couponRel,
+      },
+    }
+  }
+
+  private async applyCouponToSale(
+    item: CreateSaleItem,
+    price: number,
+    basePrice: number,
+    discount: number,
+    discountType: DiscountType | null,
+    ownDiscount: boolean,
+    userUnitId: string,
+    couponRel: { connect: { id: string } } | undefined,
+  ) {
+    if (typeof item.price === 'number') {
+      price = item.price
+      if (basePrice - price > 0) {
+        discount = basePrice - price
+        discountType = DiscountType.VALUE
+        ownDiscount = true
+      }
+    } else if (item.couponCode) {
+      const coupon = await this.couponRepository.findByCode(item.couponCode)
+      if (!coupon) throw new Error('Coupon not found')
+      if (coupon.unitId !== userUnitId) {
+        throw new CouponNotFromUserUnitError()
+      }
+      if (coupon.quantity <= 0) throw new Error('Coupon exhausted')
+      const discountAmount =
+        coupon.discountType === 'PERCENTAGE'
+          ? (price * coupon.discount) / 100
+          : coupon.discount
+      price = Math.max(price - discountAmount, 0)
+      discount = coupon.discount
+      discountType = coupon.discountType
+      couponRel = { connect: { id: coupon.id } }
+      await this.couponRepository.update(coupon.id, {
+        quantity: { decrement: 1 },
+      })
+      ownDiscount = true
+    }
+    return {
+      price,
+      discount,
+      discountType,
+      ownDiscount,
+      couponRel,
+    }
+  }
+
+  private async applyCouponToItems(
+    items: TempItems[],
+    couponCode: string,
+    userUnitId: string,
+  ): Promise<ConnectRelation | undefined> {
+    const affectedTotal = items
+      .filter((i) => !i.ownDiscount)
+      .reduce((acc, i) => acc + i.price, 0)
+
+    const coupon = await this.couponRepository.findByCode(couponCode)
+    if (!coupon) throw new Error('Coupon not found')
+    if (coupon.unitId !== userUnitId) {
+      throw new CouponNotFromUserUnitError()
+    }
+    if (coupon.quantity <= 0) throw new Error('Coupon exhausted')
+
+    for (const temp of items) {
+      if (temp.ownDiscount) continue
+      if (coupon.discountType === 'PERCENTAGE') {
+        const reduction = (temp.price * coupon.discount) / 100
+        temp.price = Math.max(temp.price - reduction, 0)
+        temp.discount = coupon.discount
+      } else if (affectedTotal > 0) {
+        const part = (temp.price / affectedTotal) * coupon.discount
+        temp.price = Math.max(temp.price - part, 0)
+        temp.discount = part
+      }
+      temp.discountType = coupon.discountType
+    }
+
+    await this.couponRepository.update(coupon.id, {
+      quantity: { decrement: 1 },
+    })
+
+    return { connect: { id: coupon.id } }
+  }
+
+  private mapToSaleItems(tempItems: TempItems[]): SaleItemTemp[] {
+    return tempItems.map((temp) => ({
+      coupon: temp.data.coupon,
+      quantity: temp.data.quantity,
+      service: temp.data.service,
+      product: temp.data.product,
+      barber: temp.data.barber,
+      price: temp.price,
+      discount: temp.discount,
+      discountType: temp.discountType,
+      porcentagemBarbeiro: temp.porcentagemBarbeiro ?? null,
+    }))
+  }
+
+  private calculateTotal(tempItems: TempItems[]): number {
+    return tempItems.reduce((acc, i) => acc + i.price, 0)
+  }
+
+  private async createTransactionIfPaid(
+    paymentStatus: PaymentStatus,
+    userId: string,
+    unitId: string | undefined,
+    session: { id: string } | null,
+    amount: number,
+  ): Promise<Transaction | null> {
+    if (paymentStatus !== PaymentStatus.PAID) return null
+
+    return this.transactionRepository.create({
+      user: { connect: { id: userId } },
+      unit: { connect: { id: unitId } },
+      session: session ? { connect: { id: session.id } } : undefined,
+      type: TransactionType.ADDITION,
+      description: 'Sale',
+      amount,
+    })
+  }
+
+  private async updateProductsStock(
+    products: { id: string; quantity: number }[],
+  ): Promise<void> {
+    for (const prod of products) {
+      await this.productRepository.update(prod.id, {
+        quantity: { decrement: prod.quantity },
+      })
+    }
+  }
+
   async execute({
     userId,
     method,
@@ -107,163 +256,45 @@ export class CreateSaleService {
     couponCode,
     paymentStatus = PaymentStatus.PENDING,
   }: CreateSaleRequest): Promise<CreateSaleResponse> {
-    const saleItems: SaleItemTemp[] = []
-    let couponConnect: ConnectRelation | undefined
     const tempItems: TempItems[] = []
+    const productsToUpdate: { id: string; quantity: number }[] = []
+
     const user = await this.barberUserRepository.findById(userId)
     const session = await this.cashRegisterRepository.findOpenByUnit(
       user?.unitId as string,
     )
+
     if (!session && paymentStatus === PaymentStatus.PAID)
       throw new Error('Cash register closed')
-    const productsToUpdate: { id: string; quantity: number }[] = []
+
     for (const item of items) {
-      if ((item.serviceId ? 1 : 0) + (item.productId ? 1 : 0) !== 1) {
-        throw new Error('Item must have serviceId or productId')
-      }
-      let basePrice = 0
-      const dataItem: DataItem = {
-        quantity: item.quantity,
-      }
-      if (item.serviceId) {
-        const service = await this.serviceRepository.findById(item.serviceId)
-        if (!service) throw new Error('Service not found')
-        if (service.unitId !== user?.unitId) {
-          throw new ServiceNotFromUserUnitError()
-        }
-        basePrice = service.price * item.quantity
-        dataItem.service = { connect: { id: item.serviceId } }
-      } else if (item.productId) {
-        const product = await this.productRepository.findById(item.productId)
-        if (!product) throw new Error('Product not found')
-        if (product.unitId !== user?.unitId) {
-          throw new ServiceNotFromUserUnitError()
-        }
-        if (product.quantity < item.quantity)
-          throw new Error('Insufficient stock')
-        basePrice = product.price * item.quantity
-        dataItem.product = { connect: { id: item.productId } }
-        productsToUpdate.push({ id: item.productId, quantity: item.quantity })
-      }
-      let price = basePrice
-      let discount = 0
-      let discountType: DiscountType | null = null
-      let itemCouponConnect: { connect: { id: string } } | undefined
-      let ownDiscount = false
-      let porcentagemBarbeiro: number | undefined
-
-      if (item.barberId) {
-        const barber = await this.barberUserRepository.findById(item.barberId)
-        if (barber && barber.unitId !== user?.unitId) {
-          throw new BarberNotFromUserUnitError()
-        }
-        porcentagemBarbeiro = barber?.profile?.commissionPercentage
-      }
-
-      if (typeof item.price === 'number') {
-        price = item.price
-        if (basePrice - price > 0) {
-          discount = basePrice - price
-          discountType = DiscountType.VALUE
-          ownDiscount = true
-        }
-      } else if (item.couponCode) {
-        const coupon = await this.couponRepository.findByCode(item.couponCode)
-        if (!coupon) throw new Error('Coupon not found')
-        if (coupon.unitId !== user?.unitId) {
-          throw new CouponNotFromUserUnitError()
-        }
-        if (coupon.quantity <= 0) throw new Error('Coupon exhausted')
-        const discountAmount =
-          coupon.discountType === 'PERCENTAGE'
-            ? (price * coupon.discount) / 100
-            : coupon.discount
-        price = Math.max(price - discountAmount, 0)
-        discount = coupon.discount
-        discountType = coupon.discountType
-        itemCouponConnect = { connect: { id: coupon.id } }
-        await this.couponRepository.update(coupon.id, {
-          quantity: { decrement: 1 },
-        })
-        ownDiscount = true
-      }
-
-      tempItems.push({
-        basePrice,
-        price,
-        discount,
-        discountType,
-        porcentagemBarbeiro,
-        ownDiscount,
-        data: {
-          ...dataItem,
-          barber: item.barberId
-            ? { connect: { id: item.barberId } }
-            : undefined,
-          coupon: itemCouponConnect,
-        },
-      })
+      const temp = await this.buildItemData(
+        item,
+        user?.unitId as string,
+        productsToUpdate,
+      )
+      tempItems.push(temp)
     }
 
+    let couponConnect: ConnectRelation | undefined
     if (couponCode) {
-      const affectedTotal = tempItems
-        .filter((i) => !i.ownDiscount)
-        .reduce((acc, i) => acc + i.price, 0)
-
-      const coupon = await this.couponRepository.findByCode(couponCode)
-      if (!coupon) throw new Error('Coupon not found')
-      if (coupon.unitId !== user?.unitId) {
-        throw new CouponNotFromUserUnitError()
-      }
-      if (coupon.quantity <= 0) throw new Error('Coupon exhausted')
-
-      for (const temp of tempItems) {
-        if (temp.ownDiscount) continue
-        if (coupon.discountType === 'PERCENTAGE') {
-          const reduction = (temp.price * coupon.discount) / 100
-          temp.price = Math.max(temp.price - reduction, 0)
-          temp.discount = coupon.discount
-        } else if (affectedTotal > 0) {
-          const part = (temp.price / affectedTotal) * coupon.discount
-          temp.price = Math.max(temp.price - part, 0)
-          temp.discount = part
-        }
-        temp.discountType = coupon.discountType
-      }
-
-      couponConnect = { connect: { id: coupon.id } }
-      await this.couponRepository.update(coupon.id, {
-        quantity: { decrement: 1 },
-      })
+      couponConnect = await this.applyCouponToItems(
+        tempItems,
+        couponCode,
+        user?.unitId as string,
+      )
     }
 
-    for (const temp of tempItems) {
-      saleItems.push({
-        coupon: temp.data.coupon,
-        quantity: temp.data.quantity,
-        service: temp.data.service,
-        product: temp.data.product,
-        barber: temp.data.barber,
-        price: temp.price,
-        discount: temp.discount,
-        discountType: temp.discountType,
-        porcentagemBarbeiro: temp.porcentagemBarbeiro ?? null,
-      })
-    }
+    const saleItems = this.mapToSaleItems(tempItems)
+    const calculatedTotal = this.calculateTotal(tempItems)
 
-    const calculatedTotal = tempItems.reduce((acc, i) => acc + i.price, 0)
-
-    let transaction: Transaction | null = null
-    if (paymentStatus === PaymentStatus.PAID) {
-      transaction = await this.transactionRepository.create({
-        user: { connect: { id: userId } },
-        unit: { connect: { id: user?.unitId } },
-        session: session ? { connect: { id: session.id } } : undefined,
-        type: TransactionType.ADDITION,
-        description: 'Sale',
-        amount: calculatedTotal,
-      })
-    }
+    const transaction = await this.createTransactionIfPaid(
+      paymentStatus,
+      userId,
+      user?.unitId,
+      session,
+      calculatedTotal,
+    )
 
     try {
       const sale = await this.saleRepository.create({
@@ -285,62 +316,14 @@ export class CreateSaleService {
       })
 
       if (paymentStatus === PaymentStatus.PAID) {
-        const org = await this.organizationRepository.findById(
-          user?.organizationId as string,
-        )
-        if (!org) throw new Error('Org not found')
-        const barberTotals: Record<string, number> = {}
-        let ownerShare = 0
-        for (const item of sale.items) {
-          const value = item.price ?? 0
-          if (item.product) {
-            ownerShare += value
-          } else if (item.barberId) {
-            const perc = item.porcentagemBarbeiro ?? 100
-            const valueBarber = (value * perc) / 100
-            barberTotals[item.barberId] =
-              (barberTotals[item.barberId] || 0) + valueBarber
-            ownerShare += value - valueBarber
-          } else {
-            ownerShare += value
-          }
-        }
-        for (const [barberId, amount] of Object.entries(barberTotals)) {
-          const userBarber = sale.items.find(
-            (item) => item.barber?.id === barberId,
-          )
-          if (!userBarber) throw new Error('Barber not found')
-          if (
-            userBarber &&
-            userBarber.barber &&
-            userBarber.barber.profile &&
-            userBarber.barber.profile.totalBalance < 0
-          ) {
-            const balanceBarber = userBarber.barber.profile.totalBalance
-            const valueCalculated = balanceBarber + amount
-            if (valueCalculated <= 0) {
-              await this.unitRepository.incrementBalance(sale.unitId, amount)
-            } else {
-              await this.unitRepository.incrementBalance(
-                sale.unitId,
-                balanceBarber * -1,
-              )
-              await this.organizationRepository.incrementBalance(
-                org.id,
-                balanceBarber * -1,
-              )
-            }
-          }
-          await this.profileRepository.incrementBalance(barberId, amount)
-        }
-        await this.unitRepository.incrementBalance(sale.unitId, ownerShare)
-        await this.organizationRepository.incrementBalance(org.id, ownerShare)
-      }
-      for (const prod of productsToUpdate) {
-        await this.productRepository.update(prod.id, {
-          quantity: { decrement: prod.quantity },
+        await distributeProfits(sale, user?.organizationId as string, {
+          organizationRepository: this.organizationRepository,
+          profileRepository: this.profileRepository,
+          unitRepository: this.unitRepository,
         })
       }
+
+      await this.updateProductsStock(productsToUpdate)
 
       return { sale }
     } catch (error) {
