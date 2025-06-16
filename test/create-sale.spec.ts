@@ -14,7 +14,6 @@ import {
   FakeUnitRepository,
 } from './helpers/fake-repositories'
 
-import { randomUUID } from 'crypto'
 import {
   defaultUser,
   defaultClient,
@@ -33,10 +32,24 @@ function setup() {
   const barberRepo = new FakeBarberUsersRepository()
   const cashRepo = new FakeCashRegisterRepository()
   const transactionRepo = new FakeTransactionRepository()
-  const organization = { id: 'org-1', name: 'Org', slug: 'org', ownerId: null, totalBalance: 0, createdAt: new Date() }
+  const organization = {
+    id: 'org-1',
+    name: 'Org',
+    slug: 'org',
+    ownerId: null,
+    totalBalance: 0,
+    createdAt: new Date(),
+  }
   const organizationRepo = new FakeOrganizationRepository(organization)
   const profilesRepo = new FakeProfilesRepository()
-  const unit = { id: 'unit-1', name: 'Unit', slug: 'unit', organizationId: 'org-1', totalBalance: 0, allowsLoan: false }
+  const unit = {
+    id: 'unit-1',
+    name: 'Unit',
+    slug: 'unit',
+    organizationId: 'org-1',
+    totalBalance: 0,
+    allowsLoan: false,
+  }
   const unitRepo = new FakeUnitRepository(unit)
 
   const createSale = new CreateSaleService(
@@ -66,7 +79,6 @@ function setup() {
     createSale,
   }
 }
-
 
 describe('Create sale service', () => {
   let ctx: ReturnType<typeof setup>
@@ -313,8 +325,18 @@ describe('Create sale service', () => {
   it('creates a sale with product and service items with coupons on each item (percentage)', async () => {
     const service = makeService('service-7', 100)
     const product = makeProduct('product-8', 50)
-    const couponService = makeCoupon('cs6', 'SV10P', 10, DiscountType.PERCENTAGE)
-    const couponProduct = makeCoupon('cp6', 'PV10P', 10, DiscountType.PERCENTAGE)
+    const couponService = makeCoupon(
+      'cs6',
+      'SV10P',
+      10,
+      DiscountType.PERCENTAGE,
+    )
+    const couponProduct = makeCoupon(
+      'cp6',
+      'PV10P',
+      10,
+      DiscountType.PERCENTAGE,
+    )
     ctx.serviceRepo.services.push(service)
     ctx.productRepo.products.push(product)
     ctx.couponRepo.coupons.push(couponService, couponProduct)
@@ -420,7 +442,17 @@ describe('Create sale service', () => {
     ctx.serviceRepo.services.push(service)
     ctx.productRepo.products.push(product)
     ctx.couponRepo.coupons.push(coupon)
-    ctx.cashRepo.session = { id: 'session-1', openedById: defaultUser.id, unitId: 'unit-1', openedAt: new Date(), closedAt: null, initialAmount: 0, transactions: [], sales: [], finalAmount: null }
+    ctx.cashRepo.session = {
+      id: 'session-1',
+      openedById: defaultUser.id,
+      unitId: 'unit-1',
+      openedAt: new Date(),
+      closedAt: null,
+      initialAmount: 0,
+      transactions: [],
+      sales: [],
+      finalAmount: null,
+    }
     ctx.profilesRepo.profiles.push({ ...barberProfile, user: barberUser })
 
     const result = await ctx.createSale.execute({
@@ -434,11 +466,16 @@ describe('Create sale service', () => {
       paymentStatus: PaymentStatus.PAID,
     })
 
-    const expectedBarber = (service.price * barberProfile.commissionPercentage) / 100
-    expect(ctx.profilesRepo.profiles[0].totalBalance).toBeCloseTo(expectedBarber)
+    const expectedBarber =
+      (service.price * barberProfile.commissionPercentage) / 100
+    expect(ctx.profilesRepo.profiles[0].totalBalance).toBeCloseTo(
+      expectedBarber,
+    )
     const ownerShare = service.price - expectedBarber + (product.price - 10)
     expect(ctx.unitRepo.unit.totalBalance).toBeCloseTo(ownerShare)
-    expect(ctx.organizationRepo.organization.totalBalance).toBeCloseTo(ownerShare)
+    expect(ctx.organizationRepo.organization.totalBalance).toBeCloseTo(
+      ownerShare,
+    )
     expect(product.quantity).toBe(4)
     expect(result.sale.total).toBe(140)
   })
