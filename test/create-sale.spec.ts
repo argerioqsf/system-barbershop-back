@@ -20,6 +20,9 @@ import {
   defaultClient,
   barberProfile,
   barberUser,
+  makeService,
+  makeProduct,
+  makeCoupon,
 } from './helpers/default-values'
 
 function setup() {
@@ -73,7 +76,7 @@ describe('Create sale service', () => {
   })
 
   it('creates a sale with one service item without coupon', async () => {
-    const service = { id: 'service-1', name: '', description: null, imageUrl: null, cost: 0, price: 100, unitId: 'unit-1' }
+    const service = makeService('service-1', 100)
     ctx.serviceRepo.services.push(service)
 
     const result = await ctx.createSale.execute({
@@ -92,8 +95,8 @@ describe('Create sale service', () => {
   })
 
   it('creates a sale with one service item with value coupon on item', async () => {
-    const service = { id: 'service-1', name: '', description: null, imageUrl: null, cost: 0, price: 100, unitId: 'unit-1' }
-    const coupon = { id: 'c1', code: 'VAL10', description: null, discount: 10, discountType: DiscountType.VALUE, imageUrl: null, quantity: 5, unitId: 'unit-1', createdAt: new Date() }
+    const service = makeService('service-1', 100)
+    const coupon = makeCoupon('c1', 'VAL10', 10, DiscountType.VALUE)
     ctx.serviceRepo.services.push(service)
     ctx.couponRepo.coupons.push(coupon)
 
@@ -113,8 +116,8 @@ describe('Create sale service', () => {
   })
 
   it('creates a sale with one service item with percentage coupon on item', async () => {
-    const service = { id: 'service-2', name: '', description: null, imageUrl: null, cost: 0, price: 100, unitId: 'unit-1' }
-    const coupon = { id: 'c2', code: 'PERC10', description: null, discount: 10, discountType: DiscountType.PERCENTAGE, imageUrl: null, quantity: 5, unitId: 'unit-1', createdAt: new Date() }
+    const service = makeService('service-2', 100)
+    const coupon = makeCoupon('c2', 'PERC10', 10, DiscountType.PERCENTAGE)
     ctx.serviceRepo.services.push(service)
     ctx.couponRepo.coupons.push(coupon)
 
@@ -131,8 +134,8 @@ describe('Create sale service', () => {
   })
 
   it('creates a sale with one service item and general value coupon', async () => {
-    const service = { id: 'service-3', name: '', description: null, imageUrl: null, cost: 0, price: 100, unitId: 'unit-1' }
-    const coupon = { id: 'c3', code: 'VAL20', description: null, discount: 20, discountType: DiscountType.VALUE, imageUrl: null, quantity: 5, unitId: 'unit-1', createdAt: new Date() }
+    const service = makeService('service-3', 100)
+    const coupon = makeCoupon('c3', 'VAL20', 20, DiscountType.VALUE)
     ctx.serviceRepo.services.push(service)
     ctx.couponRepo.coupons.push(coupon)
 
@@ -150,8 +153,8 @@ describe('Create sale service', () => {
   })
 
   it('creates a sale with one service item and general percentage coupon', async () => {
-    const service = { id: 'service-4', name: '', description: null, imageUrl: null, cost: 0, price: 100, unitId: 'unit-1' }
-    const coupon = { id: 'c4', code: 'P20', description: null, discount: 20, discountType: DiscountType.PERCENTAGE, imageUrl: null, quantity: 5, unitId: 'unit-1', createdAt: new Date() }
+    const service = makeService('service-4', 100)
+    const coupon = makeCoupon('c4', 'P20', 20, DiscountType.PERCENTAGE)
     ctx.serviceRepo.services.push(service)
     ctx.couponRepo.coupons.push(coupon)
 
@@ -169,7 +172,7 @@ describe('Create sale service', () => {
   })
 
   it('creates a sale with one product item without coupon', async () => {
-    const product = { id: 'product-1', name: '', description: null, imageUrl: null, quantity: 5, cost: 0, price: 50, unitId: 'unit-1' }
+    const product = makeProduct('product-1', 50)
     ctx.productRepo.products.push(product)
 
     const result = await ctx.createSale.execute({
@@ -184,8 +187,8 @@ describe('Create sale service', () => {
   })
 
   it('creates a sale with one product item with value coupon on item', async () => {
-    const product = { id: 'product-2', name: '', description: null, imageUrl: null, quantity: 5, cost: 0, price: 50, unitId: 'unit-1' }
-    const coupon = { id: 'pc1', code: 'PV10', description: null, discount: 10, discountType: DiscountType.VALUE, imageUrl: null, quantity: 5, unitId: 'unit-1', createdAt: new Date() }
+    const product = makeProduct('product-2', 50)
+    const coupon = makeCoupon('pc1', 'PV10', 10, DiscountType.VALUE)
     ctx.productRepo.products.push(product)
     ctx.couponRepo.coupons.push(coupon)
 
@@ -203,8 +206,8 @@ describe('Create sale service', () => {
   })
 
   it('creates a sale with one product item with percentage coupon on item', async () => {
-    const product = { id: 'product-3', name: '', description: null, imageUrl: null, quantity: 5, cost: 0, price: 50, unitId: 'unit-1' }
-    const coupon = { id: 'pc2', code: 'PP10', description: null, discount: 10, discountType: DiscountType.PERCENTAGE, imageUrl: null, quantity: 5, unitId: 'unit-1', createdAt: new Date() }
+    const product = makeProduct('product-3', 50)
+    const coupon = makeCoupon('pc2', 'PP10', 10, DiscountType.PERCENTAGE)
     ctx.productRepo.products.push(product)
     ctx.couponRepo.coupons.push(coupon)
 
@@ -222,8 +225,8 @@ describe('Create sale service', () => {
   })
 
   it('creates a sale with one product item and general value coupon', async () => {
-    const product = { id: 'product-4', name: '', description: null, imageUrl: null, quantity: 5, cost: 0, price: 50, unitId: 'unit-1' }
-    const coupon = { id: 'pc3', code: 'GV30', description: null, discount: 30, discountType: DiscountType.VALUE, imageUrl: null, quantity: 5, unitId: 'unit-1', createdAt: new Date() }
+    const product = makeProduct('product-4', 50)
+    const coupon = makeCoupon('pc3', 'GV30', 30, DiscountType.VALUE)
     ctx.productRepo.products.push(product)
     ctx.couponRepo.coupons.push(coupon)
 
@@ -242,8 +245,8 @@ describe('Create sale service', () => {
   })
 
   it('creates a sale with one product item and general percentage coupon', async () => {
-    const product = { id: 'product-5', name: '', description: null, imageUrl: null, quantity: 5, cost: 0, price: 50, unitId: 'unit-1' }
-    const coupon = { id: 'pc4', code: 'GP50', description: null, discount: 50, discountType: DiscountType.PERCENTAGE, imageUrl: null, quantity: 5, unitId: 'unit-1', createdAt: new Date() }
+    const product = makeProduct('product-5', 50)
+    const coupon = makeCoupon('pc4', 'GP50', 50, DiscountType.PERCENTAGE)
     ctx.productRepo.products.push(product)
     ctx.couponRepo.coupons.push(coupon)
 
@@ -262,8 +265,8 @@ describe('Create sale service', () => {
   })
 
   it('creates a sale with product and service items without coupons', async () => {
-    const service = { id: 'service-5', name: '', description: null, imageUrl: null, cost: 0, price: 100, unitId: 'unit-1' }
-    const product = { id: 'product-6', name: '', description: null, imageUrl: null, quantity: 5, cost: 0, price: 50, unitId: 'unit-1' }
+    const service = makeService('service-5', 100)
+    const product = makeProduct('product-6', 50)
     ctx.serviceRepo.services.push(service)
     ctx.productRepo.products.push(product)
 
@@ -283,10 +286,10 @@ describe('Create sale service', () => {
   })
 
   it('creates a sale with product and service items with coupons on each item (value)', async () => {
-    const service = { id: 'service-6', name: '', description: null, imageUrl: null, cost: 0, price: 100, unitId: 'unit-1' }
-    const product = { id: 'product-7', name: '', description: null, imageUrl: null, quantity: 5, cost: 0, price: 50, unitId: 'unit-1' }
-    const couponService = { id: 'cs5', code: 'SV5', description: null, discount: 5, discountType: DiscountType.VALUE, imageUrl: null, quantity: 5, unitId: 'unit-1', createdAt: new Date() }
-    const couponProduct = { id: 'cp5', code: 'PV5', description: null, discount: 5, discountType: DiscountType.VALUE, imageUrl: null, quantity: 5, unitId: 'unit-1', createdAt: new Date() }
+    const service = makeService('service-6', 100)
+    const product = makeProduct('product-7', 50)
+    const couponService = makeCoupon('cs5', 'SV5', 5, DiscountType.VALUE)
+    const couponProduct = makeCoupon('cp5', 'PV5', 5, DiscountType.VALUE)
     ctx.serviceRepo.services.push(service)
     ctx.productRepo.products.push(product)
     ctx.couponRepo.coupons.push(couponService, couponProduct)
@@ -308,10 +311,10 @@ describe('Create sale service', () => {
   })
 
   it('creates a sale with product and service items with coupons on each item (percentage)', async () => {
-    const service = { id: 'service-7', name: '', description: null, imageUrl: null, cost: 0, price: 100, unitId: 'unit-1' }
-    const product = { id: 'product-8', name: '', description: null, imageUrl: null, quantity: 5, cost: 0, price: 50, unitId: 'unit-1' }
-    const couponService = { id: 'cs6', code: 'SV10P', description: null, discount: 10, discountType: DiscountType.PERCENTAGE, imageUrl: null, quantity: 5, unitId: 'unit-1', createdAt: new Date() }
-    const couponProduct = { id: 'cp6', code: 'PV10P', description: null, discount: 10, discountType: DiscountType.PERCENTAGE, imageUrl: null, quantity: 5, unitId: 'unit-1', createdAt: new Date() }
+    const service = makeService('service-7', 100)
+    const product = makeProduct('product-8', 50)
+    const couponService = makeCoupon('cs6', 'SV10P', 10, DiscountType.PERCENTAGE)
+    const couponProduct = makeCoupon('cp6', 'PV10P', 10, DiscountType.PERCENTAGE)
     ctx.serviceRepo.services.push(service)
     ctx.productRepo.products.push(product)
     ctx.couponRepo.coupons.push(couponService, couponProduct)
@@ -335,9 +338,9 @@ describe('Create sale service', () => {
   })
 
   it('creates a sale with product and service items using general value coupon', async () => {
-    const service = { id: 'service-8', name: '', description: null, imageUrl: null, cost: 0, price: 100, unitId: 'unit-1' }
-    const product = { id: 'product-9', name: '', description: null, imageUrl: null, quantity: 5, cost: 0, price: 50, unitId: 'unit-1' }
-    const coupon = { id: 'cg1', code: 'GVAL30', description: null, discount: 30, discountType: DiscountType.VALUE, imageUrl: null, quantity: 5, unitId: 'unit-1', createdAt: new Date() }
+    const service = makeService('service-8', 100)
+    const product = makeProduct('product-9', 50)
+    const coupon = makeCoupon('cg1', 'GVAL30', 30, DiscountType.VALUE)
     ctx.serviceRepo.services.push(service)
     ctx.productRepo.products.push(product)
     ctx.couponRepo.coupons.push(coupon)
@@ -358,9 +361,9 @@ describe('Create sale service', () => {
   })
 
   it('creates a sale with product and service items using general percentage coupon', async () => {
-    const service = { id: 'service-9', name: '', description: null, imageUrl: null, cost: 0, price: 100, unitId: 'unit-1' }
-    const product = { id: 'product-10', name: '', description: null, imageUrl: null, quantity: 5, cost: 0, price: 50, unitId: 'unit-1' }
-    const coupon = { id: 'cg2', code: 'GPERC50', description: null, discount: 50, discountType: DiscountType.PERCENTAGE, imageUrl: null, quantity: 5, unitId: 'unit-1', createdAt: new Date() }
+    const service = makeService('service-9', 100)
+    const product = makeProduct('product-10', 50)
+    const coupon = makeCoupon('cg2', 'GPERC50', 50, DiscountType.PERCENTAGE)
     ctx.serviceRepo.services.push(service)
     ctx.productRepo.products.push(product)
     ctx.couponRepo.coupons.push(coupon)
@@ -384,11 +387,11 @@ describe('Create sale service', () => {
   })
 
   it('creates a sale with mixed coupons', async () => {
-    const service = { id: 'service-10', name: '', description: null, imageUrl: null, cost: 0, price: 100, unitId: 'unit-1' }
-    const product1 = { id: 'product-11', name: '', description: null, imageUrl: null, quantity: 5, cost: 0, price: 50, unitId: 'unit-1' }
-    const product2 = { id: 'product-12', name: '', description: null, imageUrl: null, quantity: 5, cost: 0, price: 30, unitId: 'unit-1' }
-    const couponItem = { id: 'ci1', code: 'SVC5', description: null, discount: 5, discountType: DiscountType.VALUE, imageUrl: null, quantity: 5, unitId: 'unit-1', createdAt: new Date() }
-    const couponGeneral = { id: 'cg3', code: 'G10', description: null, discount: 10, discountType: DiscountType.VALUE, imageUrl: null, quantity: 5, unitId: 'unit-1', createdAt: new Date() }
+    const service = makeService('service-10', 100)
+    const product1 = makeProduct('product-11', 50)
+    const product2 = makeProduct('product-12', 30)
+    const couponItem = makeCoupon('ci1', 'SVC5', 5, DiscountType.VALUE)
+    const couponGeneral = makeCoupon('cg3', 'G10', 10, DiscountType.VALUE)
     ctx.serviceRepo.services.push(service)
     ctx.productRepo.products.push(product1, product2)
     ctx.couponRepo.coupons.push(couponItem, couponGeneral)
@@ -411,9 +414,9 @@ describe('Create sale service', () => {
   })
 
   it('updates balances on paid sale with barber and product', async () => {
-    const service = { id: 'service-11', name: '', description: null, imageUrl: null, cost: 0, price: 100, unitId: 'unit-1' }
-    const product = { id: 'product-13', name: '', description: null, imageUrl: null, quantity: 5, cost: 0, price: 50, unitId: 'unit-1' }
-    const coupon = { id: 'pcpaid', code: 'PAID10', description: null, discount: 10, discountType: DiscountType.VALUE, imageUrl: null, quantity: 5, unitId: 'unit-1', createdAt: new Date() }
+    const service = makeService('service-11', 100)
+    const product = makeProduct('product-13', 50)
+    const coupon = makeCoupon('pcpaid', 'PAID10', 10, DiscountType.VALUE)
     ctx.serviceRepo.services.push(service)
     ctx.productRepo.products.push(product)
     ctx.couponRepo.coupons.push(coupon)
