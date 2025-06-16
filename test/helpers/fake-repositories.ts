@@ -16,6 +16,7 @@ import {
   Sale,
   Role,
   PasswordResetToken,
+  Appointment,
 } from '@prisma/client'
 import { ProductRepository } from '../../src/repositories/product-repository'
 import { CouponRepository } from '../../src/repositories/coupon-repository'
@@ -34,6 +35,10 @@ import { OrganizationRepository } from '../../src/repositories/organization-repo
 import { ProfilesRepository } from '../../src/repositories/profiles-repository'
 import { UnitRepository } from '../../src/repositories/unit-repository'
 import { PasswordResetTokenRepository } from '../../src/repositories/password-reset-token-repository'
+import {
+  AppointmentRepository,
+  DetailedAppointment,
+} from '../../src/repositories/appointment-repository'
 import { randomUUID } from 'crypto'
 import { ServiceRepository } from '../../src/repositories/service-repository'
 import { TransactionFull } from '../../src/repositories/prisma/prisma-transaction-repository'
@@ -731,5 +736,239 @@ export class FakePasswordResetTokenRepository
 
   async deleteByUserId(userId: string): Promise<void> {
     this.tokens = this.tokens.filter((t) => t.userId !== userId)
+  }
+}
+
+export class InMemoryCashRegisterRepository implements CashRegisterRepository {
+  public sessions: (CompleteCashSession & {
+    transactions: Transaction[]
+  })[] = []
+
+  async create(
+    data: Prisma.CashRegisterSessionCreateInput,
+  ): Promise<CashRegisterSession> {
+    const session: CashRegisterSession = {
+      id: randomUUID(),
+      openedById: (data.user as any).connect.id,
+      unitId: (data.unit as any).connect.id,
+      openedAt: new Date(),
+      closedAt: null,
+      initialAmount: data.initialAmount as number,
+      finalAmount: null,
+    }
+    this.sessions.push({
+      ...session,
+      user: {
+        id: session.openedById,
+        name: '',
+        email: '',
+        password: '',
+        active: true,
+        organizationId: 'org-1',
+        unitId: session.unitId,
+        createdAt: new Date(),
+        profile: null,
+      },
+      sales: [],
+      transactions: [],
+    })
+    return session
+  }
+
+  async close(
+    id: string,
+    data: Prisma.CashRegisterSessionUpdateInput,
+  ): Promise<CashRegisterSession> {
+    const index = this.sessions.findIndex((s) => s.id === id)
+    if (index < 0) throw new Error('Session not found')
+    const current = this.sessions[index]
+    const updated = {
+      ...current,
+      closedAt: data.closedAt as Date,
+      finalAmount: data.finalAmount as number,
+    }
+    this.sessions[index] = updated
+    return updated
+  }
+
+  async findMany(
+    where: Prisma.CashRegisterSessionWhereInput = {},
+  ): Promise<DetailedCashSession[]> {
+    return this.sessions.filter((s: any) => {
+      if (where.unitId && s.unitId !== where.unitId) return false
+      if (where.unit && 'organizationId' in (where.unit as any)) {
+        return s.unit?.organizationId === (where.unit as any).organizationId
+      }
+      return true
+    })
+  }
+
+  async findManyByUnit(unitId: string): Promise<DetailedCashSession[]> {
+    return this.sessions.filter((s) => s.unitId === unitId)
+  }
+
+  async findOpenByUser(userId: string): Promise<CashRegisterSession | null> {
+    const session = this.sessions.find(
+      (s) => s.openedById === userId && s.closedAt === null,
+    )
+    return session ?? null
+  }
+
+  async findOpenByUnit(
+    unitId: string,
+  ): Promise<(CashRegisterSession & { transactions: Transaction[] }) | null> {
+    const session = this.sessions.find(
+      (s) => s.unitId === unitId && s.closedAt === null,
+    )
+    return session ? { ...session, transactions: session.transactions } : null
+  }
+
+  async findById(id: string): Promise<CompleteCashSession | null> {
+    return this.sessions.find((s) => s.id === id) ?? null
+  }
+}
+
+export class InMemoryBarberUsersRepository implements BarberUsersRepository {
+  constructor(
+    public users: (User & { profile: Profile | null; unit?: Unit | null })[] = [],
+  ) {}
+
+  async create(
+    data: Prisma.UserCreateInput,
+    profileData: Omit<Prisma.ProfileCreateInput, 'user'>,
+  ): Promise<{ user: User; profile: Profile }> {
+    const user: User = {
+      id: randomUUID(),
+      name: data.name,
+      email: data.email,
+      password: data.password as string,
+      active: (data.active as boolean) ?? false,
+      organizationId: (data.organization as any).connect.id,
+      unitId: (data.unit as any).connect.id,
+      createdAt: new Date(),
+    }
+    const profile: Profile = {
+      id: randomUUID(),
+      userId: user.id,
+      phone: profileData.phone as string,
+      cpf: profileData.cpf as string,
+      genre: profileData.genre as string,
+      birthday: profileData.birthday as string,
+      pix: profileData.pix as string,
+      role: profileData.role as Role,
+      commissionPercentage:
+        (profileData as any).commissionPercentage ?? 100,
+      totalBalance: 0,
+      createdAt: new Date(),
+    }
+    this.users.push({
+      ...user,
+      profile,
+      unit: { id: user.unitId, name: '', slug: '', organizationId: user.organizationId, totalBalance: 0, allowsLoan: false },
+    })
+    return { user, profile }
+  }
+
+  async update(
+    id: string,
+    userData: Prisma.UserUpdateInput,
+    profileData: Prisma.ProfileUpdateInput,
+  ): Promise<{ user: User; profile: Profile | null }> {
+    const index = this.users.findIndex((u) => u.id === id)
+    if (index < 0) throw new Error('User not found')
+    const current = this.users[index]
+    const updatedUser: User = { ...current }
+    if (userData.name) updatedUser.name = userData.name as string
+    if (userData.email) updatedUser.email = userData.email as string
+    if ('active' in userData && typeof userData.active === 'boolean')
+      updatedUser.active = userData.active
+    if (userData.unit && 'connect' in userData.unit) {
+      updatedUser.unitId = userData.unit.connect.id
+    }
+
+    let profile = current.profile
+    if (profile) {
+      if (profileData.phone) profile.phone = profileData.phone as string
+      if (profileData.cpf) profile.cpf = profileData.cpf as string
+      if (profileData.genre) profile.genre = profileData.genre as string
+      if (profileData.birthday) profile.birthday = profileData.birthday as string
+      if (profileData.pix) profile.pix = profileData.pix as string
+      if (profileData.role) profile.role = profileData.role as Role
+      if ('commissionPercentage' in profileData && profileData.commissionPercentage !== undefined)
+        profile.commissionPercentage = profileData.commissionPercentage as number
+    }
+    this.users[index] = { ...current, ...updatedUser, profile }
+    return { user: updatedUser, profile }
+  }
+
+  async findMany(
+    where: Prisma.UserWhereInput = {},
+  ): Promise<(User & { profile: Profile | null })[]> {
+    return this.users.filter((u: any) => {
+      if (where.unitId && u.unit?.id !== where.unitId) return false
+      if (where.organizationId && u.organizationId !== where.organizationId)
+        return false
+      return true
+    })
+  }
+
+  async findById(
+    id: string,
+  ): Promise<(User & { profile: Profile | null; unit: Unit | null }) | null> {
+    const user = this.users.find((u) => u.id === id)
+    if (!user) return null
+    return { ...user, unit: user.unit ?? null }
+  }
+
+  async findByEmail(email: string): Promise<User | null> {
+    const user = this.users.find((u) => u.email === email)
+    return user ?? null
+  }
+
+  async delete(id: string): Promise<void> {
+    this.users = this.users.filter((u) => u.id !== id)
+  }
+}
+
+export class InMemoryAppointmentRepository implements AppointmentRepository {
+  public appointments: DetailedAppointment[] = []
+
+  async create(data: Prisma.AppointmentCreateInput): Promise<Appointment> {
+    const appointment: Appointment = {
+      id: randomUUID(),
+      clientId: (data.client as any).connect.id,
+      barberId: (data.barber as any).connect.id,
+      serviceId: (data.service as any).connect.id,
+      unitId: (data.unit as any).connect.id,
+      date: data.date as Date,
+      hour: data.hour as string,
+    }
+    this.appointments.push({
+      ...appointment,
+      service: { id: appointment.serviceId, name: '', description: null, imageUrl: null, cost: 0, price: 0, unitId: appointment.unitId },
+      client: { id: appointment.clientId, name: '', email: '', password: '', active: true, organizationId: 'org-1', unitId: appointment.unitId, createdAt: new Date(), profile: null },
+      barber: { id: appointment.barberId, name: '', email: '', password: '', active: true, organizationId: 'org-1', unitId: appointment.unitId, createdAt: new Date(), profile: null },
+    })
+    return appointment
+  }
+
+  async findManyByUnit(unitId: string): Promise<DetailedAppointment[]> {
+    return this.appointments.filter((a) => a.unitId === unitId)
+  }
+
+  async findMany(
+    where: Prisma.AppointmentWhereInput = {},
+  ): Promise<DetailedAppointment[]> {
+    return this.appointments.filter((a: any) => {
+      if (where.unitId && a.unitId !== where.unitId) return false
+      if (where.unit && 'organizationId' in (where.unit as any)) {
+        return a.unit?.organizationId === (where.unit as any).organizationId
+      }
+      return true
+    })
+  }
+
+  async findById(id: string): Promise<DetailedAppointment | null> {
+    return this.appointments.find((a) => a.id === id) ?? null
   }
 }
