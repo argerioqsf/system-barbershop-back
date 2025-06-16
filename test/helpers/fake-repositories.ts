@@ -76,12 +76,29 @@ export class FakeServiceRepository implements ServiceRepository {
 
 export class FakeProductRepository implements ProductRepository {
   constructor(public products: Product[] = []) {}
-  create(data: Prisma.ProductCreateInput): Promise<Product> {
-    throw new Error('not implemented')
+  async create(data: Prisma.ProductCreateInput): Promise<Product> {
+    const product: Product = {
+      id: randomUUID(),
+      name: data.name,
+      description: (data.description as string | null) ?? null,
+      imageUrl: (data.imageUrl as string | null) ?? null,
+      quantity: (data.quantity as number) ?? 0,
+      cost: data.cost as number,
+      price: data.price as number,
+      unitId: (data.unit as any).connect.id,
+    }
+    this.products.push(product)
+    return product
   }
 
-  findMany(where?: Prisma.ProductWhereInput): Promise<Product[]> {
-    throw new Error('not implemented')
+  async findMany(where: Prisma.ProductWhereInput = {}): Promise<Product[]> {
+    return this.products.filter((p: any) => {
+      if (where.unitId && p.unitId !== where.unitId) return false
+      if (where.unit && 'organizationId' in (where.unit as any)) {
+        return p.organizationId === (where.unit as any).organizationId
+      }
+      return true
+    })
   }
 
   async findById(id: string): Promise<Product | null> {
@@ -98,26 +115,53 @@ export class FakeProductRepository implements ProductRepository {
     ) {
       product.quantity -= data.quantity.decrement as number
     }
+    if (data.name) product.name = data.name as string
+    if ('description' in data) {
+      product.description = data.description as any
+    }
+    if ('imageUrl' in data) {
+      product.imageUrl = data.imageUrl as any
+    }
+    if (data.cost) product.cost = data.cost as number
+    if (data.price) product.price = data.price as number
     return product
   }
 
-  delete(id: string): Promise<void> {
-    throw new Error('not implemented')
+  async delete(id: string): Promise<void> {
+    this.products = this.products.filter((p) => p.id !== id)
   }
 }
 
 export class FakeCouponRepository implements CouponRepository {
   constructor(public coupons: Coupon[] = []) {}
-  create(data: Prisma.CouponCreateInput): Promise<Coupon> {
-    throw new Error('not implemented')
+  async create(data: Prisma.CouponCreateInput): Promise<Coupon> {
+    const coupon: Coupon = {
+      id: randomUUID(),
+      code: data.code,
+      description: (data.description as string | null) ?? null,
+      discount: data.discount as number,
+      discountType: data.discountType as any,
+      imageUrl: (data.imageUrl as string | null) ?? null,
+      quantity: (data.quantity as number) ?? 0,
+      unitId: (data.unit as any).connect.id,
+      createdAt: new Date(),
+    }
+    this.coupons.push(coupon)
+    return coupon
   }
 
-  findMany(where?: Prisma.CouponWhereInput): Promise<Coupon[]> {
-    throw new Error('not implemented')
+  async findMany(where: Prisma.CouponWhereInput = {}): Promise<Coupon[]> {
+    return this.coupons.filter((c: any) => {
+      if (where.unitId && c.unitId !== where.unitId) return false
+      if (where.unit && 'organizationId' in (where.unit as any)) {
+        return c.organizationId === (where.unit as any).organizationId
+      }
+      return true
+    })
   }
 
-  findById(id: string): Promise<Coupon | null> {
-    throw new Error('not implemented')
+  async findById(id: string): Promise<Coupon | null> {
+    return this.coupons.find((c) => c.id === id) ?? null
   }
 
   async findByCode(code: string): Promise<Coupon | null> {
@@ -137,8 +181,8 @@ export class FakeCouponRepository implements CouponRepository {
     return coupon
   }
 
-  delete(id: string): Promise<void> {
-    throw new Error('not implemented')
+  async delete(id: string): Promise<void> {
+    this.coupons = this.coupons.filter((c) => c.id !== id)
   }
 }
 
@@ -168,7 +212,14 @@ export class FakeBarberUsersRepository implements BarberUsersRepository {
   findMany(
     where?: Prisma.UserWhereInput,
   ): Promise<(User & { profile: Profile | null })[]> {
-    throw new Error('not implemented')
+    return Promise.resolve(
+      this.users.filter((u: any) => {
+        if (where?.unitId && u.unit?.id !== where.unitId) return false
+        if (where?.organizationId && u.organizationId !== where.organizationId)
+          return false
+        return true
+      }),
+    )
   }
 
   async findById(
@@ -278,32 +329,53 @@ export class FakeTransactionRepository implements TransactionRepository {
 }
 
 export class FakeOrganizationRepository implements OrganizationRepository {
-  constructor(public organization: Organization) {}
-  create(data: Prisma.OrganizationCreateInput): Promise<Organization> {
-    throw new Error('not implemented')
+  constructor(
+    public organization: Organization,
+    public organizations: Organization[] = [organization],
+  ) {}
+
+  async create(data: Prisma.OrganizationCreateInput): Promise<Organization> {
+    const org: Organization = {
+      id: randomUUID(),
+      name: data.name,
+      slug: data.slug,
+      ownerId: null,
+      totalBalance: 0,
+      createdAt: new Date(),
+    }
+    this.organizations.push(org)
+    return org
   }
 
   async findById(id: string): Promise<Organization | null> {
-    return this.organization.id === id ? this.organization : null
+    return this.organizations.find((o) => o.id === id) ?? null
   }
 
-  findMany(): Promise<Organization[]> {
-    throw new Error('not implemented')
+  async findMany(): Promise<Organization[]> {
+    return this.organizations
   }
 
-  update(
+  async update(
     id: string,
     data: Prisma.OrganizationUpdateInput,
   ): Promise<Organization> {
-    throw new Error('not implemented')
+    const org = this.organizations.find((o) => o.id === id)
+    if (!org) throw new Error('Organization not found')
+    if (data.name) org.name = data.name as string
+    if (data.slug) org.slug = data.slug as string
+    return org
   }
 
-  delete(id: string): Promise<void> {
-    throw new Error('not implemented')
+  async delete(id: string): Promise<void> {
+    this.organizations = this.organizations.filter((o) => o.id !== id)
   }
 
   async incrementBalance(id: string, amount: number): Promise<void> {
-    if (this.organization.id === id) {
+    const org = this.organizations.find((o) => o.id === id)
+    if (org) {
+      org.totalBalance += amount
+    }
+    if (this.organization.id === id && org !== this.organization) {
       this.organization.totalBalance += amount
     }
   }
