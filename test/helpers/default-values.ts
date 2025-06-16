@@ -329,7 +329,7 @@ export const listUser1 = {
   id: 'u1',
   email: 'a@a.com',
   profile: null,
-  unit: { id: 'unit-1' },
+  unit: { id: 'unit-1', organizationId: 'org-1' },
   organizationId: 'org-1',
 } as any
 
@@ -337,7 +337,7 @@ export const listUser2 = {
   id: 'u2',
   email: 'b@b.com',
   profile: null,
-  unit: { id: 'unit-2' },
+  unit: { id: 'unit-2', organizationId: 'org-2' },
   organizationId: 'org-2',
 } as any
 

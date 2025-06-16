@@ -908,6 +908,13 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
       if (where.unitId && u.unit?.id !== where.unitId) return false
       if (where.organizationId && u.organizationId !== where.organizationId)
         return false
+      if (
+        where.unit &&
+        typeof where.unit === 'object' &&
+        'organizationId' in where.unit &&
+        u.unit?.organizationId !== (where.unit as any).organizationId
+      )
+        return false
       return true
     })
   }

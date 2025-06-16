@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { DeleteUserService } from '../../../src/services/barber-user/delete-user'
 import { InMemoryBarberUsersRepository } from '../../helpers/fake-repositories'
-import { makeUser, makeProfile } from '../../factories/make-user.factory'
+import { makeUser } from '../../factories/make-user.factory'
+import { makeProfile } from '../../factories/make-profile.factory'
 
 function makeStoredUser() {
   const user = makeUser()

@@ -2,7 +2,8 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { UpdateUserService } from '../../../src/services/barber-user/update-user'
 import { InMemoryBarberUsersRepository, FakeUnitRepository } from '../../helpers/fake-repositories'
 import { defaultUnit } from '../../helpers/default-values'
-import { makeUser, makeProfile } from '../../factories/make-user.factory'
+import { makeUser } from '../../factories/make-user.factory'
+import { makeProfile } from '../../factories/make-profile.factory'
 
 describe('Update user service', () => {
   let repo: InMemoryBarberUsersRepository

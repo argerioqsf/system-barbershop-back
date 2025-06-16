@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { GetUserService } from '../../../src/services/barber-user/get-user'
 import { InMemoryBarberUsersRepository } from '../../helpers/fake-repositories'
-import { makeUser, makeProfile } from '../../factories/make-user.factory'
+import { makeUser } from '../../factories/make-user.factory'
+import { makeProfile } from '../../factories/make-profile.factory'
 
 describe('Get user service', () => {
   let repo: InMemoryBarberUsersRepository
