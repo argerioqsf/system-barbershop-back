@@ -4,30 +4,24 @@ import fastify from 'fastify'
 import multer from 'fastify-multer'
 import fs from 'fs'
 import path from 'path'
+import { uploadDir, upload } from './lib/upload'
 import { ZodError } from 'zod'
 import { env } from './env'
-import { consultantRoute } from './http/controllers/consultant/route'
-import { courseRoute } from './http/controllers/courses/route'
-import { cycleRoute } from './http/controllers/cycle/route'
-import { indicatorRoute } from './http/controllers/indicator/route'
-import { leadsRoute } from './http/controllers/leads/route'
-import { OrganizationRoute } from './http/controllers/organization/route'
 import { profileRoute } from './http/controllers/profile/route'
-import { segmentRoute } from './http/controllers/segments/route'
-import { timelineRoute } from './http/controllers/timeline/route'
-import { unitCourseRoute } from './http/controllers/unit-course/route'
-import { graphicsRoute } from './http/controllers/graphics/route'
-import { unitRoute } from './http/controllers/units/route'
-import { userRoute } from './http/controllers/user/route'
-import { appRoute } from './http/routes/route'
-
-const uploadDir = path.join('/opt/app/uploads')
-
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true })
-}
-
-const upload = multer({ dest: uploadDir })
+import { barberShopServiceRoute } from './http/controllers/barber-shop/route'
+import { productRoute } from './http/controllers/product/route'
+import { appointmentRoute } from './http/controllers/appointment/route'
+import { barberUserRoute } from './http/controllers/barber-user/route'
+import { couponRoute } from './http/controllers/coupon/route'
+import { cashRegisterRoute } from './http/controllers/cash-register/route'
+import { saleRoute } from './http/controllers/sale/route'
+import { transactionRoute } from './http/controllers/transaction/route'
+import { reportRoute } from './http/controllers/report/route'
+import { configRoute } from './http/controllers/config/route'
+import { authRoute } from './http/controllers/auth/route'
+import { organizationRoute } from './http/controllers/organization/route'
+import { unitRoute } from './http/controllers/unit/route'
+import { sessionRoute } from './http/controllers/session/route'
 
 export const app = fastify()
 
@@ -119,20 +113,21 @@ app.register(fastifyJwt, {
   secret: env.JWT_SECRET,
 })
 
-app.register(appRoute)
-app.register(unitRoute)
-app.register(courseRoute)
-app.register(segmentRoute)
+app.register(authRoute)
+app.register(sessionRoute)
 app.register(profileRoute)
-app.register(userRoute)
-app.register(unitCourseRoute)
-app.register(indicatorRoute)
-app.register(leadsRoute)
-app.register(consultantRoute)
-app.register(OrganizationRoute)
-app.register(timelineRoute)
-app.register(cycleRoute)
-app.register(graphicsRoute)
+app.register(productRoute)
+app.register(barberShopServiceRoute)
+app.register(appointmentRoute)
+app.register(barberUserRoute)
+app.register(couponRoute)
+app.register(cashRegisterRoute)
+app.register(transactionRoute)
+app.register(organizationRoute)
+app.register(unitRoute)
+app.register(saleRoute)
+app.register(reportRoute)
+app.register(configRoute)
 
 app.setErrorHandler((error, _, replay) => {
   if (error instanceof ZodError) {

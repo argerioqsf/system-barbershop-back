@@ -1,6 +1,7 @@
 import { UserAlreadyExistsError } from '@/services/@errors/user-already-exists-error'
 import { makeRegisterService } from '@/services/@factories/make-register-service'
 import { FastifyReply, FastifyRequest } from 'fastify'
+import { Role } from '@prisma/client'
 import { z } from 'zod'
 
 export async function registerUser(
@@ -11,21 +12,35 @@ export async function registerUser(
     name: z.string(),
     email: z.string().email(),
     password: z.string().min(6),
-    active: z.boolean().default(false),
+    phone: z.string(),
+    cpf: z.string(),
+    genre: z.string(),
+    birthday: z.string(),
+    pix: z.string(),
+    role: z.nativeEnum(Role),
+    unitId: z.string(),
   })
 
-  const { name, email, password, active } = registerBodySchema.parse(
-    request.body,
-  )
+  const data = registerBodySchema.parse(request.body)
+
+  if (data.role === 'ADMIN' || data.role === 'OWNER') {
+    return replay.status(403).send({ message: 'Unauthorized role' })
+  }
 
   try {
     const registerService = makeRegisterService()
 
     await registerService.execute({
-      name,
-      email,
-      password,
-      active,
+      name: data.name,
+      email: data.email,
+      password: data.password,
+      phone: data.phone,
+      cpf: data.cpf,
+      genre: data.genre,
+      birthday: data.birthday,
+      pix: data.pix,
+      role: data.role,
+      unitId: data.unitId,
     })
   } catch (error) {
     if (error instanceof UserAlreadyExistsError) {

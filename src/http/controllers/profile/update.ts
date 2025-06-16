@@ -13,11 +13,10 @@ const bodySchema = z.object({
   genre: z.string(),
   birthday: z.string(),
   pix: z.string(),
-  city: z.string(),
 })
 
 export async function Update(request: FastifyRequest, reply: FastifyReply) {
-  const { active, birthday, city, cpf, email, genre, name, phone, pix } =
+  const { active, birthday, cpf, email, genre, name, phone, pix } =
     bodySchema.parse(request.body)
 
   const updateProfileUserService = MakeUpdateProfileUserService()
@@ -37,7 +36,6 @@ export async function Update(request: FastifyRequest, reply: FastifyReply) {
     const { profile: profileUpdate } = await updateProfileUserService.execute({
       active,
       birthday,
-      city,
       cpf,
       email,
       genre,

@@ -1,0 +1,886 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2025-06-12T00:00:00.000Z",
+  "__export_source": "codex",
+  "resources": [
+    {
+      "_id": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "_type": "workspace",
+      "name": "Lobo Barbearia",
+      "description": "API collection"
+    },
+    {
+      "_id": "env_4c1afb0dd44c7f3c6141a3e219738bfc",
+      "_type": "environment",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Base Environment",
+      "data": {
+        "baseURL": "http://localhost:3333",
+        "token": ""
+      }
+    },
+    {
+      "_id": "fld_auth",
+      "_type": "request_group",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Auth"
+    },
+    {
+      "_id": "req_register",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "Register",
+      "method": "POST",
+      "url": "{{ baseURL }}/users",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"\",\n  \"email\": \"\",\n  \"password\": \"\",\n  \"phone\": \"\",\n  \"cpf\": \"\",\n  \"genre\": \"M\",\n  \"birthday\": \"1990-01-01\",\n  \"pix\": \"\",\n  \"role\": \"BARBER\",\n  \"organizationId\": \"\",\n  \"unitId\": \"\"\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ]
+    },
+    {
+      "_id": "req_authenticate",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "Authenticate",
+      "method": "POST",
+      "url": "{{ baseURL }}/sessions",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"\",\n  \"password\": \"\"\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ]
+    },
+    {
+      "_id": "req_forgot",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "Forgot password",
+      "method": "POST",
+      "url": "{{ baseURL }}/forgot-password",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"\"\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ]
+    },
+    {
+      "_id": "req_reset",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "Reset password",
+      "method": "POST",
+      "url": "{{ baseURL }}/reset-password",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"token\": \"\",\n  \"password\": \"\"\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ]
+    },
+    {
+      "_id": "req_set_unit",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "Set unit",
+      "method": "PATCH",
+      "url": "{{ baseURL }}/sessions/unit",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"unitId\": \"\"\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "fld_services",
+      "_type": "request_group",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Services"
+    },
+    {
+      "_id": "req_create_service",
+      "_type": "request",
+      "parentId": "fld_services",
+      "name": "Create service",
+      "method": "POST",
+      "url": "{{ baseURL }}/create/service",
+      "body": {
+        "mimeType": "multipart/form-data",
+        "params": [
+          {
+            "name": "name",
+            "value": "Corte"
+          },
+          {
+            "name": "description",
+            "value": "Corte simples"
+          },
+          {
+            "name": "cost",
+            "value": "10"
+          },
+          {
+            "name": "price",
+            "value": "20"
+          },
+          {
+            "name": "unitId",
+            "value": ""
+          },
+          {
+            "name": "image",
+            "value": "",
+            "type": "file"
+          }
+        ]
+      },
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_list_services",
+      "_type": "request",
+      "parentId": "fld_services",
+      "name": "List services",
+      "method": "GET",
+      "url": "{{ baseURL }}/services",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "fld_products",
+      "_type": "request_group",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Products"
+    },
+    {
+      "_id": "req_create_product",
+      "_type": "request",
+      "parentId": "fld_products",
+      "name": "Create product",
+      "method": "POST",
+      "url": "{{ baseURL }}/products",
+      "body": {
+        "mimeType": "multipart/form-data",
+        "params": [
+          {
+            "name": "name",
+            "value": "Shampoo"
+          },
+          {
+            "name": "description",
+            "value": "Hair shampoo"
+          },
+          {
+            "name": "quantity",
+            "value": "10"
+          },
+          {
+            "name": "cost",
+            "value": "5"
+          },
+          {
+            "name": "price",
+            "value": "15"
+          },
+          {
+            "name": "image",
+            "value": "",
+            "type": "file"
+          }
+        ]
+      },
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_list_products",
+      "_type": "request",
+      "parentId": "fld_products",
+      "name": "List products",
+      "method": "GET",
+      "url": "{{ baseURL }}/products",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_get_product",
+      "_type": "request",
+      "parentId": "fld_products",
+      "name": "Get product",
+      "method": "GET",
+      "url": "{{ baseURL }}/products/{id}",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_update_product",
+      "_type": "request",
+      "parentId": "fld_products",
+      "name": "Update product",
+      "method": "PATCH",
+      "url": "{{ baseURL }}/products/{id}",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Shampoo\",\n  \"quantity\": 5\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_delete_product",
+      "_type": "request",
+      "parentId": "fld_products",
+      "name": "Delete product",
+      "method": "DELETE",
+      "url": "{{ baseURL }}/products/{id}",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "fld_appointments",
+      "_type": "request_group",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Appointments"
+    },
+    {
+      "_id": "req_create_appointment",
+      "_type": "request",
+      "parentId": "fld_appointments",
+      "name": "Create appointment",
+      "method": "POST",
+      "url": "{{ baseURL }}/create/appointment",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"clientId\": \"\",\n  \"barberId\": \"\",\n  \"serviceId\": \"\",\n  \"date\": \"2025-01-01T10:00:00Z\",\n  \"hour\": \"10:00\"\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_list_appointments",
+      "_type": "request",
+      "parentId": "fld_appointments",
+      "name": "List appointments",
+      "method": "GET",
+      "url": "{{ baseURL }}/appointments",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "fld_barber_users",
+      "_type": "request_group",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Barber Users"
+    },
+    {
+      "_id": "req_create_barber_user",
+      "_type": "request",
+      "parentId": "fld_barber_users",
+      "name": "Create barber user",
+      "method": "POST",
+      "url": "{{ baseURL }}/barber/users",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"\",\n  \"email\": \"\",\n  \"password\": \"\",\n  \"phone\": \"\",\n  \"cpf\": \"\",\n  \"genre\": \"M\",\n  \"birthday\": \"1990-01-01\",\n  \"pix\": \"\",\n  \"role\": \"BARBER\",\n  \"organizationId\": \"\",\n  \"unitId\": \"\"\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_list_barber_users",
+      "_type": "request",
+      "parentId": "fld_barber_users",
+      "name": "List barber users",
+      "method": "GET",
+      "url": "{{ baseURL }}/barber/users",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "fld_coupons",
+      "_type": "request_group",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Coupons"
+    },
+    {
+      "_id": "req_create_coupon",
+      "_type": "request",
+      "parentId": "fld_coupons",
+      "name": "Create coupon",
+      "method": "POST",
+      "url": "{{ baseURL }}/coupons",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"code\": \"\",\n  \"discount\": 10,\n  \"discountType\": \"PERCENTAGE\",\n  \"quantity\": 1\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_list_coupons",
+      "_type": "request",
+      "parentId": "fld_coupons",
+      "name": "List coupons",
+      "method": "GET",
+      "url": "{{ baseURL }}/coupons",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "fld_cash",
+      "_type": "request_group",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Cash Register"
+    },
+    {
+      "_id": "req_open_cash",
+      "_type": "request",
+      "parentId": "fld_cash",
+      "name": "Open session",
+      "method": "POST",
+      "url": "{{ baseURL }}/cash-session/open",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"userId\": \"\",\n  \"unitId\": \"\",\n  \"initialAmount\": 0\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_close_cash",
+      "_type": "request",
+      "parentId": "fld_cash",
+      "name": "Close session",
+      "method": "POST",
+      "url": "{{ baseURL }}/cash-session/close",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"sessionId\": \"\"\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_list_cash",
+      "_type": "request",
+      "parentId": "fld_cash",
+      "name": "List sessions",
+      "method": "GET",
+      "url": "{{ baseURL }}/cash-session",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "fld_sales",
+      "_type": "request_group",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Sales"
+    },
+    {
+      "_id": "req_create_sale",
+      "_type": "request",
+      "parentId": "fld_sales",
+      "name": "Create sale (auto transaction)",
+      "method": "POST",
+      "url": "{{ baseURL }}/sales",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"method\": \"CASH\",\n  \"items\": [\n    {\n      \"serviceId\": \"\",\n      \"quantity\": 1,\n      \"barberId\": \"\",\n      \"couponCode\": \"\",\n      \"price\": 0\n    }\n  ],\n  \"clientId\": \"\",\n  \"paymentStatus\": \"PAID\"\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_list_sales",
+      "_type": "request",
+      "parentId": "fld_sales",
+      "name": "List sales",
+      "method": "GET",
+      "url": "{{ baseURL }}/sales",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_set_sale_status",
+      "_type": "request",
+      "parentId": "fld_sales",
+      "name": "Set sale status",
+      "method": "PATCH",
+      "url": "{{ baseURL }}/sales/{{ saleId }}/status",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"paymentStatus\": \"PAID\"\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "fld_transactions",
+      "_type": "request_group",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Transactions"
+    },
+    {
+      "_id": "req_create_transaction",
+      "_type": "request",
+      "parentId": "fld_transactions",
+      "name": "Create transaction",
+      "method": "POST",
+      "url": "{{ baseURL }}/transactions",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"userId\": \"\",\n  \"unitId\": \"\",\n  \"affectedUserId\": \"\",\n  \"type\": \"ADDITION\",\n  \"description\": \"\",\n  \"amount\": 0\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_list_transactions",
+      "_type": "request",
+      "parentId": "fld_transactions",
+      "name": "List transactions",
+      "method": "GET",
+      "url": "{{ baseURL }}/transactions",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "fld_organizations",
+      "_type": "request_group",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Organizations"
+    },
+    {
+      "_id": "req_create_organization",
+      "_type": "request",
+      "parentId": "fld_organizations",
+      "name": "Create organization",
+      "method": "POST",
+      "url": "{{ baseURL }}/organizations",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"\",\n  \"slug\": \"\",\n  \"totalBalance\": 0\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_list_organizations",
+      "_type": "request",
+      "parentId": "fld_organizations",
+      "name": "List organizations",
+      "method": "GET",
+      "url": "{{ baseURL }}/organizations",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_get_organization",
+      "_type": "request",
+      "parentId": "fld_organizations",
+      "name": "Get organization",
+      "method": "GET",
+      "url": "{{ baseURL }}/organizations/{{ organizationId }}",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_update_organization",
+      "_type": "request",
+      "parentId": "fld_organizations",
+      "name": "Update organization",
+      "method": "PUT",
+      "url": "{{ baseURL }}/organizations/{{ organizationId }}",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"New Name\",\n  \"slug\": \"new-slug\"\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_delete_organization",
+      "_type": "request",
+      "parentId": "fld_organizations",
+      "name": "Delete organization",
+      "method": "DELETE",
+      "url": "{{ baseURL }}/organizations/{{ organizationId }}",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "fld_units",
+      "_type": "request_group",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Units"
+    },
+    {
+      "_id": "req_create_unit",
+      "_type": "request",
+      "parentId": "fld_units",
+      "name": "Create unit",
+      "method": "POST",
+      "url": "{{ baseURL }}/units",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"\",\n  \"slug\": \"\",\n  \"organizationId\": \"\",\n  \"totalBalance\": 0,\n  \"allowsLoan\": false\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_list_units",
+      "_type": "request",
+      "parentId": "fld_units",
+      "name": "List units",
+      "method": "GET",
+      "url": "{{ baseURL }}/units?organizationId={{ organizationId }}",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_get_unit",
+      "_type": "request",
+      "parentId": "fld_units",
+      "name": "Get unit",
+      "method": "GET",
+      "url": "{{ baseURL }}/units/{{ unitId }}",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_update_unit",
+      "_type": "request",
+      "parentId": "fld_units",
+      "name": "Update unit",
+      "method": "PUT",
+      "url": "{{ baseURL }}/units/{{ unitId }}",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"New Unit\",\n  \"slug\": \"new-unit\",\n  \"allowsLoan\": false\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_delete_unit",
+      "_type": "request",
+      "parentId": "fld_units",
+      "name": "Delete unit",
+      "method": "DELETE",
+      "url": "{{ baseURL }}/units/{{ unitId }}",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "fld_reports",
+      "_type": "request_group",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Reports"
+    },
+    {
+      "_id": "req_barber_balance",
+      "_type": "request",
+      "parentId": "fld_reports",
+      "name": "Barber balance",
+      "method": "GET",
+      "url": "{{ baseURL }}/reports/barber/{{ barberId }}/balance",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_sales_report",
+      "_type": "request",
+      "parentId": "fld_reports",
+      "name": "Sales report",
+      "method": "GET",
+      "url": "{{ baseURL }}/reports/sales?start=2025-01-01&end=2025-01-31",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "fld_config",
+      "_type": "request_group",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Config"
+    },
+    {
+      "_id": "req_export_users",
+      "_type": "request",
+      "parentId": "fld_config",
+      "name": "Export users",
+      "method": "GET",
+      "url": "{{ baseURL }}/config/export/users",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_update_coupon",
+      "_type": "request",
+      "parentId": "fld_coupons",
+      "name": "Update coupon",
+      "method": "PATCH",
+      "url": "{{ baseURL }}/coupons/{id}",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"quantity\": 1\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_owner_balance",
+      "_type": "request",
+      "parentId": "fld_reports",
+      "name": "Owner balance",
+      "method": "GET",
+      "url": "{{ baseURL }}/reports/owner/{{ ownerId }}/balance",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_cash_session_report",
+      "_type": "request",
+      "parentId": "fld_reports",
+      "name": "Cash session report",
+      "method": "GET",
+      "url": "{{ baseURL }}/reports/cash-session/{sessionId}",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    }
+  ]
+}

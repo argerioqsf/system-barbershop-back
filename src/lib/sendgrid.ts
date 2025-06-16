@@ -1,7 +1,6 @@
 import sgMail from '@sendgrid/mail'
 import { env } from '@/env'
 import { templateEmail } from '@/templates/templateEmail'
-import { Leads } from '@prisma/client'
 
 sgMail.setApiKey(env.TOKEN_EMAIL_TWILIO)
 
@@ -48,7 +47,7 @@ export const sendCreateIndicatorEmail = async (to: string, name: string) => {
     text: `text`,
     html: templateEmail(
       name,
-      `Parabéns por sua decisão de fazer parte do Sistema de Indicadores da Madre (SIM)!
+      `Parabéns por sua decisão de fazer parte do Sistema de Indicadores da Madre (barbershop)!
        Estamos muito felizes em tê-lo como parte dessa jornada e por contar com sua colaboração para 
        fortalecer ainda mais o nosso time. <br/><br/>
 
@@ -126,7 +125,7 @@ export const sendContractEmail = async function (
 export const sendConfirmIndicatorPaymentEmail = async (
   to: string,
   name: string,
-  lead: Leads,
+  lead: { name: string },
 ) => {
   const msg = {
     to,
@@ -149,6 +148,28 @@ export const sendConfirmIndicatorPaymentEmail = async (
        Continue assim, e vamos juntos transformar vidas por meio da educação!<br/><br/>
 
        Vamos juntos nessa jornada! <br/><br/>`,
+    ),
+  }
+  try {
+    await sgMail.send(msg)
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+export const sendPasswordResetEmail = async (
+  to: string,
+  name: string,
+  link: string,
+) => {
+  const msg = {
+    to,
+    from: 'sim@grupomadretereza.com.br',
+    subject: 'Recuperação de Senha',
+    text: `Acesse o link para redefinir sua senha: ${link}`,
+    html: templateEmail(
+      name,
+      `Você solicitou a redefinição de senha.<br/><br/><a href='${link}'>Clique aqui para criar uma nova senha</a>`,
     ),
   }
   try {

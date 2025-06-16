@@ -1,49 +1,18 @@
-import {
-  Cycle,
-  ExtractProfile,
-  Leads,
-  Organization,
-  Prisma,
-  Profile,
-  Unit,
-  User,
-} from '@prisma/client'
+import { Prisma, Profile, User } from '@prisma/client'
 
 export interface ProfilesRepository {
-  findById(id: string): Promise<(Profile & { user: User }) | null>
-  create(data: Prisma.ProfileUncheckedCreateInput): Promise<Profile>
-  findByUserId(userId: string): Promise<
-    | (Omit<Profile, 'userId'> & {
-        extract_profile: ExtractProfile[]
-        user: Omit<
-          User & {
-            organizations: {
-              organization: Organization & {
-                cycles: (Cycle & { leads: Leads[] })[]
-              }
-            }[]
-          },
-          'password'
-        >
-      } & {
-        units: { unit: Unit }[]
-      })
-    | null
-  >
-  update(id: string, data: Prisma.ProfileUncheckedUpdateInput): Promise<Profile>
-  confirmPayment(
+  findById(
     id: string,
-    data: Prisma.ProfileUncheckedUpdateInput,
-    extract: Prisma.ExtractProfileUncheckedCreateInput,
-  ): Promise<{ profile: Profile; extract: ExtractProfile }>
+  ): Promise<(Profile & { user: Omit<User, 'password'> }) | null>
+  create(data: Prisma.ProfileUncheckedCreateInput): Promise<Profile>
+  findByUserId(
+    userId: string,
+  ): Promise<(Profile & { user: Omit<User, 'password'> }) | null>
+  update(id: string, data: Prisma.ProfileUncheckedUpdateInput): Promise<Profile>
   findMany(
     where?: Prisma.ProfileWhereInput,
     orderBy?: Prisma.ProfileOrderByWithRelationInput,
-  ): Promise<
-    (Profile & {
-      user: User
-      leadsConsultant: Leads[]
-      leadsIndicator: Leads[]
-    })[]
-  >
+  ): Promise<(Profile & { user: Omit<User, 'password'> })[]>
+
+  incrementBalance(userId: string, amount: number): Promise<void>
 }

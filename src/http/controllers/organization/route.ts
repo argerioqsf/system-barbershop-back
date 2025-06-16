@@ -1,9 +1,17 @@
 import { verifyJWT } from '@/http/middlewares/verify-jwt'
 import { FastifyInstance } from 'fastify'
-import { Update } from './update'
+import { CreateOrganizationController } from './create-organization-controller'
+import { ListOrganizationsController } from './list-organizations-controller'
+import { GetOrganizationController } from './get-organization-controller'
+import { UpdateOrganizationController } from './update-organization-controller'
+import { DeleteOrganizationController } from './delete-organization-controller'
 
-export async function OrganizationRoute(app: FastifyInstance) {
+export async function organizationRoute(app: FastifyInstance) {
   app.addHook('onRequest', verifyJWT)
 
-  app.put('/organization/:id/update', Update)
+  app.post('/organizations', CreateOrganizationController)
+  app.get('/organizations', ListOrganizationsController)
+  app.get('/organizations/:id', GetOrganizationController)
+  app.put('/organizations/:id', UpdateOrganizationController)
+  app.delete('/organizations/:id', DeleteOrganizationController)
 }

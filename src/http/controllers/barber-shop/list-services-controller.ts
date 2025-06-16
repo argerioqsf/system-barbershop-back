@@ -1,0 +1,13 @@
+import { makeListServices } from '@/services/@factories/barbershop/make-list-services'
+import { FastifyReply, FastifyRequest } from 'fastify'
+import { UserToken } from '../authenticate-controller'
+
+export async function ListServicesController(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const service = makeListServices()
+  const userToken = request.user as UserToken
+  const { services } = await service.execute(userToken)
+  return reply.status(200).send(services)
+}
