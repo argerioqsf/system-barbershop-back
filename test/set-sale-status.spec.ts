@@ -15,6 +15,7 @@ import {
   defaultUser,
   defaultOrganization,
   defaultUnit,
+  makeSaleWithBarber,
 } from './helpers/default-values'
 import { PaymentStatus } from '@prisma/client'
 
@@ -38,40 +39,7 @@ describe('Set sale status service', () => {
     const unit = { ...defaultUnit }
     unitRepo = new FakeUnitRepository(unit, [unit])
 
-    const sale = {
-      id: 'sale-1',
-      userId: 'cashier',
-      clientId: 'c1',
-      unitId: defaultUnit.id,
-      total: 100,
-      method: 'CASH',
-      paymentStatus: PaymentStatus.PENDING,
-      createdAt: new Date(),
-      items: [
-        {
-          id: 'i1',
-          saleId: 'sale-1',
-          serviceId: null,
-          productId: null,
-          quantity: 1,
-          barberId: barberUser.id,
-          couponId: null,
-          price: 100,
-          discount: null,
-          discountType: null,
-          porcentagemBarbeiro: barberProfile.commissionPercentage,
-          service: null,
-          product: null,
-          barber: { ...barberUser, profile: barberProfile },
-          coupon: null,
-        },
-      ],
-      user: { ...defaultUser },
-      client: { ...defaultUser },
-      coupon: null,
-      session: null,
-      transaction: null,
-    } as any
+    const sale = makeSaleWithBarber()
 
     saleRepo.sales.push(sale)
 

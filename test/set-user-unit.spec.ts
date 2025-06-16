@@ -4,18 +4,9 @@ import { InMemoryUserRepository } from '../src/repositories/in-memory/in-memory-
 import { FakeUnitRepository } from './helpers/fake-repositories'
 import { UserNotFoundError } from '../src/services/@errors/user-not-found-error'
 import { UnitNotFoundError } from '../src/services/@errors/unit-not-found-error'
+import { namedUser, makeUnit } from './helpers/default-values'
 
-const user = {
-  id: 'user-1',
-  name: 'John',
-  email: 'john@example.com',
-  password: '123',
-  active: true,
-  organizationId: 'org-1',
-  unitId: 'unit-1',
-  createdAt: new Date(),
-  profile: null,
-}
+const user = { ...namedUser }
 
 describe('Set user unit service', () => {
   let userRepo: InMemoryUserRepository
@@ -25,7 +16,7 @@ describe('Set user unit service', () => {
   beforeEach(() => {
     userRepo = new InMemoryUserRepository()
     userRepo.items.push(user as any)
-    const unit = { id: 'unit-2', name: '', slug: '', organizationId: 'org-1', totalBalance: 0, allowsLoan: false }
+    const unit = makeUnit('unit-2', '', '', 'org-1')
     unitRepo = new FakeUnitRepository(unit, [unit])
     service = new SetUserUnitService(userRepo, unitRepo)
   })
@@ -39,7 +30,7 @@ describe('Set user unit service', () => {
   })
 
   it('throws when unit is from another organization', async () => {
-    const other = { id: 'unit-3', name: '', slug: '', organizationId: 'org-2', totalBalance: 0, allowsLoan: false }
+    const other = makeUnit('unit-3', '', '', 'org-2')
     unitRepo.units.push(other)
     await expect(
       service.execute({ user: { ...user, sub: user.id } as any, unitId: 'unit-3' }),

@@ -4,6 +4,8 @@ import {
   FakeTransactionRepository,
   FakeBarberUsersRepository,
 } from './helpers/fake-repositories'
+import { makeBalanceSale, makeTransaction, namedUser } from './helpers/default-values'
+import { TransactionType } from '@prisma/client'
 
 describe('Owner balance service', () => {
   let txRepo: FakeTransactionRepository
@@ -15,69 +17,15 @@ describe('Owner balance service', () => {
     userRepo = new FakeBarberUsersRepository()
     service = new OwnerBalanceService(txRepo, userRepo)
 
-    const owner = {
-      id: 'owner1',
-      name: '',
-      email: '',
-      password: '',
-      active: true,
-      organizationId: 'org-1',
-      unitId: 'unit-1',
-      createdAt: new Date(),
-      profile: null,
-      unit: { organizationId: 'org-1' },
-    }
+    const owner = { ...namedUser, id: 'owner1', unit: { organizationId: 'org-1' } }
     userRepo.users.push(owner as any)
 
-    const sale = {
-      items: [
-        {
-          price: 100,
-          barberId: 'b1',
-          porcentagemBarbeiro: 50,
-          service: { name: 'Cut' },
-          productId: null,
-          quantity: 1,
-          coupon: null,
-        },
-      ],
-      coupon: null,
-    }
+    const sale = makeBalanceSale('b1')
 
     txRepo.transactions.push(
-      {
-        id: 't1',
-        userId: 'x',
-        unitId: 'unit-1',
-        type: 'ADDITION',
-        description: '',
-        amount: 100,
-        createdAt: new Date(),
-        sale,
-        unit: { organizationId: 'org-1' },
-      } as any,
-      {
-        id: 't2',
-        userId: 'owner1',
-        unitId: 'unit-1',
-        type: 'ADDITION',
-        description: '',
-        amount: 20,
-        createdAt: new Date(),
-        sale: null,
-        unit: { organizationId: 'org-1' },
-      } as any,
-      {
-        id: 't3',
-        userId: 'owner1',
-        unitId: 'unit-1',
-        type: 'WITHDRAWAL',
-        description: '',
-        amount: 10,
-        createdAt: new Date(),
-        sale: null,
-        unit: { organizationId: 'org-1' },
-      } as any,
+      makeTransaction({ id: 't1', userId: 'x', unitId: 'unit-1', amount: 100, sale, organizationId: 'org-1' }),
+      makeTransaction({ id: 't2', userId: 'owner1', unitId: 'unit-1', amount: 20, organizationId: 'org-1' }),
+      makeTransaction({ id: 't3', userId: 'owner1', unitId: 'unit-1', type: TransactionType.WITHDRAWAL, amount: 10, organizationId: 'org-1' }),
     )
   })
 

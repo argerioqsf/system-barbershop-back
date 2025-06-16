@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { GetUserProfileFromUserIdService } from '../src/services/profile/get-profile-from-userId-service'
 import { FakeProfilesRepository } from './helpers/fake-repositories'
+import { makeProfile } from './helpers/default-values'
 import { ResourceNotFoundError } from '../src/services/@errors/resource-not-found-error'
 
 describe('Get profile from user id service', () => {
@@ -13,29 +14,7 @@ describe('Get profile from user id service', () => {
   })
 
   it('returns profile', async () => {
-    repo.profiles.push({
-      id: 'p1',
-      phone: '',
-      cpf: '',
-      genre: '',
-      birthday: '',
-      pix: '',
-      role: 'BARBER' as any,
-      commissionPercentage: 100,
-      totalBalance: 0,
-      userId: 'u1',
-      createdAt: new Date(),
-      user: {
-        id: 'u1',
-        name: '',
-        email: '',
-        password: '',
-        active: true,
-        organizationId: 'org-1',
-        unitId: 'unit-1',
-        createdAt: new Date(),
-      },
-    })
+    repo.profiles.push(makeProfile('p1', 'u1'))
     const res = await service.execute({ id: 'u1' })
     expect(res.profile?.id).toBe('p1')
   })

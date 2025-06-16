@@ -1,27 +1,13 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { GetSaleService } from '../src/services/sale/get-sale'
 import { FakeSaleRepository } from './helpers/fake-repositories'
+import { makeSale } from './helpers/default-values'
 
 describe('Get sale service', () => {
   let repo: FakeSaleRepository
   let service: GetSaleService
 
-  const sale = {
-    id: 'sale-1',
-    userId: 'u1',
-    clientId: 'c1',
-    unitId: 'unit-1',
-    total: 100,
-    method: 'CASH',
-    paymentStatus: 'PENDING',
-    createdAt: new Date(),
-    items: [],
-    user: {},
-    client: {},
-    coupon: null,
-    session: null,
-    transaction: null,
-  } as any
+  const sale = makeSale('sale-1')
 
   beforeEach(() => {
     repo = new FakeSaleRepository()

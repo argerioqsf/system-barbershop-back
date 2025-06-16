@@ -1,19 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { ListTransactionsService } from '../src/services/transaction/list-transactions'
 import { FakeTransactionRepository } from './helpers/fake-repositories'
-
-const base = (over?: any) => ({
-  id: over?.id ?? 't1',
-  userId: over?.userId ?? 'u1',
-  affectedUserId: null,
-  unitId: over?.unitId ?? 'unit-1',
-  cashRegisterSessionId: 's1',
-  type: 'ADDITION',
-  description: '',
-  amount: 10,
-  createdAt: new Date(),
-  unit: { organizationId: over?.organizationId ?? 'org-1' },
-})
+import { makeTransaction } from './helpers/default-values'
 
 describe('List transactions service', () => {
   let repo: FakeTransactionRepository
@@ -21,8 +9,8 @@ describe('List transactions service', () => {
 
   beforeEach(() => {
     repo = new FakeTransactionRepository()
-    repo.transactions.push(base({ id: 't1', unitId: 'unit-1', organizationId: 'org-1' }))
-    repo.transactions.push(base({ id: 't2', unitId: 'unit-2', organizationId: 'org-2' }))
+    repo.transactions.push(makeTransaction({ id: 't1', unitId: 'unit-1', organizationId: 'org-1' }))
+    repo.transactions.push(makeTransaction({ id: 't2', unitId: 'unit-2', organizationId: 'org-2' }))
     service = new ListTransactionsService(repo)
   })
 

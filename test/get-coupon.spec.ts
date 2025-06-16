@@ -1,18 +1,10 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { GetCouponService } from '../src/services/coupon/get-coupon'
 import { FakeCouponRepository } from './helpers/fake-repositories'
+import { makeCoupon } from './helpers/default-values'
+import { DiscountType } from '@prisma/client'
 
-const coupon = {
-  id: 'c1',
-  code: 'C1',
-  description: null,
-  discount: 10,
-  discountType: 'VALUE',
-  imageUrl: null,
-  quantity: 5,
-  unitId: 'unit-1',
-  createdAt: new Date(),
-} as any
+const coupon = makeCoupon('c1', 'C1', 10, DiscountType.VALUE)
 
 describe('Get coupon service', () => {
   let repo: FakeCouponRepository

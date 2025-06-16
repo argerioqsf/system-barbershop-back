@@ -1,9 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { ListCouponsService } from '../src/services/coupon/list-coupons'
 import { FakeCouponRepository } from './helpers/fake-repositories'
+import { makeCoupon } from './helpers/default-values'
+import { DiscountType } from '@prisma/client'
 
-const c1 = { id: 'c1', code: 'C1', description: null, discount: 10, discountType: 'VALUE', imageUrl: null, quantity: 5, unitId: 'unit-1', organizationId: 'org-1', createdAt: new Date() } as any
-const c2 = { id: 'c2', code: 'C2', description: null, discount: 20, discountType: 'VALUE', imageUrl: null, quantity: 5, unitId: 'unit-2', organizationId: 'org-2', createdAt: new Date() } as any
+const c1 = { ...makeCoupon('c1', 'C1', 10, DiscountType.VALUE), organizationId: 'org-1' } as any
+const c2 = { ...makeCoupon('c2', 'C2', 20, DiscountType.VALUE), unitId: 'unit-2', organizationId: 'org-2' } as any
 
 describe('List coupons service', () => {
   let repo: FakeCouponRepository

@@ -5,7 +5,8 @@ import {
   FakeBarberUsersRepository,
 } from './helpers/fake-repositories'
 
-import { barberUser } from './helpers/default-values'
+import { barberUser, makeBalanceSale, makeTransaction } from './helpers/default-values'
+import { TransactionType } from '@prisma/client'
 
 describe('Barber balance service', () => {
   let txRepo: FakeTransactionRepository
@@ -22,54 +23,19 @@ describe('Barber balance service', () => {
       unit: { organizationId: 'org-1' },
     })
 
-    const sale = {
-      items: [
-        {
-          barberId: barberUser.id,
-          price: 100,
-          porcentagemBarbeiro: 50,
-          productId: null,
-          service: { name: 'Cut' },
-          coupon: null,
-        },
-      ],
-      coupon: null,
-    }
+    const sale = makeBalanceSale()
 
     txRepo.transactions.push(
-      {
-        id: 't1',
-        userId: 'u1',
-        unitId: 'unit-1',
-        type: 'ADDITION',
-        description: '',
-        amount: 100,
-        createdAt: new Date(),
-        sale,
-        unit: { organizationId: 'org-1' },
-      } as any,
-      {
-        id: 't2',
-        userId: barberUser.id,
-        unitId: 'unit-1',
-        type: 'ADDITION',
-        description: '',
-        amount: 30,
-        createdAt: new Date(),
-        sale: null,
-        unit: { organizationId: 'org-1' },
-      } as any,
-      {
+      makeTransaction({ id: 't1', userId: 'u1', unitId: 'unit-1', amount: 100, sale, organizationId: 'org-1' }),
+      makeTransaction({ id: 't2', userId: barberUser.id, unitId: 'unit-1', amount: 30, organizationId: 'org-1' }),
+      makeTransaction({
         id: 't3',
         userId: barberUser.id,
         unitId: 'unit-1',
-        type: 'WITHDRAWAL',
-        description: '',
+        type: TransactionType.WITHDRAWAL,
         amount: 20,
-        createdAt: new Date(),
-        sale: null,
-        unit: { organizationId: 'org-1' },
-      } as any,
+        organizationId: 'org-1',
+      }),
     )
   })
 

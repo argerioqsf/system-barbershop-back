@@ -1,42 +1,10 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { ListSalesService } from '../src/services/sale/list-sales'
 import { FakeSaleRepository } from './helpers/fake-repositories'
+import { makeSale } from './helpers/default-values'
 
-const s1 = {
-  id: 's1',
-  userId: 'u',
-  clientId: 'c',
-  unitId: 'unit-1',
-  total: 0,
-  method: 'CASH',
-  paymentStatus: 'PENDING',
-  createdAt: new Date(),
-  items: [],
-  user: {},
-  client: {},
-  coupon: null,
-  session: null,
-  transaction: null,
-  unit: { organizationId: 'org-1' },
-} as any
-
-const s2 = {
-  id: 's2',
-  userId: 'u',
-  clientId: 'c',
-  unitId: 'unit-2',
-  total: 0,
-  method: 'CASH',
-  paymentStatus: 'PENDING',
-  createdAt: new Date(),
-  items: [],
-  user: {},
-  client: {},
-  coupon: null,
-  session: null,
-  transaction: null,
-  unit: { organizationId: 'org-2' },
-} as any
+const s1 = makeSale('s1', 'unit-1', 'org-1')
+const s2 = makeSale('s2', 'unit-2', 'org-2')
 
 describe('List sales service', () => {
   let repo: FakeSaleRepository

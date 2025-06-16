@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { UpdateProfileUserService } from '../src/services/profile/update-profile-user-service'
 import { InMemoryUserRepository } from '../src/repositories/in-memory/in-memory-users-repository'
 import { FakeProfilesRepository } from './helpers/fake-repositories'
+import { makeProfile } from './helpers/default-values'
 import { UserNotFoundError } from '../src/services/@errors/user-not-found-error'
 import { ProfileNotFoundError } from '../src/services/@errors/profile-not-found-error'
 
@@ -24,20 +25,7 @@ describe('Update profile user service', () => {
       organization: { connect: { id: 'org-1' } },
       unit: { connect: { id: 'unit-1' } },
     })
-    profileRepo.profiles.push({
-      id: 'p1',
-      phone: '1',
-      cpf: '2',
-      genre: '',
-      birthday: '',
-      pix: '',
-      role: 'BARBER' as any,
-      commissionPercentage: 100,
-      totalBalance: 0,
-      userId: user.id,
-      createdAt: new Date(),
-      user: { ...user, password: '' },
-    })
+    profileRepo.profiles.push({ ...makeProfile('p1', user.id, 0), user: { ...user, password: '' } })
 
     const res = await service.execute({
       id: user.id,

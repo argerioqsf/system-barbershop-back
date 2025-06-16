@@ -1,17 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { GetProductService } from '../src/services/product/get-product'
 import { FakeProductRepository } from './helpers/fake-repositories'
+import { makeProduct } from './helpers/default-values'
 
-const product = {
-  id: 'p1',
-  name: 'Prod',
-  description: null,
-  imageUrl: null,
-  quantity: 5,
-  cost: 10,
-  price: 20,
-  unitId: 'unit-1',
-} as any
+const product = makeProduct('p1', 20)
 
 describe('Get product service', () => {
   let repo: FakeProductRepository

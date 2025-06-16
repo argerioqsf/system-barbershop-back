@@ -1,9 +1,10 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { ListOrganizationsService } from '../src/services/organization/list-organizations'
 import { FakeOrganizationRepository } from './helpers/fake-repositories'
+import { makeOrganization } from './helpers/default-values'
 
-const o1 = { id: 'org-1', name: 'A', slug: 'a', ownerId: null, totalBalance: 0, createdAt: new Date() }
-const o2 = { id: 'org-2', name: 'B', slug: 'b', ownerId: null, totalBalance: 0, createdAt: new Date() }
+const o1 = makeOrganization('org-1', 'A', 'a')
+const o2 = makeOrganization('org-2', 'B', 'b')
 
 describe('List organizations service', () => {
   let repo: FakeOrganizationRepository

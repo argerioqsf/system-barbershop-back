@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { UpdateUnitService } from '../src/services/unit/update-unit'
 import { FakeUnitRepository } from './helpers/fake-repositories'
+import { makeUnit } from './helpers/default-values'
 
-const unit = { id: 'unit-1', name: 'A', slug: 'a', organizationId: 'org-1', totalBalance: 0, allowsLoan: false }
+const unit = makeUnit('unit-1', 'A', 'a', 'org-1')
 
 describe('Update unit service', () => {
   let repo: FakeUnitRepository

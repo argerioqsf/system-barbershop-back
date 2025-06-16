@@ -1,15 +1,14 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { UpdateOrganizationService } from '../src/services/organization/update-organization'
 import { FakeOrganizationRepository } from './helpers/fake-repositories'
-
-const org = { id: 'org-1', name: 'Org', slug: 'org', ownerId: null, totalBalance: 0, createdAt: new Date() }
+import { defaultOrganization } from './helpers/default-values'
 
 describe('Update organization service', () => {
   let repo: FakeOrganizationRepository
   let service: UpdateOrganizationService
 
   beforeEach(() => {
-    repo = new FakeOrganizationRepository(org, [org])
+    repo = new FakeOrganizationRepository({ ...defaultOrganization }, [{ ...defaultOrganization }])
     service = new UpdateOrganizationService(repo)
   })
 

@@ -7,6 +7,9 @@ import {
   Unit,
   Profile,
   User,
+  PaymentMethod,
+  PaymentStatus,
+  TransactionType,
 } from '@prisma/client'
 
 export const defaultUser = {
@@ -162,4 +165,128 @@ export function makeUser(
   unit: Unit,
 ): User & { profile: Profile; unit: Unit } {
   return { ...defaultUser, id, profile, unit }
+}
+export function makeOrganization(
+  id: string,
+  name = 'Org',
+  slug = 'org',
+): Organization {
+  return { id, name, slug, ownerId: null, totalBalance: 0, createdAt: new Date() }
+}
+
+export function makeUnit(
+  id: string,
+  name = 'Unit',
+  slug = 'unit',
+  organizationId = 'org-1',
+): Unit {
+  return { id, name, slug, organizationId, totalBalance: 0, allowsLoan: false }
+}
+
+export function makeSale(
+  id: string,
+  unitId = 'unit-1',
+  organizationId = 'org-1',
+  status: PaymentStatus = PaymentStatus.PENDING,
+  total = 100,
+): any {
+  return {
+    id,
+    userId: 'u1',
+    clientId: 'c1',
+    unitId,
+    total,
+    method: 'CASH' as PaymentMethod,
+    paymentStatus: status,
+    createdAt: new Date(),
+    items: [],
+    user: {},
+    client: {},
+    coupon: null,
+    session: null,
+    transaction: null,
+    unit: { organizationId },
+  } as any
+}
+
+export function makeSaleWithBarber(): any {
+  return {
+    id: 'sale-1',
+    userId: 'cashier',
+    clientId: 'c1',
+    unitId: defaultUnit.id,
+    total: 100,
+    method: 'CASH' as PaymentMethod,
+    paymentStatus: PaymentStatus.PENDING,
+    createdAt: new Date(),
+    items: [
+      {
+        id: 'i1',
+        saleId: 'sale-1',
+        serviceId: null,
+        productId: null,
+        quantity: 1,
+        barberId: barberUser.id,
+        couponId: null,
+        price: 100,
+        discount: null,
+        discountType: null,
+        porcentagemBarbeiro: barberProfile.commissionPercentage,
+        service: null,
+        product: null,
+        barber: { ...barberUser, profile: barberProfile },
+        coupon: null,
+      },
+    ],
+    user: { ...defaultUser },
+    client: { ...defaultUser },
+    coupon: null,
+    session: null,
+    transaction: null,
+  } as any
+}
+
+export function makeBalanceSale(barberId: string = barberUser.id): any {
+  return {
+    items: [
+      {
+        barberId,
+        price: 100,
+        porcentagemBarbeiro: 50,
+        productId: null,
+        service: { name: 'Cut' },
+        quantity: 1,
+        coupon: null,
+      },
+    ],
+    coupon: null,
+  }
+}
+
+export function makeTransaction(over: any = {}): any {
+  return {
+    id: over.id ?? 't1',
+    userId: over.userId ?? 'u1',
+    affectedUserId: null,
+    unitId: over.unitId ?? 'unit-1',
+    cashRegisterSessionId: 's1',
+    type: over.type ?? TransactionType.ADDITION,
+    description: '',
+    amount: over.amount ?? 10,
+    createdAt: new Date(),
+    unit: { organizationId: over.organizationId ?? 'org-1' },
+    sale: over.sale ?? null,
+  }
+}
+
+export const namedUser = {
+  id: 'user-1',
+  name: 'John',
+  email: 'john@example.com',
+  password: '123',
+  active: true,
+  organizationId: 'org-1',
+  unitId: 'unit-1',
+  createdAt: new Date(),
+  profile: null,
 }
