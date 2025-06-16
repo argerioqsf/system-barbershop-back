@@ -20,6 +20,7 @@ export async function CreateSaleController(
     ),
     clientId: z.string(),
     couponCode: z.string().optional(),
+    paymentStatus: z.enum(['PAID', 'PENDING']).optional().default('PENDING'),
   })
   const data = bodySchema.parse(request.body)
   const userId = request.user.sub

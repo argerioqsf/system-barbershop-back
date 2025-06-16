@@ -36,6 +36,7 @@ export interface SaleRepository {
   create(data: Prisma.SaleCreateInput): Promise<DetailedSale>
   findMany(where?: Prisma.SaleWhereInput): Promise<DetailedSale[]>
   findById(id: string): Promise<DetailedSale | null>
+  update(id: string, data: Prisma.SaleUpdateInput): Promise<DetailedSale>
   findManyByDateRange(start: Date, end: Date): Promise<DetailedSale[]>
   findManyByUser(userId: string): Promise<DetailedSale[]>
   findManyByBarber(barberId: string): Promise<DetailedSale[]>

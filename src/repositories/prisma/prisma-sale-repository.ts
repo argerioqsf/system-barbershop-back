@@ -66,6 +66,31 @@ export class PrismaSaleRepository implements SaleRepository {
     })
   }
 
+  async update(
+    id: string,
+    data: Prisma.SaleUpdateInput,
+  ): Promise<DetailedSale> {
+    return prisma.sale.update({
+      where: { id },
+      data,
+      include: {
+        items: {
+          include: {
+            service: true,
+            product: true,
+            barber: { include: { profile: true } },
+            coupon: true,
+          },
+        },
+        user: { include: { profile: true } },
+        client: { include: { profile: true } },
+        coupon: true,
+        session: true,
+        transaction: true,
+      },
+    })
+  }
+
   async findManyByDateRange(start: Date, end: Date): Promise<DetailedSale[]> {
     return prisma.sale.findMany({
       where: { createdAt: { gte: start, lte: end } },
