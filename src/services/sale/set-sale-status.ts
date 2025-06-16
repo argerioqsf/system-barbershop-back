@@ -1,7 +1,4 @@
-import {
-  SaleRepository,
-  DetailedSale,
-} from '@/repositories/sale-repository'
+import { SaleRepository, DetailedSale } from '@/repositories/sale-repository'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { CashRegisterRepository } from '@/repositories/cash-register-repository'
 import { TransactionRepository } from '@/repositories/transaction-repository'
@@ -100,7 +97,10 @@ export class SetSaleStatusService {
             const balanceBarber = userBarber.barber.profile.totalBalance
             const valueCalculated = balanceBarber + amount
             if (valueCalculated <= 0) {
-              await this.unitRepository.incrementBalance(updatedSale.unitId, amount)
+              await this.unitRepository.incrementBalance(
+                updatedSale.unitId,
+                amount,
+              )
             } else {
               await this.unitRepository.incrementBalance(
                 updatedSale.unitId,
@@ -114,7 +114,10 @@ export class SetSaleStatusService {
           }
           await this.profileRepository.incrementBalance(barberId, amount)
         }
-        await this.unitRepository.incrementBalance(updatedSale.unitId, ownerShare)
+        await this.unitRepository.incrementBalance(
+          updatedSale.unitId,
+          ownerShare,
+        )
         await this.organizationRepository.incrementBalance(org.id, ownerShare)
 
         return { sale: updatedSale }

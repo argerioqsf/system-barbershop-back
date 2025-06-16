@@ -69,7 +69,7 @@ export class CreateSaleService {
     items,
     clientId,
     couponCode,
-    paymentStatus = PaymentStatus.PAID,
+    paymentStatus = PaymentStatus.PENDING,
   }: CreateSaleRequest): Promise<CreateSaleResponse> {
     const saleItems: SaleItem[] = []
     let couponConnect: ConnectRelation | undefined
@@ -245,7 +245,9 @@ export class CreateSaleService {
             : undefined,
         items: { create: saleItems },
         coupon: couponConnect,
-        transaction: transaction ? { connect: { id: transaction.id } } : undefined,
+        transaction: transaction
+          ? { connect: { id: transaction.id } }
+          : undefined,
       })
 
       if (paymentStatus === PaymentStatus.PAID) {
