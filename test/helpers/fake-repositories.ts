@@ -14,6 +14,8 @@ import {
   Transaction,
   TransactionType,
   Sale,
+  Role,
+  PasswordResetToken,
 } from '@prisma/client'
 import { ProductRepository } from '../../src/repositories/product-repository'
 import { CouponRepository } from '../../src/repositories/coupon-repository'
@@ -31,22 +33,40 @@ import { TransactionRepository } from '../../src/repositories/transaction-reposi
 import { OrganizationRepository } from '../../src/repositories/organization-repository'
 import { ProfilesRepository } from '../../src/repositories/profiles-repository'
 import { UnitRepository } from '../../src/repositories/unit-repository'
+import { PasswordResetTokenRepository } from '../../src/repositories/password-reset-token-repository'
 import { randomUUID } from 'crypto'
 import { ServiceRepository } from '../../src/repositories/service-repository'
 import { TransactionFull } from '../../src/repositories/prisma/prisma-transaction-repository'
 
 export class FakeServiceRepository implements ServiceRepository {
-  constructor(public services: Service[] = []) {}
-  create(data: Prisma.ServiceCreateInput): Promise<Service> {
-    throw new Error('not implemented')
+  constructor(public services: (Service & { organizationId?: string })[] = []) {}
+
+  async create(data: Prisma.ServiceCreateInput): Promise<Service> {
+    const service: Service = {
+      id: randomUUID(),
+      name: data.name,
+      description: (data.description as string | null) ?? null,
+      imageUrl: (data.imageUrl as string | null) ?? null,
+      cost: data.cost as number,
+      price: data.price as number,
+      unitId: (data.unit as any).connect.id,
+    }
+    this.services.push(service)
+    return service
   }
 
-  findManyByUnit(unitId: string): Promise<Service[]> {
-    throw new Error('not implemented')
+  async findManyByUnit(unitId: string): Promise<Service[]> {
+    return this.services.filter((s) => s.unitId === unitId)
   }
 
-  findMany(where?: Prisma.ServiceWhereInput): Promise<Service[]> {
-    throw new Error('not implemented')
+  async findMany(where: Prisma.ServiceWhereInput = {}): Promise<Service[]> {
+    return this.services.filter((s: any) => {
+      if (where.unitId && s.unitId !== where.unitId) return false
+      if (where.unit && 'organizationId' in (where.unit as any)) {
+        return s.organizationId === (where.unit as any).organizationId
+      }
+      return true
+    })
   }
 
   async findById(id: string): Promise<Service | null> {
@@ -206,13 +226,14 @@ export class FakeCashRegisterRepository implements CashRegisterRepository {
     return this.session
   }
 
-  findById(id: string): Promise<CompleteCashSession | null> {
-    throw new Error('not implemented')
+  async findById(id: string): Promise<CompleteCashSession | null> {
+    if (!this.session || this.session.id !== id) return null
+    return this.session as CompleteCashSession
   }
 }
 
 export class FakeTransactionRepository implements TransactionRepository {
-  public transactions: Transaction[] = []
+  public transactions: TransactionFull[] = []
   async create(data: Prisma.TransactionCreateInput): Promise<Transaction> {
     const tr: Transaction = {
       id: randomUUID(),
@@ -229,12 +250,18 @@ export class FakeTransactionRepository implements TransactionRepository {
     return tr
   }
 
-  findManyByUser(userId: string): Promise<TransactionFull[]> {
-    throw new Error('not implemented')
+  async findManyByUser(userId: string): Promise<TransactionFull[]> {
+    return this.transactions.filter((t: any) => t.userId === userId)
   }
 
-  findMany(where?: Prisma.TransactionWhereInput): Promise<TransactionFull[]> {
-    throw new Error('not implemented')
+  async findMany(where: Prisma.TransactionWhereInput = {}): Promise<TransactionFull[]> {
+    return this.transactions.filter((t: any) => {
+      if (where.unitId && t.unitId !== where.unitId) return false
+      if (where.unit && 'organizationId' in (where.unit as any)) {
+        return t.unit?.organizationId === (where.unit as any).organizationId
+      }
+      return true
+    })
   }
 
   findManyByUnit(unitId: string): Promise<Transaction[]> {
@@ -293,8 +320,25 @@ export class FakeProfilesRepository implements ProfilesRepository {
     return this.profiles.find((p) => p.id === id) ?? null
   }
 
-  create(data: Prisma.ProfileUncheckedCreateInput): Promise<Profile> {
-    throw new Error('not implemented')
+  async create(data: Prisma.ProfileUncheckedCreateInput): Promise<Profile> {
+    const profile: Profile = {
+      id: randomUUID(),
+      phone: data.phone as string,
+      cpf: data.cpf as string,
+      genre: data.genre as string,
+      birthday: data.birthday as string,
+      pix: data.pix as string,
+      role: data.role as Role,
+      commissionPercentage: (data as any).commissionPercentage ?? 100,
+      totalBalance: 0,
+      userId: data.userId,
+      createdAt: new Date(),
+    }
+    this.profiles.push({
+      ...profile,
+      user: { id: data.userId, name: '', email: '', password: '', active: true, organizationId: 'org-1', unitId: 'unit-1', createdAt: new Date() },
+    })
+    return profile
   }
 
   async findByUserId(
@@ -307,7 +351,12 @@ export class FakeProfilesRepository implements ProfilesRepository {
     id: string,
     data: Prisma.ProfileUncheckedUpdateInput,
   ): Promise<Profile> {
-    throw new Error('not implemented')
+    const index = this.profiles.findIndex((p) => p.id === id)
+    if (index < 0) throw new Error('Profile not found')
+    const current = this.profiles[index]
+    const updated = { ...current, ...(data as any) }
+    this.profiles[index] = updated
+    return updated
   }
 
   findMany(
@@ -326,25 +375,28 @@ export class FakeProfilesRepository implements ProfilesRepository {
 }
 
 export class FakeUnitRepository implements UnitRepository {
-  constructor(public unit: Unit) {}
+  constructor(public unit: Unit, public units: Unit[] = [unit]) {}
   create(data: Prisma.UnitCreateInput): Promise<Unit> {
     throw new Error('not implemented')
   }
 
-  findById(id: string): Promise<Unit | null> {
-    throw new Error('not implemented')
+  async findById(id: string): Promise<Unit | null> {
+    return this.units.find((u) => u.id === id) ?? null
   }
 
-  findManyByOrganization(organizationId: string): Promise<Unit[]> {
-    throw new Error('not implemented')
+  async findManyByOrganization(organizationId: string): Promise<Unit[]> {
+    return this.units.filter((u) => u.organizationId === organizationId)
   }
 
-  findMany(): Promise<Unit[]> {
-    throw new Error('not implemented')
+  async findMany(): Promise<Unit[]> {
+    return this.units
   }
 
-  update(id: string, data: Prisma.UnitUpdateInput): Promise<Unit> {
-    throw new Error('not implemented')
+  async update(id: string, data: Prisma.UnitUpdateInput): Promise<Unit> {
+    const unit = this.units.find((u) => u.id === id)
+    if (!unit) throw new Error('Unit not found')
+    Object.assign(unit, data as any)
+    return unit
   }
 
   delete(id: string): Promise<void> {
@@ -352,8 +404,9 @@ export class FakeUnitRepository implements UnitRepository {
   }
 
   async incrementBalance(id: string, amount: number): Promise<void> {
-    if (this.unit.id === id) {
-      this.unit.totalBalance += amount
+    const unit = this.units.find((u) => u.id === id)
+    if (unit) {
+      unit.totalBalance += amount
     }
   }
 }
@@ -504,31 +557,107 @@ export class FakeSaleRepository implements SaleRepository {
     return sale
   }
 
-  findMany(where?: Prisma.SaleWhereInput): Promise<DetailedSale[]> {
-    throw new Error('not implemented')
+  async findMany(where: Prisma.SaleWhereInput = {}): Promise<DetailedSale[]> {
+    return this.sales.filter((s: any) => {
+      if (where.unitId && s.unitId !== where.unitId) return false
+      if (where.unit && 'organizationId' in (where.unit as any)) {
+        return s.unit?.organizationId === (where.unit as any).organizationId
+      }
+      return true
+    })
   }
 
-  findById(id: string): Promise<DetailedSale | null> {
-    throw new Error('not implemented')
+  async findById(id: string): Promise<DetailedSale | null> {
+    return this.sales.find((s) => s.id === id) ?? null
   }
 
-  update(id: string, data: Prisma.SaleUpdateInput): Promise<DetailedSale> {
-    throw new Error('not implemented')
+  async update(id: string, data: Prisma.SaleUpdateInput): Promise<DetailedSale> {
+    const sale = this.sales.find((s) => s.id === id)
+    if (!sale) throw new Error('Sale not found')
+    if (data.paymentStatus) {
+      sale.paymentStatus = data.paymentStatus as PaymentStatus
+    }
+    if (data.session && 'connect' in data.session!) {
+      const sid = (data.session as any).connect.id
+      sale.sessionId = sid
+      sale.session = {
+        id: sid,
+        openedById: '',
+        unitId: sale.unitId,
+        openedAt: new Date(),
+        closedAt: null,
+        initialAmount: 0,
+        transactions: [],
+        sales: [],
+        finalAmount: null,
+      }
+    }
+    if (data.transaction && 'connect' in data.transaction!) {
+      const tid = (data.transaction as any).connect.id
+      sale.transactionId = tid
+      sale.transaction = {
+        id: tid,
+        userId: '',
+        affectedUserId: null,
+        unitId: sale.unitId,
+        cashRegisterSessionId: sale.sessionId ?? '',
+        type: TransactionType.ADDITION,
+        description: '',
+        amount: sale.total,
+        createdAt: new Date(),
+      }
+    }
+    return sale
   }
 
-  findManyByDateRange(start: Date, end: Date): Promise<DetailedSale[]> {
-    throw new Error('not implemented')
+  async findManyByDateRange(start: Date, end: Date): Promise<DetailedSale[]> {
+    return this.sales.filter(
+      (s) => s.createdAt >= start && s.createdAt <= end,
+    )
   }
 
-  findManyByUser(userId: string): Promise<DetailedSale[]> {
-    throw new Error('not implemented')
+  async findManyByUser(userId: string): Promise<DetailedSale[]> {
+    return this.sales.filter((s) => s.userId === userId)
   }
 
-  findManyByBarber(barberId: string): Promise<DetailedSale[]> {
-    throw new Error('not implemented')
+  async findManyByBarber(barberId: string): Promise<DetailedSale[]> {
+    return this.sales.filter((s) =>
+      s.items.some((i) => i.barberId === barberId),
+    )
   }
 
-  findManyBySession(sessionId: string): Promise<DetailedSale[]> {
-    throw new Error('not implemented')
+  async findManyBySession(sessionId: string): Promise<DetailedSale[]> {
+    return this.sales.filter((s) => s.sessionId === sessionId)
+  }
+}
+
+export class FakePasswordResetTokenRepository
+  implements PasswordResetTokenRepository
+{
+  public tokens: PasswordResetToken[] = []
+
+  async create(
+    data: Prisma.PasswordResetTokenCreateInput,
+  ): Promise<PasswordResetToken> {
+    const token: PasswordResetToken = {
+      id: randomUUID(),
+      token: data.token as string,
+      userId: (data.user as any).connect.id,
+      expiresAt: data.expiresAt as Date,
+    }
+    this.tokens.push(token)
+    return token
+  }
+
+  async findByToken(token: string): Promise<PasswordResetToken | null> {
+    return this.tokens.find((t) => t.token === token) ?? null
+  }
+
+  async delete(id: string): Promise<void> {
+    this.tokens = this.tokens.filter((t) => t.id !== id)
+  }
+
+  async deleteByUserId(userId: string): Promise<void> {
+    this.tokens = this.tokens.filter((t) => t.userId !== userId)
   }
 }

@@ -76,8 +76,12 @@ export class InMemoryUserRepository implements UsersRepository {
     const index = this.items.findIndex((u) => u.id === id)
     if (index >= 0) {
       const current = this.items[index]
+      const updated: User = { ...current }
+      if (data.unit && typeof data.unit === 'object' && 'connect' in data.unit) {
+        updated.unitId = (data.unit as any).connect.id
+      }
       this.items[index] = {
-        ...current,
+        ...updated,
         ...(data as unknown as Partial<User>),
       }
       const { ...rest } = this.items[index]
