@@ -1,13 +1,14 @@
+/* eslint-disable import/first */
 process.env.JWT_SECRET = 'test'
 process.env.PASSWORD_SEED = 'test'
 process.env.TOKEN_EMAIL_TWILIO = 'test'
+process.env.APP_WEB_URL = 'http://localhost:3000'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { RequestPasswordResetService } from '../src/services/users/request-password-reset'
 import { InMemoryUserRepository } from '../src/repositories/in-memory/in-memory-users-repository'
 import { FakePasswordResetTokenRepository } from './helpers/fake-repositories'
 import { UserNotFoundError } from '../src/services/@errors/user-not-found-error'
 import { sendPasswordResetEmail } from '../src/lib/sendgrid'
-process.env.APP_WEB_URL = 'http://localhost:3000'
 
 vi.mock('../src/lib/sendgrid', () => ({
   sendPasswordResetEmail: vi.fn(),
