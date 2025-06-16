@@ -1,10 +1,10 @@
-process.env.APP_WEB_URL = 'http://localhost:3000'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { RequestPasswordResetService } from '../src/services/users/request-password-reset'
 import { InMemoryUserRepository } from '../src/repositories/in-memory/in-memory-users-repository'
 import { FakePasswordResetTokenRepository } from './helpers/fake-repositories'
 import { UserNotFoundError } from '../src/services/@errors/user-not-found-error'
 import { sendPasswordResetEmail } from '../src/lib/sendgrid'
+process.env.APP_WEB_URL = 'http://localhost:3000'
 
 vi.mock('../src/lib/sendgrid', () => ({
   sendPasswordResetEmail: vi.fn(),
@@ -23,7 +23,9 @@ describe('Request password reset service', () => {
   })
 
   it('throws when user is not found', async () => {
-    await expect(service.execute({ email: 'test@example.com' })).rejects.toBeInstanceOf(UserNotFoundError)
+    await expect(
+      service.execute({ email: 'test@example.com' }),
+    ).rejects.toBeInstanceOf(UserNotFoundError)
   })
 
   it('creates reset token and sends email', async () => {
