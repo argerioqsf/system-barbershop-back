@@ -71,9 +71,14 @@ export class InMemoryUserRepository implements UsersRepository {
 
   async update(
     id: string,
-    data: { unit: { connect: { id: string } } },
-  ): Promise<Omit<User, 'password'>> {
-    const index = this.items.findIndex((u) => u.id === id)
+      if (
+        data.unit &&
+        typeof data.unit === 'object' &&
+        'connect' in data.unit
+      ) {
+        profile: current.profile,
+      const { profile: _p, password: _pw, ...rest } = this.items[index]
+      return rest as Omit<User, 'password'>
     if (index >= 0) {
       const current = this.items[index]
       const updated: User = { ...current }
