@@ -566,14 +566,16 @@
       "method": "POST",
       "url": "{{ baseURL }}/transactions",
       "body": {
-        "mimeType": "application/json",
-        "text": "{\n  \"userId\": \"\",\n  \"unitId\": \"\",\n  \"affectedUserId\": \"\",\n  \"type\": \"ADDITION\",\n  \"description\": \"\",\n  \"amount\": 0\n}"
+        "mimeType": "multipart/form-data",
+        "params": [
+          { "name": "type", "value": "ADDITION" },
+          { "name": "description", "value": "" },
+          { "name": "amount", "value": "0" },
+          { "name": "affectedUserId", "value": "" },
+          { "name": "receipt", "value": "", "type": "file" }
+        ]
       },
       "headers": [
-        {
-          "name": "Content-Type",
-          "value": "application/json"
-        },
         {
           "name": "Authorization",
           "value": "Bearer {{ token }}"
