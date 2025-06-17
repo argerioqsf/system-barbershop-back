@@ -36,6 +36,17 @@ describe('List units service', () => {
     expect(result.units[0].id).toBe('unit-1')
   })
 
+  it('lists only own unit for manager', async () => {
+    const result = await service.execute({
+      sub: '1',
+      role: 'MANAGER',
+      organizationId: 'org-1',
+      unitId: 'unit-1',
+    } as any)
+    expect(result.units).toHaveLength(1)
+    expect(result.units[0].id).toBe('unit-1')
+  })
+
   it('throws if user not found', async () => {
     await expect(
       service.execute({

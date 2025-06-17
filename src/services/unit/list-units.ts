@@ -14,10 +14,13 @@ export class ListUnitsService {
     let units: Unit[] = []
     if (userToken.role === 'ADMIN') {
       units = await this.repository.findMany()
-    } else {
+    } else if (userToken.role === 'OWNER') {
       units = await this.repository.findManyByOrganization(
         userToken.organizationId,
       )
+    } else {
+      const unit = await this.repository.findById(userToken.unitId)
+      units = unit ? [unit] : []
     }
     return { units }
   }
