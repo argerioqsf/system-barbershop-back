@@ -91,7 +91,7 @@ describe('Set sale status service', () => {
       paymentStatus: PaymentStatus.PAID,
     })
     expect(res.sale.paymentStatus).toBe(PaymentStatus.PAID)
-    expect(transactionRepo.transactions).toHaveLength(1)
+    expect(transactionRepo.transactions).toHaveLength(3)
     expect(profileRepo.profiles[0].totalBalance).toBeCloseTo(50)
     expect(unitRepo.unit.totalBalance).toBeCloseTo(50)
     expect(orgRepo.organization.totalBalance).toBeCloseTo(50)

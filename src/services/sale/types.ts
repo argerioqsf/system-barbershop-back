@@ -10,6 +10,7 @@ export interface DistributeProfitsDeps {
   organizationRepository: import('@/repositories/organization-repository').OrganizationRepository
   profileRepository: import('@/repositories/profiles-repository').ProfilesRepository
   unitRepository: import('@/repositories/unit-repository').UnitRepository
+  transactionRepository: import('@/repositories/transaction-repository').TransactionRepository
 }
 
 export interface CreateSaleItem {

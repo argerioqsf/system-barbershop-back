@@ -204,7 +204,7 @@ export function makeSale(
     client: {},
     coupon: null,
     session: null,
-    transaction: null,
+    transactions: [],
     unit: { organizationId },
   } as any
 }
@@ -242,7 +242,7 @@ export function makeSaleWithBarber(): any {
     client: { ...defaultUser },
     coupon: null,
     session: null,
-    transaction: null,
+    transactions: [],
   } as any
 }
 

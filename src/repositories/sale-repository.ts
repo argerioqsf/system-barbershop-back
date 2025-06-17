@@ -29,7 +29,7 @@ export type DetailedSale = Sale & {
   client: User & { profile: Profile | null }
   coupon: Coupon | null
   session: CashRegisterSession | null
-  transaction: Transaction | null
+  transactions: Transaction[]
 }
 
 export interface SaleRepository {

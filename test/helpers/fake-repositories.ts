@@ -575,7 +575,6 @@ export class FakeSaleRepository implements SaleRepository {
       unitId: (data.unit as any).connect.id,
       sessionId: (data.session as any)?.connect.id,
       couponId: (data.coupon as any)?.connect.id,
-      transactionId: (data.transaction as any)?.connect.id,
       total: data.total as number,
       method: data.method as PaymentMethod,
       paymentStatus: data.paymentStatus as PaymentStatus,
@@ -617,19 +616,7 @@ export class FakeSaleRepository implements SaleRepository {
           }
         : null,
       session: null,
-      transaction: data.transaction
-        ? {
-            id: (data.transaction as any).connect.id,
-            userId: '',
-            affectedUserId: null,
-            unitId: '',
-            cashRegisterSessionId: '',
-            type: TransactionType.ADDITION,
-            description: '',
-            amount: data.total as number,
-            createdAt: new Date(),
-          }
-        : null,
+      transactions: [],
     }
     this.sales.push(sale)
     return sale
@@ -670,21 +657,7 @@ export class FakeSaleRepository implements SaleRepository {
         finalAmount: null,
       }
     }
-    if (data.transaction && 'connect' in data.transaction!) {
-      const tid = (data.transaction as any).connect.id
-      sale.transactionId = tid
-      sale.transaction = {
-        id: tid,
-        userId: '',
-        affectedUserId: null,
-        unitId: sale.unitId,
-        cashRegisterSessionId: sale.sessionId ?? '',
-        type: TransactionType.ADDITION,
-        description: '',
-        amount: sale.total,
-        createdAt: new Date(),
-      }
-    }
+    sale.transactions = sale.transactions ?? []
     return sale
   }
 
