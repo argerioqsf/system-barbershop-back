@@ -295,4 +295,18 @@ describe('Create transaction service', () => {
     expect(ctx.unitRepo.unit.totalBalance).toBe(80)
     expect(ctx.organizationRepo.organization.totalBalance).toBe(-20)
   })
+
+  it('stores receipt url when provided', async () => {
+    await ctx.createTransaction.execute({
+      userId: ctx.user.id,
+      type: TransactionType.ADDITION,
+      description: '',
+      amount: 10,
+      receiptUrl: '/uploads/test.png',
+    })
+
+    expect(ctx.transactionRepo.transactions[0].receiptUrl).toBe(
+      '/uploads/test.png',
+    )
+  })
 })
