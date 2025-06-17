@@ -10,7 +10,7 @@ export async function CreateTransactionController(
   const bodySchema = z.object({
     type: z.enum(['ADDITION', 'WITHDRAWAL']),
     description: z.string(),
-    amount: z.number(),
+    amount: z.coerce.number(),
     affectedUserId: z.string().optional(),
   })
   const data = bodySchema.parse(request.body)
