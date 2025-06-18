@@ -572,6 +572,7 @@
           { "name": "description", "value": "" },
           { "name": "amount", "value": "0" },
           { "name": "affectedUserId", "value": "" },
+          { "name": "isLoan", "value": "false" },
           { "name": "receipt", "value": "", "type": "file" }
         ]
       },
@@ -863,6 +864,20 @@
       "name": "Owner balance",
       "method": "GET",
       "url": "{{ baseURL }}/reports/owner/{{ ownerId }}/balance",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_unit_loan_balance",
+      "_type": "request",
+      "parentId": "fld_reports",
+      "name": "Unit loan balance",
+      "method": "GET",
+      "url": "{{ baseURL }}/reports/unit/{{ unitId }}/loan-balance",
       "headers": [
         {
           "name": "Authorization",
