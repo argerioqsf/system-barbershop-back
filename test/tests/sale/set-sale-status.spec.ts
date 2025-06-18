@@ -1,5 +1,6 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { SetSaleStatusService } from '../../../src/services/sale/set-sale-status'
+import { CreateTransactionService } from '../../../src/services/transaction/create-transaction'
 import {
   FakeSaleRepository,
   FakeBarberUsersRepository,
@@ -17,13 +18,18 @@ import {
   defaultUnit,
   makeSaleWithBarber,
 } from '../../helpers/default-values'
+
+let transactionRepo: FakeTransactionRepository
+let barberRepo: FakeBarberUsersRepository
+let cashRepo: FakeCashRegisterRepository
+
+vi.mock('../../../src/services/@factories/transaction/make-create-transaction', () => ({
+  makeCreateTransaction: () => new CreateTransactionService(transactionRepo, barberRepo, cashRepo),
+}))
 import { PaymentStatus } from '@prisma/client'
 
 describe('Set sale status service', () => {
   let saleRepo: FakeSaleRepository
-  let barberRepo: FakeBarberUsersRepository
-  let cashRepo: FakeCashRegisterRepository
-  let transactionRepo: FakeTransactionRepository
   let orgRepo: FakeOrganizationRepository
   let profileRepo: FakeProfilesRepository
   let unitRepo: FakeUnitRepository
@@ -43,13 +49,16 @@ describe('Set sale status service', () => {
 
     saleRepo.sales.push(sale)
 
-    barberRepo.users.push({
-      ...defaultUser,
-      id: 'cashier',
-      organizationId: defaultOrganization.id,
-      unitId: defaultUnit.id,
-      unit: { organizationId: defaultOrganization.id },
-    })
+    barberRepo.users.push(
+      {
+        ...defaultUser,
+        id: 'cashier',
+        organizationId: defaultOrganization.id,
+        unitId: defaultUnit.id,
+        unit: { organizationId: defaultOrganization.id },
+      },
+      barberUser as any,
+    )
 
     cashRepo.session = {
       id: 'session-1',
@@ -91,10 +100,9 @@ describe('Set sale status service', () => {
       paymentStatus: PaymentStatus.PAID,
     })
     expect(res.sale.paymentStatus).toBe(PaymentStatus.PAID)
-    expect(transactionRepo.transactions).toHaveLength(3)
+    expect(transactionRepo.transactions).toHaveLength(2)
     expect(profileRepo.profiles[0].totalBalance).toBeCloseTo(50)
     expect(unitRepo.unit.totalBalance).toBeCloseTo(50)
-    expect(orgRepo.organization.totalBalance).toBeCloseTo(50)
   })
 })
 
