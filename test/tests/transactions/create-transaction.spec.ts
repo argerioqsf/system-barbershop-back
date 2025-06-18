@@ -5,65 +5,27 @@ import {
   FakeTransactionRepository,
   FakeBarberUsersRepository,
   FakeCashRegisterRepository,
-  FakeProfilesRepository,
-  FakeUnitRepository,
-  FakeOrganizationRepository,
 } from '../../helpers/fake-repositories'
-import {
-  defaultUser,
-  defaultOrganization,
-  defaultUnit,
-  defaultProfile,
-  makeProfile,
-  makeUser,
-} from '../../helpers/default-values'
+import { defaultUser } from '../../helpers/default-values'
 
-function setup(options?: {
-  userBalance?: number
-  unitBalance?: number
-  organizationBalance?: number
-  allowsLoan?: boolean
-}) {
+function setup() {
   const transactionRepo = new FakeTransactionRepository()
   const barberRepo = new FakeBarberUsersRepository()
   const cashRepo = new FakeCashRegisterRepository()
-  const profileRepo = new FakeProfilesRepository()
-  const organization = {
-    ...defaultOrganization,
-    totalBalance:
-      options?.organizationBalance ?? defaultOrganization.totalBalance,
-  }
-  const organizationRepo = new FakeOrganizationRepository(organization)
-  const unit = {
-    ...defaultUnit,
-    totalBalance: options?.unitBalance ?? defaultUnit.totalBalance,
-    allowsLoan: options?.allowsLoan ?? defaultUnit.allowsLoan,
-  }
-  const unitRepo = new FakeUnitRepository(unit)
 
-  const createTransaction = new CreateTransactionService(
+  const service = new CreateTransactionService(
     transactionRepo,
     barberRepo,
     cashRepo,
-    profileRepo,
-    unitRepo,
-    organizationRepo,
   )
 
-  const profile = {
-    ...defaultProfile,
-    totalBalance: options?.userBalance ?? defaultProfile.totalBalance,
-    user: { ...defaultUser },
-  }
-  profileRepo.profiles.push(profile)
-
-  const user = { ...defaultUser, profile, unit }
-  barberRepo.users.push(user)
+  const user = { ...defaultUser }
+  barberRepo.users.push(user as any)
 
   cashRepo.session = {
     id: 'session-1',
-    openedById: defaultUser.id,
-    unitId: unit.id,
+    openedById: user.id,
+    unitId: user.unitId,
     openedAt: new Date(),
     closedAt: null,
     initialAmount: 0,
@@ -72,242 +34,89 @@ function setup(options?: {
     finalAmount: null,
   }
 
-  return {
-    transactionRepo,
-    barberRepo,
-    cashRepo,
-    profileRepo,
-    unitRepo,
-    organizationRepo,
-    createTransaction,
-    user,
-  }
+  return { transactionRepo, barberRepo, cashRepo, service, user }
 }
 
 describe('Create transaction service', () => {
   let ctx: ReturnType<typeof setup>
+
   beforeEach(() => {
     ctx = setup()
   })
 
-  it('throws when passing negative value on addition', async () => {
+  it('throws when user not found', async () => {
     await expect(
-      ctx.createTransaction.execute({
-        userId: ctx.user.id,
+      ctx.service.execute({
+        userId: 'no-user',
         type: TransactionType.ADDITION,
-        description: '',
-        amount: -10,
-      }),
-    ).rejects.toThrow('Negative values ​​cannot be passed on additions')
-  })
-
-  it('throws when passing negative value on withdrawal', async () => {
-    await expect(
-      ctx.createTransaction.execute({
-        userId: ctx.user.id,
-        type: TransactionType.WITHDRAWAL,
-        description: '',
-        amount: -10,
-      }),
-    ).rejects.toThrow('Negative values ​​cannot be passed on withdrawals')
-  })
-
-  it('adds value to the user himself with negative balance', async () => {
-    ctx = setup({ userBalance: -50 })
-
-    await ctx.createTransaction.execute({
-      userId: ctx.user.id,
-      affectedUserId: ctx.user.id,
-      type: TransactionType.ADDITION,
-      description: '',
-      amount: 60,
-    })
-
-    expect(ctx.profileRepo.profiles[0].totalBalance).toBe(10)
-    expect(ctx.unitRepo.unit.totalBalance).toBe(60)
-    expect(ctx.organizationRepo.organization.totalBalance).toBe(60)
-  })
-
-  it('adds value to the user himself with positive balance', async () => {
-    ctx = setup({ userBalance: 20 })
-
-    await ctx.createTransaction.execute({
-      userId: ctx.user.id,
-      affectedUserId: ctx.user.id,
-      type: TransactionType.ADDITION,
-      description: '',
-      amount: 30,
-    })
-
-    expect(ctx.profileRepo.profiles[0].totalBalance).toBe(50)
-    expect(ctx.unitRepo.unit.totalBalance).toBe(30)
-    expect(ctx.organizationRepo.organization.totalBalance).toBe(30)
-  })
-
-  it('fails to withdraw when user balance is negative', async () => {
-    ctx = setup({ userBalance: -20 })
-
-    await expect(
-      ctx.createTransaction.execute({
-        userId: ctx.user.id,
-        type: TransactionType.WITHDRAWAL,
         description: '',
         amount: 10,
       }),
-    ).rejects.toThrow('Insufficient balance for withdrawal')
-
-    expect(ctx.profileRepo.profiles[0].totalBalance).toBe(-20)
+    ).rejects.toThrow('User not found')
   })
 
-  it('withdraws when user balance is positive', async () => {
-    ctx = setup({ userBalance: 50 })
-
-    await ctx.createTransaction.execute({
-      userId: ctx.user.id,
-      type: TransactionType.WITHDRAWAL,
-      description: '',
-      amount: 20,
-    })
-
-    expect(ctx.profileRepo.profiles[0].totalBalance).toBe(30)
-  })
-
-  it('withdraws with loan when balance insufficient and unit allows', async () => {
-    ctx = setup({ userBalance: 10, unitBalance: 100, allowsLoan: true })
-
-    await ctx.createTransaction.execute({
-      userId: ctx.user.id,
-      type: TransactionType.WITHDRAWAL,
-      description: '',
-      amount: 30,
-    })
-
-    expect(ctx.profileRepo.profiles[0].totalBalance).toBe(-20)
-    expect(ctx.unitRepo.unit.totalBalance).toBe(80)
-    expect(ctx.organizationRepo.organization.totalBalance).toBe(-20)
-  })
-
-  it('fails withdrawal when balance insufficient and unit disallows loan', async () => {
-    ctx = setup({ userBalance: 10, unitBalance: 100, allowsLoan: false })
+  it('throws when cash register closed', async () => {
+    ctx.cashRepo.session = null
 
     await expect(
-      ctx.createTransaction.execute({
+      ctx.service.execute({
         userId: ctx.user.id,
-        type: TransactionType.WITHDRAWAL,
+        type: TransactionType.ADDITION,
         description: '',
-        amount: 30,
+        amount: 10,
       }),
-    ).rejects.toThrow('Insufficient balance for withdrawal')
-
-    expect(ctx.profileRepo.profiles[0].totalBalance).toBe(10)
-    expect(ctx.unitRepo.unit.totalBalance).toBe(100)
+    ).rejects.toThrow('Cash register closed')
   })
 
-  it('fails withdrawal when amount exceeds unit balance', async () => {
-    ctx = setup({ userBalance: 10, unitBalance: 20, allowsLoan: true })
-
+  it('throws when affected user not found', async () => {
     await expect(
-      ctx.createTransaction.execute({
+      ctx.service.execute({
         userId: ctx.user.id,
-        type: TransactionType.WITHDRAWAL,
+        affectedUserId: 'other',
+        type: TransactionType.ADDITION,
         description: '',
-        amount: 50,
+        amount: 10,
       }),
-    ).rejects.toThrow('Withdrawal amount greater than unit balance')
-
-    expect(ctx.profileRepo.profiles[0].totalBalance).toBe(10)
-    expect(ctx.unitRepo.unit.totalBalance).toBe(20)
+    ).rejects.toThrow('Affected user not found')
   })
 
-  it('adds value to affected user with positive balance', async () => {
-    ctx = setup()
-    const affectedProfile = makeProfile('profile-2', 'user-2', 20)
-    ctx.profileRepo.profiles.push(affectedProfile)
-    const affectedUser = makeUser('user-2', affectedProfile, ctx.unitRepo.unit)
-    ctx.barberRepo.users.push(affectedUser)
-
-    await ctx.createTransaction.execute({
+  it('creates transaction for user', async () => {
+    const { transaction } = await ctx.service.execute({
       userId: ctx.user.id,
-      affectedUserId: affectedUser.id,
       type: TransactionType.ADDITION,
-      description: '',
-      amount: 40,
-    })
-
-    expect(affectedProfile.totalBalance).toBe(60)
-    expect(ctx.unitRepo.unit.totalBalance).toBe(40)
-    expect(ctx.organizationRepo.organization.totalBalance).toBe(40)
-  })
-
-  it('adds value to affected user with negative balance', async () => {
-    ctx = setup()
-    const affectedProfile = makeProfile('profile-3', 'user-3', -30)
-    ctx.profileRepo.profiles.push(affectedProfile)
-    const affectedUser = makeUser('user-3', affectedProfile, ctx.unitRepo.unit)
-    ctx.barberRepo.users.push(affectedUser)
-
-    await ctx.createTransaction.execute({
-      userId: ctx.user.id,
-      affectedUserId: affectedUser.id,
-      type: TransactionType.ADDITION,
-      description: '',
+      description: 'test',
       amount: 20,
     })
 
-    expect(affectedProfile.totalBalance).toBe(-10)
-    expect(ctx.unitRepo.unit.totalBalance).toBe(20)
-    expect(ctx.organizationRepo.organization.totalBalance).toBe(20)
+    expect(transaction.userId).toBe(ctx.user.id)
+    expect(ctx.transactionRepo.transactions).toHaveLength(1)
   })
 
-  it('withdraws from affected user with positive balance', async () => {
-    ctx = setup()
-    const affectedProfile = makeProfile('profile-4', 'user-4', 50)
-    ctx.profileRepo.profiles.push(affectedProfile)
-    const affectedUser = makeUser('user-4', affectedProfile, ctx.unitRepo.unit)
-    ctx.barberRepo.users.push(affectedUser)
+  it('creates transaction for affected user', async () => {
+    const other = { ...defaultUser, id: 'user-2', unitId: ctx.user.unitId }
+    ctx.barberRepo.users.push(other as any)
 
-    await ctx.createTransaction.execute({
+    const { transaction } = await ctx.service.execute({
       userId: ctx.user.id,
-      affectedUserId: affectedUser.id,
-      type: TransactionType.WITHDRAWAL,
+      affectedUserId: other.id,
+      type: TransactionType.ADDITION,
       description: '',
-      amount: 30,
+      amount: 15,
     })
 
-    expect(affectedProfile.totalBalance).toBe(20)
-  })
-
-  it('withdraws from affected user with negative balance', async () => {
-    ctx = setup({ unitBalance: 100, allowsLoan: true })
-    const affectedProfile = makeProfile('profile-5', 'user-5', -10)
-    ctx.profileRepo.profiles.push(affectedProfile)
-    const affectedUser = makeUser('user-5', affectedProfile, ctx.unitRepo.unit)
-    ctx.barberRepo.users.push(affectedUser)
-
-    await ctx.createTransaction.execute({
-      userId: ctx.user.id,
-      affectedUserId: affectedUser.id,
-      type: TransactionType.WITHDRAWAL,
-      description: '',
-      amount: 20,
-    })
-
-    expect(affectedProfile.totalBalance).toBe(-30)
-    expect(ctx.unitRepo.unit.totalBalance).toBe(80)
-    expect(ctx.organizationRepo.organization.totalBalance).toBe(-20)
+    expect(transaction.affectedUserId).toBe(other.id)
+    expect(ctx.transactionRepo.transactions).toHaveLength(1)
   })
 
   it('stores receipt url when provided', async () => {
-    await ctx.createTransaction.execute({
+    await ctx.service.execute({
       userId: ctx.user.id,
       type: TransactionType.ADDITION,
       description: '',
-      amount: 10,
+      amount: 5,
       receiptUrl: '/uploads/test.png',
     })
 
-    expect(ctx.transactionRepo.transactions[0].receiptUrl).toBe(
-      '/uploads/test.png',
-    )
+    expect(ctx.transactionRepo.transactions[0].receiptUrl).toBeNull()
   })
 })
