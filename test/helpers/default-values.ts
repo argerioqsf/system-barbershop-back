@@ -10,6 +10,7 @@ import {
   PaymentMethod,
   PaymentStatus,
   TransactionType,
+  Sale,
 } from '@prisma/client'
 
 export const defaultUser = {
@@ -22,6 +23,19 @@ export const defaultUser = {
   unitId: 'unit-1',
   createdAt: new Date(),
   profile: null,
+}
+
+export const defaulSale: Sale = {
+  id: 'user-1',
+  unitId: 'unit-1',
+  createdAt: new Date(),
+  userId: 'user-1',
+  clientId: 'client-1',
+  sessionId: 's1',
+  couponId: null,
+  total: 20,
+  method: 'CASH',
+  paymentStatus: 'PAID',
 }
 
 export const defaultClient = {
@@ -171,7 +185,14 @@ export function makeOrganization(
   name = 'Org',
   slug = 'org',
 ): Organization {
-  return { id, name, slug, ownerId: null, totalBalance: 0, createdAt: new Date() }
+  return {
+    id,
+    name,
+    slug,
+    ownerId: null,
+    totalBalance: 0,
+    createdAt: new Date(),
+  }
 }
 
 export function makeUnit(
@@ -296,8 +317,8 @@ export const sessionUser = { sub: 'u1', unitId: 'unit-1' } as any
 
 export function makeCashSession(
   id: string,
-  unitId: string = 'unit-1',
-  organizationId: string = 'org-1',
+  unitId = 'unit-1',
+  organizationId = 'org-1',
 ): any {
   return {
     id,

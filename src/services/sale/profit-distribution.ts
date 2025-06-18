@@ -1,9 +1,9 @@
 import { DistributeProfitsDeps } from './types'
 import { IncrementBalanceUnitService } from '../unit/increment-balance'
 import { IncrementBalanceProfileService } from '../profile/increment-balance'
-import { IncrementBalanceOrganizationService } from '../organization/increment-balance'
 
 import { DetailedSale } from '@/repositories/sale-repository'
+import { Transaction } from '@prisma/client'
 
 export async function distributeProfits(
   sale: DetailedSale,
@@ -17,9 +17,13 @@ export async function distributeProfits(
   }: DistributeProfitsDeps & {
     transactionRepository: import('@/repositories/transaction-repository').TransactionRepository
   },
-): Promise<void> {
+): Promise<{ transactions: Transaction[] }> {
   const org = await organizationRepository.findById(organizationId)
   if (!org) throw new Error('Org not found')
+
+  if (!sale.sessionId) throw new Error('Session not found')
+
+  const transactions: Transaction[] = []
 
   const incrementUnit = new IncrementBalanceUnitService(
     unitRepository,
@@ -29,13 +33,10 @@ export async function distributeProfits(
     profileRepository,
     transactionRepository,
   )
-  const incrementOrg = new IncrementBalanceOrganizationService(
-    organizationRepository,
-    transactionRepository,
-  )
 
   const barberTotals: Record<string, number> = {}
   let ownerShare = 0
+
   for (const item of sale.items) {
     const value = item.price ?? 0
     if (item.product) {
@@ -50,6 +51,7 @@ export async function distributeProfits(
       ownerShare += value
     }
   }
+
   for (const [barberId, amount] of Object.entries(barberTotals)) {
     const userBarber = sale.items.find((item) => item.barber?.id === barberId)
     if (!userBarber) throw new Error('Barber not found')
@@ -61,48 +63,30 @@ export async function distributeProfits(
     ) {
       const balanceBarber = userBarber.barber.profile.totalBalance
       const valueCalculated = balanceBarber + amount
-      if (valueCalculated <= 0) {
-        await incrementUnit.execute(
-          sale.unitId,
-          userId,
-          sale.sessionId!,
-          amount,
-          sale.id,
-        )
-      } else {
-        await incrementUnit.execute(
-          sale.unitId,
-          userId,
-          sale.sessionId!,
-          balanceBarber * -1,
-          sale.id,
-        )
-        await incrementOrg.execute(
-          org.id,
-          userId,
-          sale.unitId,
-          sale.sessionId!,
-          balanceBarber * -1,
-          sale.id,
-        )
-      }
+      const amountToPay = valueCalculated <= 0 ? amount : -balanceBarber
+      const transactionUnit = await incrementUnit.execute(
+        sale.unitId,
+        userId,
+        amountToPay,
+        sale.id,
+      )
+      transactions.push(transactionUnit.transaction)
     }
-    await incrementProfile.execute(barberId, sale.sessionId!, amount, sale.id)
+    const transactionProfile = await incrementProfile.execute(
+      barberId,
+      amount,
+      sale.id,
+    )
+    transactions.push(transactionProfile.transaction)
   }
 
-  await incrementUnit.execute(
+  const transactionUnit = await incrementUnit.execute(
     sale.unitId,
     userId,
-    sale.sessionId!,
     ownerShare,
     sale.id,
   )
-  await incrementOrg.execute(
-    org.id,
-    userId,
-    sale.unitId,
-    sale.sessionId!,
-    ownerShare,
-    sale.id,
-  )
+  transactions.push(transactionUnit.transaction)
+
+  return { transactions }
 }

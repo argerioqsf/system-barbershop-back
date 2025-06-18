@@ -1,6 +1,7 @@
 import { TransactionRepository } from '@/repositories/transaction-repository'
 import { OrganizationRepository } from '@/repositories/organization-repository'
 import { Organization, Transaction, TransactionType } from '@prisma/client'
+import { makeCreateTransaction } from '../@factories/transaction/make-create-transaction'
 
 interface IncrementBalanceOrganizationResponse {
   organization: Organization | null
@@ -16,30 +17,26 @@ export class IncrementBalanceOrganizationService {
   async execute(
     id: string,
     userId: string,
-    unitId: string,
-    sessionId: string,
     amount: number,
     saleId?: string,
   ): Promise<IncrementBalanceOrganizationResponse> {
-    let transaction: Transaction | undefined
-    let organization: Organization | null = null
+    const createTransactionService = makeCreateTransaction()
     try {
-      await this.repository.incrementBalance(id, amount)
-      organization = await this.repository.findById(id)
-      transaction = await this.transactionRepository.create({
-        user: { connect: { id: userId } },
-        unit: { connect: { id: unitId } },
-        session: { connect: { id: sessionId } },
-        sale: saleId ? { connect: { id: saleId } } : undefined,
+      let organization: Organization | null = null
+      organization = await this.repository.incrementBalance(id, amount)
+      const transaction = await createTransactionService.execute({
         type:
           amount < 0 ? TransactionType.WITHDRAWAL : TransactionType.ADDITION,
         description: 'Increment Balance Organization',
-        amount,
+        amount: amount < 0 ? -amount : amount,
+        userId,
+        receiptUrl: undefined,
+        saleId,
       })
+      return { organization, transaction: transaction.transaction }
     } catch (error) {
       await this.repository.incrementBalance(id, -amount)
       throw error
     }
-    return { organization, transaction }
   }
 }

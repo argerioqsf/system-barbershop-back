@@ -30,7 +30,8 @@ function setup(options?: {
   const profileRepo = new FakeProfilesRepository()
   const organization = {
     ...defaultOrganization,
-    totalBalance: options?.organizationBalance ?? defaultOrganization.totalBalance,
+    totalBalance:
+      options?.organizationBalance ?? defaultOrganization.totalBalance,
   }
   const organizationRepo = new FakeOrganizationRepository(organization)
   const unit = {

@@ -231,7 +231,6 @@ export class CreateSaleService {
   }: CreateSaleRequest): Promise<CreateSaleResponse> {
     const tempItems: TempItems[] = []
     const productsToUpdate: { id: string; quantity: number }[] = []
-
     const user = await this.barberUserRepository.findById(userId)
     const session = await this.cashRegisterRepository.findOpenByUnit(
       user?.unitId as string,
@@ -277,12 +276,18 @@ export class CreateSaleService {
     })
 
     if (paymentStatus === PaymentStatus.PAID) {
-      await distributeProfits(sale, user?.organizationId as string, userId, {
-        organizationRepository: this.organizationRepository,
-        profileRepository: this.profileRepository,
-        unitRepository: this.unitRepository,
-        transactionRepository: this.transactionRepository,
-      })
+      const { transactions } = await distributeProfits(
+        sale,
+        user?.organizationId as string,
+        userId,
+        {
+          organizationRepository: this.organizationRepository,
+          profileRepository: this.profileRepository,
+          unitRepository: this.unitRepository,
+          transactionRepository: this.transactionRepository,
+        },
+      )
+      sale.transactions = [...transactions]
     }
 
     await this.updateProductsStock(productsToUpdate)

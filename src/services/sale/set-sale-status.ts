@@ -44,7 +44,7 @@ export class SetSaleStatusService {
         session: { connect: { id: session.id } },
       })
 
-      await distributeProfits(
+      const { transactions } = await distributeProfits(
         updatedSale,
         user?.organizationId as string,
         userId,
@@ -55,6 +55,8 @@ export class SetSaleStatusService {
           transactionRepository: this.transactionRepository,
         },
       )
+
+      updatedSale.transactions = [...transactions]
 
       return { sale: updatedSale }
     }

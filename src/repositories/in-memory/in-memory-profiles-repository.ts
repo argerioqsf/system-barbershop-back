@@ -63,10 +63,15 @@ export class InMemoryProfilesRepository implements ProfilesRepository {
     return this.items
   }
 
-  async incrementBalance(userId: string, amount: number): Promise<void> {
+  async incrementBalance(
+    userId: string,
+    amount: number,
+  ): Promise<Profile & { user: Omit<User, 'password'> }> {
     const profile = this.items.find((item) => item.userId === userId)
     if (profile) {
       profile.totalBalance += amount
+      return profile
     }
+    throw new Error('Profile not found')
   }
 }

@@ -1,6 +1,7 @@
 import { TransactionRepository } from '@/repositories/transaction-repository'
 import { ProfilesRepository } from '@/repositories/profiles-repository'
 import { Profile, Transaction, TransactionType, User } from '@prisma/client'
+import { makeCreateTransaction } from '../@factories/transaction/make-create-transaction'
 
 interface IncrementBalanceProfileResponse {
   profile: (Profile & { user: Omit<User, 'password'> }) | null
@@ -15,30 +16,27 @@ export class IncrementBalanceProfileService {
 
   async execute(
     userId: string,
-    sessionId: string,
     amount: number,
     saleId?: string,
   ): Promise<IncrementBalanceProfileResponse> {
-    let transaction: Transaction | undefined
-    let profile: IncrementBalanceProfileResponse['profile'] = null
+    const createTransactionService = makeCreateTransaction()
     try {
-      await this.repository.incrementBalance(userId, amount)
-      profile = await this.repository.findByUserId(userId)
-      const unitId = profile?.user.unitId as string
-      transaction = await this.transactionRepository.create({
-        user: { connect: { id: userId } },
-        unit: { connect: { id: unitId } },
-        session: { connect: { id: sessionId } },
-        sale: saleId ? { connect: { id: saleId } } : undefined,
+      let profile: IncrementBalanceProfileResponse['profile'] = null
+      profile = await this.repository.incrementBalance(userId, amount)
+      const transaction = await createTransactionService.execute({
         type:
           amount < 0 ? TransactionType.WITHDRAWAL : TransactionType.ADDITION,
         description: 'Increment Balance Profile',
-        amount,
+        amount: amount < 0 ? -amount : amount,
+        userId,
+        receiptUrl: undefined,
+        saleId,
+        affectedUserId: userId,
       })
+      return { profile, transaction: transaction.transaction }
     } catch (error) {
       await this.repository.incrementBalance(userId, -amount)
       throw error
     }
-    return { profile, transaction }
   }
 }
