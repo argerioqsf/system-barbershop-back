@@ -87,10 +87,15 @@ export class PrismaProfilesRepository implements ProfilesRepository {
     return profiles as (Profile & { user: Omit<User, 'password'> })[]
   }
 
-  async incrementBalance(userId: string, amount: number): Promise<void> {
-    await prisma.profile.update({
+  async incrementBalance(
+    userId: string,
+    amount: number,
+  ): Promise<Profile & { user: Omit<User, 'password'> }> {
+    const profile = await prisma.profile.update({
       where: { userId },
       data: { totalBalance: { increment: amount } },
+      include: { user: true },
     })
+    return profile
   }
 }

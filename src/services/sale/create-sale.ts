@@ -2,12 +2,7 @@ import { SaleRepository } from '../../repositories/sale-repository'
 import { ServiceRepository } from '../../repositories/service-repository'
 import { ProductRepository } from '../../repositories/product-repository'
 import { CouponRepository } from '../../repositories/coupon-repository'
-import {
-  DiscountType,
-  TransactionType,
-  PaymentStatus,
-  Transaction,
-} from '@prisma/client'
+import { DiscountType, PaymentStatus } from '@prisma/client'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { CashRegisterRepository } from '@/repositories/cash-register-repository'
 import { TransactionRepository } from '@/repositories/transaction-repository'
@@ -216,25 +211,6 @@ export class CreateSaleService {
     return tempItems.reduce((acc, i) => acc + i.price, 0)
   }
 
-  private async createTransactionIfPaid(
-    paymentStatus: PaymentStatus,
-    userId: string,
-    unitId: string | undefined,
-    session: { id: string } | null,
-    amount: number,
-  ): Promise<Transaction | null> {
-    if (paymentStatus !== PaymentStatus.PAID) return null
-
-    return this.transactionRepository.create({
-      user: { connect: { id: userId } },
-      unit: { connect: { id: unitId } },
-      session: session ? { connect: { id: session.id } } : undefined,
-      type: TransactionType.ADDITION,
-      description: 'Sale',
-      amount,
-    })
-  }
-
   private async updateProductsStock(
     products: { id: string; quantity: number }[],
   ): Promise<void> {
@@ -255,7 +231,6 @@ export class CreateSaleService {
   }: CreateSaleRequest): Promise<CreateSaleResponse> {
     const tempItems: TempItems[] = []
     const productsToUpdate: { id: string; quantity: number }[] = []
-
     const user = await this.barberUserRepository.findById(userId)
     const session = await this.cashRegisterRepository.findOpenByUnit(
       user?.unitId as string,
@@ -285,47 +260,38 @@ export class CreateSaleService {
     const saleItems = this.mapToSaleItems(tempItems)
     const calculatedTotal = this.calculateTotal(tempItems)
 
-    const transaction = await this.createTransactionIfPaid(
+    const sale = await this.saleRepository.create({
+      total: calculatedTotal,
+      method,
       paymentStatus,
-      userId,
-      user?.unitId,
-      session,
-      calculatedTotal,
-    )
-
-    try {
-      const sale = await this.saleRepository.create({
-        total: calculatedTotal,
-        method,
-        paymentStatus,
-        user: { connect: { id: userId } },
-        client: { connect: { id: clientId } },
-        unit: { connect: { id: user?.unitId } },
-        session:
-          paymentStatus === PaymentStatus.PAID && session
-            ? { connect: { id: session.id } }
-            : undefined,
-        items: { create: saleItems },
-        coupon: couponConnect,
-        transaction: transaction
-          ? { connect: { id: transaction.id } }
+      user: { connect: { id: userId } },
+      client: { connect: { id: clientId } },
+      unit: { connect: { id: user?.unitId } },
+      session:
+        paymentStatus === PaymentStatus.PAID && session
+          ? { connect: { id: session.id } }
           : undefined,
-      })
+      items: { create: saleItems },
+      coupon: couponConnect,
+    })
 
-      if (paymentStatus === PaymentStatus.PAID) {
-        await distributeProfits(sale, user?.organizationId as string, {
+    if (paymentStatus === PaymentStatus.PAID) {
+      const { transactions } = await distributeProfits(
+        sale,
+        user?.organizationId as string,
+        userId,
+        {
           organizationRepository: this.organizationRepository,
           profileRepository: this.profileRepository,
           unitRepository: this.unitRepository,
-        })
-      }
-
-      await this.updateProductsStock(productsToUpdate)
-
-      return { sale }
-    } catch (error) {
-      if (transaction) await this.transactionRepository.delete(transaction.id)
-      throw error
+          transactionRepository: this.transactionRepository,
+        },
+      )
+      sale.transactions = [...transactions]
     }
+
+    await this.updateProductsStock(productsToUpdate)
+
+    return { sale }
   }
 }

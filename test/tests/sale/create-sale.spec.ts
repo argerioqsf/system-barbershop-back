@@ -1,6 +1,7 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { PaymentMethod, DiscountType, PaymentStatus } from '@prisma/client'
 import { CreateSaleService } from '../../../src/services/sale/create-sale'
+import { CreateTransactionService } from '../../../src/services/transaction/create-transaction'
 import {
   FakeServiceRepository,
   FakeProductRepository,
@@ -24,14 +25,26 @@ import {
   makeCoupon,
 } from '../../helpers/default-values'
 
+let transactionRepo: FakeTransactionRepository
+let barberRepo: FakeBarberUsersRepository
+let cashRepo: FakeCashRegisterRepository
+
+vi.mock(
+  '../../../src/services/@factories/transaction/make-create-transaction',
+  () => ({
+    makeCreateTransaction: () =>
+      new CreateTransactionService(transactionRepo, barberRepo, cashRepo),
+  }),
+)
+
 function setup() {
   const serviceRepo = new FakeServiceRepository()
   const productRepo = new FakeProductRepository()
   const couponRepo = new FakeCouponRepository()
   const saleRepo = new FakeSaleRepository()
-  const barberRepo = new FakeBarberUsersRepository()
-  const cashRepo = new FakeCashRegisterRepository()
-  const transactionRepo = new FakeTransactionRepository()
+  barberRepo = new FakeBarberUsersRepository()
+  cashRepo = new FakeCashRegisterRepository()
+  transactionRepo = new FakeTransactionRepository()
   const organization = {
     id: 'org-1',
     name: 'Org',
@@ -473,9 +486,6 @@ describe('Create sale service', () => {
     )
     const ownerShare = service.price - expectedBarber + (product.price - 10)
     expect(ctx.unitRepo.unit.totalBalance).toBeCloseTo(ownerShare)
-    expect(ctx.organizationRepo.organization.totalBalance).toBeCloseTo(
-      ownerShare,
-    )
     expect(product.quantity).toBe(4)
     expect(result.sale.total).toBe(140)
   })

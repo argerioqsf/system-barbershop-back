@@ -254,17 +254,6 @@ async function main() {
     data: { totalBalance: { increment: 100 } },
   })
 
-  const transaction = await prisma.transaction.create({
-    data: {
-      userId: client.id,
-      unitId: mainUnit.id,
-      cashRegisterSessionId: cashSession.id,
-      type: TransactionType.ADDITION,
-      description: 'Sale',
-      amount: 35,
-      receiptUrl: '/uploads/sample-receipt.png',
-    },
-  })
   await prisma.unit.update({
     where: { id: mainUnit.id },
     data: { totalBalance: { increment: 35 } },
@@ -304,7 +293,6 @@ async function main() {
           },
         ],
       },
-      transaction: { connect: { id: transaction.id } },
     },
   })
   const pendingSale = await prisma.sale.create({

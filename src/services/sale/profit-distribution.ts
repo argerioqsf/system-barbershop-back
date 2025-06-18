@@ -1,20 +1,42 @@
 import { DistributeProfitsDeps } from './types'
+import { IncrementBalanceUnitService } from '../unit/increment-balance'
+import { IncrementBalanceProfileService } from '../profile/increment-balance'
 
 import { DetailedSale } from '@/repositories/sale-repository'
+import { Transaction } from '@prisma/client'
 
 export async function distributeProfits(
   sale: DetailedSale,
   organizationId: string,
+  userId: string,
   {
     organizationRepository,
     profileRepository,
     unitRepository,
-  }: DistributeProfitsDeps,
-): Promise<void> {
+    transactionRepository,
+  }: DistributeProfitsDeps & {
+    transactionRepository: import('@/repositories/transaction-repository').TransactionRepository
+  },
+): Promise<{ transactions: Transaction[] }> {
   const org = await organizationRepository.findById(organizationId)
   if (!org) throw new Error('Org not found')
+
+  if (!sale.sessionId) throw new Error('Session not found')
+
+  const transactions: Transaction[] = []
+
+  const incrementUnit = new IncrementBalanceUnitService(
+    unitRepository,
+    transactionRepository,
+  )
+  const incrementProfile = new IncrementBalanceProfileService(
+    profileRepository,
+    transactionRepository,
+  )
+
   const barberTotals: Record<string, number> = {}
   let ownerShare = 0
+
   for (const item of sale.items) {
     const value = item.price ?? 0
     if (item.product) {
@@ -29,6 +51,7 @@ export async function distributeProfits(
       ownerShare += value
     }
   }
+
   for (const [barberId, amount] of Object.entries(barberTotals)) {
     const userBarber = sale.items.find((item) => item.barber?.id === barberId)
     if (!userBarber) throw new Error('Barber not found')
@@ -40,18 +63,30 @@ export async function distributeProfits(
     ) {
       const balanceBarber = userBarber.barber.profile.totalBalance
       const valueCalculated = balanceBarber + amount
-      if (valueCalculated <= 0) {
-        await unitRepository.incrementBalance(sale.unitId, amount)
-      } else {
-        await unitRepository.incrementBalance(sale.unitId, balanceBarber * -1)
-        await organizationRepository.incrementBalance(
-          org.id,
-          balanceBarber * -1,
-        )
-      }
+      const amountToPay = valueCalculated <= 0 ? amount : -balanceBarber
+      const transactionUnit = await incrementUnit.execute(
+        sale.unitId,
+        userId,
+        amountToPay,
+        sale.id,
+      )
+      transactions.push(transactionUnit.transaction)
     }
-    await profileRepository.incrementBalance(barberId, amount)
+    const transactionProfile = await incrementProfile.execute(
+      barberId,
+      amount,
+      sale.id,
+    )
+    transactions.push(transactionProfile.transaction)
   }
-  await unitRepository.incrementBalance(sale.unitId, ownerShare)
-  await organizationRepository.incrementBalance(org.id, ownerShare)
+
+  const transactionUnit = await incrementUnit.execute(
+    sale.unitId,
+    userId,
+    ownerShare,
+    sale.id,
+  )
+  transactions.push(transactionUnit.transaction)
+
+  return { transactions }
 }

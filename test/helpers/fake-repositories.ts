@@ -44,7 +44,9 @@ import { ServiceRepository } from '../../src/repositories/service-repository'
 import { TransactionFull } from '../../src/repositories/prisma/prisma-transaction-repository'
 
 export class FakeServiceRepository implements ServiceRepository {
-  constructor(public services: (Service & { organizationId?: string })[] = []) {}
+  constructor(
+    public services: (Service & { organizationId?: string })[] = [],
+  ) {}
 
   async create(data: Prisma.ServiceCreateInput): Promise<Service> {
     const service: Service = {
@@ -302,6 +304,7 @@ export class FakeTransactionRepository implements TransactionRepository {
       amount: data.amount as number,
       receiptUrl: (data.receiptUrl as string | null | undefined) ?? null,
       createdAt: new Date(),
+      saleId: null,
     }
     this.transactions.push(tr)
     return tr
@@ -311,7 +314,9 @@ export class FakeTransactionRepository implements TransactionRepository {
     return this.transactions.filter((t: any) => t.userId === userId)
   }
 
-  async findMany(where: Prisma.TransactionWhereInput = {}): Promise<TransactionFull[]> {
+  async findMany(
+    where: Prisma.TransactionWhereInput = {},
+  ): Promise<TransactionFull[]> {
     return this.transactions.filter((t: any) => {
       if (where.unitId && t.unitId !== where.unitId) return false
       if (where.unit && 'organizationId' in (where.unit as any)) {
@@ -414,7 +419,16 @@ export class FakeProfilesRepository implements ProfilesRepository {
     }
     this.profiles.push({
       ...profile,
-      user: { id: data.userId, name: '', email: '', password: '', active: true, organizationId: 'org-1', unitId: 'unit-1', createdAt: new Date() },
+      user: {
+        id: data.userId,
+        name: '',
+        email: '',
+        password: '',
+        active: true,
+        organizationId: 'org-1',
+        unitId: 'unit-1',
+        createdAt: new Date(),
+      },
     })
     return profile
   }
@@ -453,7 +467,11 @@ export class FakeProfilesRepository implements ProfilesRepository {
 }
 
 export class FakeUnitRepository implements UnitRepository {
-  constructor(public unit: Unit, public units: Unit[] = [unit]) {}
+  constructor(
+    public unit: Unit,
+    public units: Unit[] = [unit],
+  ) {}
+
   create(data: Prisma.UnitCreateInput): Promise<Unit> {
     throw new Error('not implemented')
   }
@@ -575,7 +593,6 @@ export class FakeSaleRepository implements SaleRepository {
       unitId: (data.unit as any).connect.id,
       sessionId: (data.session as any)?.connect.id,
       couponId: (data.coupon as any)?.connect.id,
-      transactionId: (data.transaction as any)?.connect.id,
       total: data.total as number,
       method: data.method as PaymentMethod,
       paymentStatus: data.paymentStatus as PaymentStatus,
@@ -617,19 +634,7 @@ export class FakeSaleRepository implements SaleRepository {
           }
         : null,
       session: null,
-      transaction: data.transaction
-        ? {
-            id: (data.transaction as any).connect.id,
-            userId: '',
-            affectedUserId: null,
-            unitId: '',
-            cashRegisterSessionId: '',
-            type: TransactionType.ADDITION,
-            description: '',
-            amount: data.total as number,
-            createdAt: new Date(),
-          }
-        : null,
+      transactions: [],
     }
     this.sales.push(sale)
     return sale
@@ -649,7 +654,10 @@ export class FakeSaleRepository implements SaleRepository {
     return this.sales.find((s) => s.id === id) ?? null
   }
 
-  async update(id: string, data: Prisma.SaleUpdateInput): Promise<DetailedSale> {
+  async update(
+    id: string,
+    data: Prisma.SaleUpdateInput,
+  ): Promise<DetailedSale> {
     const sale = this.sales.find((s) => s.id === id)
     if (!sale) throw new Error('Sale not found')
     if (data.paymentStatus) {
@@ -670,28 +678,12 @@ export class FakeSaleRepository implements SaleRepository {
         finalAmount: null,
       }
     }
-    if (data.transaction && 'connect' in data.transaction!) {
-      const tid = (data.transaction as any).connect.id
-      sale.transactionId = tid
-      sale.transaction = {
-        id: tid,
-        userId: '',
-        affectedUserId: null,
-        unitId: sale.unitId,
-        cashRegisterSessionId: sale.sessionId ?? '',
-        type: TransactionType.ADDITION,
-        description: '',
-        amount: sale.total,
-        createdAt: new Date(),
-      }
-    }
+    sale.transactions = sale.transactions ?? []
     return sale
   }
 
   async findManyByDateRange(start: Date, end: Date): Promise<DetailedSale[]> {
-    return this.sales.filter(
-      (s) => s.createdAt >= start && s.createdAt <= end,
-    )
+    return this.sales.filter((s) => s.createdAt >= start && s.createdAt <= end)
   }
 
   async findManyByUser(userId: string): Promise<DetailedSale[]> {
@@ -831,7 +823,10 @@ export class InMemoryCashRegisterRepository implements CashRegisterRepository {
 
 export class InMemoryBarberUsersRepository implements BarberUsersRepository {
   constructor(
-    public users: (User & { profile: Profile | null; unit?: Unit | null })[] = [],
+    public users: (User & {
+      profile: Profile | null
+      unit?: Unit | null
+    })[] = [],
   ) {}
 
   async create(
@@ -857,15 +852,21 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
       birthday: profileData.birthday as string,
       pix: profileData.pix as string,
       role: profileData.role as Role,
-      commissionPercentage:
-        (profileData as any).commissionPercentage ?? 100,
+      commissionPercentage: (profileData as any).commissionPercentage ?? 100,
       totalBalance: 0,
       createdAt: new Date(),
     }
     this.users.push({
       ...user,
       profile,
-      unit: { id: user.unitId, name: '', slug: '', organizationId: user.organizationId, totalBalance: 0, allowsLoan: false },
+      unit: {
+        id: user.unitId,
+        name: '',
+        slug: '',
+        organizationId: user.organizationId,
+        totalBalance: 0,
+        allowsLoan: false,
+      },
     })
     return { user, profile }
   }
@@ -887,16 +888,21 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
       updatedUser.unitId = userData.unit.connect.id
     }
 
-    let profile = current.profile
+    const profile = current.profile
     if (profile) {
       if (profileData.phone) profile.phone = profileData.phone as string
       if (profileData.cpf) profile.cpf = profileData.cpf as string
       if (profileData.genre) profile.genre = profileData.genre as string
-      if (profileData.birthday) profile.birthday = profileData.birthday as string
+      if (profileData.birthday)
+        profile.birthday = profileData.birthday as string
       if (profileData.pix) profile.pix = profileData.pix as string
       if (profileData.role) profile.role = profileData.role as Role
-      if ('commissionPercentage' in profileData && profileData.commissionPercentage !== undefined)
-        profile.commissionPercentage = profileData.commissionPercentage as number
+      if (
+        'commissionPercentage' in profileData &&
+        profileData.commissionPercentage !== undefined
+      )
+        profile.commissionPercentage =
+          profileData.commissionPercentage as number
     }
     this.users[index] = { ...current, ...updatedUser, profile }
     return { user: updatedUser, profile }
@@ -953,9 +959,37 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
     }
     this.appointments.push({
       ...appointment,
-      service: { id: appointment.serviceId, name: '', description: null, imageUrl: null, cost: 0, price: 0, unitId: appointment.unitId },
-      client: { id: appointment.clientId, name: '', email: '', password: '', active: true, organizationId: 'org-1', unitId: appointment.unitId, createdAt: new Date(), profile: null },
-      barber: { id: appointment.barberId, name: '', email: '', password: '', active: true, organizationId: 'org-1', unitId: appointment.unitId, createdAt: new Date(), profile: null },
+      service: {
+        id: appointment.serviceId,
+        name: '',
+        description: null,
+        imageUrl: null,
+        cost: 0,
+        price: 0,
+        unitId: appointment.unitId,
+      },
+      client: {
+        id: appointment.clientId,
+        name: '',
+        email: '',
+        password: '',
+        active: true,
+        organizationId: 'org-1',
+        unitId: appointment.unitId,
+        createdAt: new Date(),
+        profile: null,
+      },
+      barber: {
+        id: appointment.barberId,
+        name: '',
+        email: '',
+        password: '',
+        active: true,
+        organizationId: 'org-1',
+        unitId: appointment.unitId,
+        createdAt: new Date(),
+        profile: null,
+      },
     })
     return appointment
   }

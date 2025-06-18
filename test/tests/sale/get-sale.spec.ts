@@ -25,4 +25,3 @@ describe('Get sale service', () => {
     expect(res.sale).toBeNull()
   })
 })
-

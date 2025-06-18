@@ -9,5 +9,5 @@ export interface OrganizationRepository {
     data: Prisma.OrganizationUpdateInput,
   ): Promise<Organization>
   delete(id: string): Promise<void>
-  incrementBalance(id: string, amount: number): Promise<void>
+  incrementBalance(id: string, amount: number): Promise<Organization>
 }

@@ -19,7 +19,7 @@ export class PrismaSaleRepository implements SaleRepository {
         client: { include: { profile: true } },
         coupon: true,
         session: true,
-        transaction: true,
+        transactions: true,
       },
     })
   }
@@ -40,7 +40,7 @@ export class PrismaSaleRepository implements SaleRepository {
         client: { include: { profile: true } },
         coupon: true,
         session: true,
-        transaction: true,
+        transactions: true,
       },
     })
   }
@@ -61,7 +61,7 @@ export class PrismaSaleRepository implements SaleRepository {
         client: { include: { profile: true } },
         coupon: true,
         session: true,
-        transaction: true,
+        transactions: true,
       },
     })
   }
@@ -86,7 +86,7 @@ export class PrismaSaleRepository implements SaleRepository {
         client: { include: { profile: true } },
         coupon: true,
         session: true,
-        transaction: true,
+        transactions: true,
       },
     })
   }
@@ -107,7 +107,7 @@ export class PrismaSaleRepository implements SaleRepository {
         client: { include: { profile: true } },
         coupon: true,
         session: true,
-        transaction: true,
+        transactions: true,
       },
     })
   }
@@ -128,7 +128,7 @@ export class PrismaSaleRepository implements SaleRepository {
         client: { include: { profile: true } },
         coupon: true,
         session: true,
-        transaction: true,
+        transactions: true,
       },
     })
   }
@@ -149,7 +149,7 @@ export class PrismaSaleRepository implements SaleRepository {
         client: { include: { profile: true } },
         coupon: true,
         session: true,
-        transaction: true,
+        transactions: true,
       },
     })
   }
@@ -170,7 +170,7 @@ export class PrismaSaleRepository implements SaleRepository {
         client: { include: { profile: true } },
         coupon: true,
         session: true,
-        transaction: true,
+        transactions: true,
       },
     })
   }

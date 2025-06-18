@@ -5,7 +5,7 @@ import { TransactionRepository } from '@/repositories/transaction-repository'
 import { OrganizationRepository } from '@/repositories/organization-repository'
 import { ProfilesRepository } from '@/repositories/profiles-repository'
 import { UnitRepository } from '@/repositories/unit-repository'
-import { PaymentStatus, TransactionType } from '@prisma/client'
+import { PaymentStatus } from '@prisma/client'
 import { distributeProfits } from './profit-distribution'
 import { SetSaleStatusRequest, SetSaleStatusResponse } from './types'
 
@@ -39,33 +39,26 @@ export class SetSaleStatusService {
       )
       if (!session) throw new Error('Cash register closed')
 
-      const transaction = await this.transactionRepository.create({
-        user: { connect: { id: userId } },
-        unit: { connect: { id: user?.unitId } },
+      const updatedSale = await this.saleRepository.update(saleId, {
+        paymentStatus,
         session: { connect: { id: session.id } },
-        type: TransactionType.ADDITION,
-        description: 'Sale',
-        amount: sale.total,
       })
 
-      try {
-        const updatedSale = await this.saleRepository.update(saleId, {
-          paymentStatus,
-          session: { connect: { id: session.id } },
-          transaction: { connect: { id: transaction.id } },
-        })
-
-        await distributeProfits(updatedSale, user?.organizationId as string, {
+      const { transactions } = await distributeProfits(
+        updatedSale,
+        user?.organizationId as string,
+        userId,
+        {
           organizationRepository: this.organizationRepository,
           profileRepository: this.profileRepository,
           unitRepository: this.unitRepository,
-        })
+          transactionRepository: this.transactionRepository,
+        },
+      )
 
-        return { sale: updatedSale }
-      } catch (error) {
-        await this.transactionRepository.delete(transaction.id)
-        throw error
-      }
+      updatedSale.transactions = [...transactions]
+
+      return { sale: updatedSale }
     }
 
     const updatedSale = await this.saleRepository.update(saleId, {

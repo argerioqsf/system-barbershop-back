@@ -143,7 +143,8 @@ model Transaction {
   receiptUrl            String?
   createdAt             DateTime        @default(now())
 
-  sale Sale?
+  saleId String?
+  sale   Sale?          @relation(fields: [saleId], references: [id])
 
   user         User                 @relation(fields: [userId], references: [id])
   affectedUser User?                @relation("AffectedUser", fields: [affectedUserId], references: [id])
@@ -160,19 +161,18 @@ model Sale {
   unitId        String
   sessionId     String?
   couponId      String?
-  transactionId String?       @unique
   total         Float
   method        PaymentMethod
   paymentStatus PaymentStatus @default(PAID)
   createdAt     DateTime      @default(now())
 
-  user        User                 @relation(fields: [userId], references: [id])
-  client      User                 @relation("SaleClient", fields: [clientId], references: [id])
-  items       SaleItem[]
-  unit        Unit                 @relation(fields: [unitId], references: [id])
-  coupon      Coupon?              @relation(fields: [couponId], references: [id])
-  session     CashRegisterSession? @relation(fields: [sessionId], references: [id])
-  transaction Transaction?         @relation(fields: [transactionId], references: [id])
+  user         User                 @relation(fields: [userId], references: [id])
+  client       User                 @relation("SaleClient", fields: [clientId], references: [id])
+  items        SaleItem[]
+  unit         Unit                 @relation(fields: [unitId], references: [id])
+  coupon       Coupon?              @relation(fields: [couponId], references: [id])
+  session      CashRegisterSession? @relation(fields: [sessionId], references: [id])
+  transactions Transaction[]
 
   @@map("sales")
 }
