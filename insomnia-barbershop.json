@@ -572,6 +572,53 @@
           { "name": "description", "value": "" },
           { "name": "amount", "value": "0" },
           { "name": "affectedUserId", "value": "" },
+          { "name": "isLoan", "value": "false" },
+          { "name": "receipt", "value": "", "type": "file" }
+        ]
+      },
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_add_balance_transaction",
+      "_type": "request",
+      "parentId": "fld_transactions",
+      "name": "Add balance transaction",
+      "method": "POST",
+      "url": "{{ baseURL }}/add/transactions",
+      "body": {
+        "mimeType": "multipart/form-data",
+        "params": [
+          { "name": "description", "value": "" },
+          { "name": "amount", "value": "0" },
+          { "name": "affectedUserId", "value": "" },
+          { "name": "receipt", "value": "", "type": "file" }
+        ]
+      },
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_withdrawal_balance_transaction",
+      "_type": "request",
+      "parentId": "fld_transactions",
+      "name": "Withdrawal balance transaction",
+      "method": "POST",
+      "url": "{{ baseURL }}/withdrawal/transactions",
+      "body": {
+        "mimeType": "multipart/form-data",
+        "params": [
+          { "name": "description", "value": "" },
+          { "name": "amount", "value": "0" },
+          { "name": "affectedUserId", "value": "" },
           { "name": "receipt", "value": "", "type": "file" }
         ]
       },
@@ -863,6 +910,20 @@
       "name": "Owner balance",
       "method": "GET",
       "url": "{{ baseURL }}/reports/owner/{{ ownerId }}/balance",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_unit_loan_balance",
+      "_type": "request",
+      "parentId": "fld_reports",
+      "name": "Unit loan balance",
+      "method": "GET",
+      "url": "{{ baseURL }}/reports/unit/{{ unitId }}/loan-balance",
       "headers": [
         {
           "name": "Authorization",

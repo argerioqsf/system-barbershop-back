@@ -19,6 +19,7 @@ export class IncrementBalanceUnitService {
     userId: string,
     amount: number,
     saleId?: string,
+    isLoan?: boolean,
   ): Promise<IncrementBalanceUnitResponse> {
     const createTransactionService = makeCreateTransaction()
     try {
@@ -28,10 +29,11 @@ export class IncrementBalanceUnitService {
         type:
           amount < 0 ? TransactionType.WITHDRAWAL : TransactionType.ADDITION,
         description: 'Increment Balance Unit',
-        amount: amount < 0 ? -amount : amount,
+        amount: isLoan ? amount : Math.abs(amount),
         userId,
         receiptUrl: undefined,
         saleId,
+        isLoan: isLoan ?? false,
       })
       return { unit, transaction: transaction.transaction }
     } catch (error) {

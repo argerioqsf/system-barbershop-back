@@ -302,10 +302,11 @@ export class FakeTransactionRepository implements TransactionRepository {
       type: data.type as TransactionType,
       description: data.description as string,
       amount: data.amount as number,
+      isLoan: (data.isLoan as boolean | undefined) ?? false,
       receiptUrl: (data.receiptUrl as string | null | undefined) ?? null,
       createdAt: new Date(),
       saleId: null,
-    }
+    } as any
     this.transactions.push(tr)
     return tr
   }
@@ -319,6 +320,7 @@ export class FakeTransactionRepository implements TransactionRepository {
   ): Promise<TransactionFull[]> {
     return this.transactions.filter((t: any) => {
       if (where.unitId && t.unitId !== where.unitId) return false
+      if (where.isLoan !== undefined && t.isLoan !== where.isLoan) return false
       if (where.unit && 'organizationId' in (where.unit as any)) {
         return t.unit?.organizationId === (where.unit as any).organizationId
       }

@@ -53,22 +53,22 @@ export async function distributeProfits(
   }
 
   for (const [barberId, amount] of Object.entries(barberTotals)) {
-    const userBarber = sale.items.find((item) => item.barber?.id === barberId)
+    const userBarber = sale.items.find(
+      (item) => item.barber?.id === barberId,
+    )?.barber
     if (!userBarber) throw new Error('Barber not found')
-    if (
-      userBarber &&
-      userBarber.barber &&
-      userBarber.barber.profile &&
-      userBarber.barber.profile.totalBalance < 0
-    ) {
-      const balanceBarber = userBarber.barber.profile.totalBalance
+    if (!userBarber.profile) throw new Error('Barber profile not found')
+
+    if (userBarber.profile.totalBalance < 0) {
+      const balanceBarber = userBarber.profile.totalBalance
       const valueCalculated = balanceBarber + amount
       const amountToPay = valueCalculated <= 0 ? amount : -balanceBarber
       const transactionUnit = await incrementUnit.execute(
         sale.unitId,
-        userId,
+        barberId,
         amountToPay,
         sale.id,
+        true,
       )
       transactions.push(transactionUnit.transaction)
     }
@@ -76,6 +76,7 @@ export async function distributeProfits(
       barberId,
       amount,
       sale.id,
+      userBarber.profile.totalBalance < 0,
     )
     transactions.push(transactionProfile.transaction)
   }
@@ -85,6 +86,7 @@ export async function distributeProfits(
     userId,
     ownerShare,
     sale.id,
+    false,
   )
   transactions.push(transactionUnit.transaction)
 

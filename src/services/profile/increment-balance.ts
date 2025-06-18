@@ -18,6 +18,7 @@ export class IncrementBalanceProfileService {
     userId: string,
     amount: number,
     saleId?: string,
+    isLoan?: boolean,
   ): Promise<IncrementBalanceProfileResponse> {
     const createTransactionService = makeCreateTransaction()
     try {
@@ -27,10 +28,11 @@ export class IncrementBalanceProfileService {
         type:
           amount < 0 ? TransactionType.WITHDRAWAL : TransactionType.ADDITION,
         description: 'Increment Balance Profile',
-        amount: amount < 0 ? -amount : amount,
+        amount: isLoan ? amount : Math.abs(amount),
         userId,
         receiptUrl: undefined,
         saleId,
+        isLoan: isLoan ?? false,
         affectedUserId: userId,
       })
       return { profile, transaction: transaction.transaction }
