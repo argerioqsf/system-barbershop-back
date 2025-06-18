@@ -1,5 +1,7 @@
 import { DistributeProfitsDeps } from './types'
-import { TransactionType } from '@prisma/client'
+import { IncrementBalanceUnitService } from '../unit/increment-balance'
+import { IncrementBalanceProfileService } from '../profile/increment-balance'
+import { IncrementBalanceOrganizationService } from '../organization/increment-balance'
 
 import { DetailedSale } from '@/repositories/sale-repository'
 
@@ -18,6 +20,20 @@ export async function distributeProfits(
 ): Promise<void> {
   const org = await organizationRepository.findById(organizationId)
   if (!org) throw new Error('Org not found')
+
+  const incrementUnit = new IncrementBalanceUnitService(
+    unitRepository,
+    transactionRepository,
+  )
+  const incrementProfile = new IncrementBalanceProfileService(
+    profileRepository,
+    transactionRepository,
+  )
+  const incrementOrg = new IncrementBalanceOrganizationService(
+    organizationRepository,
+    transactionRepository,
+  )
+
   const barberTotals: Record<string, number> = {}
   let ownerShare = 0
   for (const item of sale.items) {
@@ -46,71 +62,47 @@ export async function distributeProfits(
       const balanceBarber = userBarber.barber.profile.totalBalance
       const valueCalculated = balanceBarber + amount
       if (valueCalculated <= 0) {
-        await unitRepository.incrementBalance(sale.unitId, amount)
-        await transactionRepository.create({
-          user: { connect: { id: userId } },
-          unit: { connect: { id: sale.unitId } },
-          session: { connect: { id: sale.sessionId! } },
-          sale: { connect: { id: sale.id } },
-          type: TransactionType.ADDITION,
-          description: 'Sale',
+        await incrementUnit.execute(
+          sale.unitId,
+          userId,
+          sale.sessionId!,
           amount,
-        })
-      } else {
-        await unitRepository.incrementBalance(sale.unitId, balanceBarber * -1)
-        await transactionRepository.create({
-          user: { connect: { id: userId } },
-          unit: { connect: { id: sale.unitId } },
-          session: { connect: { id: sale.sessionId! } },
-          sale: { connect: { id: sale.id } },
-          type: TransactionType.ADDITION,
-          description: 'Sale',
-          amount: balanceBarber * -1,
-        })
-        await organizationRepository.incrementBalance(
-          org.id,
-          balanceBarber * -1,
+          sale.id,
         )
-        await transactionRepository.create({
-          user: { connect: { id: userId } },
-          unit: { connect: { id: sale.unitId } },
-          session: { connect: { id: sale.sessionId! } },
-          sale: { connect: { id: sale.id } },
-          type: TransactionType.ADDITION,
-          description: 'Sale',
-          amount: balanceBarber * -1,
-        })
+      } else {
+        await incrementUnit.execute(
+          sale.unitId,
+          userId,
+          sale.sessionId!,
+          balanceBarber * -1,
+          sale.id,
+        )
+        await incrementOrg.execute(
+          org.id,
+          userId,
+          sale.unitId,
+          sale.sessionId!,
+          balanceBarber * -1,
+          sale.id,
+        )
       }
     }
-    await profileRepository.incrementBalance(barberId, amount)
-    await transactionRepository.create({
-      user: { connect: { id: barberId } },
-      unit: { connect: { id: sale.unitId } },
-      session: { connect: { id: sale.sessionId! } },
-      sale: { connect: { id: sale.id } },
-      type: TransactionType.ADDITION,
-      description: 'Sale',
-      amount,
-    })
+    await incrementProfile.execute(barberId, sale.sessionId!, amount, sale.id)
   }
-  await unitRepository.incrementBalance(sale.unitId, ownerShare)
-  await transactionRepository.create({
-    user: { connect: { id: userId } },
-    unit: { connect: { id: sale.unitId } },
-    session: { connect: { id: sale.sessionId! } },
-    sale: { connect: { id: sale.id } },
-    type: TransactionType.ADDITION,
-    description: 'Sale',
-    amount: ownerShare,
-  })
-  await organizationRepository.incrementBalance(org.id, ownerShare)
-  await transactionRepository.create({
-    user: { connect: { id: userId } },
-    unit: { connect: { id: sale.unitId } },
-    session: { connect: { id: sale.sessionId! } },
-    sale: { connect: { id: sale.id } },
-    type: TransactionType.ADDITION,
-    description: 'Sale',
-    amount: ownerShare,
-  })
+
+  await incrementUnit.execute(
+    sale.unitId,
+    userId,
+    sale.sessionId!,
+    ownerShare,
+    sale.id,
+  )
+  await incrementOrg.execute(
+    org.id,
+    userId,
+    sale.unitId,
+    sale.sessionId!,
+    ownerShare,
+    sale.id,
+  )
 }

@@ -5,6 +5,9 @@ import { ProfilesRepository } from '@/repositories/profiles-repository'
 import { Transaction, TransactionType } from '@prisma/client'
 import { UnitRepository } from '@/repositories/unit-repository'
 import { OrganizationRepository } from '@/repositories/organization-repository'
+import { IncrementBalanceUnitService } from '../unit/increment-balance'
+import { IncrementBalanceProfileService } from '../profile/increment-balance'
+import { IncrementBalanceOrganizationService } from '../organization/increment-balance'
 
 interface CreateTransactionRequest {
   userId: string
@@ -48,6 +51,19 @@ export class CreateTransactionService {
       )
       if (!affectedUser) throw new Error('Affected user not found')
     }
+
+    const incrementProfile = new IncrementBalanceProfileService(
+      this.profileRepository,
+      this.repository,
+    )
+    const incrementUnit = new IncrementBalanceUnitService(
+      this.unitRepository,
+      this.repository,
+    )
+    const incrementOrg = new IncrementBalanceOrganizationService(
+      this.organizationRepository,
+      this.repository,
+    )
 
     const transaction = await this.repository.create({
       user: { connect: { id: user.id } },
@@ -94,21 +110,28 @@ export class CreateTransactionService {
           if (remainingBalanceRelative > balanceUnit) {
             throw new Error('Withdrawal amount greater than unit balance')
           }
-          await this.profileRepository.incrementBalance(
+          await incrementProfile.execute(
             effectiveUser.id,
+            session.id,
             increment,
           )
-          await this.unitRepository.incrementBalance(
+          await incrementUnit.execute(
             effectiveUser.unitId,
+            user.id,
+            session.id,
             remainingBalance,
           )
-          await this.organizationRepository.incrementBalance(
+          await incrementOrg.execute(
             effectiveUser.organizationId,
+            user.id,
+            effectiveUser.unitId,
+            session.id,
             remainingBalance,
           )
         } else {
-          await this.profileRepository.incrementBalance(
+          await incrementProfile.execute(
             effectiveUser.id,
+            session.id,
             increment,
           )
         }
@@ -117,36 +140,56 @@ export class CreateTransactionService {
           if (balanceUser < 0) {
             const remainingBalance = balanceUser - increment
             const valueForPay = remainingBalance < 0 ? increment : balanceUser
-            await this.unitRepository.incrementBalance(
+            await incrementUnit.execute(
               affectedUser.unitId,
+              user.id,
+              session.id,
               valueForPay,
             )
-            await this.organizationRepository.incrementBalance(
+            await incrementOrg.execute(
               affectedUser.organizationId,
+              user.id,
+              affectedUser.unitId,
+              session.id,
               valueForPay,
             )
-            await this.profileRepository.incrementBalance(
+            await incrementProfile.execute(
               affectedUser.id,
+              session.id,
               valueForPay,
             )
           } else {
-            await this.unitRepository.incrementBalance(
+            await incrementUnit.execute(
               affectedUser.unitId,
+              user.id,
+              session.id,
               increment,
             )
-            await this.organizationRepository.incrementBalance(
+            await incrementOrg.execute(
               affectedUser.organizationId,
+              user.id,
+              affectedUser.unitId,
+              session.id,
               increment,
             )
-            await this.profileRepository.incrementBalance(
+            await incrementProfile.execute(
               affectedUser.id,
+              session.id,
               increment,
             )
           }
         } else {
-          await this.unitRepository.incrementBalance(user.unitId, increment)
-          await this.organizationRepository.incrementBalance(
+          await incrementUnit.execute(
+            user.unitId,
+            user.id,
+            session.id,
+            increment,
+          )
+          await incrementOrg.execute(
             user.organizationId,
+            user.id,
+            user.unitId,
+            session.id,
             increment,
           )
         }
