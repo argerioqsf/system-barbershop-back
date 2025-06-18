@@ -29,9 +29,13 @@ let transactionRepo: FakeTransactionRepository
 let barberRepo: FakeBarberUsersRepository
 let cashRepo: FakeCashRegisterRepository
 
-vi.mock('../../../src/services/@factories/transaction/make-create-transaction', () => ({
-  makeCreateTransaction: () => new CreateTransactionService(transactionRepo, barberRepo, cashRepo),
-}))
+vi.mock(
+  '../../../src/services/@factories/transaction/make-create-transaction',
+  () => ({
+    makeCreateTransaction: () =>
+      new CreateTransactionService(transactionRepo, barberRepo, cashRepo),
+  }),
+)
 
 function setup() {
   const serviceRepo = new FakeServiceRepository()
