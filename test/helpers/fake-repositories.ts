@@ -302,6 +302,7 @@ export class FakeTransactionRepository implements TransactionRepository {
       type: data.type as TransactionType,
       description: data.description as string,
       amount: data.amount as number,
+      loanAmount: (data.loanAmount as number | null) ?? null,
       receiptUrl: (data.receiptUrl as string | null | undefined) ?? null,
       createdAt: new Date(),
       saleId: null,

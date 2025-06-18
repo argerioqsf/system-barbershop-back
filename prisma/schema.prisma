@@ -140,6 +140,7 @@ model Transaction {
   type                  TransactionType
   description           String
   amount                Float
+  loanAmount            Float?
   receiptUrl            String?
   createdAt             DateTime        @default(now())
 

@@ -117,6 +117,8 @@ describe('Create transaction service', () => {
       receiptUrl: '/uploads/test.png',
     })
 
-    expect(ctx.transactionRepo.transactions[0].receiptUrl).toBeNull()
+    expect(ctx.transactionRepo.transactions[0].receiptUrl).toBe(
+      '/uploads/test.png',
+    )
   })
 })

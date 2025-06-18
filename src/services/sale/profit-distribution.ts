@@ -66,9 +66,10 @@ export async function distributeProfits(
       const amountToPay = valueCalculated <= 0 ? amount : -balanceBarber
       const transactionUnit = await incrementUnit.execute(
         sale.unitId,
-        userId,
+        barberId,
         amountToPay,
         sale.id,
+        amountToPay,
       )
       transactions.push(transactionUnit.transaction)
     }
@@ -76,6 +77,7 @@ export async function distributeProfits(
       barberId,
       amount,
       sale.id,
+      undefined,
     )
     transactions.push(transactionProfile.transaction)
   }

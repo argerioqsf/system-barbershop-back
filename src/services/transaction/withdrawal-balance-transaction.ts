@@ -92,10 +92,14 @@ export class WithdrawalBalanceTransactionService {
       const transactionProfile = await incrementProfile.execute(
         effectiveUser.id,
         increment,
+        undefined,
+        remainingBalance,
       )
       const transactionUnit = await incrementUnit.execute(
         effectiveUser.unitId,
-        user.id,
+        effectiveUser.id,
+        remainingBalance,
+        undefined,
         remainingBalance,
       )
       transactions.push(transactionProfile.transaction)

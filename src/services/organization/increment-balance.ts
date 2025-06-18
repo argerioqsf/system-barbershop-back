@@ -19,6 +19,7 @@ export class IncrementBalanceOrganizationService {
     userId: string,
     amount: number,
     saleId?: string,
+    loanAmount?: number,
   ): Promise<IncrementBalanceOrganizationResponse> {
     const createTransactionService = makeCreateTransaction()
     try {
@@ -32,6 +33,7 @@ export class IncrementBalanceOrganizationService {
         userId,
         receiptUrl: undefined,
         saleId,
+        loanAmount,
       })
       return { organization, transaction: transaction.transaction }
     } catch (error) {
