@@ -19,7 +19,7 @@ export class IncrementBalanceOrganizationService {
     userId: string,
     amount: number,
     saleId?: string,
-    loanAmount?: number,
+    isLoan?: boolean,
   ): Promise<IncrementBalanceOrganizationResponse> {
     const createTransactionService = makeCreateTransaction()
     try {
@@ -29,11 +29,11 @@ export class IncrementBalanceOrganizationService {
         type:
           amount < 0 ? TransactionType.WITHDRAWAL : TransactionType.ADDITION,
         description: 'Increment Balance Organization',
-        amount: amount < 0 ? -amount : amount,
+        amount: isLoan ? amount : Math.abs(amount),
         userId,
         receiptUrl: undefined,
         saleId,
-        loanAmount,
+        isLoan: isLoan ?? false,
       })
       return { organization, transaction: transaction.transaction }
     } catch (error) {

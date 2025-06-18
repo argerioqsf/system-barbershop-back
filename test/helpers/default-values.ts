@@ -294,7 +294,7 @@ export function makeTransaction(over: any = {}): any {
     type: over.type ?? TransactionType.ADDITION,
     description: '',
     amount: over.amount ?? 10,
-    loanAmount: over.loanAmount ?? null,
+    isLoan: over.isLoan ?? false,
     receiptUrl: over.receiptUrl ?? null,
     createdAt: new Date(),
     unit: { organizationId: over.organizationId ?? 'org-1' },

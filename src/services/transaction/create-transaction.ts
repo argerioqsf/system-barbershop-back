@@ -11,7 +11,7 @@ interface CreateTransactionRequest {
   amount: number
   receiptUrl?: string | null
   saleId?: string
-  loanAmount?: number | null
+  isLoan?: boolean
 }
 
 interface CreateTransactionResponse {
@@ -54,7 +54,7 @@ export class CreateTransactionService {
       type: data.type,
       description: data.description,
       amount: data.amount,
-      loanAmount: data.loanAmount ?? null,
+      isLoan: data.isLoan ?? false,
       receiptUrl: data.receiptUrl ?? null,
       affectedUser: affectedUser
         ? { connect: { id: effectiveUser.id } }

@@ -69,7 +69,7 @@ export async function distributeProfits(
         barberId,
         amountToPay,
         sale.id,
-        amountToPay,
+        true,
       )
       transactions.push(transactionUnit.transaction)
     }
@@ -77,7 +77,6 @@ export async function distributeProfits(
       barberId,
       amount,
       sale.id,
-      undefined,
     )
     transactions.push(transactionProfile.transaction)
   }
@@ -87,6 +86,7 @@ export async function distributeProfits(
     userId,
     ownerShare,
     sale.id,
+    false,
   )
   transactions.push(transactionUnit.transaction)
 
