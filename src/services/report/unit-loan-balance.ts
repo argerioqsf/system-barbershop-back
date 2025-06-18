@@ -17,6 +17,9 @@ export class UnitLoanBalanceService {
   }: UnitLoanBalanceRequest): Promise<UnitLoanBalanceResponse> {
     const transactions = await this.transactionRepository.findMany({
       unitId,
+      affectedUserId: {
+        equals: null,
+      },
       isLoan: true,
     })
 
