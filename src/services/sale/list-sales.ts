@@ -2,6 +2,7 @@ import { UserToken } from '@/http/controllers/authenticate-controller'
 import { SaleRepository } from '@/repositories/sale-repository'
 import { assertPermission, getScope, buildUnitWhere } from '@/utils/permissions'
 import { ListSalesResponse } from './types'
+import { assertUser } from '@/utils/assert-user'
 
 export class ListSalesService {
   constructor(private repository: SaleRepository) {}
