@@ -1,9 +1,8 @@
-import { InvalidCredentialsError } from '@/services/@errors/invalid-credentials-error'
-import { UserInactiveError } from '@/services/@errors/user-inactive-error'
 import { makeAuthenticateService } from '@/services/@factories/make-authenticate-service'
 import { Role } from '@prisma/client'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
+import { handleControllerError } from '@/utils/http-error-handler'
 
 export interface UserToken {
   unitId: string
@@ -48,12 +47,6 @@ export async function authenticate(
       token,
     })
   } catch (error) {
-    if (error instanceof UserInactiveError) {
-      return replay.status(400).send({ message: error.message })
-    }
-    if (error instanceof InvalidCredentialsError) {
-      return replay.status(400).send({ message: error.message })
-    }
-    throw error
+    return handleControllerError(error, replay)
   }
 }

@@ -1,7 +1,7 @@
 import { makeRequestPasswordResetService } from '@/services/@factories/user/make-request-password-reset'
 import { FastifyRequest, FastifyReply } from 'fastify'
 import { z } from 'zod'
-import { UserNotFoundError } from '@/services/@errors/user-not-found-error'
+import { handleControllerError } from '@/utils/http-error-handler'
 
 export async function SendResetLinkController(
   request: FastifyRequest,
@@ -16,10 +16,7 @@ export async function SendResetLinkController(
     const service = makeRequestPasswordResetService()
     await service.execute({ email })
   } catch (error) {
-    if (error instanceof UserNotFoundError) {
-      return reply.status(404).send({ message: error.message })
-    }
-    throw error
+    return handleControllerError(error, reply)
   }
 
   return reply.status(200).send()

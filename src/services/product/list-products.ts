@@ -1,5 +1,6 @@
 import { UserToken } from '@/http/controllers/authenticate-controller'
 import { ProductRepository } from '@/repositories/product-repository'
+import { assertUser } from '@/utils/assert-user'
 import { Product } from '@prisma/client'
 
 interface ListProductsResponse {
@@ -10,7 +11,7 @@ export class ListProductsService {
   constructor(private repository: ProductRepository) {}
 
   async execute(user: UserToken): Promise<ListProductsResponse> {
-    if (!user.sub) throw new Error('User not found')
+    assertUser(user)
     let products: Product[] = []
     if (user.role === 'OWNER') {
       products = await this.repository.findMany({

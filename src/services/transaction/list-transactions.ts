@@ -1,6 +1,7 @@
 import { UserToken } from '@/http/controllers/authenticate-controller'
 import { TransactionFull } from '@/repositories/prisma/prisma-transaction-repository'
 import { TransactionRepository } from '@/repositories/transaction-repository'
+import { assertUser } from '@/utils/assert-user'
 import { Transaction } from '@prisma/client'
 
 interface ListTransactionsResponse {
@@ -11,7 +12,7 @@ export class ListTransactionsService {
   constructor(private repository: TransactionRepository) {}
 
   async execute(userToken: UserToken): Promise<ListTransactionsResponse> {
-    if (!userToken.sub) throw new Error('User not found')
+    assertUser(userToken)
 
     let transactions: TransactionFull[] = []
 

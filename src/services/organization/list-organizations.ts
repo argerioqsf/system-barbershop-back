@@ -1,5 +1,7 @@
 import { UserToken } from '@/http/controllers/authenticate-controller'
 import { OrganizationRepository } from '@/repositories/organization-repository'
+import { assertUser } from '@/utils/assert-user'
+import { OrganizationNotFoundError } from '@/services/@errors/organization-not-found-error'
 import { Organization } from '@prisma/client'
 
 interface ListOrganizationsResponse {
@@ -10,7 +12,7 @@ export class ListOrganizationsService {
   constructor(private repository: OrganizationRepository) {}
 
   async execute(userToken: UserToken): Promise<ListOrganizationsResponse> {
-    if (!userToken.sub) throw new Error('User not found')
+    assertUser(userToken)
     let organizations: Organization[] = []
     if (userToken.role === 'ADMIN') {
       organizations = await this.repository.findMany()
@@ -18,7 +20,7 @@ export class ListOrganizationsService {
       const org: Organization | null = await this.repository.findById(
         userToken.organizationId,
       )
-      if (!org) throw new Error('Organization not found')
+      if (!org) throw new OrganizationNotFoundError()
       organizations = [org]
     }
     return { organizations }

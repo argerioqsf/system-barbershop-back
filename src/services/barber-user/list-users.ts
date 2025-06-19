@@ -1,5 +1,6 @@
 import { UserToken } from '@/http/controllers/authenticate-controller'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
+import { assertUser } from '@/utils/assert-user'
 import { Profile, User } from '@prisma/client'
 
 interface ListUsersResponse {
@@ -10,7 +11,7 @@ export class ListUsersService {
   constructor(private repository: BarberUsersRepository) {}
 
   async execute(userToken: UserToken): Promise<ListUsersResponse> {
-    if (!userToken.sub) throw new Error('User not found')
+    assertUser(userToken)
     let users = []
 
     if (userToken.role === 'OWNER') {

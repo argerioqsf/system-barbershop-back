@@ -3,6 +3,7 @@ import { getProfileFromUserIdService } from '@/services/@factories/profile/get-p
 import { MakeUpdateProfileUserService } from '@/services/@factories/profile/update-profile-user-service'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
+import { handleControllerError } from '@/utils/http-error-handler'
 
 const bodySchema = z.object({
   name: z.string(),
@@ -47,6 +48,6 @@ export async function Update(request: FastifyRequest, reply: FastifyReply) {
     })
     return reply.status(201).send({ profile: profileUpdate })
   } catch (error) {
-    return reply.status(500).send({ message: 'Internal server error' })
+    return handleControllerError(error, reply)
   }
 }

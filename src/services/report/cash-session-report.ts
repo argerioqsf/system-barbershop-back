@@ -1,5 +1,6 @@
 import { CashRegisterRepository } from '@/repositories/cash-register-repository'
 import { TransactionType } from '@prisma/client'
+import { SessionNotFoundError } from '../@errors/session-not-found-error'
 
 interface CashSessionReportRequest {
   sessionId: string
@@ -20,7 +21,7 @@ export class CashSessionReportService {
     sessionId,
   }: CashSessionReportRequest): Promise<CashSessionReportResponse> {
     const session = await this.repository.findById(sessionId)
-    if (!session) throw new Error('Session not found')
+    if (!session) throw new SessionNotFoundError()
 
     const additions = session.transactions
       .filter((t) => t.type === TransactionType.ADDITION)

@@ -4,6 +4,10 @@ import { IncrementBalanceProfileService } from '../profile/increment-balance'
 
 import { DetailedSale } from '@/repositories/sale-repository'
 import { Transaction } from '@prisma/client'
+import { OrganizationNotFoundError } from '../@errors/organization-not-found-error'
+import { SessionNotFoundError } from '../@errors/session-not-found-error'
+import { BarberNotFoundError } from '../@errors/barber-not-found-error'
+import { BarberProfileNotFoundError } from '../@errors/barber-profile-not-found-error'
 
 export async function distributeProfits(
   sale: DetailedSale,
@@ -19,9 +23,9 @@ export async function distributeProfits(
   },
 ): Promise<{ transactions: Transaction[] }> {
   const org = await organizationRepository.findById(organizationId)
-  if (!org) throw new Error('Org not found')
+  if (!org) throw new OrganizationNotFoundError()
 
-  if (!sale.sessionId) throw new Error('Session not found')
+  if (!sale.sessionId) throw new SessionNotFoundError()
 
   const transactions: Transaction[] = []
 
@@ -56,8 +60,8 @@ export async function distributeProfits(
     const userBarber = sale.items.find(
       (item) => item.barber?.id === barberId,
     )?.barber
-    if (!userBarber) throw new Error('Barber not found')
-    if (!userBarber.profile) throw new Error('Barber profile not found')
+    if (!userBarber) throw new BarberNotFoundError()
+    if (!userBarber.profile) throw new BarberProfileNotFoundError()
 
     if (userBarber.profile.totalBalance < 0) {
       const balanceBarber = userBarber.profile.totalBalance

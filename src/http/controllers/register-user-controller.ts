@@ -1,8 +1,8 @@
-import { UserAlreadyExistsError } from '@/services/@errors/user-already-exists-error'
 import { makeRegisterService } from '@/services/@factories/make-register-service'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { Role } from '@prisma/client'
 import { z } from 'zod'
+import { handleControllerError } from '@/utils/http-error-handler'
 
 export async function registerUser(
   request: FastifyRequest,
@@ -43,10 +43,7 @@ export async function registerUser(
       unitId: data.unitId,
     })
   } catch (error) {
-    if (error instanceof UserAlreadyExistsError) {
-      return replay.status(409).send({ message: error.message })
-    }
-    throw error
+    return handleControllerError(error, replay)
   }
 
   return replay.status(201).send()

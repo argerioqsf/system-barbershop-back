@@ -1,5 +1,6 @@
 import { UserToken } from '@/http/controllers/authenticate-controller'
 import { ServiceRepository } from '@/repositories/service-repository'
+import { assertUser } from '@/utils/assert-user'
 import { Service } from '@prisma/client'
 
 interface ListServicesResponse {
@@ -10,7 +11,7 @@ export class ListServicesService {
   constructor(private repository: ServiceRepository) {}
 
   async execute(userToken: UserToken): Promise<ListServicesResponse> {
-    if (!userToken.sub) throw new Error('User not found')
+    assertUser(userToken)
 
     let services = []
 

@@ -1,5 +1,6 @@
 import { CashRegisterRepository } from '@/repositories/cash-register-repository'
 import { CashRegisterSession, TransactionType } from '@prisma/client'
+import { CashRegisterNotOpenedError } from '@/services/@errors/cash-register-not-opened-error'
 
 interface CloseSessionRequest {
   unitId: string
@@ -16,7 +17,7 @@ export class CloseSessionService {
     unitId,
   }: CloseSessionRequest): Promise<CloseSessionResponse> {
     const sessionOpen = await this.repository.findOpenByUnit(unitId)
-    if (!sessionOpen) throw new Error('Cash register not opened')
+    if (!sessionOpen) throw new CashRegisterNotOpenedError()
 
     const finalAmount = sessionOpen.transactions.reduce(
       (total, transaction) => {

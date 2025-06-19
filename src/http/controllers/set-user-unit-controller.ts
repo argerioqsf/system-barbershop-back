@@ -1,10 +1,8 @@
 import { makeSetUserUnitService } from '@/services/@factories/user/make-set-user-unit'
-import { UnitNotFoundError } from '@/services/@errors/unit-not-found-error'
-import { UserNotFoundError } from '@/services/@errors/user-not-found-error'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
-import { UnitNotFromOrganizationError } from '@/services/users/set-user-unit'
 import { UserToken } from './authenticate-controller'
+import { handleControllerError } from '@/utils/http-error-handler'
 
 export async function SetUserUnitController(
   request: FastifyRequest,
@@ -18,14 +16,7 @@ export async function SetUserUnitController(
     const service = makeSetUserUnitService()
     await service.execute({ user, unitId })
   } catch (error) {
-    if (
-      error instanceof UnitNotFoundError ||
-      error instanceof UserNotFoundError ||
-      error instanceof UnitNotFromOrganizationError
-    ) {
-      return reply.status(400).send({ message: error.message })
-    }
-    throw error
+    return handleControllerError(error, reply)
   }
 
   const token = await reply.jwtSign(

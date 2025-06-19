@@ -7,6 +7,12 @@ import { UnitRepository } from '@/repositories/unit-repository'
 import { OrganizationRepository } from '@/repositories/organization-repository'
 import { IncrementBalanceUnitService } from '../unit/increment-balance'
 import { IncrementBalanceProfileService } from '../profile/increment-balance'
+import { UserNotFoundError } from '@/services/@errors/user-not-found-error'
+import { CashRegisterClosedError } from '@/services/@errors/cash-register-closed-error'
+import { AffectedUserNotFoundError } from '@/services/@errors/affected-user-not-found-error'
+import { NegativeValuesNotAllowedError } from '@/services/@errors/negative-values-not-allowed-error'
+import { InsufficientBalanceError } from '@/services/@errors/insufficient-balance-error'
+import { WithdrawalGreaterThanUnitBalanceError } from '@/services/@errors/withdrawal-greater-than-unit-balance-error'
 
 interface withdrawalBalanceTransactionRequest {
   userId: string
@@ -35,19 +41,19 @@ export class WithdrawalBalanceTransactionService {
     data: withdrawalBalanceTransactionRequest,
   ): Promise<withdrawalBalanceTransactionResponse> {
     const user = await this.barberUserRepository.findById(data.userId)
-    if (!user) throw new Error('User not found')
+    if (!user) throw new UserNotFoundError()
 
     const session = await this.cashRegisterRepository.findOpenByUnit(
       user.unitId,
     )
-    if (!session) throw new Error('Cash register closed')
+    if (!session) throw new CashRegisterClosedError()
 
     let affectedUser
     if (data.affectedUserId) {
       affectedUser = await this.barberUserRepository.findById(
         data.affectedUserId,
       )
-      if (!affectedUser) throw new Error('Affected user not found')
+      if (!affectedUser) throw new AffectedUserNotFoundError()
     }
 
     const incrementProfile = new IncrementBalanceProfileService(
@@ -64,7 +70,7 @@ export class WithdrawalBalanceTransactionService {
     const increment = -data.amount
 
     if (data.amount < 0) {
-      throw new Error('Negative values ​​cannot be passed on withdrawals')
+      throw new NegativeValuesNotAllowedError()
     }
 
     const effectiveUser = affectedUser ?? user
@@ -83,11 +89,11 @@ export class WithdrawalBalanceTransactionService {
 
     if (remainingBalance < 0) {
       if (!effectiveUser.unit?.allowsLoan) {
-        throw new Error('Insufficient balance for withdrawal')
+        throw new InsufficientBalanceError()
       }
       const remainingBalanceRelative = -remainingBalance
       if (remainingBalanceRelative > balanceUnit) {
-        throw new Error('Withdrawal amount greater than unit balance')
+        throw new WithdrawalGreaterThanUnitBalanceError()
       }
       const transactionProfile = await incrementProfile.execute(
         effectiveUser.id,

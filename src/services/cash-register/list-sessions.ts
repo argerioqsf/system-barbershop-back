@@ -1,4 +1,5 @@
 import { UserToken } from '@/http/controllers/authenticate-controller'
+import { assertUser } from '@/utils/assert-user'
 import {
   CashRegisterRepository,
   DetailedCashSession,
@@ -12,7 +13,7 @@ export class ListSessionsService {
   constructor(private repository: CashRegisterRepository) {}
 
   async execute(userToken: UserToken): Promise<ListSessionsResponse> {
-    if (!userToken.sub) throw new Error('User not found')
+    assertUser(userToken)
 
     let sessions = []
 

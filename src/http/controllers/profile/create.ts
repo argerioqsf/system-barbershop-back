@@ -1,5 +1,5 @@
-import { UserNotFoundError } from '@/services/@errors/user-not-found-error'
 import { makeCreateProfileService } from '@/services/@factories/profile/make-create-profile-service'
+import { handleControllerError } from '@/utils/http-error-handler'
 
 import { Role } from '@prisma/client'
 import { FastifyReply, FastifyRequest } from 'fastify'
@@ -31,12 +31,8 @@ export async function Create(request: FastifyRequest, reply: FastifyReply) {
       role: body.role,
       userId,
     })
-
     return reply.status(201).send(profile)
   } catch (error) {
-    if (error instanceof UserNotFoundError) {
-      return reply.status(404).send({ message: error.message })
-    }
-    return reply.status(500).send({ message: 'Internal server error' })
+    return handleControllerError(error, reply)
   }
 }

@@ -1,5 +1,7 @@
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { UnitRepository } from '@/repositories/unit-repository'
+import { UserNotFoundError } from '@/services/@errors/user-not-found-error'
+import { UnitNotExistsError } from '@/services/@errors/unit-not-exists-error'
 import { Profile, Role, Unit, User } from '@prisma/client'
 
 interface UpdateUserRequest {
@@ -31,12 +33,12 @@ export class UpdateUserService {
   async execute(data: UpdateUserRequest): Promise<UpdateUserResponse> {
     const existing = await this.repository.findById(data.id)
     if (!existing) {
-      throw new Error('User not found')
+      throw new UserNotFoundError()
     }
     let unit: Unit | undefined
     if (data.unitId) {
       unit = (await this.unitRepository.findById(data.unitId)) ?? undefined
-      if (!unit) throw new Error('Unit not exists')
+      if (!unit) throw new UnitNotExistsError()
     }
 
     const { user, profile } = await this.repository.update(
