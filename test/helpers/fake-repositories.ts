@@ -1,22 +1,16 @@
+import { InMemoryCashRegisterRepository as BaseCashRegisterRepository } from '../../src/repositories/in-memory/in-memory-cash-register-repository'
+import type { CashRegisterSession, Transaction, Sale } from '@prisma/client'
+import type { CompleteCashSession } from '../../src/repositories/cash-register-repository'
+import { InMemoryProfilesRepository } from '../../src/repositories/in-memory/in-memory-profiles-repository'
+import { Profile, User } from '@prisma/client'
 export { InMemoryServiceRepository as FakeServiceRepository } from '../../src/repositories/in-memory/in-memory-service-repository'
 export { InMemoryProductRepository as FakeProductRepository } from '../../src/repositories/in-memory/in-memory-product-repository'
 export { InMemoryCouponRepository as FakeCouponRepository } from '../../src/repositories/in-memory/in-memory-coupon-repository'
 export { InMemoryBarberUsersRepository } from '../../src/repositories/in-memory/in-memory-barber-users-repository'
 export { InMemoryBarberUsersRepository as FakeBarberUsersRepository } from '../../src/repositories/in-memory/in-memory-barber-users-repository'
 export { InMemoryCashRegisterRepository } from '../../src/repositories/in-memory/in-memory-cash-register-repository'
-import {
-  InMemoryCashRegisterRepository as BaseCashRegisterRepository,
-} from '../../src/repositories/in-memory/in-memory-cash-register-repository'
-import type {
-  CashRegisterSession,
-  Transaction,
-  Sale,
-} from '@prisma/client'
-import type { CompleteCashSession } from '../../src/repositories/cash-register-repository'
 export { InMemoryTransactionRepository as FakeTransactionRepository } from '../../src/repositories/in-memory/in-memory-transaction-repository'
 export { InMemoryOrganizationRepository as FakeOrganizationRepository } from '../../src/repositories/in-memory/in-memory-organization-repository'
-import { InMemoryProfilesRepository } from '../../src/repositories/in-memory/in-memory-profiles-repository'
-import { Profile, User } from '@prisma/client'
 
 export class FakeProfilesRepository extends InMemoryProfilesRepository {
   constructor(
