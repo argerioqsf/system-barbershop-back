@@ -1,7 +1,7 @@
 import { UserToken } from '@/http/controllers/authenticate-controller'
 import { OrganizationRepository } from '@/repositories/organization-repository'
 import { assertUser } from '@/utils/assert-user'
-import { assertPermission, getScope } from '@/utils/permissions'
+import { getScope } from '@/utils/permissions'
 import { OrganizationNotFoundError } from '@/services/@errors/organization/organization-not-found-error'
 import { Organization } from '@prisma/client'
 
@@ -14,7 +14,6 @@ export class ListOrganizationsService {
 
   async execute(userToken: UserToken): Promise<ListOrganizationsResponse> {
     assertUser(userToken)
-    assertPermission(userToken.role, 'LIST_ORGANIZATIONS')
     const scope = getScope(userToken)
     let organizations: Organization[] = []
     if (scope.organizationId || scope.unitId) {

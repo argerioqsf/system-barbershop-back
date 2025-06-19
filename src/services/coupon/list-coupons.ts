@@ -1,7 +1,7 @@
 import { UserToken } from '@/http/controllers/authenticate-controller'
 import { CouponRepository } from '@/repositories/coupon-repository'
 import { assertUser } from '@/utils/assert-user'
-import { assertPermission, getScope, buildUnitWhere } from '@/utils/permissions'
+import { getScope, buildUnitWhere } from '@/utils/permissions'
 import { Coupon } from '@prisma/client'
 
 interface ListCouponsResponse {
@@ -13,7 +13,6 @@ export class ListCouponsService {
 
   async execute(userToken: UserToken): Promise<ListCouponsResponse> {
     assertUser(userToken)
-    assertPermission(userToken.role, 'LIST_COUPONS')
     const scope = getScope(userToken)
     const where = buildUnitWhere(scope)
     const coupons = await this.repository.findMany(where)

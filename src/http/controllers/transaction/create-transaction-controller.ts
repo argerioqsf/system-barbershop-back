@@ -3,7 +3,6 @@ import { makeCreateTransaction } from '@/services/@factories/transaction/make-cr
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { UserToken } from '../authenticate-controller'
-import { hasPermission } from '@/utils/permissions'
 
 export const CreateTransactionController = withErrorHandling(
   async (request: FastifyRequest, reply: FastifyReply) => {
@@ -18,12 +17,6 @@ export const CreateTransactionController = withErrorHandling(
       ? `/uploads/${request.file.filename}`
       : undefined
     const user = request.user as UserToken
-    if (
-      data.affectedUserId &&
-      !hasPermission(user.role, 'MANAGE_OTHER_USER_TRANSACTION')
-    ) {
-      return reply.status(403).send({ message: 'Unauthorized' })
-    }
     const userId = user.sub
     const service = makeCreateTransaction()
     const { transaction } = await service.execute({
