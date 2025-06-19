@@ -4,7 +4,15 @@ export { InMemoryCouponRepository as FakeCouponRepository } from '../../src/repo
 export { InMemoryBarberUsersRepository } from '../../src/repositories/in-memory/in-memory-barber-users-repository'
 export { InMemoryBarberUsersRepository as FakeBarberUsersRepository } from '../../src/repositories/in-memory/in-memory-barber-users-repository'
 export { InMemoryCashRegisterRepository } from '../../src/repositories/in-memory/in-memory-cash-register-repository'
-export { InMemoryCashRegisterRepository as FakeCashRegisterRepository } from '../../src/repositories/in-memory/in-memory-cash-register-repository'
+import {
+  InMemoryCashRegisterRepository as BaseCashRegisterRepository,
+} from '../../src/repositories/in-memory/in-memory-cash-register-repository'
+import type {
+  CashRegisterSession,
+  Transaction,
+  Sale,
+} from '@prisma/client'
+import type { CompleteCashSession } from '../../src/repositories/cash-register-repository'
 export { InMemoryTransactionRepository as FakeTransactionRepository } from '../../src/repositories/in-memory/in-memory-transaction-repository'
 export { InMemoryOrganizationRepository as FakeOrganizationRepository } from '../../src/repositories/in-memory/in-memory-organization-repository'
 import { InMemoryProfilesRepository } from '../../src/repositories/in-memory/in-memory-profiles-repository'
@@ -16,6 +24,38 @@ export class FakeProfilesRepository extends InMemoryProfilesRepository {
   ) {
     super()
     this.items = profiles
+  }
+}
+
+export class FakeCashRegisterRepository extends BaseCashRegisterRepository {
+  private _session:
+    | (CompleteCashSession & { transactions: Transaction[]; sales: Sale[] })
+    | null = null
+
+  constructor(
+    session?:
+      | (CashRegisterSession & { transactions: Transaction[]; sales: Sale[] })
+      | null,
+  ) {
+    super()
+    if (session) {
+      this.session = session
+    }
+  }
+
+  get session():
+    | (CompleteCashSession & { transactions: Transaction[]; sales: Sale[] })
+    | null {
+    return this._session
+  }
+
+  set session(
+    value:
+      | (CashRegisterSession & { transactions: Transaction[]; sales: Sale[] })
+      | null,
+  ) {
+    this._session = value as any
+    this.sessions = value ? [value as any] : []
   }
 }
 export { InMemoryUnitRepository as FakeUnitRepository } from '../../src/repositories/in-memory/in-memory-unit-repository'
