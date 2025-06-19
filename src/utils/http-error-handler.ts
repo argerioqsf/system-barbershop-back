@@ -25,7 +25,7 @@ import { BarberNotFoundError } from '@/services/@errors/barber/barber-not-found-
 import { BarberProfileNotFoundError } from '@/services/@errors/profile/barber-profile-not-found-error'
 import { OwnerNotFoundError } from '@/services/@errors/organization/owner-not-found-error'
 import { UnitNotFromOrganizationError } from '@/services/users/set-user-unit'
-import { FastifyReply, FastifyRequest } from 'fastify'
+import { FastifyReply } from 'fastify'
 
 export function mapErrorToStatus(error: Error): number {
   if (
@@ -75,15 +75,4 @@ export function handleControllerError(error: unknown, reply: FastifyReply) {
     return reply.status(status).send({ message: error.message })
   }
   return reply.status(500).send({ message: 'Internal server error' })
-}
-export function withErrorHandling(
-  fn: (request: FastifyRequest, reply: FastifyReply) => Promise<unknown>,
-) {
-  return async (request: FastifyRequest, reply: FastifyReply) => {
-    try {
-      return await fn(request, reply)
-    } catch (error) {
-      return handleControllerError(error, reply)
-    }
-  }
 }

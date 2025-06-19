@@ -2,7 +2,6 @@ import { makeAuthenticateService } from '@/services/@factories/make-authenticate
 import { Role } from '@prisma/client'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
-import { withErrorHandling } from '@/utils/http-error-handler'
 
 export interface UserToken {
   unitId: string
@@ -11,37 +10,38 @@ export interface UserToken {
   sub: string
 }
 
-export const authenticate = withErrorHandling(
-  async (request: FastifyRequest, replay: FastifyReply) => {
-    const authenticateBodySchema = z.object({
-      email: z.string().email(),
-      password: z.string().min(6),
-    })
+export const authenticate = async (
+  request: FastifyRequest,
+  replay: FastifyReply,
+) => {
+  const authenticateBodySchema = z.object({
+    email: z.string().email(),
+    password: z.string().min(6),
+  })
 
-    const { email, password } = authenticateBodySchema.parse(request.body)
+  const { email, password } = authenticateBodySchema.parse(request.body)
 
-    const authenticateService = makeAuthenticateService()
+  const authenticateService = makeAuthenticateService()
 
-    const { user } = await authenticateService.execute({
-      email,
-      password,
-    })
+  const { user } = await authenticateService.execute({
+    email,
+    password,
+  })
 
-    const token = await replay.jwtSign(
-      {
-        unitId: user.unitId,
-        organizationId: user.organizationId,
-        role: user.profile?.role,
-      },
-      { sign: { sub: user.id } },
-    )
+  const token = await replay.jwtSign(
+    {
+      unitId: user.unitId,
+      organizationId: user.organizationId,
+      role: user.profile?.role,
+    },
+    { sign: { sub: user.id } },
+  )
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password: _, ...userWithoutPassword } = user
-    return replay.status(200).send({
-      user: userWithoutPassword,
-      roles: Role,
-      token,
-    })
-  },
-)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { password: _, ...userWithoutPassword } = user
+  return replay.status(200).send({
+    user: userWithoutPassword,
+    roles: Role,
+    token,
+  })
+}
