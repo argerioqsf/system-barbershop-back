@@ -11,18 +11,16 @@ export interface UserToken {
   sub: string
 }
 
-export const authenticate = withErrorHandling(async (
-  request: FastifyRequest,
-  replay: FastifyReply,
-) => {
-  const authenticateBodySchema = z.object({
-    email: z.string().email(),
-    password: z.string().min(6),
-  })
+export const authenticate = withErrorHandling(
+  async (request: FastifyRequest, replay: FastifyReply) => {
+    const authenticateBodySchema = z.object({
+      email: z.string().email(),
+      password: z.string().min(6),
+    })
 
-  const { email, password } = authenticateBodySchema.parse(request.body)
+    const { email, password } = authenticateBodySchema.parse(request.body)
 
-  const authenticateService = makeAuthenticateService()
+    const authenticateService = makeAuthenticateService()
 
     const { user } = await authenticateService.execute({
       email,
@@ -40,9 +38,10 @@ export const authenticate = withErrorHandling(async (
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password: _, ...userWithoutPassword } = user
-  return replay.status(200).send({
-    user: userWithoutPassword,
-    roles: Role,
-    token,
-  })
-})
+    return replay.status(200).send({
+      user: userWithoutPassword,
+      roles: Role,
+      token,
+    })
+  },
+)

@@ -3,12 +3,11 @@ import { makeListAppointments } from '@/services/@factories/appointment/make-lis
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { UserToken } from '../authenticate-controller'
 
-export const ListAppointmentsController = withErrorHandling(async (
-  request: FastifyRequest,
-  reply: FastifyReply,
-) => {
-  const service = makeListAppointments()
-  const user = request.user as UserToken
-  const { appointments } = await service.execute(user)
-  return reply.status(200).send(appointments)
-})
+export const ListAppointmentsController = withErrorHandling(
+  async (request: FastifyRequest, reply: FastifyReply) => {
+    const service = makeListAppointments()
+    const user = request.user as UserToken
+    const { appointments } = await service.execute(user)
+    return reply.status(200).send(appointments)
+  },
+)

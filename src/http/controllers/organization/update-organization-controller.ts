@@ -3,20 +3,19 @@ import { makeUpdateOrganizationService } from '@/services/@factories/organizatio
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
-export const UpdateOrganizationController = withErrorHandling(async (
-  request: FastifyRequest,
-  reply: FastifyReply,
-) => {
-  const bodySchema = z.object({
-    name: z.string(),
-    slug: z.string().optional(),
-  })
-  const paramsSchema = z.object({
-    id: z.string(),
-  })
-  const { name, slug } = bodySchema.parse(request.body)
-  const { id } = paramsSchema.parse(request.params)
-  const service = makeUpdateOrganizationService()
-  const { organization } = await service.execute({ id, name, slug })
-  return reply.status(200).send(organization)
-})
+export const UpdateOrganizationController = withErrorHandling(
+  async (request: FastifyRequest, reply: FastifyReply) => {
+    const bodySchema = z.object({
+      name: z.string(),
+      slug: z.string().optional(),
+    })
+    const paramsSchema = z.object({
+      id: z.string(),
+    })
+    const { name, slug } = bodySchema.parse(request.body)
+    const { id } = paramsSchema.parse(request.params)
+    const service = makeUpdateOrganizationService()
+    const { organization } = await service.execute({ id, name, slug })
+    return reply.status(200).send(organization)
+  },
+)

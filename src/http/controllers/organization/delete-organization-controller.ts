@@ -3,15 +3,14 @@ import { makeDeleteOrganizationService } from '@/services/@factories/organizatio
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
-export const DeleteOrganizationController = withErrorHandling(async (
-  request: FastifyRequest,
-  reply: FastifyReply,
-) => {
-  const paramsSchema = z.object({
-    id: z.string(),
-  })
-  const { id } = paramsSchema.parse(request.params)
-  const service = makeDeleteOrganizationService()
-  await service.execute(id)
-  return reply.status(204).send()
-})
+export const DeleteOrganizationController = withErrorHandling(
+  async (request: FastifyRequest, reply: FastifyReply) => {
+    const paramsSchema = z.object({
+      id: z.string(),
+    })
+    const { id } = paramsSchema.parse(request.params)
+    const service = makeDeleteOrganizationService()
+    await service.execute(id)
+    return reply.status(204).send()
+  },
+)

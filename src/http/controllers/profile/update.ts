@@ -16,37 +16,36 @@ const bodySchema = z.object({
   pix: z.string(),
 })
 
-export const Update = withErrorHandling(async (
-  request: FastifyRequest,
-  reply: FastifyReply,
-) => {
-  const { active, birthday, cpf, email, genre, name, phone, pix } =
-    bodySchema.parse(request.body)
+export const Update = withErrorHandling(
+  async (request: FastifyRequest, reply: FastifyReply) => {
+    const { active, birthday, cpf, email, genre, name, phone, pix } =
+      bodySchema.parse(request.body)
 
-  const updateProfileUserService = MakeUpdateProfileUserService()
-  const getProfileFromUserId = getProfileFromUserIdService()
+    const updateProfileUserService = MakeUpdateProfileUserService()
+    const getProfileFromUserId = getProfileFromUserIdService()
 
-  const id = request.user.sub
+    const id = request.user.sub
 
-  const { profile } = await getProfileFromUserId.execute({
-    id,
-  })
+    const { profile } = await getProfileFromUserId.execute({
+      id,
+    })
 
-  if (!profile) {
-    throw new ResourceNotFoundError()
-  }
+    if (!profile) {
+      throw new ResourceNotFoundError()
+    }
 
-  const { profile: profileUpdate } = await updateProfileUserService.execute({
-    active,
-    birthday,
-    cpf,
-    email,
-    genre,
-    id,
-    name,
-    phone,
-    pix,
-    role: profile.role,
-  })
-  return reply.status(201).send({ profile: profileUpdate })
-})
+    const { profile: profileUpdate } = await updateProfileUserService.execute({
+      active,
+      birthday,
+      cpf,
+      email,
+      genre,
+      id,
+      name,
+      phone,
+      pix,
+      role: profile.role,
+    })
+    return reply.status(201).send({ profile: profileUpdate })
+  },
+)

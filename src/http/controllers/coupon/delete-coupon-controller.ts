@@ -3,13 +3,12 @@ import { makeDeleteCouponService } from '@/services/@factories/coupon/make-delet
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
-export const DeleteCouponController = withErrorHandling(async (
-  request: FastifyRequest,
-  reply: FastifyReply,
-) => {
-  const paramsSchema = z.object({ id: z.string() })
-  const { id } = paramsSchema.parse(request.params)
-  const service = makeDeleteCouponService()
-  await service.execute({ id })
-  return reply.status(204).send()
-})
+export const DeleteCouponController = withErrorHandling(
+  async (request: FastifyRequest, reply: FastifyReply) => {
+    const paramsSchema = z.object({ id: z.string() })
+    const { id } = paramsSchema.parse(request.params)
+    const service = makeDeleteCouponService()
+    await service.execute({ id })
+    return reply.status(204).send()
+  },
+)

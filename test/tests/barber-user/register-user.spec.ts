@@ -4,18 +4,6 @@ import {
   InMemoryBarberUsersRepository,
   FakeUnitRepository,
 } from '../../helpers/fake-repositories'
-import { UnitNotExistsError } from '../../../src/services/@errors/unit/unit-not-exists-error'
-  let usersRepo: InMemoryBarberUsersRepository
-  let unitsRepo: FakeUnitRepository
-    usersRepo = new InMemoryBarberUsersRepository()
-    unitsRepo = new FakeUnitRepository({ ...defaultUnit }, [{ ...defaultUnit }])
-    service = new RegisterUserService(usersRepo, unitsRepo)
-    const res = await service.execute({
-      ...baseRegisterUserData,
-      unitId: defaultUnit.id,
-    })
-    expect(usersRepo.users).toHaveLength(1)
-    service = new RegisterUserService(usersRepo, badUnit)
 import { defaultUnit, baseRegisterUserData } from '../../helpers/default-values'
 
 describe('Register user service', () => {

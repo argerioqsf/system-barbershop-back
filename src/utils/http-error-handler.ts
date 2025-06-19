@@ -11,7 +11,6 @@ import { CashRegisterClosedError } from '@/services/@errors/cash-register/cash-r
 import { CashRegisterNotOpenedError } from '@/services/@errors/cash-register/cash-register-not-opened-error'
 import { CashRegisterAlreadyOpenError } from '@/services/@errors/cash-register/cash-register-already-open-error'
 import { CouponNotFoundError } from '@/services/@errors/coupon/coupon-not-found-error'
-import { CouponExhaustedError } from '@/services/@errors/coupon/coupon-exhausted-error'
 import { InsufficientStockError } from '@/services/@errors/product/insufficient-stock-error'
 import { ItemNeedsServiceOrProductError } from '@/services/@errors/sale/item-needs-service-or-product-error'
 import { NegativeValuesNotAllowedError } from '@/services/@errors/transaction/negative-values-not-allowed-error'
@@ -25,7 +24,8 @@ import { ProductNotFoundError } from '@/services/@errors/product/product-not-fou
 import { BarberNotFoundError } from '@/services/@errors/barber/barber-not-found-error'
 import { BarberProfileNotFoundError } from '@/services/@errors/profile/barber-profile-not-found-error'
 import { OwnerNotFoundError } from '@/services/@errors/organization/owner-not-found-error'
-import { UserNotFromOrganizationError } from '@/services/@errors/user/user-not-from-organization-error'
+import { UnitNotFromOrganizationError } from '@/services/users/set-user-unit'
+import { FastifyReply, FastifyRequest } from 'fastify'
 
 export function mapErrorToStatus(error: Error): number {
   if (

@@ -3,13 +3,12 @@ import { makeDeleteUserService } from '@/services/@factories/barber-user/make-de
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
-export const DeleteBarberUserController = withErrorHandling(async (
-  request: FastifyRequest,
-  reply: FastifyReply,
-) => {
-  const paramsSchema = z.object({ id: z.string() })
-  const { id } = paramsSchema.parse(request.params)
-  const service = makeDeleteUserService()
-  await service.execute({ id })
-  return reply.status(204).send()
-})
+export const DeleteBarberUserController = withErrorHandling(
+  async (request: FastifyRequest, reply: FastifyReply) => {
+    const paramsSchema = z.object({ id: z.string() })
+    const { id } = paramsSchema.parse(request.params)
+    const service = makeDeleteUserService()
+    await service.execute({ id })
+    return reply.status(204).send()
+  },
+)
