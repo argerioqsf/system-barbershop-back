@@ -18,6 +18,7 @@ export const registerUser = async (
     pix: z.string(),
     role: z.nativeEnum(Role),
     unitId: z.string(),
+    roleModelId: z.string(),
   })
 
   const data = registerBodySchema.parse(request.body)
@@ -38,6 +39,7 @@ export const registerUser = async (
     birthday: data.birthday,
     pix: data.pix,
     role: data.role,
+    roleModelId: data.roleModelId,
     unitId: data.unitId,
   })
 

@@ -19,6 +19,7 @@ export const CreateBarberUserController = async (
     pix: z.string(),
     unitId: z.string().optional(),
     role: z.nativeEnum(Role),
+    roleModelId: z.string(),
   })
 
   const data = bodySchema.parse(request.body)
@@ -44,6 +45,7 @@ export const CreateBarberUserController = async (
     birthday: data.birthday,
     pix: data.pix,
     role: data.role,
+    roleModelId: data.roleModelId,
     unitId,
   })
   return reply.status(201).send({ user, profile })

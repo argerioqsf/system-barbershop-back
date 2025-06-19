@@ -3,12 +3,12 @@ import { Prisma, Profile, Unit, User } from '@prisma/client'
 export interface BarberUsersRepository {
   create(
     data: Prisma.UserCreateInput,
-    profile: Omit<Prisma.ProfileCreateInput, 'user'>,
+    profile: Omit<Prisma.ProfileUncheckedCreateInput, 'userId'>,
   ): Promise<{ user: User; profile: Profile }>
   update(
     id: string,
     userData: Prisma.UserUpdateInput,
-    profileData: Prisma.ProfileUpdateInput,
+    profileData: Prisma.ProfileUncheckedUpdateInput,
   ): Promise<{ user: User; profile: Profile | null }>
   findMany(
     where?: Prisma.UserWhereInput,

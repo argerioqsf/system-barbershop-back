@@ -24,6 +24,7 @@ describe('Create profile service', () => {
         birthday: '',
         pix: '',
         role: 'BARBER' as any,
+        roleModelId: 'role-1',
         userId: 'u1',
       }),
     ).rejects.toBeInstanceOf(UserNotFoundError)
@@ -45,6 +46,7 @@ describe('Create profile service', () => {
       birthday: '2000',
       pix: 'x',
       role: 'BARBER' as any,
+      roleModelId: 'role-1',
       userId: user.id,
     })
 

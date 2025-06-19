@@ -5,7 +5,7 @@ import { BarberUsersRepository } from '../barber-users-repository'
 export class PrismaBarberUsersRepository implements BarberUsersRepository {
   async create(
     data: Prisma.UserCreateInput,
-    profileData: Omit<Prisma.ProfileCreateInput, 'user'>,
+    profileData: Omit<Prisma.ProfileUncheckedCreateInput, 'userId'>,
   ): Promise<{ user: User; profile: Profile }> {
     const user = await prisma.user.create({ data })
     const profile = await prisma.profile.create({
@@ -17,7 +17,7 @@ export class PrismaBarberUsersRepository implements BarberUsersRepository {
   async update(
     id: string,
     userData: Prisma.UserUpdateInput,
-    profileData: Prisma.ProfileUpdateInput,
+    profileData: Prisma.ProfileUncheckedUpdateInput,
   ): Promise<{ user: User; profile: Profile | null }> {
     const user = await prisma.user.update({
       where: { id },

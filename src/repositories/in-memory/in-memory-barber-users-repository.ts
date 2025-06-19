@@ -12,7 +12,7 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
 
   async create(
     data: Prisma.UserCreateInput,
-    profileData: Omit<Prisma.ProfileCreateInput, 'user'>,
+    profileData: Omit<Prisma.ProfileUncheckedCreateInput, 'userId'>,
   ): Promise<{ user: User; profile: Profile }> {
     const user: User = {
       id: randomUUID(),
@@ -34,6 +34,7 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
       birthday: profileData.birthday as string,
       pix: profileData.pix as string,
       role: profileData.role as Role,
+      roleModelId: (profileData as { roleModelId: string }).roleModelId,
       commissionPercentage:
         (profileData as { commissionPercentage?: number })
           .commissionPercentage ?? 100,
@@ -58,7 +59,7 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
   async update(
     id: string,
     userData: Prisma.UserUpdateInput,
-    profileData: Prisma.ProfileUpdateInput,
+    profileData: Prisma.ProfileUncheckedUpdateInput,
   ): Promise<{ user: User; profile: Profile | null }> {
     const index = this.users.findIndex((u) => u.id === id)
     if (index < 0) throw new Error('User not found')
@@ -83,6 +84,8 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
         profile.birthday = profileData.birthday as string
       if (profileData.pix) profile.pix = profileData.pix as string
       if (profileData.role) profile.role = profileData.role as Role
+      if ('roleModelId' in profileData)
+        profile.roleModelId = (profileData as { roleModelId: string }).roleModelId
       if (
         'commissionPercentage' in profileData &&
         profileData.commissionPercentage !== undefined

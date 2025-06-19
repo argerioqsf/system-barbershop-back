@@ -17,6 +17,7 @@ export const UpdateBarberUserController = async (
     pix: z.string().optional(),
     role: z.nativeEnum(Role).optional(),
     unitId: z.string().optional(),
+    roleModelId: z.string().optional(),
     commissionPercentage: z.number().optional(),
     active: z
       .union([z.boolean(), z.string()])

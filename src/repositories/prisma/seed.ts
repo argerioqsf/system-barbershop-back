@@ -15,6 +15,14 @@ const prisma = new PrismaClient()
 async function main() {
   const passwordHash = await hash(env.PASSWORD_SEED, 6)
 
+  await prisma.feature.createMany({
+    data: [
+      { category: 'unit', action: 'list_all' },
+      { category: 'unit', action: 'list_org' },
+    ],
+    skipDuplicates: true,
+  })
+
   const organization = await prisma.organization.create({
     data: {
       name: 'Lobo BarberShop',
@@ -45,6 +53,50 @@ async function main() {
     },
   })
 
+  const listAllFeature = await prisma.feature.findFirst({
+    where: { category: 'unit', action: 'list_all' },
+  })
+  const listOrgFeature = await prisma.feature.findFirst({
+    where: { category: 'unit', action: 'list_org' },
+  })
+
+  let adminRoleModel: { id: string } | null = null
+  const defaultRoleMain = await prisma.roleModel.create({
+    data: {
+      name: 'Default',
+      unit: { connect: { id: mainUnit.id } },
+    },
+  })
+
+  const defaultRoleUnit2 = await prisma.roleModel.create({
+    data: {
+      name: 'Default',
+      unit: { connect: { id: Unit2.id } },
+    },
+  })
+
+  if (listAllFeature && listOrgFeature) {
+    adminRoleModel = await prisma.roleModel.create({
+      data: {
+        name: 'Admin',
+        unit: { connect: { id: mainUnit.id } },
+      },
+    })
+
+    await prisma.permission.create({
+      data: {
+        name: 'List Units',
+        unit: { connect: { id: mainUnit.id } },
+        roles: { connect: { id: adminRoleModel.id } },
+        features: {
+          connect: [{ id: listAllFeature.id }, { id: listOrgFeature.id }],
+        },
+      },
+    })
+  }
+
+  const adminRoleId = adminRoleModel?.id ?? defaultRoleMain.id
+
   const owner = await prisma.user.create({
     data: {
       name: 'Owner',
@@ -61,6 +113,7 @@ async function main() {
           pix: 'ownerpix',
           role: Role.OWNER,
           totalBalance: 0,
+          roleModel: { connect: { id: defaultRoleMain.id } },
         },
       },
       unit: { connect: { id: mainUnit.id } },
@@ -83,6 +136,7 @@ async function main() {
           pix: 'ownerpix',
           role: Role.OWNER,
           totalBalance: 0,
+          roleModel: { connect: { id: defaultRoleUnit2.id } },
         },
       },
       unit: { connect: { id: Unit2.id } },
@@ -105,6 +159,7 @@ async function main() {
           pix: 'adminpix',
           role: Role.ADMIN,
           totalBalance: 0,
+          roleModel: { connect: { id: adminRoleId } },
         },
       },
       unit: { connect: { id: mainUnit.id } },
@@ -127,6 +182,7 @@ async function main() {
           pix: 'managerpix',
           role: Role.MANAGER,
           totalBalance: 0,
+          roleModel: { connect: { id: defaultRoleMain.id } },
         },
       },
       unit: { connect: { id: mainUnit.id } },
@@ -150,6 +206,7 @@ async function main() {
           commissionPercentage: 70,
           role: Role.BARBER,
           totalBalance: 0,
+          roleModel: { connect: { id: defaultRoleMain.id } },
         },
       },
       unit: { connect: { id: mainUnit.id } },
@@ -172,6 +229,7 @@ async function main() {
           pix: 'clientpix',
           role: Role.CLIENT,
           totalBalance: 0,
+          roleModel: { connect: { id: defaultRoleMain.id } },
         },
       },
       unit: { connect: { id: mainUnit.id } },

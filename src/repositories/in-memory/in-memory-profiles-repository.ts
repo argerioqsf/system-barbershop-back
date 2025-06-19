@@ -15,6 +15,7 @@ export class InMemoryProfilesRepository implements ProfilesRepository {
       birthday: data.birthday,
       pix: data.pix,
       role: data.role as Role,
+      roleModelId: (data as { roleModelId: string }).roleModelId,
       commissionPercentage: 100,
       totalBalance: 0,
       userId: data.userId,

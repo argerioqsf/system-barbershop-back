@@ -13,6 +13,7 @@ interface UpdateUserRequest {
   birthday?: string
   pix?: string
   role?: Role
+  roleModelId?: string
   active?: boolean
   email?: string
   unitId?: string
@@ -59,6 +60,7 @@ export class UpdateUserService {
         birthday: data.birthday,
         pix: data.pix,
         role: data.role,
+        roleModelId: data.roleModelId,
         commissionPercentage: data.commissionPercentage,
       },
     )

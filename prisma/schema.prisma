@@ -39,6 +39,38 @@ enum PaymentStatus {
   PENDING
 }
 
+model Feature {
+  id        String @id @default(uuid())
+  category  String
+  action    String
+  permissions Permission[]
+
+  @@map("features")
+}
+
+model RoleModel {
+  id          String       @id @default(uuid())
+  name        String
+  unitId      String
+  permissions Permission[] @relation("RolePermissions")
+  profiles    Profile[]
+  unit        Unit         @relation(fields: [unitId], references: [id])
+
+  @@map("roles")
+}
+
+model Permission {
+  id       String      @id @default(uuid())
+  name     String
+  unitId   String
+  roles    RoleModel[] @relation("RolePermissions")
+  features Feature[]
+  profiles Profile[]   @relation("ProfilePermissions")
+  unit     Unit        @relation(fields: [unitId], references: [id])
+
+  @@map("permissions")
+}
+
 model User {
   id                   String                @id @default(uuid())
   name                 String
@@ -73,6 +105,9 @@ model Profile {
   birthday             String
   pix                  String
   role                 Role     @default(CLIENT)
+  permissions          Permission[] @relation("ProfilePermissions")
+  roleModelId          String
+  roleModel            RoleModel @relation(fields: [roleModelId], references: [id])
   commissionPercentage Float    @default(100)
   totalBalance         Float    @default(0)
   userId               String   @unique
@@ -273,6 +308,8 @@ model Unit {
   transactions   Transaction[]
   sessions       CashRegisterSession[]
   users          User[]
+  roles          RoleModel[]
+  permissions    Permission[]
 
   organization Organization @relation(fields: [organizationId], references: [id])
   Coupon       Coupon[]

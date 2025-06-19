@@ -15,6 +15,7 @@ interface RegisterUserRequest {
   birthday: string
   pix: string
   role: Role
+  roleModelId: string
   unitId: string
 }
 
@@ -54,6 +55,7 @@ export class RegisterUserService {
         birthday: data.birthday,
         pix: data.pix,
         role: data.role,
+        roleModelId: data.roleModelId,
       },
     )
 

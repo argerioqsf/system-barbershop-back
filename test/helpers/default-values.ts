@@ -59,6 +59,7 @@ export const barberProfile = {
   pix: '',
   role: 'BARBER' as any,
   commissionPercentage: 50,
+  roleModelId: 'role-1',
   totalBalance: 0,
   userId: 'barber-1',
   createdAt: new Date(),
@@ -145,6 +146,7 @@ export const defaultProfile: Profile = {
   birthday: '',
   pix: '',
   role: 'BARBER' as any,
+  roleModelId: 'role-1',
   commissionPercentage: 100,
   totalBalance: 0,
   userId: defaultUser.id,
@@ -164,6 +166,7 @@ export function makeProfile(
     birthday: '',
     pix: '',
     role: 'BARBER' as any,
+    roleModelId: 'role-1',
     commissionPercentage: 100,
     totalBalance: balance,
     userId,
@@ -344,6 +347,7 @@ export const baseRegisterUserData = {
   birthday: '2000',
   pix: 'x',
   role: 'BARBER' as any,
+  roleModelId: 'role-1',
 }
 
 export const listUser1 = {
