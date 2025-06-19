@@ -352,7 +352,6 @@ export class FakeOrganizationRepository implements OrganizationRepository {
       id: randomUUID(),
       name: data.name,
       slug: data.slug,
-      ownerId: null,
       totalBalance: 0,
       createdAt: new Date(),
     }

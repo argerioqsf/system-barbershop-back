@@ -124,7 +124,6 @@ export const defaultOrganization: Organization = {
   id: 'org-1',
   name: 'Org',
   slug: 'org',
-  ownerId: null,
   totalBalance: 0,
   createdAt: new Date(),
 }
@@ -189,7 +188,6 @@ export function makeOrganization(
     id,
     name,
     slug,
-    ownerId: null,
     totalBalance: 0,
     createdAt: new Date(),
   }

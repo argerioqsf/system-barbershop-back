@@ -57,7 +57,6 @@ model User {
   affectedTransactions Transaction[]         @relation("AffectedUser")
   sessions             CashRegisterSession[]
   passwordResetTokens  PasswordResetToken[]
-  ownedOrganizations   Organization[]        @relation("OrganizationOwner")
   createdAt            DateTime              @default(now())
 
   organization Organization @relation(fields: [organizationId], references: [id])
@@ -252,8 +251,6 @@ model Organization {
   id           String   @id @default(uuid())
   name         String
   slug         String   @unique
-  ownerId      String?
-  owner        User?    @relation("OrganizationOwner", fields: [ownerId], references: [id])
   users        User[]
   units        Unit[]
   totalBalance Float    @default(0)
