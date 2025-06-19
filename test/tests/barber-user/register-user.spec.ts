@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { RegisterUserService } from '../../../src/services/barber-user/register-user'
-import {
+    await expect(service.execute({ ...baseRegisterUserData, unitId: defaultUnit.id })).rejects.toThrow('E-mail already exists')
   InMemoryBarberUsersRepository,
   FakeUnitRepository,
 } from '../../helpers/fake-repositories'

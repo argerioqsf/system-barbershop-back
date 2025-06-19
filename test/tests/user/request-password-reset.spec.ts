@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { RequestPasswordResetService } from '../../../src/services/users/request-password-reset'
 import { InMemoryUserRepository } from '../../../src/repositories/in-memory/in-memory-users-repository'
 import { FakePasswordResetTokenRepository } from '../../helpers/fake-repositories'
-import { UserNotFoundError } from '../../../src/services/@errors/user-not-found-error'
+import { UserNotFoundError } from '../../../src/services/@errors/user/user-not-found-error'
 import { sendPasswordResetEmail } from '../../../src/lib/sendgrid'
 
 vi.mock('../../../src/lib/sendgrid', () => ({
