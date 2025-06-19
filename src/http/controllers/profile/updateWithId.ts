@@ -2,7 +2,6 @@ import { MakeUpdateProfileUserService } from '@/services/@factories/profile/upda
 import { Role } from '@prisma/client'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
-import { withErrorHandling } from '@/utils/http-error-handler'
 
 const bodySchema = z.object({
   name: z.string(),
@@ -20,27 +19,28 @@ const routeSchema = z.object({
   id: z.string(),
 })
 
-export const UpdateWithId = withErrorHandling(
-  async (request: FastifyRequest, reply: FastifyReply) => {
-    const { active, birthday, cpf, email, genre, name, phone, pix, role } =
-      bodySchema.parse(request.body)
+export const UpdateWithId = async (
+  request: FastifyRequest,
+  reply: FastifyReply,
+) => {
+  const { active, birthday, cpf, email, genre, name, phone, pix, role } =
+    bodySchema.parse(request.body)
 
-    const updateProfileUserService = MakeUpdateProfileUserService()
+  const updateProfileUserService = MakeUpdateProfileUserService()
 
-    const { id } = routeSchema.parse(request.params)
+  const { id } = routeSchema.parse(request.params)
 
-    const { profile } = await updateProfileUserService.execute({
-      active,
-      birthday,
-      cpf,
-      email,
-      genre,
-      id,
-      name,
-      phone,
-      pix,
-      role,
-    })
-    return reply.status(201).send({ profile })
-  },
-)
+  const { profile } = await updateProfileUserService.execute({
+    active,
+    birthday,
+    cpf,
+    email,
+    genre,
+    id,
+    name,
+    phone,
+    pix,
+    role,
+  })
+  return reply.status(201).send({ profile })
+}

@@ -7,6 +7,7 @@ import path from 'path'
 import { uploadDir, upload } from './lib/upload'
 import { ZodError } from 'zod'
 import { env } from './env'
+import { handleControllerError } from './utils/http-error-handler'
 import { profileRoute } from './http/controllers/profile/route'
 import { barberShopServiceRoute } from './http/controllers/barber-shop/route'
 import { productRoute } from './http/controllers/product/route'
@@ -129,9 +130,9 @@ app.register(saleRoute)
 app.register(reportRoute)
 app.register(configRoute)
 
-app.setErrorHandler((error, _, replay) => {
+app.setErrorHandler((error, _, reply) => {
   if (error instanceof ZodError) {
-    return replay
+    return reply
       .status(400)
       .send({ message: 'Validation error', issues: error.format() })
   }
@@ -140,5 +141,5 @@ app.setErrorHandler((error, _, replay) => {
     console.log(error)
   }
 
-  return replay.status(500).send({ message: 'Internal server error' })
+  return handleControllerError(error, reply)
 })
