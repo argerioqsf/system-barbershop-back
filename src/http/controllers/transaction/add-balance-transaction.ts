@@ -2,6 +2,7 @@ import { withErrorHandling } from '@/utils/http-error-handler'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { UserToken } from '../authenticate-controller'
+import { hasPermission } from '@/utils/permissions'
 import { makeAddBalanceTransaction } from '@/services/@factories/transaction/make-add-balance-transaction'
 
 export const AddBalanceTransactionController = withErrorHandling(
@@ -19,18 +20,12 @@ export const AddBalanceTransactionController = withErrorHandling(
 
     if (
       data.affectedUserId &&
-      user.role !== 'ADMIN' &&
-      user.role !== 'OWNER' &&
-      user.role !== 'MANAGER'
+      !hasPermission(user.role, 'MANAGE_OTHER_USER_TRANSACTION')
     ) {
       return reply.status(403).send({ message: 'Unauthorized' })
     }
 
-    if (
-      user.role !== 'ADMIN' &&
-      user.role !== 'OWNER' &&
-      user.role !== 'MANAGER'
-    ) {
+    if (!hasPermission(user.role, 'MANAGE_OTHER_USER_TRANSACTION')) {
       return reply.status(403).send({ message: 'Unauthorized' })
     }
     const userId = user.sub

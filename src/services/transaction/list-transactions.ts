@@ -2,6 +2,7 @@ import { UserToken } from '@/http/controllers/authenticate-controller'
 import { TransactionFull } from '@/repositories/prisma/prisma-transaction-repository'
 import { TransactionRepository } from '@/repositories/transaction-repository'
 import { assertUser } from '@/utils/assert-user'
+import { assertPermission, getScope, buildUnitWhere } from '@/utils/permissions'
 import { Transaction } from '@prisma/client'
 
 interface ListTransactionsResponse {
@@ -13,21 +14,10 @@ export class ListTransactionsService {
 
   async execute(userToken: UserToken): Promise<ListTransactionsResponse> {
     assertUser(userToken)
-
-    let transactions: TransactionFull[] = []
-
-    if (userToken.role === 'OWNER') {
-      transactions = await this.repository.findMany({
-        unit: { organizationId: userToken.organizationId },
-      })
-    } else if (userToken.role === 'ADMIN') {
-      transactions = await this.repository.findMany()
-    } else {
-      transactions = await this.repository.findMany({
-        unitId: userToken.unitId,
-      })
-    }
-
+    assertPermission(userToken.role, 'LIST_TRANSACTIONS')
+    const scope = getScope(userToken)
+    const where = buildUnitWhere(scope)
+    const transactions = await this.repository.findMany(where)
     return { transactions }
   }
 }

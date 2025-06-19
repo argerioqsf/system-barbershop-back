@@ -3,6 +3,7 @@ import { makeCreateTransaction } from '@/services/@factories/transaction/make-cr
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { UserToken } from '../authenticate-controller'
+import { hasPermission } from '@/utils/permissions'
 
 export const CreateTransactionController = withErrorHandling(
   async (request: FastifyRequest, reply: FastifyReply) => {
@@ -19,9 +20,7 @@ export const CreateTransactionController = withErrorHandling(
     const user = request.user as UserToken
     if (
       data.affectedUserId &&
-      user.role !== 'ADMIN' &&
-      user.role !== 'OWNER' &&
-      user.role !== 'MANAGER'
+      !hasPermission(user.role, 'MANAGE_OTHER_USER_TRANSACTION')
     ) {
       return reply.status(403).send({ message: 'Unauthorized' })
     }

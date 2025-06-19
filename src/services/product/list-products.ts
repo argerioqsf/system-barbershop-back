@@ -1,6 +1,7 @@
 import { UserToken } from '@/http/controllers/authenticate-controller'
 import { ProductRepository } from '@/repositories/product-repository'
 import { assertUser } from '@/utils/assert-user'
+import { assertPermission, getScope, buildUnitWhere } from '@/utils/permissions'
 import { Product } from '@prisma/client'
 
 interface ListProductsResponse {
@@ -12,16 +13,10 @@ export class ListProductsService {
 
   async execute(user: UserToken): Promise<ListProductsResponse> {
     assertUser(user)
-    let products: Product[] = []
-    if (user.role === 'OWNER') {
-      products = await this.repository.findMany({
-        unit: { organizationId: user.organizationId },
-      })
-    } else if (user.role === 'ADMIN') {
-      products = await this.repository.findMany()
-    } else {
-      products = await this.repository.findMany({ unitId: user.unitId })
-    }
+    assertPermission(user.role, 'LIST_PRODUCTS')
+    const scope = getScope(user)
+    const where = buildUnitWhere(scope)
+    const products = await this.repository.findMany(where)
     return { products }
   }
 }
