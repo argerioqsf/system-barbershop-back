@@ -11,7 +11,6 @@ import { CashRegisterClosedError } from '@/services/@errors/cash-register-closed
 import { CashRegisterNotOpenedError } from '@/services/@errors/cash-register-not-opened-error'
 import { CashRegisterAlreadyOpenError } from '@/services/@errors/cash-register-already-open-error'
 import { CouponNotFoundError } from '@/services/@errors/coupon-not-found-error'
-import { CouponExhaustedError } from '@/services/@errors/coupon-exhausted-error'
 import { InsufficientStockError } from '@/services/@errors/insufficient-stock-error'
 import { ItemNeedsServiceOrProductError } from '@/services/@errors/item-needs-service-or-product-error'
 import { NegativeValuesNotAllowedError } from '@/services/@errors/negative-values-not-allowed-error'
@@ -25,7 +24,6 @@ import { ProductNotFoundError } from '@/services/@errors/product-not-found-error
 import { BarberNotFoundError } from '@/services/@errors/barber-not-found-error'
 import { BarberProfileNotFoundError } from '@/services/@errors/barber-profile-not-found-error'
 import { OwnerNotFoundError } from '@/services/@errors/owner-not-found-error'
-import { UserNotFromOrganizationError } from '@/services/@errors/user-not-from-organization-error'
 import { UnitNotFromOrganizationError } from '@/services/users/set-user-unit'
 import { FastifyReply } from 'fastify'
 

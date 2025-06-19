@@ -72,8 +72,7 @@ export class CreateSaleService {
       if (product.unitId !== userUnitId) {
         throw new ServiceNotFromUserUnitError()
       }
-      if (product.quantity < item.quantity)
-        throw new InsufficientStockError()
+      if (product.quantity < item.quantity) throw new InsufficientStockError()
       basePrice = product.price * item.quantity
       dataItem.product = { connect: { id: item.productId } }
       productsToUpdate.push({ id: item.productId, quantity: item.quantity })

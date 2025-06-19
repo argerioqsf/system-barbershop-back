@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { RegisterUserService } from '../../../src/services/barber-user/register-user'
-import { InMemoryBarberUsersRepository, FakeUnitRepository } from '../../helpers/fake-repositories'
+import {
+  InMemoryBarberUsersRepository,
+  FakeUnitRepository,
+} from '../../helpers/fake-repositories'
 import { defaultUnit, baseRegisterUserData } from '../../helpers/default-values'
 
 describe('Register user service', () => {
@@ -15,19 +18,26 @@ describe('Register user service', () => {
   })
 
   it('creates user and profile', async () => {
-    const res = await service.execute({ ...baseRegisterUserData, unitId: defaultUnit.id })
+    const res = await service.execute({
+      ...baseRegisterUserData,
+      unitId: defaultUnit.id,
+    })
     expect(repo.users).toHaveLength(1)
     expect(res.profile.userId).toBe(res.user.id)
   })
 
   it('throws when email already exists', async () => {
     await service.execute({ ...baseRegisterUserData, unitId: defaultUnit.id })
-    await expect(service.execute({ ...baseRegisterUserData, unitId: defaultUnit.id })).rejects.toThrow('User already exists')
+    await expect(
+      service.execute({ ...baseRegisterUserData, unitId: defaultUnit.id }),
+    ).rejects.toThrow('E-mail already exists')
   })
 
   it('throws when unit not exists', async () => {
     const badUnit = new FakeUnitRepository({ ...defaultUnit, id: 'x' }, [])
     service = new RegisterUserService(repo, badUnit)
-    await expect(service.execute({ ...baseRegisterUserData, unitId: 'x' })).rejects.toThrow('Unit not exists')
+    await expect(
+      service.execute({ ...baseRegisterUserData, unitId: 'x' }),
+    ).rejects.toThrow('Unit not exists')
   })
 })
