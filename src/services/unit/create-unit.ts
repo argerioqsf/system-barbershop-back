@@ -1,6 +1,7 @@
 import { UserToken } from '@/http/controllers/authenticate-controller'
 import { UnitRepository } from '@/repositories/unit-repository'
 import { Unit } from '@prisma/client'
+import { UserNotFromOrganizationError } from '@/services/@errors/user/user-not-from-organization-error'
 
 interface CreateUnitRequest {
   name: string
@@ -25,7 +26,7 @@ export class CreateUnitService {
       data.organizationId &&
       data.organizationId !== data.userToken.organizationId
     )
-      throw new Error('You do not belong to this organization')
+      throw new UserNotFromOrganizationError()
     const unit = await this.repository.create({
       name: data.name,
       slug: data.slug,

@@ -1,5 +1,6 @@
 import { UserToken } from '@/http/controllers/authenticate-controller'
 import { UnitRepository } from '@/repositories/unit-repository'
+import { assertUser } from '@/utils/assert-user'
 import { Unit } from '@prisma/client'
 
 interface ListUnitsResponse {
@@ -10,7 +11,7 @@ export class ListUnitsService {
   constructor(private repository: UnitRepository) {}
 
   async execute(userToken: UserToken): Promise<ListUnitsResponse> {
-    if (!userToken.sub) throw new Error('User not found')
+    assertUser(userToken)
     let units: Unit[] = []
     if (userToken.role === 'ADMIN') {
       units = await this.repository.findMany()

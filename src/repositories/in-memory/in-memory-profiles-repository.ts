@@ -1,4 +1,5 @@
 import { Prisma, Profile, Role, User } from '@prisma/client'
+import { ProfileNotFoundError } from '@/services/@errors/profile/profile-not-found-error'
 import crypto from 'node:crypto'
 import { ProfilesRepository } from '../profiles-repository'
 
@@ -56,7 +57,7 @@ export class InMemoryProfilesRepository implements ProfilesRepository {
       }
       return { ...this.items[index] }
     }
-    throw new Error('Profile not found')
+    throw new ProfileNotFoundError()
   }
 
   async findMany(): Promise<(Profile & { user: Omit<User, 'password'> })[]> {
@@ -72,6 +73,6 @@ export class InMemoryProfilesRepository implements ProfilesRepository {
       profile.totalBalance += amount
       return profile
     }
-    throw new Error('Profile not found')
+    throw new ProfileNotFoundError()
   }
 }

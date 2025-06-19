@@ -1,6 +1,8 @@
 import { UserToken } from '@/http/controllers/authenticate-controller'
 import { CashRegisterRepository } from '@/repositories/cash-register-repository'
 import { TransactionRepository } from '@/repositories/transaction-repository'
+import { UserNotFoundError } from '@/services/@errors/user/user-not-found-error'
+import { CashRegisterAlreadyOpenError } from '@/services/@errors/cash-register/cash-register-already-open-error'
 import { CashRegisterSession, TransactionType } from '@prisma/client'
 
 interface OpenSessionRequest {
@@ -22,9 +24,9 @@ export class OpenSessionService {
     user,
     initialAmount,
   }: OpenSessionRequest): Promise<OpenSessionResponse> {
-    if (!user) throw new Error('User not found')
+    if (!user) throw new UserNotFoundError()
     const existing = await this.repository.findOpenByUnit(user.unitId)
-    if (existing) throw new Error('Cash register already open for this unit')
+    if (existing) throw new CashRegisterAlreadyOpenError()
 
     const session = await this.repository.create({
       user: { connect: { id: user.sub } },

@@ -1,5 +1,6 @@
 import { UserToken } from '@/http/controllers/authenticate-controller'
 import { CouponRepository } from '@/repositories/coupon-repository'
+import { assertUser } from '@/utils/assert-user'
 import { Coupon } from '@prisma/client'
 
 interface ListCouponsResponse {
@@ -10,7 +11,7 @@ export class ListCouponsService {
   constructor(private repository: CouponRepository) {}
 
   async execute(userToken: UserToken): Promise<ListCouponsResponse> {
-    if (!userToken.sub) throw new Error('User not found')
+    assertUser(userToken)
     let coupons = await this.repository.findMany()
 
     if (userToken.role === 'OWNER') {

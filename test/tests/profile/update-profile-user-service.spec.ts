@@ -3,8 +3,8 @@ import { UpdateProfileUserService } from '../../../src/services/profile/update-p
 import { InMemoryUserRepository } from '../../../src/repositories/in-memory/in-memory-users-repository'
 import { FakeProfilesRepository } from '../../helpers/fake-repositories'
 import { makeProfile } from '../../helpers/default-values'
-import { UserNotFoundError } from '../../../src/services/@errors/user-not-found-error'
-import { ProfileNotFoundError } from '../../../src/services/@errors/profile-not-found-error'
+import { UserNotFoundError } from '../../../src/services/@errors/user/user-not-found-error'
+import { ProfileNotFoundError } from '../../../src/services/@errors/profile/profile-not-found-error'
 
 describe('Update profile user service', () => {
   let userRepo: InMemoryUserRepository

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { CreateProfileService } from '../../../src/services/profile/register-profile-service'
 import { InMemoryUserRepository } from '../../../src/repositories/in-memory/in-memory-users-repository'
 import { FakeProfilesRepository } from '../../helpers/fake-repositories'
-import { UserNotFoundError } from '../../../src/services/@errors/user-not-found-error'
+import { UserNotFoundError } from '../../../src/services/@errors/user/user-not-found-error'
 
 describe('Create profile service', () => {
   let userRepo: InMemoryUserRepository

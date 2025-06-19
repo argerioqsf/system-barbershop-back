@@ -1,5 +1,6 @@
 import { TransactionRepository } from '@/repositories/transaction-repository'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
+import { OwnerNotFoundError } from '../@errors/organization/owner-not-found-error'
 
 interface OwnerBalanceRequest {
   ownerId: string
@@ -29,7 +30,7 @@ export class OwnerBalanceService {
     ownerId,
   }: OwnerBalanceRequest): Promise<OwnerBalanceResponse> {
     const owner = await this.userRepository.findById(ownerId)
-    if (!owner) throw new Error('Owner not found')
+    if (!owner) throw new OwnerNotFoundError()
     const orgId = owner.organizationId
     const historySales: HistorySales[] = []
 

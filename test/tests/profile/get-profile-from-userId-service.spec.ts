@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { GetUserProfileFromUserIdService } from '../../../src/services/profile/get-profile-from-userId-service'
 import { FakeProfilesRepository } from '../../helpers/fake-repositories'
 import { makeProfile } from '../../helpers/default-values'
-import { ResourceNotFoundError } from '../../../src/services/@errors/resource-not-found-error'
+import { ResourceNotFoundError } from '../../../src/services/@errors/common/resource-not-found-error'
 
 describe('Get profile from user id service', () => {
   let repo: FakeProfilesRepository

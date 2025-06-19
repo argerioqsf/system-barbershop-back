@@ -1,8 +1,9 @@
-import { ResourceNotFoundError } from '@/services/@errors/resource-not-found-error'
+import { ResourceNotFoundError } from '@/services/@errors/common/resource-not-found-error'
 import { getProfileFromUserIdService } from '@/services/@factories/profile/get-profile-from-userId-service'
 import { MakeUpdateProfileUserService } from '@/services/@factories/profile/update-profile-user-service'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
+import { withErrorHandling } from '@/utils/http-error-handler'
 
 const bodySchema = z.object({
   name: z.string(),
@@ -15,24 +16,24 @@ const bodySchema = z.object({
   pix: z.string(),
 })
 
-export async function Update(request: FastifyRequest, reply: FastifyReply) {
-  const { active, birthday, cpf, email, genre, name, phone, pix } =
-    bodySchema.parse(request.body)
+export const Update = withErrorHandling(
+  async (request: FastifyRequest, reply: FastifyReply) => {
+    const { active, birthday, cpf, email, genre, name, phone, pix } =
+      bodySchema.parse(request.body)
 
-  const updateProfileUserService = MakeUpdateProfileUserService()
-  const getProfileFromUserId = getProfileFromUserIdService()
+    const updateProfileUserService = MakeUpdateProfileUserService()
+    const getProfileFromUserId = getProfileFromUserIdService()
 
-  const id = request.user.sub
+    const id = request.user.sub
 
-  const { profile } = await getProfileFromUserId.execute({
-    id,
-  })
+    const { profile } = await getProfileFromUserId.execute({
+      id,
+    })
 
-  if (!profile) {
-    throw new ResourceNotFoundError()
-  }
+    if (!profile) {
+      throw new ResourceNotFoundError()
+    }
 
-  try {
     const { profile: profileUpdate } = await updateProfileUserService.execute({
       active,
       birthday,
@@ -46,7 +47,5 @@ export async function Update(request: FastifyRequest, reply: FastifyReply) {
       role: profile.role,
     })
     return reply.status(201).send({ profile: profileUpdate })
-  } catch (error) {
-    return reply.status(500).send({ message: 'Internal server error' })
-  }
-}
+  },
+)

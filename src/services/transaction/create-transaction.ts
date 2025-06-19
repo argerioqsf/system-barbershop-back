@@ -1,6 +1,9 @@
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { CashRegisterRepository } from '@/repositories/cash-register-repository'
 import { TransactionRepository } from '@/repositories/transaction-repository'
+import { UserNotFoundError } from '@/services/@errors/user/user-not-found-error'
+import { CashRegisterClosedError } from '@/services/@errors/cash-register/cash-register-closed-error'
+import { AffectedUserNotFoundError } from '@/services/@errors/transaction/affected-user-not-found-error'
 import { Transaction, TransactionType } from '@prisma/client'
 
 interface CreateTransactionRequest {
@@ -29,19 +32,19 @@ export class CreateTransactionService {
     data: CreateTransactionRequest,
   ): Promise<CreateTransactionResponse> {
     const user = await this.barberUserRepository.findById(data.userId)
-    if (!user) throw new Error('User not found')
+    if (!user) throw new UserNotFoundError()
 
     const session = await this.cashRegisterRepository.findOpenByUnit(
       user.unitId,
     )
-    if (!session) throw new Error('Cash register closed')
+    if (!session) throw new CashRegisterClosedError()
 
     let affectedUser
     if (data.affectedUserId) {
       affectedUser = await this.barberUserRepository.findById(
         data.affectedUserId,
       )
-      if (!affectedUser) throw new Error('Affected user not found')
+      if (!affectedUser) throw new AffectedUserNotFoundError()
     }
 
     const effectiveUser = affectedUser ?? user

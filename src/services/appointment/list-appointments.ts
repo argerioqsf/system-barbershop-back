@@ -1,4 +1,5 @@
 import { UserToken } from '@/http/controllers/authenticate-controller'
+import { assertUser } from '@/utils/assert-user'
 import {
   AppointmentRepository,
   DetailedAppointment,
@@ -12,7 +13,7 @@ export class ListAppointmentsService {
   constructor(private repository: AppointmentRepository) {}
 
   async execute(userToken: UserToken): Promise<ListAppointmentsResponse> {
-    if (!userToken.sub) throw new Error('User not found')
+    assertUser(userToken)
     let appointments = []
 
     if (userToken.role === 'OWNER') {

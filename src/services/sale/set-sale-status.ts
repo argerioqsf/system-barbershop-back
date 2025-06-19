@@ -6,6 +6,8 @@ import { OrganizationRepository } from '@/repositories/organization-repository'
 import { ProfilesRepository } from '@/repositories/profiles-repository'
 import { UnitRepository } from '@/repositories/unit-repository'
 import { PaymentStatus } from '@prisma/client'
+import { SaleNotFoundError } from '@/services/@errors/sale/sale-not-found-error'
+import { CashRegisterClosedError } from '@/services/@errors/cash-register/cash-register-closed-error'
 import { distributeProfits } from './profit-distribution'
 import { SetSaleStatusRequest, SetSaleStatusResponse } from './types'
 
@@ -26,7 +28,7 @@ export class SetSaleStatusService {
     paymentStatus,
   }: SetSaleStatusRequest): Promise<SetSaleStatusResponse> {
     const sale = await this.saleRepository.findById(saleId)
-    if (!sale) throw new Error('Sale not found')
+    if (!sale) throw new SaleNotFoundError()
 
     if (sale.paymentStatus === paymentStatus) {
       return { sale }
@@ -37,7 +39,7 @@ export class SetSaleStatusService {
       const session = await this.cashRegisterRepository.findOpenByUnit(
         user?.unitId as string,
       )
-      if (!session) throw new Error('Cash register closed')
+      if (!session) throw new CashRegisterClosedError()
 
       const updatedSale = await this.saleRepository.update(saleId, {
         paymentStatus,

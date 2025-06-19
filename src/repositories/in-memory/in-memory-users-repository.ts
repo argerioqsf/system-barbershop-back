@@ -1,4 +1,5 @@
 import { Prisma, Profile, User } from '@prisma/client'
+import { UserNotFoundError } from '@/services/@errors/user/user-not-found-error'
 import { UsersRepository } from '../users-repository'
 
 export class InMemoryUserRepository implements UsersRepository {
@@ -92,6 +93,6 @@ export class InMemoryUserRepository implements UsersRepository {
       const { ...rest } = this.items[index]
       return rest
     }
-    throw new Error('User not found')
+    throw new UserNotFoundError()
   }
 }

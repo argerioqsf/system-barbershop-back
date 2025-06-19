@@ -1,7 +1,7 @@
 import { ProfilesRepository } from '@/repositories/profiles-repository'
 import { UsersRepository } from '@/repositories/users-repository'
 import { Profile, Role } from '@prisma/client'
-import { UserNotFoundError } from '../@errors/user-not-found-error'
+import { UserNotFoundError } from '../@errors/user/user-not-found-error'
 
 interface CreateProfileServiceRequest {
   phone: string

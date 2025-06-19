@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { ResetPasswordWithTokenService } from '../../../src/services/users/reset-password-with-token'
 import { InMemoryUserRepository } from '../../../src/repositories/in-memory/in-memory-users-repository'
 import { FakePasswordResetTokenRepository } from '../../helpers/fake-repositories'
-import { ResourceNotFoundError } from '../../../src/services/@errors/resource-not-found-error'
-import { UserNotFoundError } from '../../../src/services/@errors/user-not-found-error'
+import { ResourceNotFoundError } from '../../../src/services/@errors/common/resource-not-found-error'
+import { UserNotFoundError } from '../../../src/services/@errors/user/user-not-found-error'
 import { compare } from 'bcryptjs'
 
 describe('Reset password with token service', () => {

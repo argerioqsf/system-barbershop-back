@@ -1,9 +1,8 @@
-import { InvalidCredentialsError } from '@/services/@errors/invalid-credentials-error'
-import { UserInactiveError } from '@/services/@errors/user-inactive-error'
 import { makeAuthenticateService } from '@/services/@factories/make-authenticate-service'
 import { Role } from '@prisma/client'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
+import { withErrorHandling } from '@/utils/http-error-handler'
 
 export interface UserToken {
   unitId: string
@@ -12,18 +11,15 @@ export interface UserToken {
   sub: string
 }
 
-export async function authenticate(
-  request: FastifyRequest,
-  replay: FastifyReply,
-) {
-  const authenticateBodySchema = z.object({
-    email: z.string().email(),
-    password: z.string().min(6),
-  })
+export const authenticate = withErrorHandling(
+  async (request: FastifyRequest, replay: FastifyReply) => {
+    const authenticateBodySchema = z.object({
+      email: z.string().email(),
+      password: z.string().min(6),
+    })
 
-  const { email, password } = authenticateBodySchema.parse(request.body)
+    const { email, password } = authenticateBodySchema.parse(request.body)
 
-  try {
     const authenticateService = makeAuthenticateService()
 
     const { user } = await authenticateService.execute({
@@ -47,13 +43,5 @@ export async function authenticate(
       roles: Role,
       token,
     })
-  } catch (error) {
-    if (error instanceof UserInactiveError) {
-      return replay.status(400).send({ message: error.message })
-    }
-    if (error instanceof InvalidCredentialsError) {
-      return replay.status(400).send({ message: error.message })
-    }
-    throw error
-  }
-}
+  },
+)

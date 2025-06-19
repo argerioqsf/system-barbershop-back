@@ -7,6 +7,10 @@ import { UnitRepository } from '@/repositories/unit-repository'
 import { OrganizationRepository } from '@/repositories/organization-repository'
 import { IncrementBalanceUnitService } from '../unit/increment-balance'
 import { IncrementBalanceProfileService } from '../profile/increment-balance'
+import { UserNotFoundError } from '@/services/@errors/user/user-not-found-error'
+import { CashRegisterClosedError } from '@/services/@errors/cash-register/cash-register-closed-error'
+import { AffectedUserNotFoundError } from '@/services/@errors/transaction/affected-user-not-found-error'
+import { NegativeValuesNotAllowedError } from '@/services/@errors/transaction/negative-values-not-allowed-error'
 
 interface AddBalanceTransactionRequest {
   userId: string
@@ -35,19 +39,19 @@ export class AddBalanceTransactionService {
     data: AddBalanceTransactionRequest,
   ): Promise<AddBalanceTransactionResponse> {
     const user = await this.barberUserRepository.findById(data.userId)
-    if (!user) throw new Error('User not found')
+    if (!user) throw new UserNotFoundError()
 
     const session = await this.cashRegisterRepository.findOpenByUnit(
       user.unitId,
     )
-    if (!session) throw new Error('Cash register closed')
+    if (!session) throw new CashRegisterClosedError()
 
     let affectedUser
     if (data.affectedUserId) {
       affectedUser = await this.barberUserRepository.findById(
         data.affectedUserId,
       )
-      if (!affectedUser) throw new Error('Affected user not found')
+      if (!affectedUser) throw new AffectedUserNotFoundError()
     }
 
     const incrementProfile = new IncrementBalanceProfileService(
@@ -65,7 +69,7 @@ export class AddBalanceTransactionService {
     const increment = data.amount
 
     if (increment < 0) {
-      throw new Error('Negative values ​​cannot be passed on withdrawals')
+      throw new NegativeValuesNotAllowedError()
     }
 
     const effectiveUser = affectedUser ?? user

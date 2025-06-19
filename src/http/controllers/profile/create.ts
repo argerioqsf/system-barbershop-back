@@ -1,5 +1,5 @@
-import { UserNotFoundError } from '@/services/@errors/user-not-found-error'
 import { makeCreateProfileService } from '@/services/@factories/profile/make-create-profile-service'
+import { withErrorHandling } from '@/utils/http-error-handler'
 
 import { Role } from '@prisma/client'
 import { FastifyReply, FastifyRequest } from 'fastify'
@@ -14,14 +14,14 @@ const bodySchema = z.object({
   role: z.nativeEnum(Role),
 })
 
-export async function Create(request: FastifyRequest, reply: FastifyReply) {
-  const body = bodySchema.parse(request.body)
+export const Create = withErrorHandling(
+  async (request: FastifyRequest, reply: FastifyReply) => {
+    const body = bodySchema.parse(request.body)
 
-  const createProfileService = makeCreateProfileService()
+    const createProfileService = makeCreateProfileService()
 
-  const userId = request.user.sub
+    const userId = request.user.sub
 
-  try {
     const { profile } = await createProfileService.execute({
       phone: body.phone,
       cpf: body.cpf,
@@ -31,12 +31,6 @@ export async function Create(request: FastifyRequest, reply: FastifyReply) {
       role: body.role,
       userId,
     })
-
     return reply.status(201).send(profile)
-  } catch (error) {
-    if (error instanceof UserNotFoundError) {
-      return reply.status(404).send({ message: error.message })
-    }
-    return reply.status(500).send({ message: 'Internal server error' })
-  }
-}
+  },
+)

@@ -2,6 +2,8 @@ import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { UnitRepository } from '@/repositories/unit-repository'
 import { Profile, Role, User } from '@prisma/client'
 import { hash } from 'bcryptjs'
+import { UserAlreadyExistsError } from '@/services/@errors/user/user-already-exists-error'
+import { UnitNotExistsError } from '@/services/@errors/unit/unit-not-exists-error'
 
 interface RegisterUserRequest {
   name: string
@@ -30,11 +32,11 @@ export class RegisterUserService {
   async execute(data: RegisterUserRequest): Promise<RegisterUserResponse> {
     const existing = await this.repository.findByEmail(data.email)
     if (existing) {
-      throw new Error('User already exists')
+      throw new UserAlreadyExistsError()
     }
     const password_hash = await hash(data.password, 6)
     const unit = await this.unitRepository.findById(data.unitId)
-    if (!unit) throw new Error('Unit not exists')
+    if (!unit) throw new UnitNotExistsError()
 
     const { user, profile } = await this.repository.create(
       {
