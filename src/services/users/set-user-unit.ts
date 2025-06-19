@@ -1,7 +1,7 @@
 import { UsersRepository } from '@/repositories/users-repository'
 import { UnitRepository } from '@/repositories/unit-repository'
-import { UnitNotFoundError } from '../@errors/unit-not-found-error'
-import { UserNotFoundError } from '../@errors/user-not-found-error'
+import { UnitNotFoundError } from '../@errors/unit/unit-not-found-error'
+import { UserNotFoundError } from '../@errors/user/user-not-found-error'
 import { UserToken } from '@/http/controllers/authenticate-controller'
 
 export class UnitNotFromOrganizationError extends Error {

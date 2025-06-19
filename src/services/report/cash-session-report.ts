@@ -1,6 +1,6 @@
 import { CashRegisterRepository } from '@/repositories/cash-register-repository'
 import { TransactionType } from '@prisma/client'
-import { SessionNotFoundError } from '../@errors/session-not-found-error'
+import { SessionNotFoundError } from '../@errors/cash-register/session-not-found-error'
 
 interface CashSessionReportRequest {
   sessionId: string

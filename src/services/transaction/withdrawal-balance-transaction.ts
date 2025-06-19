@@ -7,12 +7,12 @@ import { UnitRepository } from '@/repositories/unit-repository'
 import { OrganizationRepository } from '@/repositories/organization-repository'
 import { IncrementBalanceUnitService } from '../unit/increment-balance'
 import { IncrementBalanceProfileService } from '../profile/increment-balance'
-import { UserNotFoundError } from '@/services/@errors/user-not-found-error'
-import { CashRegisterClosedError } from '@/services/@errors/cash-register-closed-error'
-import { AffectedUserNotFoundError } from '@/services/@errors/affected-user-not-found-error'
-import { NegativeValuesNotAllowedError } from '@/services/@errors/negative-values-not-allowed-error'
-import { InsufficientBalanceError } from '@/services/@errors/insufficient-balance-error'
-import { WithdrawalGreaterThanUnitBalanceError } from '@/services/@errors/withdrawal-greater-than-unit-balance-error'
+import { UserNotFoundError } from '@/services/@errors/user/user-not-found-error'
+import { CashRegisterClosedError } from '@/services/@errors/cash-register/cash-register-closed-error'
+import { AffectedUserNotFoundError } from '@/services/@errors/transaction/affected-user-not-found-error'
+import { NegativeValuesNotAllowedError } from '@/services/@errors/transaction/negative-values-not-allowed-error'
+import { InsufficientBalanceError } from '@/services/@errors/transaction/insufficient-balance-error'
+import { WithdrawalGreaterThanUnitBalanceError } from '@/services/@errors/transaction/withdrawal-greater-than-unit-balance-error'
 
 interface withdrawalBalanceTransactionRequest {
   userId: string

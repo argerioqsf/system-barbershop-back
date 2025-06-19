@@ -1,5 +1,5 @@
 import { Prisma, Profile, Role, User } from '@prisma/client'
-import { ProfileNotFoundError } from '@/services/@errors/profile-not-found-error'
+import { ProfileNotFoundError } from '@/services/@errors/profile/profile-not-found-error'
 import crypto from 'node:crypto'
 import { ProfilesRepository } from '../profiles-repository'
 

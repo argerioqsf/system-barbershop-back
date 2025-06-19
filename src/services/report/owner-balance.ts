@@ -1,6 +1,6 @@
 import { TransactionRepository } from '@/repositories/transaction-repository'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
-import { OwnerNotFoundError } from '../@errors/owner-not-found-error'
+import { OwnerNotFoundError } from '../@errors/organization/owner-not-found-error'
 
 interface OwnerBalanceRequest {
   ownerId: string

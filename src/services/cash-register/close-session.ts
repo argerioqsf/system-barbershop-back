@@ -1,6 +1,6 @@
 import { CashRegisterRepository } from '@/repositories/cash-register-repository'
 import { CashRegisterSession, TransactionType } from '@prisma/client'
-import { CashRegisterNotOpenedError } from '@/services/@errors/cash-register-not-opened-error'
+import { CashRegisterNotOpenedError } from '@/services/@errors/cash-register/cash-register-not-opened-error'
 
 interface CloseSessionRequest {
   unitId: string

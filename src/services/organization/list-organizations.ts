@@ -1,7 +1,7 @@
 import { UserToken } from '@/http/controllers/authenticate-controller'
 import { OrganizationRepository } from '@/repositories/organization-repository'
 import { assertUser } from '@/utils/assert-user'
-import { OrganizationNotFoundError } from '@/services/@errors/organization-not-found-error'
+import { OrganizationNotFoundError } from '@/services/@errors/organization/organization-not-found-error'
 import { Organization } from '@prisma/client'
 
 interface ListOrganizationsResponse {

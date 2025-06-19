@@ -1,7 +1,7 @@
 import { UserToken } from '@/http/controllers/authenticate-controller'
 import { UnitRepository } from '@/repositories/unit-repository'
 import { Unit } from '@prisma/client'
-import { UserNotFromOrganizationError } from '@/services/@errors/user-not-from-organization-error'
+import { UserNotFromOrganizationError } from '@/services/@errors/user/user-not-from-organization-error'
 
 interface CreateUnitRequest {
   name: string

@@ -1,7 +1,7 @@
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { UnitRepository } from '@/repositories/unit-repository'
-import { UserNotFoundError } from '@/services/@errors/user-not-found-error'
-import { UnitNotExistsError } from '@/services/@errors/unit-not-exists-error'
+import { UserNotFoundError } from '@/services/@errors/user/user-not-found-error'
+import { UnitNotExistsError } from '@/services/@errors/unit/unit-not-exists-error'
 import { Profile, Role, Unit, User } from '@prisma/client'
 
 interface UpdateUserRequest {

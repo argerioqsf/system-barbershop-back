@@ -4,10 +4,10 @@ import { IncrementBalanceProfileService } from '../profile/increment-balance'
 
 import { DetailedSale } from '@/repositories/sale-repository'
 import { Transaction } from '@prisma/client'
-import { OrganizationNotFoundError } from '../@errors/organization-not-found-error'
-import { SessionNotFoundError } from '../@errors/session-not-found-error'
-import { BarberNotFoundError } from '../@errors/barber-not-found-error'
-import { BarberProfileNotFoundError } from '../@errors/barber-profile-not-found-error'
+import { OrganizationNotFoundError } from '../@errors/organization/organization-not-found-error'
+import { SessionNotFoundError } from '../@errors/cash-register/session-not-found-error'
+import { BarberNotFoundError } from '../@errors/barber/barber-not-found-error'
+import { BarberProfileNotFoundError } from '../@errors/profile/barber-profile-not-found-error'
 
 export async function distributeProfits(
   sale: DetailedSale,

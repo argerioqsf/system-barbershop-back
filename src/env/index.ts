@@ -1,6 +1,6 @@
 import 'dotenv/config'
 import { z } from 'zod'
-import { InvalidEnvError } from '@/services/@errors/invalid-env-error'
+import { InvalidEnvError } from '@/services/@errors/common/invalid-env-error'
 
 const envSchema = z.object({
   NODE_ENV: z.enum(['dev', 'test', 'production']).default('dev'),

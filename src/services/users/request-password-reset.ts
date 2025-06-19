@@ -4,7 +4,7 @@ import { sendPasswordResetEmail } from '@/lib/sendgrid'
 import { env } from '@/env'
 import { randomUUID } from 'crypto'
 import { addHours } from 'date-fns'
-import { UserNotFoundError } from '../@errors/user-not-found-error'
+import { UserNotFoundError } from '../@errors/user/user-not-found-error'
 
 interface RequestPasswordResetServiceRequest {
   email: string

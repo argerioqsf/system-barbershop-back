@@ -1,8 +1,8 @@
 import { UserToken } from '@/http/controllers/authenticate-controller'
 import { CashRegisterRepository } from '@/repositories/cash-register-repository'
 import { TransactionRepository } from '@/repositories/transaction-repository'
-import { UserNotFoundError } from '@/services/@errors/user-not-found-error'
-import { CashRegisterAlreadyOpenError } from '@/services/@errors/cash-register-already-open-error'
+import { UserNotFoundError } from '@/services/@errors/user/user-not-found-error'
+import { CashRegisterAlreadyOpenError } from '@/services/@errors/cash-register/cash-register-already-open-error'
 import { CashRegisterSession, TransactionType } from '@prisma/client'
 
 interface OpenSessionRequest {

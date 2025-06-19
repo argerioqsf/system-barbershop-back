@@ -1,4 +1,4 @@
-import { ResourceNotFoundError } from '@/services/@errors/resource-not-found-error'
+import { ResourceNotFoundError } from '@/services/@errors/common/resource-not-found-error'
 import { getProfileFromUserIdService } from '@/services/@factories/profile/get-profile-from-userId-service'
 import { MakeUpdateProfileUserService } from '@/services/@factories/profile/update-profile-user-service'
 import { FastifyReply, FastifyRequest } from 'fastify'

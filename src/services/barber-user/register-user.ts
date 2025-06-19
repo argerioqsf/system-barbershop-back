@@ -2,8 +2,8 @@ import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { UnitRepository } from '@/repositories/unit-repository'
 import { Profile, Role, User } from '@prisma/client'
 import { hash } from 'bcryptjs'
-import { UserAlreadyExistsError } from '@/services/@errors/user-already-exists-error'
-import { UnitNotExistsError } from '@/services/@errors/unit-not-exists-error'
+import { UserAlreadyExistsError } from '@/services/@errors/user/user-already-exists-error'
+import { UnitNotExistsError } from '@/services/@errors/unit/unit-not-exists-error'
 
 interface RegisterUserRequest {
   name: string
