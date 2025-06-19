@@ -1,7 +1,13 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { RegisterUserService } from '../../../src/services/barber-user/register-user'
-    await expect(service.execute({ ...baseRegisterUserData, unitId: defaultUnit.id })).rejects.toThrow('E-mail already exists')
-  InMemoryBarberUsersRepository,
+import { UserAlreadyExistsError } from '../../../src/services/@errors/user/user-already-exists-error'
+import { UnitNotExistsError } from '../../../src/services/@errors/unit/unit-not-exists-error'
+    await expect(
+      service.execute({ ...baseRegisterUserData, unitId: defaultUnit.id }),
+    ).rejects.toBeInstanceOf(UserAlreadyExistsError)
+    await expect(
+      service.execute({ ...baseRegisterUserData, unitId: 'x' }),
+    ).rejects.toBeInstanceOf(UnitNotExistsError)
   FakeUnitRepository,
 } from '../../helpers/fake-repositories'
 import { defaultUnit, baseRegisterUserData } from '../../helpers/default-values'
