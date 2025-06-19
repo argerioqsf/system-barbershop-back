@@ -3,6 +3,7 @@ import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { UserToken } from '../authenticate-controller'
 import { makeAddBalanceTransaction } from '@/services/@factories/transaction/make-add-balance-transaction'
+import { assertPermission } from '@/utils/permissions'
 
 export const AddBalanceTransactionController = withErrorHandling(
   async (request: FastifyRequest, reply: FastifyReply) => {
@@ -11,11 +12,16 @@ export const AddBalanceTransactionController = withErrorHandling(
       amount: z.coerce.number(),
       affectedUserId: z.string().optional(),
     })
+    const user = request.user as UserToken
     const data = bodySchema.parse(request.body)
+
+    if (data.affectedUserId) {
+      assertPermission(user.role, 'MANAGE_OTHER_USER_TRANSACTION')
+    }
+
     const receiptUrl = request.file
       ? `/uploads/${request.file.filename}`
       : undefined
-    const user = request.user as UserToken
 
     const userId = user.sub
     const service = makeAddBalanceTransaction()

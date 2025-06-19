@@ -42,6 +42,13 @@ export const FEATURES = {
     'ATTENDANT',
   ] as Role[],
   LIST_SALES: ['ADMIN', 'OWNER', 'BARBER', 'MANAGER', 'ATTENDANT'] as Role[],
+  MANAGE_USER_TRANSACTION_WITHDRAWAL: [
+    'ADMIN',
+    'OWNER',
+    'MANAGER',
+    'BARBER',
+  ] as Role[],
+  MANAGE_USER_TRANSACTION_ADD: ['ADMIN', 'OWNER', 'MANAGER'] as Role[],
   MANAGE_OTHER_USER_TRANSACTION: ['ADMIN', 'OWNER', 'MANAGER'] as Role[],
 } as const
 
