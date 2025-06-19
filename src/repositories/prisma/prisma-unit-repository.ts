@@ -15,8 +15,8 @@ export class PrismaUnitRepository implements UnitRepository {
     return prisma.unit.findMany({ where: { organizationId } })
   }
 
-  async findMany(): Promise<Unit[]> {
-    return prisma.unit.findMany()
+  async findMany(where: Prisma.UnitWhereInput = {}): Promise<Unit[]> {
+    return prisma.unit.findMany({ where })
   }
 
   async update(id: string, data: Prisma.UnitUpdateInput): Promise<Unit> {

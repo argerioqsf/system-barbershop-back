@@ -3,8 +3,12 @@ import { PermissionDeniedError } from '@/services/@errors/permission/permission-
 import { UnitRepository } from '@/repositories/unit-repository'
 
 export const FEATURES = {
+  // UNIT
   LIST_UNITS: ['ADMIN', 'OWNER', 'BARBER', 'MANAGER', 'ATTENDANT'] as Role[],
+  LIST_ALL_UNITS: ['ADMIN'] as Role[],
+  LIST_ORG_UNIT: ['OWNER', 'BARBER', 'MANAGER', 'ATTENDANT'] as Role[],
   CREATE_UNIT: ['ADMIN'] as Role[],
+  // SERVICES
   LIST_SERVICES: ['ADMIN', 'OWNER', 'BARBER', 'MANAGER', 'ATTENDANT'] as Role[],
   LIST_TRANSACTIONS: [
     'ADMIN',
