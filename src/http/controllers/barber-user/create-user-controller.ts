@@ -1,13 +1,14 @@
+import { withErrorHandling } from '@/utils/http-error-handler'
 import { makeRegisterUserService } from '@/services/@factories/barber-user/make-register-user'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { Role } from '@prisma/client'
 import { z } from 'zod'
 import { UserToken } from '../authenticate-controller'
 
-export async function CreateBarberUserController(
+export const CreateBarberUserController = withErrorHandling(async (
   request: FastifyRequest,
   reply: FastifyReply,
-) {
+) => {
   const bodySchema = z.object({
     name: z.string(),
     email: z.string().email(),
@@ -47,4 +48,4 @@ export async function CreateBarberUserController(
     unitId,
   })
   return reply.status(201).send({ user, profile })
-}
+})

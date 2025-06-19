@@ -1,12 +1,13 @@
+import { withErrorHandling } from '@/utils/http-error-handler'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { UserToken } from '../authenticate-controller'
 import { makeAddBalanceTransaction } from '@/services/@factories/transaction/make-add-balance-transaction'
 
-export async function AddBalanceTransactionController(
+export const AddBalanceTransactionController = withErrorHandling(async (
   request: FastifyRequest,
   reply: FastifyReply,
-) {
+) => {
   const bodySchema = z.object({
     description: z.string(),
     amount: z.coerce.number(),
@@ -44,4 +45,4 @@ export async function AddBalanceTransactionController(
     receiptUrl,
   })
   return reply.status(201).send({ transactions, surplusValue })
-}
+})

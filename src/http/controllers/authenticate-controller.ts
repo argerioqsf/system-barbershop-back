@@ -2,7 +2,7 @@ import { makeAuthenticateService } from '@/services/@factories/make-authenticate
 import { Role } from '@prisma/client'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
-import { handleControllerError } from '@/utils/http-error-handler'
+import { withErrorHandling } from '@/utils/http-error-handler'
 
 export interface UserToken {
   unitId: string
@@ -11,10 +11,10 @@ export interface UserToken {
   sub: string
 }
 
-export async function authenticate(
+export const authenticate = withErrorHandling(async (
   request: FastifyRequest,
   replay: FastifyReply,
-) {
+) => {
   const authenticateBodySchema = z.object({
     email: z.string().email(),
     password: z.string().min(6),
@@ -22,8 +22,7 @@ export async function authenticate(
 
   const { email, password } = authenticateBodySchema.parse(request.body)
 
-  try {
-    const authenticateService = makeAuthenticateService()
+  const authenticateService = makeAuthenticateService()
 
     const { user } = await authenticateService.execute({
       email,
@@ -41,12 +40,9 @@ export async function authenticate(
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password: _, ...userWithoutPassword } = user
-    return replay.status(200).send({
-      user: userWithoutPassword,
-      roles: Role,
-      token,
-    })
-  } catch (error) {
-    return handleControllerError(error, replay)
-  }
-}
+  return replay.status(200).send({
+    user: userWithoutPassword,
+    roles: Role,
+    token,
+  })
+})

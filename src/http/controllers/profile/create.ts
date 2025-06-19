@@ -1,5 +1,5 @@
 import { makeCreateProfileService } from '@/services/@factories/profile/make-create-profile-service'
-import { handleControllerError } from '@/utils/http-error-handler'
+import { withErrorHandling } from '@/utils/http-error-handler'
 
 import { Role } from '@prisma/client'
 import { FastifyReply, FastifyRequest } from 'fastify'
@@ -14,25 +14,24 @@ const bodySchema = z.object({
   role: z.nativeEnum(Role),
 })
 
-export async function Create(request: FastifyRequest, reply: FastifyReply) {
+export const Create = withErrorHandling(async (
+  request: FastifyRequest,
+  reply: FastifyReply,
+) => {
   const body = bodySchema.parse(request.body)
 
   const createProfileService = makeCreateProfileService()
 
   const userId = request.user.sub
 
-  try {
-    const { profile } = await createProfileService.execute({
-      phone: body.phone,
-      cpf: body.cpf,
-      genre: body.genre,
-      birthday: body.birthday,
-      pix: body.pix,
-      role: body.role,
-      userId,
-    })
-    return reply.status(201).send(profile)
-  } catch (error) {
-    return handleControllerError(error, reply)
-  }
-}
+  const { profile } = await createProfileService.execute({
+    phone: body.phone,
+    cpf: body.cpf,
+    genre: body.genre,
+    birthday: body.birthday,
+    pix: body.pix,
+    role: body.role,
+    userId,
+  })
+  return reply.status(201).send(profile)
+})

@@ -1,12 +1,13 @@
+import { withErrorHandling } from '@/utils/http-error-handler'
 import { makeCreateCouponService } from '@/services/@factories/coupon/make-create-coupon'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { UserToken } from '../authenticate-controller'
 
-export async function CreateCouponController(
+export const CreateCouponController = withErrorHandling(async (
   request: FastifyRequest,
   reply: FastifyReply,
-) {
+) => {
   const bodySchema = z.object({
     code: z.string(),
     description: z.string().optional(),
@@ -28,4 +29,4 @@ export async function CreateCouponController(
     unitId,
   })
   return reply.status(201).send(coupon)
-}
+})

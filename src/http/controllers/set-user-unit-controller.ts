@@ -2,22 +2,18 @@ import { makeSetUserUnitService } from '@/services/@factories/user/make-set-user
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { UserToken } from './authenticate-controller'
-import { handleControllerError } from '@/utils/http-error-handler'
+import { withErrorHandling } from '@/utils/http-error-handler'
 
-export async function SetUserUnitController(
+export const SetUserUnitController = withErrorHandling(async (
   request: FastifyRequest,
   reply: FastifyReply,
-) {
+) => {
   const bodySchema = z.object({ unitId: z.string() })
   const { unitId } = bodySchema.parse(request.body)
   const user = request.user as UserToken
 
-  try {
-    const service = makeSetUserUnitService()
-    await service.execute({ user, unitId })
-  } catch (error) {
-    return handleControllerError(error, reply)
-  }
+  const service = makeSetUserUnitService()
+  await service.execute({ user, unitId })
 
   const token = await reply.jwtSign(
     { unitId, organizationId: user.organizationId, role: user.role },
@@ -25,4 +21,4 @@ export async function SetUserUnitController(
   )
 
   return reply.status(200).send({ token })
-}
+})

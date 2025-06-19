@@ -1,12 +1,13 @@
+import { withErrorHandling } from '@/utils/http-error-handler'
 import { makeUpdateUserService } from '@/services/@factories/barber-user/make-update-user'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { Role } from '@prisma/client'
 import { z } from 'zod'
 
-export async function UpdateBarberUserController(
+export const UpdateBarberUserController = withErrorHandling(async (
   request: FastifyRequest,
   reply: FastifyReply,
-) {
+) => {
   const paramsSchema = z.object({ id: z.string() })
   const bodySchema = z.object({
     name: z.string().optional(),
@@ -51,4 +52,4 @@ export async function UpdateBarberUserController(
   }
 
   return reply.status(200).send(result)
-}
+})

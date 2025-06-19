@@ -1,12 +1,13 @@
+import { withErrorHandling } from '@/utils/http-error-handler'
 import { makeListUsersService } from '@/services/@factories/barber-user/make-list-users'
 import { makeBarberBalance } from '@/services/@factories/report/make-barber-balance'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { UserToken } from '../authenticate-controller'
 
-export async function ListBarberUsersController(
+export const ListBarberUsersController = withErrorHandling(async (
   request: FastifyRequest,
   reply: FastifyReply,
-) {
+) => {
   const service = makeListUsersService()
   const user = request.user as UserToken
   const { users } = await service.execute(user)
@@ -19,4 +20,4 @@ export async function ListBarberUsersController(
   )
 
   return reply.status(200).send(usersWithBalance)
-}
+})

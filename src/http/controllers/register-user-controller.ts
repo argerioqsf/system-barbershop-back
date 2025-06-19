@@ -2,12 +2,12 @@ import { makeRegisterService } from '@/services/@factories/make-register-service
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { Role } from '@prisma/client'
 import { z } from 'zod'
-import { handleControllerError } from '@/utils/http-error-handler'
+import { withErrorHandling } from '@/utils/http-error-handler'
 
-export async function registerUser(
+export const registerUser = withErrorHandling(async (
   request: FastifyRequest,
   replay: FastifyReply,
-) {
+) => {
   const registerBodySchema = z.object({
     name: z.string(),
     email: z.string().email(),
@@ -27,10 +27,9 @@ export async function registerUser(
     return replay.status(403).send({ message: 'Unauthorized role' })
   }
 
-  try {
-    const registerService = makeRegisterService()
+  const registerService = makeRegisterService()
 
-    await registerService.execute({
+  await registerService.execute({
       name: data.name,
       email: data.email,
       password: data.password,
@@ -42,9 +41,6 @@ export async function registerUser(
       role: data.role,
       unitId: data.unitId,
     })
-  } catch (error) {
-    return handleControllerError(error, replay)
-  }
 
   return replay.status(201).send()
-}
+})

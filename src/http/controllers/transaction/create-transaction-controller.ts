@@ -1,12 +1,13 @@
+import { withErrorHandling } from '@/utils/http-error-handler'
 import { makeCreateTransaction } from '@/services/@factories/transaction/make-create-transaction'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { UserToken } from '../authenticate-controller'
 
-export async function CreateTransactionController(
+export const CreateTransactionController = withErrorHandling(async (
   request: FastifyRequest,
   reply: FastifyReply,
-) {
+) => {
   const bodySchema = z.object({
     type: z.enum(['ADDITION', 'WITHDRAWAL']),
     description: z.string(),
@@ -37,4 +38,4 @@ export async function CreateTransactionController(
     receiptUrl,
   })
   return reply.status(201).send({ transaction })
-}
+})

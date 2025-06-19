@@ -2,22 +2,18 @@ import { getProfileFromUserIdService } from '@/services/@factories/profile/get-p
 
 import { Role } from '@prisma/client'
 import { FastifyReply, FastifyRequest } from 'fastify'
-import { handleControllerError } from '@/utils/http-error-handler'
+import { withErrorHandling } from '@/utils/http-error-handler'
 
-export async function GetProfile(
+export const GetProfile = withErrorHandling(async (
   request: FastifyRequest,
   replay: FastifyReply,
-) {
-  try {
-    const getProfileFromUserId = getProfileFromUserIdService()
-    const userId = request.user.sub
-    const { profile } = await getProfileFromUserId.execute({ id: userId })
+) => {
+  const getProfileFromUserId = getProfileFromUserIdService()
+  const userId = request.user.sub
+  const { profile } = await getProfileFromUserId.execute({ id: userId })
 
-    return replay.status(200).send({
-      profile,
-      roles: Role,
-    })
-  } catch (error) {
-    return handleControllerError(error, replay)
-  }
-}
+  return replay.status(200).send({
+    profile,
+    roles: Role,
+  })
+})

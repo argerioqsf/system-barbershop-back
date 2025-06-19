@@ -1,12 +1,13 @@
+import { withErrorHandling } from '@/utils/http-error-handler'
 import { makeCreateAppointment } from '@/services/@factories/appointment/make-create-appointment'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { UserToken } from '../authenticate-controller'
 
-export async function CreateAppointmentController(
+export const CreateAppointmentController = withErrorHandling(async (
   request: FastifyRequest,
   reply: FastifyReply,
-) {
+) => {
   const bodySchema = z.object({
     clientId: z.string(),
     barberId: z.string(),
@@ -30,4 +31,4 @@ export async function CreateAppointmentController(
   })
 
   return reply.status(201).send(appointment)
-}
+})

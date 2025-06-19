@@ -1,11 +1,12 @@
+import { withErrorHandling } from '@/utils/http-error-handler'
 import { makeCreateSale } from '@/services/@factories/sale/make-create-sale'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
-export async function CreateSaleController(
+export const CreateSaleController = withErrorHandling(async (
   request: FastifyRequest,
   reply: FastifyReply,
-) {
+) => {
   const bodySchema = z.object({
     method: z.enum(['CASH', 'PIX', 'CREDIT_CARD', 'DEBIT_CARD']),
     items: z.array(
@@ -34,4 +35,4 @@ export async function CreateSaleController(
     userId,
   })
   return reply.status(201).send(sale)
-}
+})

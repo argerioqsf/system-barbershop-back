@@ -1,11 +1,12 @@
+import { withErrorHandling } from '@/utils/http-error-handler'
 import { makeDeleteOrganizationService } from '@/services/@factories/organization/make-delete-organization'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
-export async function DeleteOrganizationController(
+export const DeleteOrganizationController = withErrorHandling(async (
   request: FastifyRequest,
   reply: FastifyReply,
-) {
+) => {
   const paramsSchema = z.object({
     id: z.string(),
   })
@@ -13,4 +14,4 @@ export async function DeleteOrganizationController(
   const service = makeDeleteOrganizationService()
   await service.execute(id)
   return reply.status(204).send()
-}
+})

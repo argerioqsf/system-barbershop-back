@@ -3,7 +3,7 @@ import { getProfileFromUserIdService } from '@/services/@factories/profile/get-p
 import { MakeUpdateProfileUserService } from '@/services/@factories/profile/update-profile-user-service'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
-import { handleControllerError } from '@/utils/http-error-handler'
+import { withErrorHandling } from '@/utils/http-error-handler'
 
 const bodySchema = z.object({
   name: z.string(),
@@ -16,7 +16,10 @@ const bodySchema = z.object({
   pix: z.string(),
 })
 
-export async function Update(request: FastifyRequest, reply: FastifyReply) {
+export const Update = withErrorHandling(async (
+  request: FastifyRequest,
+  reply: FastifyReply,
+) => {
   const { active, birthday, cpf, email, genre, name, phone, pix } =
     bodySchema.parse(request.body)
 
@@ -33,21 +36,17 @@ export async function Update(request: FastifyRequest, reply: FastifyReply) {
     throw new ResourceNotFoundError()
   }
 
-  try {
-    const { profile: profileUpdate } = await updateProfileUserService.execute({
-      active,
-      birthday,
-      cpf,
-      email,
-      genre,
-      id,
-      name,
-      phone,
-      pix,
-      role: profile.role,
-    })
-    return reply.status(201).send({ profile: profileUpdate })
-  } catch (error) {
-    return handleControllerError(error, reply)
-  }
-}
+  const { profile: profileUpdate } = await updateProfileUserService.execute({
+    active,
+    birthday,
+    cpf,
+    email,
+    genre,
+    id,
+    name,
+    phone,
+    pix,
+    role: profile.role,
+  })
+  return reply.status(201).send({ profile: profileUpdate })
+})

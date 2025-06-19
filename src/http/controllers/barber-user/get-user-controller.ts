@@ -1,12 +1,13 @@
+import { withErrorHandling } from '@/utils/http-error-handler'
 import { makeGetUserService } from '@/services/@factories/barber-user/make-get-user'
 import { makeBarberBalance } from '@/services/@factories/report/make-barber-balance'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
-export async function GetBarberUserController(
+export const GetBarberUserController = withErrorHandling(async (
   request: FastifyRequest,
   reply: FastifyReply,
-) {
+) => {
   const paramsSchema = z.object({ id: z.string() })
   const { id } = paramsSchema.parse(request.params)
   const service = makeGetUserService()
@@ -17,4 +18,4 @@ export async function GetBarberUserController(
   const { balance } = await balanceService.execute({ barberId: id })
 
   return reply.status(200).send({ ...user, balance })
-}
+})

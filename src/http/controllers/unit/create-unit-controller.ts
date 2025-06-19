@@ -1,12 +1,13 @@
+import { withErrorHandling } from '@/utils/http-error-handler'
 import { makeCreateUnitService } from '@/services/@factories/unit/make-create-unit'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { UserToken } from '../authenticate-controller'
 
-export async function CreateUnitController(
+export const CreateUnitController = withErrorHandling(async (
   request: FastifyRequest,
   reply: FastifyReply,
-) {
+) => {
   const bodySchema = z.object({
     name: z.string(),
     slug: z.string(),
@@ -24,4 +25,4 @@ export async function CreateUnitController(
     userToken,
   })
   return reply.status(201).send(unit)
-}
+})

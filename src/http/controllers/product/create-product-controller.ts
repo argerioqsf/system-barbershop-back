@@ -1,12 +1,13 @@
+import { withErrorHandling } from '@/utils/http-error-handler'
 import { makeCreateProductService } from '@/services/@factories/product/make-create-product'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { UserToken } from '../authenticate-controller'
 
-export async function CreateProductController(
+export const CreateProductController = withErrorHandling(async (
   request: FastifyRequest,
   reply: FastifyReply,
-) {
+) => {
   const bodySchema = z.object({
     name: z.string(),
     description: z.string().optional(),
@@ -33,4 +34,4 @@ export async function CreateProductController(
   })
 
   return reply.status(201).send(product)
-}
+})

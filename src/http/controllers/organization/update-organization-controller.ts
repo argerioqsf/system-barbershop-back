@@ -1,11 +1,12 @@
+import { withErrorHandling } from '@/utils/http-error-handler'
 import { makeUpdateOrganizationService } from '@/services/@factories/organization/make-update-organization'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
-export async function UpdateOrganizationController(
+export const UpdateOrganizationController = withErrorHandling(async (
   request: FastifyRequest,
   reply: FastifyReply,
-) {
+) => {
   const bodySchema = z.object({
     name: z.string(),
     slug: z.string().optional(),
@@ -18,4 +19,4 @@ export async function UpdateOrganizationController(
   const service = makeUpdateOrganizationService()
   const { organization } = await service.execute({ id, name, slug })
   return reply.status(200).send(organization)
-}
+})
