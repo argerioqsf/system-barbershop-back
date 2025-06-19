@@ -14,17 +14,34 @@ export class InMemoryProductRepository implements ProductRepository {
       quantity: (data.quantity as number) ?? 0,
       cost: data.cost as number,
       price: data.price as number,
-      unitId: (data.unit as any).connect.id,
+      unitId: (data.unit as { connect: { id: string } }).connect.id,
     }
-    this.products.push(product)
+    this.products.push({
+      ...product,
+      unit: {
+        id: product.unitId,
+        name: '',
+        slug: '',
+        organizationId: 'org-1',
+        totalBalance: 0,
+        allowsLoan: false,
+      },
+    } as Product & { unit: { organizationId: string } })
     return product
   }
 
   async findMany(where: Prisma.ProductWhereInput = {}): Promise<Product[]> {
-    return this.products.filter((p: any) => {
+    return this.products.filter((p) => {
       if (where.unitId && p.unitId !== where.unitId) return false
-      if (where.unit && 'organizationId' in (where.unit as any)) {
-        return p.organizationId === (where.unit as any).organizationId
+      if (
+        where.unit &&
+        'organizationId' in (where.unit as { organizationId: string })
+      ) {
+        const orgId = (where.unit as { organizationId: string }).organizationId
+        const unitOrg = (p as { unit?: { organizationId?: string } }).unit
+          ?.organizationId
+        const productOrg = (p as { organizationId?: string }).organizationId
+        return unitOrg ? unitOrg === orgId : productOrg === orgId
       }
       return true
     })
@@ -46,10 +63,10 @@ export class InMemoryProductRepository implements ProductRepository {
     }
     if (data.name) product.name = data.name as string
     if ('description' in data) {
-      product.description = data.description as any
+      product.description = data.description as string | null
     }
     if ('imageUrl' in data) {
-      product.imageUrl = data.imageUrl as any
+      product.imageUrl = data.imageUrl as string | null
     }
     if (data.cost) product.cost = data.cost as number
     if (data.price) product.price = data.price as number

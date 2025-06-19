@@ -3,15 +3,7 @@ import {
   DiscountType,
   PaymentMethod,
   PaymentStatus,
-  Sale,
-  SaleItem,
-  Service,
-  Product,
-  User,
-  Coupon,
-  Profile,
-  CashRegisterSession,
-  Transaction,
+  Role,
 } from '@prisma/client'
 import {
   SaleRepository,
@@ -25,15 +17,27 @@ export class InMemorySaleRepository implements SaleRepository {
 
   async create(data: Prisma.SaleCreateInput): Promise<DetailedSale> {
     const saleId = randomUUID()
-    const itemsData = (data.items as any).create as any[]
-    const items: DetailedSaleItem[] = itemsData.map((it: any) => ({
+    const unitId = (data.unit as { connect: { id: string } }).connect.id
+    type SaleItemData = {
+      service?: { connect: { id: string } }
+      product?: { connect: { id: string } }
+      quantity: number
+      barber?: { connect: { id: string } }
+      coupon?: { connect: { id: string } }
+      price: number
+      discount?: number | null
+      discountType?: DiscountType | null
+      porcentagemBarbeiro?: number | null
+    }
+    const itemsData = (data.items as { create: SaleItemData[] }).create
+    const items: DetailedSaleItem[] = itemsData.map((it) => ({
       id: randomUUID(),
       saleId,
-      serviceId: it.service?.connect.id,
-      productId: it.product?.connect.id,
+      serviceId: it.service?.connect.id ?? null,
+      productId: it.product?.connect.id ?? null,
       quantity: it.quantity,
-      barberId: it.barber?.connect.id,
-      couponId: it.coupon?.connect.id,
+      barberId: it.barber?.connect.id ?? null,
+      couponId: it.coupon?.connect.id ?? null,
       price: it.price as number,
       discount: it.discount ?? null,
       discountType: it.discountType ?? null,
@@ -78,7 +82,7 @@ export class InMemorySaleRepository implements SaleRepository {
               genre: '',
               birthday: '',
               pix: '',
-              role: 'BARBER' as any,
+              role: 'BARBER' as Role,
               commissionPercentage: it.porcentagemBarbeiro ?? 100,
               totalBalance: 0,
               userId: it.barber.connect.id,
@@ -100,20 +104,24 @@ export class InMemorySaleRepository implements SaleRepository {
           }
         : null,
     }))
-    const sale: DetailedSale = {
+    const sale = {
       id: saleId,
-      userId: (data.user as any).connect.id,
-      clientId: (data.client as any).connect.id,
-      unitId: (data.unit as any).connect.id,
-      sessionId: (data.session as any)?.connect.id,
-      couponId: (data.coupon as any)?.connect.id,
+      userId: (data.user as { connect: { id: string } }).connect.id,
+      clientId: (data.client as { connect: { id: string } }).connect.id,
+      unitId,
+      sessionId:
+        (data.session as { connect: { id: string } } | undefined)?.connect.id ??
+        null,
+      couponId:
+        (data.coupon as { connect: { id: string } } | undefined)?.connect.id ??
+        null,
       total: data.total as number,
       method: data.method as PaymentMethod,
       paymentStatus: data.paymentStatus as PaymentStatus,
       createdAt: new Date(),
       items,
       user: {
-        id: (data.user as any).connect.id,
+        id: (data.user as { connect: { id: string } }).connect.id,
         name: '',
         email: '',
         password: '',
@@ -124,7 +132,7 @@ export class InMemorySaleRepository implements SaleRepository {
         profile: null,
       },
       client: {
-        id: (data.client as any).connect.id,
+        id: (data.client as { connect: { id: string } }).connect.id,
         name: '',
         email: '',
         password: '',
@@ -136,7 +144,7 @@ export class InMemorySaleRepository implements SaleRepository {
       },
       coupon: data.coupon
         ? {
-            id: (data.coupon as any).connect.id,
+            id: (data.coupon as { connect: { id: string } }).connect.id,
             code: '',
             description: null,
             discount: 0,
@@ -149,16 +157,32 @@ export class InMemorySaleRepository implements SaleRepository {
         : null,
       session: null,
       transactions: [],
-    }
+      unit: {
+        id: unitId,
+        name: '',
+        slug: '',
+        organizationId: 'org-1',
+        totalBalance: 0,
+        allowsLoan: false,
+      },
+    } as DetailedSale & { unit: { organizationId: string } }
     this.sales.push(sale)
     return sale
   }
 
   async findMany(where: Prisma.SaleWhereInput = {}): Promise<DetailedSale[]> {
-    return this.sales.filter((s: any) => {
+    return this.sales.filter((s) => {
       if (where.unitId && s.unitId !== where.unitId) return false
-      if (where.unit && 'organizationId' in (where.unit as any)) {
-        return s.unit?.organizationId === (where.unit as any).organizationId
+      if (
+        where.unit &&
+        'organizationId' in (where.unit as { organizationId: string })
+      ) {
+        const orgId = (where.unit as { organizationId: string }).organizationId
+        const unitOrg =
+          (s as { unit?: { organizationId?: string }; organizationId?: string })
+            .unit?.organizationId ??
+          (s as { organizationId?: string }).organizationId
+        return unitOrg === orgId
       }
       return true
     })
@@ -177,8 +201,8 @@ export class InMemorySaleRepository implements SaleRepository {
     if (data.paymentStatus) {
       sale.paymentStatus = data.paymentStatus as PaymentStatus
     }
-    if (data.session && 'connect' in data.session!) {
-      const sid = (data.session as any).connect.id
+    if (data.session && 'connect' in data.session) {
+      const sid = (data.session as { connect: { id: string } }).connect.id
       sale.sessionId = sid
       sale.session = {
         id: sid,
@@ -187,10 +211,8 @@ export class InMemorySaleRepository implements SaleRepository {
         openedAt: new Date(),
         closedAt: null,
         initialAmount: 0,
-        transactions: [],
-        sales: [],
         finalAmount: null,
-      } as any
+      }
     }
     sale.transactions = sale.transactions ?? []
     return sale

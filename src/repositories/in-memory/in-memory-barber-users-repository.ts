@@ -20,8 +20,9 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
       email: data.email,
       password: data.password as string,
       active: (data.active as boolean) ?? false,
-      organizationId: (data.organization as any).connect.id,
-      unitId: (data.unit as any).connect.id,
+      organizationId: (data.organization as { connect: { id: string } }).connect
+        .id,
+      unitId: (data.unit as { connect: { id: string } }).connect.id,
       createdAt: new Date(),
     }
     const profile: Profile = {
@@ -33,7 +34,9 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
       birthday: profileData.birthday as string,
       pix: profileData.pix as string,
       role: profileData.role as Role,
-      commissionPercentage: (profileData as any).commissionPercentage ?? 100,
+      commissionPercentage:
+        (profileData as { commissionPercentage?: number })
+          .commissionPercentage ?? 100,
       totalBalance: 0,
       createdAt: new Date(),
     }
@@ -66,7 +69,9 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
     if ('active' in userData && typeof userData.active === 'boolean')
       updatedUser.active = userData.active
     if (userData.unit && 'connect' in userData.unit) {
-      updatedUser.unitId = (userData.unit as any).connect.id
+      updatedUser.unitId = (
+        userData.unit as { connect: { id: string } }
+      ).connect.id
     }
 
     const profile = current.profile
@@ -92,7 +97,7 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
   async findMany(
     where: Prisma.UserWhereInput = {},
   ): Promise<(User & { profile: Profile | null })[]> {
-    return this.users.filter((u: any) => {
+    return this.users.filter((u) => {
       if (where.unitId && u.unit?.id !== where.unitId) return false
       if (where.organizationId && u.organizationId !== where.organizationId)
         return false
@@ -100,7 +105,8 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
         where.unit &&
         typeof where.unit === 'object' &&
         'organizationId' in where.unit &&
-        u.unit?.organizationId !== (where.unit as any).organizationId
+        u.unit?.organizationId !==
+          (where.unit as { organizationId: string }).organizationId
       )
         return false
       return true

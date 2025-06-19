@@ -13,7 +13,7 @@ export class InMemoryPasswordResetTokenRepository
     const token: PasswordResetToken = {
       id: randomUUID(),
       token: data.token as string,
-      userId: (data.user as any).connect.id,
+      userId: (data.user as { connect: { id: string } }).connect.id,
       expiresAt: data.expiresAt as Date,
       createdAt: new Date(),
     }

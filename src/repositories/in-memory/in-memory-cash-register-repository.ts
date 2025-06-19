@@ -15,8 +15,8 @@ export class InMemoryCashRegisterRepository implements CashRegisterRepository {
   ): Promise<CashRegisterSession> {
     const session: CashRegisterSession = {
       id: randomUUID(),
-      openedById: (data.user as any).connect.id,
-      unitId: (data.unit as any).connect.id,
+      openedById: (data.user as { connect: { id: string } }).connect.id,
+      unitId: (data.unit as { connect: { id: string } }).connect.id,
       openedAt: new Date(),
       closedAt: null,
       initialAmount: data.initialAmount as number,
@@ -34,9 +34,17 @@ export class InMemoryCashRegisterRepository implements CashRegisterRepository {
         unitId: session.unitId,
         createdAt: new Date(),
       },
+      unit: {
+        id: session.unitId,
+        name: '',
+        slug: '',
+        organizationId: 'org-1',
+        totalBalance: 0,
+        allowsLoan: false,
+      },
       sales: [],
       transactions: [],
-    })
+    } as CompleteCashSession & { unit: { organizationId: string } })
     return session
   }
 
@@ -59,10 +67,17 @@ export class InMemoryCashRegisterRepository implements CashRegisterRepository {
   async findMany(
     where: Prisma.CashRegisterSessionWhereInput = {},
   ): Promise<DetailedCashSession[]> {
-    return this.sessions.filter((s: any) => {
+    return this.sessions.filter((s) => {
       if (where.unitId && s.unitId !== where.unitId) return false
-      if (where.unit && 'organizationId' in (where.unit as any)) {
-        return s.unit?.organizationId === (where.unit as any).organizationId
+      if (
+        where.unit &&
+        'organizationId' in (where.unit as { organizationId: string })
+      ) {
+        return (
+          (s as unknown as { unit?: { organizationId: string } }).unit
+            ?.organizationId ===
+          (where.unit as { organizationId: string }).organizationId
+        )
       }
       return true
     })

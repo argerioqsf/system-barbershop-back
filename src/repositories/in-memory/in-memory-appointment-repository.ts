@@ -1,4 +1,4 @@
-import { Appointment, Prisma, Service, User } from '@prisma/client'
+import { Appointment, Prisma } from '@prisma/client'
 import {
   AppointmentRepository,
   DetailedAppointment,
@@ -11,10 +11,10 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
   async create(data: Prisma.AppointmentCreateInput): Promise<Appointment> {
     const appointment: Appointment = {
       id: randomUUID(),
-      clientId: (data.client as any).connect.id,
-      barberId: (data.barber as any).connect.id,
-      serviceId: (data.service as any).connect.id,
-      unitId: (data.unit as any).connect.id,
+      clientId: (data.client as { connect: { id: string } }).connect.id,
+      barberId: (data.barber as { connect: { id: string } }).connect.id,
+      serviceId: (data.service as { connect: { id: string } }).connect.id,
+      unitId: (data.unit as { connect: { id: string } }).connect.id,
       date: data.date as Date,
       hour: data.hour as string,
     }
@@ -49,7 +49,15 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
         unitId: appointment.unitId,
         createdAt: new Date(),
       },
-    })
+      unit: {
+        id: appointment.unitId,
+        name: '',
+        slug: '',
+        organizationId: 'org-1',
+        totalBalance: 0,
+        allowsLoan: false,
+      },
+    } as DetailedAppointment & { unit: { organizationId: string } })
     return appointment
   }
 
@@ -60,10 +68,17 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
   async findMany(
     where: Prisma.AppointmentWhereInput = {},
   ): Promise<DetailedAppointment[]> {
-    return this.appointments.filter((a: any) => {
+    return this.appointments.filter((a) => {
       if (where.unitId && a.unitId !== where.unitId) return false
-      if (where.unit && 'organizationId' in (where.unit as any)) {
-        return a.unit?.organizationId === (where.unit as any).organizationId
+      if (
+        where.unit &&
+        'organizationId' in (where.unit as { organizationId: string })
+      ) {
+        return (
+          (a as unknown as { unit?: { organizationId: string } }).unit
+            ?.organizationId ===
+          (where.unit as { organizationId: string }).organizationId
+        )
       }
       return true
     })

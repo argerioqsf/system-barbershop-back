@@ -15,7 +15,7 @@ export class InMemoryServiceRepository implements ServiceRepository {
       imageUrl: (data.imageUrl as string | null) ?? null,
       cost: data.cost as number,
       price: data.price as number,
-      unitId: (data.unit as any).connect.id,
+      unitId: (data.unit as { connect: { id: string } }).connect.id,
     }
     this.services.push(service)
     return service
@@ -26,10 +26,16 @@ export class InMemoryServiceRepository implements ServiceRepository {
   }
 
   async findMany(where: Prisma.ServiceWhereInput = {}): Promise<Service[]> {
-    return this.services.filter((s: any) => {
+    return this.services.filter((s) => {
       if (where.unitId && s.unitId !== where.unitId) return false
-      if (where.unit && 'organizationId' in (where.unit as any)) {
-        return s.organizationId === (where.unit as any).organizationId
+      if (
+        where.unit &&
+        'organizationId' in (where.unit as { organizationId: string })
+      ) {
+        return (
+          s.organizationId ===
+          (where.unit as { organizationId: string }).organizationId
+        )
       }
       return true
     })

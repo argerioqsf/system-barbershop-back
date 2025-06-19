@@ -1,4 +1,4 @@
-import { Prisma, Coupon } from '@prisma/client'
+import { Prisma, Coupon, DiscountType } from '@prisma/client'
 import { CouponRepository } from '../coupon-repository'
 import { randomUUID } from 'crypto'
 
@@ -11,21 +11,38 @@ export class InMemoryCouponRepository implements CouponRepository {
       code: data.code,
       description: (data.description as string | null) ?? null,
       discount: data.discount as number,
-      discountType: data.discountType as any,
+      discountType: data.discountType as DiscountType,
       imageUrl: (data.imageUrl as string | null) ?? null,
       quantity: (data.quantity as number) ?? 0,
-      unitId: (data.unit as any).connect.id,
+      unitId: (data.unit as { connect: { id: string } }).connect.id,
       createdAt: new Date(),
     }
-    this.coupons.push(coupon)
+    this.coupons.push({
+      ...coupon,
+      unit: {
+        id: coupon.unitId,
+        name: '',
+        slug: '',
+        organizationId: 'org-1',
+        totalBalance: 0,
+        allowsLoan: false,
+      },
+    } as Coupon & { unit: { organizationId: string } })
     return coupon
   }
 
   async findMany(where: Prisma.CouponWhereInput = {}): Promise<Coupon[]> {
-    return this.coupons.filter((c: any) => {
+    return this.coupons.filter((c) => {
       if (where.unitId && c.unitId !== where.unitId) return false
-      if (where.unit && 'organizationId' in (where.unit as any)) {
-        return c.organizationId === (where.unit as any).organizationId
+      if (
+        where.unit &&
+        'organizationId' in (where.unit as { organizationId: string })
+      ) {
+        const orgId = (where.unit as { organizationId: string }).organizationId
+        const unitOrg = (c as { unit?: { organizationId?: string } }).unit
+          ?.organizationId
+        const couponOrg = (c as { organizationId?: string }).organizationId
+        return unitOrg ? unitOrg === orgId : couponOrg === orgId
       }
       return true
     })
