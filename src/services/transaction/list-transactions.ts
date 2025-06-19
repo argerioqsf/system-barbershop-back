@@ -1,5 +1,4 @@
 import { UserToken } from '@/http/controllers/authenticate-controller'
-import { TransactionFull } from '@/repositories/prisma/prisma-transaction-repository'
 import { TransactionRepository } from '@/repositories/transaction-repository'
 import { assertUser } from '@/utils/assert-user'
 import { assertPermission, getScope, buildUnitWhere } from '@/utils/permissions'

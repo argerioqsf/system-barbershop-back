@@ -1,5 +1,5 @@
 import { UserToken } from '@/http/controllers/authenticate-controller'
-import { SaleRepository, DetailedSale } from '@/repositories/sale-repository'
+import { SaleRepository } from '@/repositories/sale-repository'
 import { assertUser } from '@/utils/assert-user'
 import { assertPermission, getScope, buildUnitWhere } from '@/utils/permissions'
 import { ListSalesResponse } from './types'
