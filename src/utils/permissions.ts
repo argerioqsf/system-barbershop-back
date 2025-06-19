@@ -8,7 +8,7 @@ export const FEATURES = {
   LIST_ALL_UNITS: ['ADMIN'] as Role[],
   LIST_ORG_UNIT: ['OWNER', 'BARBER', 'MANAGER', 'ATTENDANT'] as Role[],
   CREATE_UNIT: ['ADMIN'] as Role[],
-  // SERVICES
+  // SERVICE
   LIST_SERVICES: ['ADMIN', 'OWNER', 'BARBER', 'MANAGER', 'ATTENDANT'] as Role[],
   LIST_TRANSACTIONS: [
     'ADMIN',
@@ -17,6 +17,7 @@ export const FEATURES = {
     'MANAGER',
     'ATTENDANT',
   ] as Role[],
+  // ORGANIZATION
   LIST_ORGANIZATIONS: [
     'ADMIN',
     'OWNER',
@@ -24,7 +25,9 @@ export const FEATURES = {
     'MANAGER',
     'ATTENDANT',
   ] as Role[],
+  // PRODUCT
   LIST_PRODUCTS: ['ADMIN', 'OWNER', 'BARBER', 'MANAGER', 'ATTENDANT'] as Role[],
+  // APPOINTMENT
   LIST_APPOINTMENTS: [
     'ADMIN',
     'OWNER',
@@ -32,8 +35,11 @@ export const FEATURES = {
     'MANAGER',
     'ATTENDANT',
   ] as Role[],
+  // USER
   LIST_USERS: ['ADMIN', 'OWNER', 'BARBER', 'MANAGER'] as Role[],
+  // COUPON
   LIST_COUPONS: ['ADMIN', 'OWNER', 'BARBER', 'MANAGER', 'ATTENDANT'] as Role[],
+  // CASH
   LIST_CASH_SESSIONS: [
     'ADMIN',
     'OWNER',
@@ -41,7 +47,9 @@ export const FEATURES = {
     'MANAGER',
     'ATTENDANT',
   ] as Role[],
+  // SALE
   LIST_SALES: ['ADMIN', 'OWNER', 'BARBER', 'MANAGER', 'ATTENDANT'] as Role[],
+  // TRANSACTION
   MANAGE_USER_TRANSACTION_WITHDRAWAL: [
     'ADMIN',
     'OWNER',
