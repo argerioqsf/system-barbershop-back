@@ -17,14 +17,6 @@ export const CreateTransactionController = withErrorHandling(
       ? `/uploads/${request.file.filename}`
       : undefined
     const user = request.user as UserToken
-    if (
-      data.affectedUserId &&
-      user.role !== 'ADMIN' &&
-      user.role !== 'OWNER' &&
-      user.role !== 'MANAGER'
-    ) {
-      return reply.status(403).send({ message: 'Unauthorized' })
-    }
     const userId = user.sub
     const service = makeCreateTransaction()
     const { transaction } = await service.execute({

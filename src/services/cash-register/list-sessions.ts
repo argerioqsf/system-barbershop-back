@@ -1,5 +1,6 @@
 import { UserToken } from '@/http/controllers/authenticate-controller'
 import { assertUser } from '@/utils/assert-user'
+import { getScope, buildUnitWhere } from '@/utils/permissions'
 import {
   CashRegisterRepository,
   DetailedCashSession,
@@ -14,20 +15,9 @@ export class ListSessionsService {
 
   async execute(userToken: UserToken): Promise<ListSessionsResponse> {
     assertUser(userToken)
-
-    let sessions = []
-
-    if (userToken.role === 'OWNER') {
-      sessions = await this.repository.findMany({
-        unit: { organizationId: userToken.organizationId },
-      })
-    } else if (userToken.role === 'ADMIN') {
-      sessions = await this.repository.findMany()
-    } else {
-      sessions = await this.repository.findMany({
-        unitId: userToken.unitId,
-      })
-    }
+    const scope = getScope(userToken)
+    const where = buildUnitWhere(scope)
+    const sessions = await this.repository.findMany(where)
     return { sessions }
   }
 }

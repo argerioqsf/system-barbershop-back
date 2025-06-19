@@ -1,4 +1,5 @@
 import { verifyJWT } from '@/http/middlewares/verify-jwt'
+import { verifyPermission } from '@/http/middlewares/verify-permission'
 import { FastifyInstance } from 'fastify'
 import { upload } from '@/lib/upload'
 import { CreateServiceController } from './create-service-controller'
@@ -12,5 +13,9 @@ export async function barberShopServiceRoute(app: FastifyInstance) {
     { preHandler: upload.single('image') },
     CreateServiceController,
   )
-  app.get('/services', ListServicesController)
+  app.get(
+    '/services',
+    { preHandler: verifyPermission('LIST_SERVICES') },
+    ListServicesController,
+  )
 }

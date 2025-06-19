@@ -32,7 +32,7 @@ describe('List units service', () => {
       organizationId: 'org-1',
       unitId: 'unit-1',
     } as any)
-    expect(result.units).toHaveLength(1)
+    expect(result.units).toHaveLength(2)
     expect(result.units[0].id).toBe('unit-1')
   })
 
@@ -43,7 +43,7 @@ describe('List units service', () => {
       organizationId: 'org-1',
       unitId: 'unit-1',
     } as any)
-    expect(result.units).toHaveLength(1)
+    expect(result.units).toHaveLength(2)
     expect(result.units[0].id).toBe('unit-1')
   })
 

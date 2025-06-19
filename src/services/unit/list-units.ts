@@ -1,6 +1,7 @@
 import { UserToken } from '@/http/controllers/authenticate-controller'
 import { UnitRepository } from '@/repositories/unit-repository'
 import { assertUser } from '@/utils/assert-user'
+import { hasPermission } from '@/utils/permissions'
 import { Unit } from '@prisma/client'
 
 interface ListUnitsResponse {
@@ -12,17 +13,17 @@ export class ListUnitsService {
 
   async execute(userToken: UserToken): Promise<ListUnitsResponse> {
     assertUser(userToken)
+
     let units: Unit[] = []
-    if (userToken.role === 'ADMIN') {
+
+    if (hasPermission(userToken.role, 'LIST_ALL_UNITS')) {
       units = await this.repository.findMany()
-    } else if (userToken.role === 'OWNER') {
-      units = await this.repository.findManyByOrganization(
-        userToken.organizationId,
-      )
-    } else {
-      const unit = await this.repository.findById(userToken.unitId)
-      units = unit ? [unit] : []
+    } else if (hasPermission(userToken.role, 'LIST_ORG_UNIT')) {
+      units = await this.repository.findMany({
+        organizationId: userToken.organizationId,
+      })
     }
+
     return { units }
   }
 }

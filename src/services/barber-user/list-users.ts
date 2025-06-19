@@ -1,6 +1,7 @@
 import { UserToken } from '@/http/controllers/authenticate-controller'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { assertUser } from '@/utils/assert-user'
+import { getScope, buildUnitWhere } from '@/utils/permissions'
 import { Profile, User } from '@prisma/client'
 
 interface ListUsersResponse {
@@ -12,19 +13,9 @@ export class ListUsersService {
 
   async execute(userToken: UserToken): Promise<ListUsersResponse> {
     assertUser(userToken)
-    let users = []
-
-    if (userToken.role === 'OWNER') {
-      users = await this.repository.findMany({
-        unit: { organizationId: userToken.organizationId },
-      })
-    } else if (userToken.role === 'ADMIN') {
-      users = await this.repository.findMany()
-    } else {
-      users = await this.repository.findMany({
-        unitId: userToken.unitId,
-      })
-    }
+    const scope = getScope(userToken)
+    const where = buildUnitWhere(scope)
+    const users = await this.repository.findMany(where)
     return { users }
   }
 }

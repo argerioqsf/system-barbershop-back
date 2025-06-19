@@ -1,25 +1,18 @@
 import { UserToken } from '@/http/controllers/authenticate-controller'
-import { SaleRepository, DetailedSale } from '@/repositories/sale-repository'
-import { assertUser } from '@/utils/assert-user'
+import { SaleRepository } from '@/repositories/sale-repository'
+import { assertPermission, getScope, buildUnitWhere } from '@/utils/permissions'
 import { ListSalesResponse } from './types'
+import { assertUser } from '@/utils/assert-user'
 
 export class ListSalesService {
   constructor(private repository: SaleRepository) {}
 
   async execute(userToken: UserToken): Promise<ListSalesResponse> {
     assertUser(userToken)
-    let sales: DetailedSale[] = []
-
-    if (userToken.role === 'OWNER') {
-      sales = await this.repository.findMany({
-        unit: { organizationId: userToken.organizationId },
-      })
-    } else if (userToken.role === 'ADMIN') {
-      sales = await this.repository.findMany()
-    } else {
-      sales = await this.repository.findMany({ unitId: userToken.unitId })
-    }
-
+    assertPermission(userToken.role, 'LIST_SALES')
+    const scope = getScope(userToken)
+    const where = buildUnitWhere(scope)
+    const sales = await this.repository.findMany(where)
     return { sales }
   }
 }
