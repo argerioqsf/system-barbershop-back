@@ -89,11 +89,6 @@ async function main() {
     },
   })
 
-  await prisma.organization.update({
-    where: { id: organization.id },
-    data: { owner: { connect: { id: owner.id } } },
-  })
-
   const admin = await prisma.user.create({
     data: {
       name: 'Admin',

@@ -49,7 +49,6 @@ function setup() {
     id: 'org-1',
     name: 'Org',
     slug: 'org',
-    ownerId: null,
     totalBalance: 0,
     createdAt: new Date(),
   }
