@@ -67,12 +67,16 @@ async function main() {
     },
   })
 
+  const feature = await prisma.feature.create({
+    data: { category: 'unit', action: 'LIST_UNITS' },
+  })
+
   await prisma.permission.create({
     data: {
-      action: 'LIST_UNITS',
-      category: 'unit',
+      name: 'List units',
       unit: { connect: { id: mainUnit.id } },
       roles: { connect: { id: adminRoleModel.id } },
+      features: { connect: { id: feature.id } },
     },
   })
 

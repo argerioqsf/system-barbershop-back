@@ -13,12 +13,12 @@ describe('Create permission service', () => {
 
   it('creates a permission', async () => {
     const res = await service.execute({
-      action: 'PERM_ACTION',
-      category: 'unit',
+      name: 'PERM_ACTION',
+      featureIds: ['f1'],
       unitId: 'unit-1',
     })
     expect(repo.permissions).toHaveLength(1)
-    expect(res.permission.action).toBe('PERM_ACTION')
+    expect(res.permission.name).toBe('PERM_ACTION')
     expect(res.permission.unitId).toBe('unit-1')
   })
 })

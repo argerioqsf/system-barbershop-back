@@ -51,8 +51,7 @@ describe('Update user service', () => {
   it('validates permission against role', async () => {
     permissionRepo.permissions.push({
       id: 'p1',
-      action: 'A1',
-      category: 'unit',
+      name: 'A1',
       unitId: defaultUnit.id,
     })
     ;(permissionRepo.permissions[0] as any).roles = [{ id: 'role-1' }]

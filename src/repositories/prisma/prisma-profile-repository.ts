@@ -59,8 +59,18 @@ export class PrismaProfilesRepository implements ProfilesRepository {
     return profile as (Profile & { user: Omit<User, 'password'> }) | null
   }
 
-  async create(data: Prisma.ProfileUncheckedCreateInput): Promise<Profile> {
-    return prisma.profile.create({ data })
+  async create(
+    data: Prisma.ProfileUncheckedCreateInput,
+    permissionIds?: string[],
+  ): Promise<Profile> {
+    return prisma.profile.create({
+      data: {
+        ...data,
+        ...(permissionIds && {
+          permissions: { connect: permissionIds.map((id) => ({ id })) },
+        }),
+      },
+    })
   }
 
   async findMany(

@@ -19,6 +19,7 @@ export const registerUser = async (
     role: z.nativeEnum(Role),
     unitId: z.string(),
     roleModelId: z.string(),
+    permissions: z.array(z.string()).optional(),
   })
 
   const data = registerBodySchema.parse(request.body)
@@ -41,6 +42,7 @@ export const registerUser = async (
     role: data.role,
     roleModelId: data.roleModelId,
     unitId: data.unitId,
+    permissions: data.permissions,
   })
 
   return replay.status(201).send()

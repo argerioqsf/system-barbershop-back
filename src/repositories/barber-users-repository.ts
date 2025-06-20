@@ -4,6 +4,7 @@ export interface BarberUsersRepository {
   create(
     data: Prisma.UserCreateInput,
     profile: Omit<Prisma.ProfileUncheckedCreateInput, 'userId'>,
+    permissionIds?: string[],
   ): Promise<{ user: User; profile: Profile }>
   update(
     id: string,

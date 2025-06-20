@@ -6,10 +6,17 @@ export class PrismaBarberUsersRepository implements BarberUsersRepository {
   async create(
     data: Prisma.UserCreateInput,
     profileData: Omit<Prisma.ProfileUncheckedCreateInput, 'userId'>,
+    permissionIds?: string[],
   ): Promise<{ user: User; profile: Profile }> {
     const user = await prisma.user.create({ data })
     const profile = await prisma.profile.create({
-      data: { ...profileData, userId: user.id },
+      data: {
+        ...profileData,
+        userId: user.id,
+        ...(permissionIds && {
+          permissions: { connect: permissionIds.map((id) => ({ id })) },
+        }),
+      },
     })
     return { user, profile }
   }

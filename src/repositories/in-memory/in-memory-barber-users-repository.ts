@@ -13,6 +13,7 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
   async create(
     data: Prisma.UserCreateInput,
     profileData: Omit<Prisma.ProfileUncheckedCreateInput, 'userId'>,
+    permissionIds?: string[],
   ): Promise<{ user: User; profile: Profile }> {
     const user: User = {
       id: randomUUID(),
@@ -40,6 +41,9 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
           .commissionPercentage ?? 100,
       totalBalance: 0,
       createdAt: new Date(),
+    }
+    if (permissionIds) {
+      ;(profile as any).permissions = permissionIds.map((id) => ({ id }))
     }
     this.users.push({
       ...user,

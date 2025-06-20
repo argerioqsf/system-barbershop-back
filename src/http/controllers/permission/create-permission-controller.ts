@@ -8,15 +8,15 @@ export const CreatePermissionController = async (
   reply: FastifyReply,
 ) => {
   const bodySchema = z.object({
-    action: z.string(),
-    category: z.string(),
+    name: z.string(),
+    featureIds: z.array(z.string()),
   })
-  const { action, category } = bodySchema.parse(request.body)
+  const { name, featureIds } = bodySchema.parse(request.body)
   const unitId = (request.user as UserToken).unitId
   const service = makeCreatePermissionService()
   const { permission } = await service.execute({
-    action,
-    category,
+    name,
+    featureIds,
     unitId,
   })
   return reply.status(201).send(permission)

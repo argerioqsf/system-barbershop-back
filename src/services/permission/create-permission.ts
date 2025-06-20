@@ -2,8 +2,8 @@ import { PermissionRepository } from '@/repositories/permission-repository'
 import { Permission } from '@prisma/client'
 
 interface CreatePermissionRequest {
-  action: string
-  category: string
+  name: string
+  featureIds: string[]
   unitId: string
 }
 
@@ -18,9 +18,9 @@ export class CreatePermissionService {
     data: CreatePermissionRequest,
   ): Promise<CreatePermissionResponse> {
     const permission = await this.repository.create({
-      action: data.action,
-      category: data.category,
+      name: data.name,
       unit: { connect: { id: data.unitId } },
+      features: { connect: data.featureIds.map((id) => ({ id })) },
     })
     return { permission }
   }

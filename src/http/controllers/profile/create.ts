@@ -12,6 +12,7 @@ const bodySchema = z.object({
   pix: z.string(),
   role: z.nativeEnum(Role),
   roleModelId: z.string(),
+  permissions: z.array(z.string()).optional(),
 })
 
 export const Create = async (request: FastifyRequest, reply: FastifyReply) => {
@@ -30,6 +31,7 @@ export const Create = async (request: FastifyRequest, reply: FastifyReply) => {
     role: body.role,
     roleModelId: body.roleModelId,
     userId,
+    permissions: body.permissions,
   })
   return reply.status(201).send(profile)
 }
