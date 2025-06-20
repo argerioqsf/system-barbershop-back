@@ -26,7 +26,7 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
       unitId: (data.unit as { connect: { id: string } }).connect.id,
       createdAt: new Date(),
     }
-    const profile: Profile = {
+    const profile: Profile & { permissions?: { id: string }[] } = {
       id: randomUUID(),
       userId: user.id,
       phone: profileData.phone as string,
@@ -43,7 +43,7 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
       createdAt: new Date(),
     }
     if (permissionIds) {
-      ;(profile as any).permissions = permissionIds.map((id) => ({ id }))
+      profile.permissions = permissionIds.map((id) => ({ id }))
     }
     this.users.push({
       ...user,

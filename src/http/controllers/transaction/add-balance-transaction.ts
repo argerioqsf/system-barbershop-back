@@ -17,7 +17,7 @@ export const AddBalanceTransactionController = async (
   const data = bodySchema.parse(request.body)
 
   if (data.affectedUserId) {
-    assertPermission(user.role, 'MANAGE_OTHER_USER_TRANSACTION')
+    await assertPermission(user.sub, 'MANAGE_OTHER_USER_TRANSACTION')
   }
 
   const receiptUrl = request.file

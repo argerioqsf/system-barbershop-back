@@ -9,7 +9,7 @@ export class ListSalesService {
 
   async execute(userToken: UserToken): Promise<ListSalesResponse> {
     assertUser(userToken)
-    assertPermission(userToken.role, 'LIST_SALES')
+    await assertPermission(userToken.sub, 'LIST_SALES')
     const scope = getScope(userToken)
     const where = buildUnitWhere(scope)
     const sales = await this.repository.findMany(where)

@@ -1,7 +1,14 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { ListRolesService } from '../../../src/services/role/list-roles'
-import { InMemoryRoleModelRepository } from '../../helpers/fake-repositories'
-import { makeRoleModel } from '../../helpers/default-values'
+import { InMemoryRoleModelRepository, FakeProfilesRepository } from '../../helpers/fake-repositories'
+import { makeRoleModel, makeProfile } from '../../helpers/default-values'
+import { GetUserProfileFromUserIdService } from '../../../src/services/profile/get-profile-from-userId-service'
+
+const profileRepo = new FakeProfilesRepository()
+
+vi.mock('../../../src/services/@factories/profile/get-profile-from-userId-service', () => ({
+  getProfileFromUserIdService: () => new GetUserProfileFromUserIdService(profileRepo),
+}))
 
 const r1 = makeRoleModel('r1', 'unit-1')
 const r2 = makeRoleModel('r2', 'unit-2')
@@ -13,6 +20,9 @@ describe('List roles service', () => {
   beforeEach(() => {
     repo = new InMemoryRoleModelRepository([r1, r2])
     service = new ListRolesService(repo)
+    const profile = makeProfile('prof-1', '1')
+    ;(profile as any).permissions = [{ id: 'perm', name: 'LIST_ROLES' }]
+    profileRepo.profiles = [profile]
   })
 
   it('lists roles from user unit', async () => {

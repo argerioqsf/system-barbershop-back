@@ -7,7 +7,12 @@ interface GetUserProfileServiceRequest {
 }
 
 interface GetUserProfileServiceResponse {
-  profile: (Profile & { user: Omit<User, 'password'> }) | null
+  profile:
+    | (Profile & {
+        user: Omit<User, 'password'>
+        permissions: { id: string; name: string }[]
+      })
+    | null
 }
 
 export class GetUserProfileFromUserIdService {

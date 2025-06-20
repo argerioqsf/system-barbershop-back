@@ -6,7 +6,7 @@ export function verifyPermission(feature: Feature) {
   return async function (request: FastifyRequest, reply: FastifyReply) {
     const user = request.user as UserToken
     try {
-      assertPermission(user.role, feature)
+      await assertPermission(user.sub, feature)
     } catch {
       return reply.status(403).send({ message: 'Unauthorized' })
     }
