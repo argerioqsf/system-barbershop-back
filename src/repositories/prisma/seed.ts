@@ -6,6 +6,7 @@ import {
   TransactionType,
   DiscountType,
   PermissionName,
+  PermissionCategory,
 } from '@prisma/client'
 import { hash } from 'bcryptjs'
 import 'dotenv/config'
@@ -89,6 +90,7 @@ async function main() {
             create: [
               {
                 name: PermissionName.LIST_USER_ALL,
+                category: PermissionCategory.USER,
                 unitId: mainUnit.id,
               },
             ],
@@ -141,18 +143,22 @@ async function main() {
             create: [
               {
                 name: PermissionName.LIST_USER_ALL,
+                category: PermissionCategory.USER,
                 unitId: mainUnit.id,
               },
               {
                 name: PermissionName.UPDATE_USER_ADMIN,
+                category: PermissionCategory.USER,
                 unitId: mainUnit.id,
               },
               {
                 name: PermissionName.UPDATE_USER_BARBER,
+                category: PermissionCategory.USER,
                 unitId: mainUnit.id,
               },
               {
                 name: PermissionName.UPDATE_USER_OWNER,
+                category: PermissionCategory.USER,
                 unitId: mainUnit.id,
               },
             ],

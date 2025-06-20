@@ -37,23 +37,27 @@ export const UpdateBarberUserController = async (
   if (
     data.roleId ||
     (data.permissions &&
-      hasPermission(['UPDATE_USER_ADMIN', 'UPDATE_USER_OWNER'], undefined))
+      !hasPermission(
+        ['UPDATE_USER_ADMIN', 'UPDATE_USER_OWNER'],
+        userToken.permissions,
+      ))
   ) {
     return reply.status(403).send({ message: 'Unauthorized' })
   }
+
   const result = await service.execute({ id, ...data })
 
-  // if (id === userToken.sub && (data.unitId || data.role)) {
-  //   const token = await reply.jwtSign(
-  //     {
-  //       unitId: result.user.unitId,
-  //       organizationId: result.user.organizationId,
-  //       role: (result.profile as any)?.role?.name ?? userToken.role,
-  //     },
-  //     { sign: { sub: result.user.id } },
-  //   )
-  //   return reply.status(200).send({ ...result, token })
-  // }
+  if (id === userToken.sub && (data.unitId || data.roleId)) {
+    const token = await reply.jwtSign(
+      {
+        unitId: result.user.unitId,
+        organizationId: result.user.organizationId,
+        role: result.profile?.role?.name ?? userToken.role,
+      },
+      { sign: { sub: result.user.id } },
+    )
+    return reply.status(200).send({ ...result, token })
+  }
 
   return reply.status(200).send(result)
 }

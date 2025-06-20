@@ -10,7 +10,7 @@ export class PrismaRoleRepository implements RoleRepository {
   async findMany(where: Prisma.RoleWhereInput = {}): Promise<Role[]> {
     return prisma.role.findMany({
       where,
-      include: { permissions: { include: { features: true } } },
+      include: { permissions: true },
     })
   }
 

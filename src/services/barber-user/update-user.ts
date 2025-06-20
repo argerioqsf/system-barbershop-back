@@ -4,7 +4,7 @@ import { UnitRepository } from '@/repositories/unit-repository'
 import { UserNotFoundError } from '@/services/@errors/user/user-not-found-error'
 import { UnitNotExistsError } from '@/services/@errors/unit/unit-not-exists-error'
 import { InvalidPermissionError } from '@/services/@errors/permission/invalid-permission-error'
-import { Profile, Unit, User } from '@prisma/client'
+import { Profile, Role, Unit, User } from '@prisma/client'
 
 interface UpdateUserRequest {
   id: string
@@ -24,7 +24,7 @@ interface UpdateUserRequest {
 
 interface UpdateUserResponse {
   user: User
-  profile: Profile | null
+  profile: (Profile & { role: Role }) | null
 }
 
 export class UpdateUserService {
