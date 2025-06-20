@@ -34,4 +34,15 @@ export class InMemoryPermissionRepository implements PermissionRepository {
   async findManyByIds(ids: string[]): Promise<Permission[]> {
     return this.permissions.filter((p) => ids.includes(p.id))
   }
+
+  async update(
+    id: string,
+    data: Prisma.PermissionUpdateInput,
+  ): Promise<Permission> {
+    const permission = this.permissions.find((p) => p.id === id)
+    if (!permission) throw new Error('Permission not found')
+    if (data.name) permission.name = data.name as PermissionName
+    if (data.category) permission.category = data.category as any
+    return permission
+  }
 }

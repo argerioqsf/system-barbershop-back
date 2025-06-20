@@ -17,4 +17,8 @@ export class PrismaRoleRepository implements RoleRepository {
   async findById(id: string): Promise<Role | null> {
     return prisma.role.findUnique({ where: { id } })
   }
+
+  async update(id: string, data: Prisma.RoleUpdateInput): Promise<Role> {
+    return prisma.role.update({ where: { id }, data })
+  }
 }

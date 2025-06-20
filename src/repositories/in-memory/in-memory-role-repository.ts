@@ -25,4 +25,11 @@ export class InMemoryRoleRepository implements RoleRepository {
   async findById(id: string): Promise<Role | null> {
     return this.roles.find((r) => r.id === id) ?? null
   }
+
+  async update(id: string, data: Prisma.RoleUpdateInput): Promise<Role> {
+    const role = this.roles.find((r) => r.id === id)
+    if (!role) throw new Error('Role not found')
+    if (data.name) role.name = data.name as RoleName
+    return role
+  }
 }
