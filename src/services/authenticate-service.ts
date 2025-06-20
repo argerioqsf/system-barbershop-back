@@ -1,7 +1,7 @@
 import { UsersRepository } from '@/repositories/users-repository'
 import { InvalidCredentialsError } from './@errors/auth/invalid-credentials-error'
 import { compare } from 'bcryptjs'
-import { Profile, User } from '@prisma/client'
+import { Permission, Profile, Role, User } from '@prisma/client'
 import { UserInactiveError } from './@errors/user/user-inactive-error'
 
 interface AuthenticateServiceRequest {
@@ -10,7 +10,9 @@ interface AuthenticateServiceRequest {
 }
 
 interface AuthenticateServiceResponse {
-  user: User & { profile: Profile | null }
+  user: User & {
+    profile: (Profile & { role: Role; permissions: Permission[] }) | null
+  }
 }
 
 export class AuthenticateService {

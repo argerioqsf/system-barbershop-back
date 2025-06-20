@@ -1,4 +1,4 @@
-import { Prisma, Permission } from '@prisma/client'
+import { Prisma, Permission, PermissionName } from '@prisma/client'
 import { randomUUID } from 'crypto'
 import { PermissionRepository } from '../permission-repository'
 
@@ -10,7 +10,7 @@ export class InMemoryPermissionRepository implements PermissionRepository {
   async create(data: Prisma.PermissionCreateInput): Promise<Permission> {
     const permission: Permission = {
       id: randomUUID(),
-      name: data.name as string,
+      name: data.name as PermissionName,
       unitId: (data.unit as { connect: { id: string } }).connect.id,
     }
     this.permissions.push(permission)

@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { pagination } from '@/utils/constants/pagination'
-import { Prisma, Profile, User } from '@prisma/client'
+import { Permission, Prisma, Profile, Role, User } from '@prisma/client'
 import { UsersRepository } from '../users-repository'
 
 export class PrismaUsersRepository implements UsersRepository {
@@ -76,15 +76,18 @@ export class PrismaUsersRepository implements UsersRepository {
     }
   }
 
-  async findByEmail(
-    email: string,
-  ): Promise<(User & { profile: Profile | null }) | null> {
+  async findByEmail(email: string): Promise<
+    | (User & {
+        profile: (Profile & { role: Role; permissions: Permission[] }) | null
+      })
+    | null
+  > {
     const user = await prisma.user.findUnique({
       where: {
         email,
       },
       include: {
-        profile: { include: { role: true } },
+        profile: { include: { role: true, permissions: true } },
       },
     })
     return user

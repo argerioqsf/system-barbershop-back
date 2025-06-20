@@ -5,6 +5,7 @@ import {
   PaymentStatus,
   TransactionType,
   DiscountType,
+  PermissionName,
 } from '@prisma/client'
 import { hash } from 'bcryptjs'
 import 'dotenv/config'
@@ -66,14 +67,6 @@ async function main() {
     },
   })
 
-  await prisma.permission.create({
-    data: {
-      name: 'List units',
-      unit: { connect: { id: mainUnit.id } },
-      roles: { connect: { id: adminRoleModel.id } },
-    },
-  })
-
   const adminRoleId = adminRoleModel?.id ?? defaultRoleMain.id
 
   const owner = await prisma.user.create({
@@ -92,6 +85,14 @@ async function main() {
           pix: 'ownerpix',
           totalBalance: 0,
           role: { connect: { id: defaultRoleMain.id } },
+          permissions: {
+            create: [
+              {
+                name: PermissionName.LIST_USER_ALL,
+                unitId: mainUnit.id,
+              },
+            ],
+          },
         },
       },
       unit: { connect: { id: mainUnit.id } },
@@ -136,6 +137,26 @@ async function main() {
           pix: 'adminpix',
           totalBalance: 0,
           role: { connect: { id: adminRoleId } },
+          permissions: {
+            create: [
+              {
+                name: PermissionName.LIST_USER_ALL,
+                unitId: mainUnit.id,
+              },
+              {
+                name: PermissionName.UPDATE_USER_ADMIN,
+                unitId: mainUnit.id,
+              },
+              {
+                name: PermissionName.UPDATE_USER_BARBER,
+                unitId: mainUnit.id,
+              },
+              {
+                name: PermissionName.UPDATE_USER_OWNER,
+                unitId: mainUnit.id,
+              },
+            ],
+          },
         },
       },
       unit: { connect: { id: mainUnit.id } },

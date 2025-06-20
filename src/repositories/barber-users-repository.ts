@@ -1,4 +1,4 @@
-import { Prisma, Profile, Unit, User } from '@prisma/client'
+import { Permission, Prisma, Profile, Role, Unit, User } from '@prisma/client'
 
 export interface BarberUsersRepository {
   create(
@@ -18,6 +18,11 @@ export interface BarberUsersRepository {
   findById(
     id: string,
   ): Promise<(User & { profile: Profile | null; unit: Unit | null }) | null>
-  findByEmail(email: string): Promise<User | null>
+  findByEmail(email: string): Promise<
+    | (User & {
+        profile: (Profile & { role: Role; permissions: Permission[] }) | null
+      })
+    | null
+  >
   delete(id: string): Promise<void>
 }

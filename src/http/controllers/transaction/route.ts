@@ -14,7 +14,7 @@ export async function transactionRoute(app: FastifyInstance) {
     {
       preHandler: [
         upload.single('receipt'),
-        verifyPermission('MANAGE_USER_TRANSACTION_ADD'),
+        verifyPermission(['MANAGE_USER_TRANSACTION_ADD']),
       ],
     },
     AddBalanceTransactionController,
@@ -24,14 +24,10 @@ export async function transactionRoute(app: FastifyInstance) {
     {
       preHandler: [
         upload.single('receipt'),
-        verifyPermission('MANAGE_USER_TRANSACTION_WITHDRAWAL'),
+        verifyPermission(['MANAGE_USER_TRANSACTION_WITHDRAWAL']),
       ],
     },
     WithdrawalBalanceTransactionController,
   )
-  app.get(
-    '/transactions',
-    { preHandler: verifyPermission('LIST_TRANSACTIONS') },
-    ListTransactionsController,
-  )
+  app.get('/transactions', ListTransactionsController)
 }

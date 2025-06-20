@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { Prisma, Profile, Unit, User } from '@prisma/client'
+import { Permission, Prisma, Profile, Role, Unit, User } from '@prisma/client'
 import { BarberUsersRepository } from '../barber-users-repository'
 
 export class PrismaBarberUsersRepository implements BarberUsersRepository {
@@ -61,8 +61,16 @@ export class PrismaBarberUsersRepository implements BarberUsersRepository {
     })
   }
 
-  async findByEmail(email: string): Promise<User | null> {
-    return prisma.user.findUnique({ where: { email } })
+  async findByEmail(email: string): Promise<
+    | (User & {
+        profile: (Profile & { role: Role; permissions: Permission[] }) | null
+      })
+    | null
+  > {
+    return prisma.user.findUnique({
+      where: { email },
+      include: { profile: { include: { role: true, permissions: true } } },
+    })
   }
 
   async delete(id: string): Promise<void> {

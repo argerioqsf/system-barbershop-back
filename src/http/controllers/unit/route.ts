@@ -1,5 +1,4 @@
 import { verifyJWT } from '@/http/middlewares/verify-jwt'
-import { verifyPermission } from '@/http/middlewares/verify-permission'
 import { FastifyInstance } from 'fastify'
 import { CreateUnitController } from './create-unit-controller'
 import { ListUnitsController } from './list-units-controller'
@@ -11,11 +10,7 @@ export async function unitRoute(app: FastifyInstance) {
   app.addHook('onRequest', verifyJWT)
 
   app.post('/units', CreateUnitController)
-  app.get(
-    '/units',
-    { preHandler: verifyPermission('LIST_UNITS') },
-    ListUnitsController,
-  )
+  app.get('/units', ListUnitsController)
   app.get('/units/:id', GetUnitController)
   app.put('/units/:id', UpdateUnitController)
   app.delete('/units/:id', DeleteUnitController)

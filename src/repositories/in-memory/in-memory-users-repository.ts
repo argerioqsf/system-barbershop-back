@@ -1,9 +1,11 @@
-import { Prisma, Profile, User } from '@prisma/client'
+import { Permission, Prisma, Profile, Role, User } from '@prisma/client'
 import { UserNotFoundError } from '@/services/@errors/user/user-not-found-error'
 import { UsersRepository } from '../users-repository'
 
 export class InMemoryUserRepository implements UsersRepository {
-  public items: (User & { profile: Profile | null })[] = []
+  public items: (User & {
+    profile: (Profile & { role: Role; permissions: Permission[] }) | null
+  })[] = []
 
   async findById(
     id: string,
@@ -27,9 +29,12 @@ export class InMemoryUserRepository implements UsersRepository {
     }
   }
 
-  async findByEmail(
-    email: string,
-  ): Promise<(User & { profile: Profile | null }) | null> {
+  async findByEmail(email: string): Promise<
+    | (User & {
+        profile: (Profile & { role: Role; permissions: Permission[] }) | null
+      })
+    | null
+  > {
     const user = this.items.find((item) => item.email === email)
 
     if (!user) {

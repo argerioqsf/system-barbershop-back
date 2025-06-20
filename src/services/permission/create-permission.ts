@@ -1,8 +1,8 @@
 import { PermissionRepository } from '@/repositories/permission-repository'
-import { Permission } from '@prisma/client'
+import { Permission, PermissionName } from '@prisma/client'
 
 interface CreatePermissionRequest {
-  name: string
+  name: PermissionName
   featureIds: string[]
   unitId: string
 }

@@ -1,4 +1,4 @@
-import { Prisma, Profile, User } from '@prisma/client'
+import { Permission, Prisma, Profile, Role, User } from '@prisma/client'
 
 export interface UsersRepository {
   findById(
@@ -7,9 +7,12 @@ export interface UsersRepository {
     | (Omit<User, 'password'> & { profile: Omit<Profile, 'userId'> | null })
     | null
   >
-  findByEmail(
-    email: string,
-  ): Promise<(User & { profile: Profile | null }) | null>
+  findByEmail(email: string): Promise<
+    | (User & {
+        profile: (Profile & { role: Role; permissions: Permission[] }) | null
+      })
+    | null
+  >
   create(data: Prisma.UserCreateInput): Promise<User>
   findMany(
     page: number,

@@ -13,7 +13,7 @@ export class ListRolesService {
 
   async execute(user: UserToken): Promise<ListRolesResponse> {
     assertUser(user)
-    await assertPermission(user.sub, 'LIST_ROLES')
+    await assertPermission(['LIST_ROLES_UNIT'], user.permissions)
     const roles = await this.repository.findMany({ unitId: user.unitId })
     return { roles }
   }

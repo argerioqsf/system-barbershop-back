@@ -18,24 +18,20 @@ export const CreateBarberUserController = async (
     birthday: z.string(),
     pix: z.string(),
     unitId: z.string().optional(),
-    role: z.nativeEnum(RoleName),
     roleId: z.string(),
   })
 
   const data = bodySchema.parse(request.body)
   const service = makeRegisterUserService()
   const userToken = request.user as UserToken
-  if (
-    (data.role === RoleName.ADMIN || data.role === RoleName.OWNER) &&
-    userToken.role !== 'ADMIN'
-  ) {
-    return reply.status(403).send({ message: 'Unauthorized' })
-  }
+
   let unitId = userToken.unitId
+
   if (userToken.role === 'ADMIN') {
     unitId = data.unitId ?? unitId
   }
-  const { user, profile } = await service.execute({
+
+  const { user, profile } = await service.execute(userToken, {
     name: data.name,
     email: data.email,
     password: data.password,
