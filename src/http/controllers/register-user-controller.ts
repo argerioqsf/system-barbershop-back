@@ -1,6 +1,6 @@
 import { makeRegisterService } from '@/services/@factories/make-register-service'
 import { FastifyReply, FastifyRequest } from 'fastify'
-import { Role } from '@prisma/client'
+import type { Role } from '@/@types/roles'
 import { z } from 'zod'
 
 export const registerUser = async (
@@ -16,9 +16,9 @@ export const registerUser = async (
     genre: z.string(),
     birthday: z.string(),
     pix: z.string(),
-    role: z.nativeEnum(Role),
+    role: z.enum(['ADMIN','BARBER','CLIENT','ATTENDANT','MANAGER','OWNER']),
     unitId: z.string(),
-    roleModelId: z.string(),
+    roleId: z.string(),
     permissions: z.array(z.string()).optional(),
   })
 
@@ -39,8 +39,7 @@ export const registerUser = async (
     genre: data.genre,
     birthday: data.birthday,
     pix: data.pix,
-    role: data.role,
-    roleModelId: data.roleModelId,
+    roleId: data.roleId,
     unitId: data.unitId,
     permissions: data.permissions,
   })

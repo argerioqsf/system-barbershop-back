@@ -1,4 +1,4 @@
-import { Role, Unit } from '@prisma/client'
+import { Unit } from '@prisma/client'
 import { PermissionDeniedError } from '@/services/@errors/permission/permission-denied-error'
 import { UnitRepository } from '@/repositories/unit-repository'
 import { getProfileFromUserIdService } from '@/services/@factories/profile/get-profile-from-userId-service'
@@ -55,7 +55,7 @@ export interface DataScope {
 }
 
 export function getScope(user: {
-  role: Role
+  role: string
   organizationId: string
   unitId: string
 }): DataScope {

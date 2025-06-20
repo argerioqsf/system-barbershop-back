@@ -1,4 +1,4 @@
-import { Prisma, Profile, Unit, User, Role } from '@prisma/client'
+import { Prisma, Profile, Unit, User } from '@prisma/client'
 import { BarberUsersRepository } from '../barber-users-repository'
 import { randomUUID } from 'crypto'
 
@@ -34,8 +34,7 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
       genre: profileData.genre as string,
       birthday: profileData.birthday as string,
       pix: profileData.pix as string,
-      role: profileData.role as Role,
-      roleModelId: (profileData as { roleModelId: string }).roleModelId,
+      roleId: (profileData as { roleId: string }).roleId,
       commissionPercentage:
         (profileData as { commissionPercentage?: number })
           .commissionPercentage ?? 100,
@@ -86,11 +85,8 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
       if (profileData.birthday)
         profile.birthday = profileData.birthday as string
       if (profileData.pix) profile.pix = profileData.pix as string
-      if (profileData.role) profile.role = profileData.role as Role
-      if ('roleModelId' in profileData)
-        profile.roleModelId = (
-          profileData as { roleModelId: string }
-        ).roleModelId
+      if ('roleId' in profileData)
+        profile.roleId = (profileData as { roleId: string }).roleId
       if (
         'commissionPercentage' in profileData &&
         profileData.commissionPercentage !== undefined

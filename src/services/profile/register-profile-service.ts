@@ -1,7 +1,7 @@
 import { ProfilesRepository } from '@/repositories/profiles-repository'
 import { UsersRepository } from '@/repositories/users-repository'
 import { PermissionRepository } from '@/repositories/permission-repository'
-import { Profile, Role } from '@prisma/client'
+import { Profile } from '@prisma/client'
 import { UserNotFoundError } from '../@errors/user/user-not-found-error'
 import { InvalidPermissionError } from '../@errors/permission/invalid-permission-error'
 
@@ -11,8 +11,7 @@ interface CreateProfileServiceRequest {
   genre: string
   birthday: string
   pix: string
-  role: Role
-  roleModelId: string
+  roleId: string
   userId: string
   permissions?: string[]
 }
@@ -34,8 +33,7 @@ export class CreateProfileService {
     genre,
     birthday,
     pix,
-    role,
-    roleModelId,
+    roleId,
     userId,
     permissions,
   }: CreateProfileServiceRequest): Promise<CreateProfileServiceResponse> {
@@ -47,8 +45,7 @@ export class CreateProfileService {
 
     let permissionIds: string[] | undefined
     if (permissions) {
-      const allowed =
-        await this.permissionRepository.findManyByRole(roleModelId)
+      const allowed = await this.permissionRepository.findManyByRole(roleId)
       const allowedIds = allowed.map((p) => p.id)
       if (!permissions.every((id) => allowedIds.includes(id))) {
         throw new InvalidPermissionError()
@@ -63,8 +60,7 @@ export class CreateProfileService {
         genre,
         birthday,
         pix,
-        role,
-        roleModelId,
+        roleId,
         userId,
       },
       permissionIds,

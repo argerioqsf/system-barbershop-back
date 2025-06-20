@@ -42,8 +42,8 @@ export class PrismaUsersRepository implements UsersRepository {
             cpf: true,
             genre: true,
             phone: true,
+            roleId: true,
             role: true,
-            roleModelId: true,
             pix: true,
             birthday: true,
             commissionPercentage: true,
@@ -67,7 +67,7 @@ export class PrismaUsersRepository implements UsersRepository {
   > {
     const user = await prisma.user.findUnique({
       where: { id },
-      include: { profile: true },
+      include: { profile: { include: { role: true } } },
     })
     if (!user) return null
     const { ...rest } = user
@@ -84,7 +84,7 @@ export class PrismaUsersRepository implements UsersRepository {
         email,
       },
       include: {
-        profile: true,
+        profile: { include: { role: true } },
       },
     })
     return user
@@ -121,8 +121,8 @@ export class PrismaUsersRepository implements UsersRepository {
             cpf: true,
             genre: true,
             phone: true,
+            roleId: true,
             role: true,
-            roleModelId: true,
             pix: true,
             birthday: true,
             commissionPercentage: true,

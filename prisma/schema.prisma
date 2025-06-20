@@ -105,10 +105,9 @@ model Profile {
   genre                String
   birthday             String
   pix                  String
-  role                 Role     @default(CLIENT)
   permissions          Permission[] @relation("ProfilePermissions")
-  roleModelId          String
-  roleModel            RoleModel @relation(fields: [roleModelId], references: [id])
+  roleId               String
+  role                 RoleModel @relation(fields: [roleId], references: [id])
   commissionPercentage Float    @default(100)
   totalBalance         Float    @default(0)
   userId               String   @unique

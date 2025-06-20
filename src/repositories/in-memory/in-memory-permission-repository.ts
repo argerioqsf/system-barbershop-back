@@ -26,10 +26,8 @@ export class InMemoryPermissionRepository implements PermissionRepository {
     })
   }
 
-  async findManyByRole(roleModelId: string): Promise<Permission[]> {
-    return this.permissions.filter((p) =>
-      p.roles?.some((r) => r.id === roleModelId),
-    )
+  async findManyByRole(roleId: string): Promise<Permission[]> {
+    return this.permissions.filter((p) => p.roles?.some((r) => r.id === roleId))
   }
 
   async findManyByIds(ids: string[]): Promise<Permission[]> {

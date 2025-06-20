@@ -1,12 +1,11 @@
 import { makeAuthenticateService } from '@/services/@factories/make-authenticate-service'
-import { Role } from '@prisma/client'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
 export interface UserToken {
   unitId: string
   organizationId: string
-  role: Role
+  role: string
   sub: string
 }
 
@@ -32,16 +31,17 @@ export const authenticate = async (
     {
       unitId: user.unitId,
       organizationId: user.organizationId,
-      role: user.profile?.role,
+      role: (user.profile as any)?.role?.name,
     },
     { sign: { sub: user.id } },
   )
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { password: _, ...userWithoutPassword } = user
+  const Roles = ['ADMIN','BARBER','CLIENT','ATTENDANT','MANAGER','OWNER'] as const
   return replay.status(200).send({
     user: userWithoutPassword,
-    roles: Role,
+    roles: Roles,
     token,
   })
 }

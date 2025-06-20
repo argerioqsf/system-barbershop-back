@@ -1,6 +1,6 @@
 import { makeUpdateUserService } from '@/services/@factories/barber-user/make-update-user'
 import { FastifyReply, FastifyRequest } from 'fastify'
-import { Role } from '@prisma/client'
+import type { Role } from '@/@types/roles'
 import { z } from 'zod'
 
 export const UpdateBarberUserController = async (
@@ -15,9 +15,9 @@ export const UpdateBarberUserController = async (
     genre: z.string().optional(),
     birthday: z.string().optional(),
     pix: z.string().optional(),
-    role: z.nativeEnum(Role).optional(),
+    role: z.enum(['ADMIN','BARBER','CLIENT','ATTENDANT','MANAGER','OWNER']).optional(),
     unitId: z.string().optional(),
-    roleModelId: z.string().optional(),
+    roleId: z.string().optional(),
     permissions: z.array(z.string()).optional(),
     commissionPercentage: z.number().optional(),
     active: z
@@ -39,7 +39,7 @@ export const UpdateBarberUserController = async (
     role: Role
   }
   if (
-    (data.roleModelId || data.permissions) &&
+    (data.roleId || data.permissions) &&
     !['ADMIN', 'OWNER'].includes(userToken.role)
   ) {
     return reply.status(403).send({ message: 'Unauthorized' })
@@ -51,7 +51,7 @@ export const UpdateBarberUserController = async (
       {
         unitId: result.user.unitId,
         organizationId: result.user.organizationId,
-        role: result.profile?.role ?? userToken.role,
+        role: (result.profile as any)?.role?.name ?? userToken.role,
       },
       { sign: { sub: result.user.id } },
     )

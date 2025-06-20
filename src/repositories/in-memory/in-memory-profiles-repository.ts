@@ -1,4 +1,4 @@
-import { Prisma, Profile, Role, User } from '@prisma/client'
+import { Prisma, Profile, User } from '@prisma/client'
 import { ProfileNotFoundError } from '@/services/@errors/profile/profile-not-found-error'
 import crypto from 'node:crypto'
 import { ProfilesRepository } from '../profiles-repository'
@@ -20,8 +20,7 @@ export class InMemoryProfilesRepository implements ProfilesRepository {
       genre: data.genre,
       birthday: data.birthday,
       pix: data.pix,
-      role: data.role as Role,
-      roleModelId: (data as { roleModelId: string }).roleModelId,
+      roleId: (data as { roleId: string }).roleId,
       commissionPercentage: 100,
       totalBalance: 0,
       userId: data.userId,

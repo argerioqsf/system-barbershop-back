@@ -28,8 +28,7 @@ describe('Create profile service', () => {
         genre: '',
         birthday: '',
         pix: '',
-        role: 'BARBER' as any,
-        roleModelId: 'role-1',
+        roleId: 'role-1',
         userId: 'u1',
       }),
     ).rejects.toBeInstanceOf(UserNotFoundError)
@@ -50,8 +49,7 @@ describe('Create profile service', () => {
       genre: 'M',
       birthday: '2000',
       pix: 'x',
-      role: 'BARBER' as any,
-      roleModelId: 'role-1',
+      roleId: 'role-1',
       userId: user.id,
     })
 
@@ -76,8 +74,7 @@ describe('Create profile service', () => {
         genre: 'M',
         birthday: '2000',
         pix: 'x',
-        role: 'BARBER' as any,
-        roleModelId: 'role-1',
+        roleId: 'role-1',
         permissions: ['p2'],
         userId: user.id,
       }),

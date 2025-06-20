@@ -1,7 +1,8 @@
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { PermissionRepository } from '@/repositories/permission-repository'
 import { UnitRepository } from '@/repositories/unit-repository'
-import { Profile, Role, User } from '@prisma/client'
+import { Profile, User } from '@prisma/client'
+import type { Role } from '@/@types/roles'
 import { hash } from 'bcryptjs'
 import { UserAlreadyExistsError } from '@/services/@errors/user/user-already-exists-error'
 import { UnitNotExistsError } from '@/services/@errors/unit/unit-not-exists-error'
@@ -16,8 +17,7 @@ interface RegisterUserRequest {
   genre: string
   birthday: string
   pix: string
-  role: Role
-  roleModelId: string
+  roleId: string
   unitId: string
   permissions?: string[]
 }
@@ -46,7 +46,7 @@ export class RegisterUserService {
     let permissionIds: string[] | undefined
     if (data.permissions) {
       const allowed = await this.permissionRepository.findManyByRole(
-        data.roleModelId,
+        data.roleId,
       )
       const allowedIds = allowed.map((p) => p.id)
       if (!data.permissions.every((id) => allowedIds.includes(id))) {
@@ -70,8 +70,7 @@ export class RegisterUserService {
         genre: data.genre,
         birthday: data.birthday,
         pix: data.pix,
-        role: data.role,
-        roleModelId: data.roleModelId,
+        roleId: data.roleId,
       },
       permissionIds,
     )
