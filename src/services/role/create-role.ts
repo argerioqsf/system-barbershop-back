@@ -1,5 +1,5 @@
 import { RoleRepository } from '@/repositories/role-repository'
-import { Role } from '@prisma/client'
+import { Role, RoleName } from '@prisma/client'
 
 interface CreateRoleRequest {
   name: string
@@ -16,7 +16,7 @@ export class CreateRoleService {
 
   async execute(data: CreateRoleRequest): Promise<CreateRoleResponse> {
     const role = await this.repository.create({
-      name: data.name as any,
+      name: data.name as RoleName,
       unit: { connect: { id: data.unitId } },
       permissions: { connect: data.permissionIds.map((id) => ({ id })) },
     })

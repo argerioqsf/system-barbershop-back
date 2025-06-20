@@ -10,7 +10,7 @@ export class PrismaPermissionRepository implements PermissionRepository {
   async findMany(
     where: Prisma.PermissionWhereInput = {},
   ): Promise<Permission[]> {
-    return prisma.permission.findMany({ where, include: { features: true } })
+    return prisma.permission.findMany({ where })
   }
 
   async findManyByRole(roleId: string): Promise<Permission[]> {

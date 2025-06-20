@@ -26,7 +26,7 @@ export class PrismaBarberUsersRepository implements BarberUsersRepository {
     userData: Prisma.UserUpdateInput,
     profileData: Prisma.ProfileUncheckedUpdateInput,
     permissionIds?: string[],
-  ): Promise<{ user: User; profile: Profile | null }> {
+  ): Promise<{ user: User; profile: (Profile & { role: Role }) | null }> {
     const user = await prisma.user.update({
       where: { id },
       data: {
@@ -40,7 +40,7 @@ export class PrismaBarberUsersRepository implements BarberUsersRepository {
           },
         },
       },
-      include: { profile: true },
+      include: { profile: { include: { role: true } } },
     })
 
     return { user, profile: user.profile }

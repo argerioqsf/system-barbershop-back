@@ -3,6 +3,7 @@ import { UnitRepository } from '@/repositories/unit-repository'
 import { assertUser } from '@/utils/assert-user'
 import { hasPermission } from '@/utils/permissions'
 import { Unit } from '@prisma/client'
+import { UnauthorizedError } from '../@errors/auth/unauthorized-error'
 
 interface ListUnitsResponse {
   units: Unit[]
@@ -22,6 +23,8 @@ export class ListUnitsService {
       units = await this.repository.findMany({
         organizationId: userToken.organizationId,
       })
+    } else {
+      throw new UnauthorizedError()
     }
 
     return { units }

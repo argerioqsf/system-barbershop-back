@@ -1,13 +1,4 @@
 -- CreateTable
-CREATE TABLE `features` (
-    `id` VARCHAR(191) NOT NULL,
-    `category` VARCHAR(191) NOT NULL,
-    `action` VARCHAR(191) NOT NULL,
-
-    PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
 CREATE TABLE `roles` (
     `id` VARCHAR(191) NOT NULL,
     `name` ENUM('ADMIN', 'BARBER', 'CLIENT', 'ATTENDANT', 'MANAGER', 'OWNER') NOT NULL,
@@ -19,7 +10,8 @@ CREATE TABLE `roles` (
 -- CreateTable
 CREATE TABLE `permissions` (
     `id` VARCHAR(191) NOT NULL,
-    `name` ENUM('LISTUSERALL') NOT NULL,
+    `name` ENUM('LIST_USER_ALL', 'LIST_USER_UNIT', 'LIST_USER_ORG', 'UPDATE_USER_ADMIN', 'UPDATE_USER_OWNER', 'UPDATE_USER_BARBER', 'MANAGE_OTHER_USER_TRANSACTION', 'LIST_PERMISSIONS_UNIT', 'LIST_ROLES_UNIT', 'LIST_SALES_UNIT', 'LIST_APPOINTMENTS_UNIT', 'LIST_SERVICES_UNIT', 'MANAGE_USER_TRANSACTION_ADD', 'MANAGE_USER_TRANSACTION_WITHDRAWAL', 'LIST_UNIT_ALL', 'LIST_UNIT_ORG') NOT NULL,
+    `category` ENUM('UNIT', 'SERVICE', 'USER', 'PRODUCT', 'PROFILE') NOT NULL,
     `unitId` VARCHAR(191) NOT NULL,
 
     PRIMARY KEY (`id`)
@@ -216,15 +208,6 @@ CREATE TABLE `units` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `_FeatureToPermission` (
-    `A` VARCHAR(191) NOT NULL,
-    `B` VARCHAR(191) NOT NULL,
-
-    UNIQUE INDEX `_FeatureToPermission_AB_unique`(`A`, `B`),
-    INDEX `_FeatureToPermission_B_index`(`B`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
 CREATE TABLE `_RolePermissions` (
     `A` VARCHAR(191) NOT NULL,
     `B` VARCHAR(191) NOT NULL,
@@ -337,12 +320,6 @@ ALTER TABLE `password_reset_tokens` ADD CONSTRAINT `password_reset_tokens_userId
 
 -- AddForeignKey
 ALTER TABLE `units` ADD CONSTRAINT `units_organizationId_fkey` FOREIGN KEY (`organizationId`) REFERENCES `organizations`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `_FeatureToPermission` ADD CONSTRAINT `_FeatureToPermission_A_fkey` FOREIGN KEY (`A`) REFERENCES `features`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `_FeatureToPermission` ADD CONSTRAINT `_FeatureToPermission_B_fkey` FOREIGN KEY (`B`) REFERENCES `permissions`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `_RolePermissions` ADD CONSTRAINT `_RolePermissions_A_fkey` FOREIGN KEY (`A`) REFERENCES `permissions`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

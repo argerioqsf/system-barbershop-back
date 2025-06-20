@@ -1,4 +1,4 @@
-import { Prisma, Role } from '@prisma/client'
+import { Prisma, Role, RoleName } from '@prisma/client'
 import { randomUUID } from 'crypto'
 import { RoleRepository } from '../role-repository'
 
@@ -8,7 +8,7 @@ export class InMemoryRoleRepository implements RoleRepository {
   async create(data: Prisma.RoleCreateInput): Promise<Role> {
     const role: Role = {
       id: randomUUID(),
-      name: data.name as any,
+      name: data.name as RoleName,
       unitId: (data.unit as { connect: { id: string } }).connect.id,
     }
     this.roles.push(role)

@@ -2,7 +2,7 @@ import { makeCreatePermissionService } from '@/services/@factories/permission/ma
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { UserToken } from '../authenticate-controller'
-import { PermissionName } from '@prisma/client'
+import { PermissionCategory, PermissionName } from '@prisma/client'
 
 export const CreatePermissionController = async (
   request: FastifyRequest,
@@ -10,14 +10,14 @@ export const CreatePermissionController = async (
 ) => {
   const bodySchema = z.object({
     name: z.nativeEnum(PermissionName),
-    featureIds: z.array(z.string()),
+    category: z.nativeEnum(PermissionCategory),
   })
-  const { name, featureIds } = bodySchema.parse(request.body)
+  const { name, category } = bodySchema.parse(request.body)
   const unitId = (request.user as UserToken).unitId
   const service = makeCreatePermissionService()
   const { permission } = await service.execute({
     name,
-    featureIds,
+    category,
     unitId,
   })
   return reply.status(201).send(permission)
