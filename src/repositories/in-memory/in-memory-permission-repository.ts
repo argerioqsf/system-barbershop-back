@@ -8,7 +8,8 @@ export class InMemoryPermissionRepository implements PermissionRepository {
   async create(data: Prisma.PermissionCreateInput): Promise<Permission> {
     const permission: Permission = {
       id: randomUUID(),
-      name: data.name as string,
+      action: data.action as string,
+      category: data.category as string,
       unitId: (data.unit as { connect: { id: string } }).connect.id,
     }
     this.permissions.push(permission)

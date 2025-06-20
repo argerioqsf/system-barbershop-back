@@ -39,14 +39,6 @@ enum PaymentStatus {
   PENDING
 }
 
-model Feature {
-  id        String @id @default(uuid())
-  category  String
-  action    String
-  permissions Permission[]
-
-  @@map("features")
-}
 
 model RoleModel {
   id          String       @id @default(uuid())
@@ -61,10 +53,10 @@ model RoleModel {
 
 model Permission {
   id       String      @id @default(uuid())
-  name     String
+  action   String      @unique
+  category String
   unitId   String
   roles    RoleModel[] @relation("RolePermissions")
-  features Feature[]
   profiles Profile[]   @relation("ProfilePermissions")
   unit     Unit        @relation(fields: [unitId], references: [id])
 

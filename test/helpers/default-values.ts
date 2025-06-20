@@ -426,5 +426,5 @@ export function makePermission(
   id = 'perm-1',
   unitId = 'unit-1',
 ): Permission {
-  return { id, name: 'Permission', unitId }
+  return { id, action: 'action', category: 'general', unitId }
 }
