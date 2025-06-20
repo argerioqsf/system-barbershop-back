@@ -1,4 +1,13 @@
-import { Permission, Prisma, Profile, Role, Unit, User } from '@prisma/client'
+import {
+  Permission,
+  PermissionName,
+  PermissionCategory,
+  Prisma,
+  Profile,
+  Role,
+  Unit,
+  User,
+} from '@prisma/client'
 import { BarberUsersRepository } from '../barber-users-repository'
 import { randomUUID } from 'crypto'
 
@@ -105,13 +114,17 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
         profile.commissionPercentage =
           profileData.commissionPercentage as number
       if (permissionIds) {
-        profile.permissions =
-          permissionIds?.map((id) => ({
+        const existingIds = profile.permissions?.map((p) => p.id) ?? []
+        const toAdd = permissionIds.filter((id) => !existingIds.includes(id))
+        profile.permissions = [
+          ...(profile.permissions ?? []),
+          ...toAdd.map((id) => ({
             id,
-            name: 'LIST_APPOINTMENTS_UNIT',
-            category: 'USER',
-            unitId: randomUUID(),
-          })) ?? []
+            name: 'LIST_APPOINTMENTS_UNIT' as PermissionName,
+            category: 'USER' as PermissionCategory,
+            unitId: randomUUID() as string,
+          })),
+        ]
       }
     }
     this.users[index] = { ...current, ...updatedUser, profile }
