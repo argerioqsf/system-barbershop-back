@@ -49,6 +49,7 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
         permissionIds?.map((id) => ({
           id,
           name: 'LIST_APPOINTMENTS_UNIT',
+          category: 'USER',
           unitId: randomUUID(),
         })) ?? [],
     }
@@ -72,7 +73,7 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
     userData: Prisma.UserUpdateInput,
     profileData: Prisma.ProfileUncheckedUpdateInput,
     permissionIds?: string[],
-  ): Promise<{ user: User; profile: Profile | null }> {
+  ): Promise<{ user: User; profile: (Profile & { role: Role }) | null }> {
     const index = this.users.findIndex((u) => u.id === id)
     if (index < 0) throw new Error('User not found')
     const current = this.users[index]
@@ -108,6 +109,7 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
           permissionIds?.map((id) => ({
             id,
             name: 'LIST_APPOINTMENTS_UNIT',
+            category: 'USER',
             unitId: randomUUID(),
           })) ?? []
       }
