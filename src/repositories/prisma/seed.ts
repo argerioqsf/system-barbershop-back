@@ -15,14 +15,6 @@ const prisma = new PrismaClient()
 async function main() {
   const passwordHash = await hash(env.PASSWORD_SEED, 6)
 
-  await prisma.feature.createMany({
-    data: [
-      { category: 'unit', action: 'list_all' },
-      { category: 'unit', action: 'list_org' },
-    ],
-    skipDuplicates: true,
-  })
-
   const organization = await prisma.organization.create({
     data: {
       name: 'Lobo BarberShop',
@@ -53,13 +45,6 @@ async function main() {
     },
   })
 
-  const listAllFeature = await prisma.feature.findFirst({
-    where: { category: 'unit', action: 'list_all' },
-  })
-  const listOrgFeature = await prisma.feature.findFirst({
-    where: { category: 'unit', action: 'list_org' },
-  })
-
   let adminRoleModel: { id: string } | null = null
   const defaultRoleMain = await prisma.roleModel.create({
     data: {
@@ -75,25 +60,25 @@ async function main() {
     },
   })
 
-  if (listAllFeature && listOrgFeature) {
-    adminRoleModel = await prisma.roleModel.create({
-      data: {
-        name: 'Admin',
-        unit: { connect: { id: mainUnit.id } },
-      },
-    })
+  adminRoleModel = await prisma.roleModel.create({
+    data: {
+      name: 'Admin',
+      unit: { connect: { id: mainUnit.id } },
+    },
+  })
 
-    await prisma.permission.create({
-      data: {
-        name: 'List Units',
-        unit: { connect: { id: mainUnit.id } },
-        roles: { connect: { id: adminRoleModel.id } },
-        features: {
-          connect: [{ id: listAllFeature.id }, { id: listOrgFeature.id }],
-        },
-      },
-    })
-  }
+  const feature = await prisma.feature.create({
+    data: { category: 'unit', action: 'LIST_UNITS' },
+  })
+
+  await prisma.permission.create({
+    data: {
+      name: 'List units',
+      unit: { connect: { id: mainUnit.id } },
+      roles: { connect: { id: adminRoleModel.id } },
+      features: { connect: { id: feature.id } },
+    },
+  })
 
   const adminRoleId = adminRoleModel?.id ?? defaultRoleMain.id
 

@@ -6,7 +6,10 @@ import { ProfilesRepository } from '../profiles-repository'
 export class InMemoryProfilesRepository implements ProfilesRepository {
   public items: (Profile & { user: Omit<User, 'password'> })[] = []
 
-  async create(data: Prisma.ProfileUncheckedCreateInput): Promise<Profile> {
+  async create(
+    data: Prisma.ProfileUncheckedCreateInput,
+    permissionIds?: string[],
+  ): Promise<Profile> {
     const profile: Profile = {
       id: crypto.randomUUID(),
       phone: data.phone,
@@ -20,6 +23,9 @@ export class InMemoryProfilesRepository implements ProfilesRepository {
       totalBalance: 0,
       userId: data.userId,
       createdAt: new Date(),
+    }
+    if (permissionIds) {
+      ;(profile as any).permissions = permissionIds.map((id) => ({ id }))
     }
     const user: Omit<User, 'password'> = {
       id: data.userId,

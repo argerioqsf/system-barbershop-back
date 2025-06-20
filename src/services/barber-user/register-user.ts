@@ -1,9 +1,11 @@
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
+import { PermissionRepository } from '@/repositories/permission-repository'
 import { UnitRepository } from '@/repositories/unit-repository'
 import { Profile, Role, User } from '@prisma/client'
 import { hash } from 'bcryptjs'
 import { UserAlreadyExistsError } from '@/services/@errors/user/user-already-exists-error'
 import { UnitNotExistsError } from '@/services/@errors/unit/unit-not-exists-error'
+import { InvalidPermissionError } from '../@errors/permission/invalid-permission-error'
 
 interface RegisterUserRequest {
   name: string
@@ -17,6 +19,7 @@ interface RegisterUserRequest {
   role: Role
   roleModelId: string
   unitId: string
+  permissions?: string[]
 }
 
 interface RegisterUserResponse {
@@ -28,6 +31,7 @@ export class RegisterUserService {
   constructor(
     private repository: BarberUsersRepository,
     private unitRepository: UnitRepository,
+    private permissionRepository: PermissionRepository,
   ) {}
 
   async execute(data: RegisterUserRequest): Promise<RegisterUserResponse> {
@@ -38,6 +42,18 @@ export class RegisterUserService {
     const password_hash = await hash(data.password, 6)
     const unit = await this.unitRepository.findById(data.unitId)
     if (!unit) throw new UnitNotExistsError()
+
+    let permissionIds: string[] | undefined
+    if (data.permissions) {
+      const allowed = await this.permissionRepository.findManyByRole(
+        data.roleModelId,
+      )
+      const allowedIds = allowed.map((p) => p.id)
+      if (!data.permissions.every((id) => allowedIds.includes(id))) {
+        throw new InvalidPermissionError()
+      }
+      permissionIds = data.permissions
+    }
 
     const { user, profile } = await this.repository.create(
       {
@@ -57,6 +73,7 @@ export class RegisterUserService {
         role: data.role,
         roleModelId: data.roleModelId,
       },
+      permissionIds,
     )
 
     return { user, profile }

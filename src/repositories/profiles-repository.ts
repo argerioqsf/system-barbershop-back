@@ -4,7 +4,10 @@ export interface ProfilesRepository {
   findById(
     id: string,
   ): Promise<(Profile & { user: Omit<User, 'password'> }) | null>
-  create(data: Prisma.ProfileUncheckedCreateInput): Promise<Profile>
+  create(
+    data: Prisma.ProfileUncheckedCreateInput,
+    permissionIds?: string[],
+  ): Promise<Profile>
   findByUserId(
     userId: string,
   ): Promise<(Profile & { user: Omit<User, 'password'> }) | null>
