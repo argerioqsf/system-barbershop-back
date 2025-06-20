@@ -9,7 +9,7 @@ export const CreateRoleController = async (
 ) => {
   const bodySchema = z.object({
     name: z.string(),
-    permissionIds: z.array(z.string()).optional(),
+    permissionIds: z.array(z.string()),
   })
   const { name, permissionIds } = bodySchema.parse(request.body)
   const unitId = (request.user as UserToken).unitId

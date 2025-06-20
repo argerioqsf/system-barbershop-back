@@ -7,6 +7,10 @@ export class PrismaRoleModelRepository implements RoleModelRepository {
     return prisma.roleModel.create({ data })
   }
 
+  async findMany(where: Prisma.RoleModelWhereInput = {}): Promise<RoleModel[]> {
+    return prisma.roleModel.findMany({ where })
+  }
+
   async findById(id: string): Promise<RoleModel | null> {
     return prisma.roleModel.findUnique({ where: { id } })
   }

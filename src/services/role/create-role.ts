@@ -4,7 +4,7 @@ import { RoleModel } from '@prisma/client'
 interface CreateRoleRequest {
   name: string
   unitId: string
-  permissionIds?: string[]
+  permissionIds: string[]
 }
 
 interface CreateRoleResponse {
@@ -18,9 +18,7 @@ export class CreateRoleService {
     const role = await this.repository.create({
       name: data.name,
       unit: { connect: { id: data.unitId } },
-      ...(data.permissionIds && {
-        permissions: { connect: data.permissionIds.map((id) => ({ id })) },
-      }),
+      permissions: { connect: data.permissionIds.map((id) => ({ id })) },
     })
     return { role }
   }

@@ -11,6 +11,8 @@ import {
   PaymentStatus,
   TransactionType,
   Sale,
+  Permission,
+  RoleModel,
 } from '@prisma/client'
 
 export const defaultUser = {
@@ -415,3 +417,14 @@ export const appointment2 = {
   hour: '11',
   unit: { organizationId: 'org-2' },
 } as any
+
+export function makeRoleModel(id = 'role-1', unitId = 'unit-1'): RoleModel {
+  return { id, name: 'Role', unitId }
+}
+
+export function makePermission(
+  id = 'perm-1',
+  unitId = 'unit-1',
+): Permission {
+  return { id, name: 'Permission', unitId }
+}

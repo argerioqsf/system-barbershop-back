@@ -5,7 +5,6 @@ interface CreatePermissionRequest {
   name: string
   featureIds: string[]
   unitId: string
-  roleIds?: string[]
 }
 
 interface CreatePermissionResponse {
@@ -22,9 +21,6 @@ export class CreatePermissionService {
       name: data.name,
       unit: { connect: { id: data.unitId } },
       features: { connect: data.featureIds.map((id) => ({ id })) },
-      ...(data.roleIds && {
-        roles: { connect: data.roleIds.map((id) => ({ id })) },
-      }),
     })
     return { permission }
   }
