@@ -8,10 +8,12 @@ export interface ProfilesRepository {
     data: Prisma.ProfileUncheckedCreateInput,
     permissionIds?: string[],
   ): Promise<Profile>
-  findByUserId(
-    userId: string,
-  ): Promise<
-    (Profile & { user: Omit<User, 'password'>; permissions: { id: string; name: string }[] }) | null
+  findByUserId(userId: string): Promise<
+    | (Profile & {
+        user: Omit<User, 'password'>
+        permissions: { id: string; name: string }[]
+      })
+    | null
   >
   update(id: string, data: Prisma.ProfileUncheckedUpdateInput): Promise<Profile>
   findMany(

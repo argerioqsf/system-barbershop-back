@@ -5,7 +5,7 @@ import { randomUUID } from 'crypto'
 export class InMemoryBarberUsersRepository implements BarberUsersRepository {
   constructor(
     public users: (User & {
-      profile: Profile | null
+      profile: (Profile & { permissions: { id: string }[] }) | null
       unit?: Unit | null
     })[] = [],
   ) {}
@@ -26,7 +26,7 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
       unitId: (data.unit as { connect: { id: string } }).connect.id,
       createdAt: new Date(),
     }
-    const profile: Profile & { permissions?: { id: string }[] } = {
+    const profile: Profile & { permissions: { id: string }[] } = {
       id: randomUUID(),
       userId: user.id,
       phone: profileData.phone as string,
@@ -41,9 +41,7 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
           .commissionPercentage ?? 100,
       totalBalance: 0,
       createdAt: new Date(),
-    }
-    if (permissionIds) {
-      profile.permissions = permissionIds.map((id) => ({ id }))
+      permissions: permissionIds?.map((id) => ({ id })) ?? [],
     }
     this.users.push({
       ...user,
@@ -100,7 +98,7 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
         profile.commissionPercentage =
           profileData.commissionPercentage as number
       if (permissionIds) {
-        ;(profile as any).permissions = permissionIds.map((id) => ({ id }))
+        profile.permissions = permissionIds.map((id) => ({ id }))
       }
     }
     this.users[index] = { ...current, ...updatedUser, profile }

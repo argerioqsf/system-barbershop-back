@@ -15,10 +15,36 @@ export { InMemoryTransactionRepository as FakeTransactionRepository } from '../.
 export { InMemoryOrganizationRepository as FakeOrganizationRepository } from '../../src/repositories/in-memory/in-memory-organization-repository'
 
 export class FakeProfilesRepository extends InMemoryProfilesRepository {
+  private _profiles: (Profile & {
+    user: Omit<User, 'password'>
+    permissions: { id: string; name: string }[]
+  })[] = []
+
   constructor(
-    public profiles: (Profile & { user: Omit<User, 'password'> })[] = [],
+    profiles: (Profile & {
+      user: Omit<User, 'password'>
+      permissions: { id: string; name: string }[]
+    })[] = [],
   ) {
     super()
+    this._profiles = profiles
+    this.items = profiles
+  }
+
+  get profiles(): (Profile & {
+    user: Omit<User, 'password'>
+    permissions: { id: string; name: string }[]
+  })[] {
+    return this._profiles
+  }
+
+  set profiles(
+    profiles: (Profile & {
+      user: Omit<User, 'password'>
+      permissions: { id: string; name: string }[]
+    })[],
+  ) {
+    this._profiles = profiles
     this.items = profiles
   }
 }

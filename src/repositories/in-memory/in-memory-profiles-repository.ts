@@ -4,13 +4,16 @@ import crypto from 'node:crypto'
 import { ProfilesRepository } from '../profiles-repository'
 
 export class InMemoryProfilesRepository implements ProfilesRepository {
-  public items: (Profile & { user: Omit<User, 'password'>; permissions?: { id: string; name?: string }[] })[] = []
+  public items: (Profile & {
+    user: Omit<User, 'password'>
+    permissions: { id: string; name: string }[]
+  })[] = []
 
   async create(
     data: Prisma.ProfileUncheckedCreateInput,
     permissionIds?: string[],
   ): Promise<Profile> {
-    const profile: Profile = {
+    const profile: Profile & { permissions: { id: string; name: string }[] } = {
       id: crypto.randomUUID(),
       phone: data.phone,
       cpf: data.cpf,
@@ -23,9 +26,7 @@ export class InMemoryProfilesRepository implements ProfilesRepository {
       totalBalance: 0,
       userId: data.userId,
       createdAt: new Date(),
-    }
-    if (permissionIds) {
-      ;(profile as any).permissions = permissionIds.map((id) => ({ id, name: id }))
+      permissions: permissionIds?.map((id) => ({ id, name: id })) ?? [],
     }
     const user: Omit<User, 'password'> = {
       id: data.userId,
@@ -40,20 +41,26 @@ export class InMemoryProfilesRepository implements ProfilesRepository {
     return profile
   }
 
-  async findById(
-    id: string,
-  ): Promise<
-    (Profile & { user: Omit<User, 'password'>; permissions: { id: string; name?: string }[] }) | null
+  async findById(id: string): Promise<
+    | (Profile & {
+        user: Omit<User, 'password'>
+        permissions: { id: string; name: string }[]
+      })
+    | null
   > {
-    return (this.items.find((item) => item.id === id) as any) ?? null
+    const profile = this.items.find((item) => item.id === id)
+    return profile ?? null
   }
 
-  async findByUserId(
-    id: string,
-  ): Promise<
-    (Profile & { user: Omit<User, 'password'>; permissions: { id: string; name?: string }[] }) | null
+  async findByUserId(id: string): Promise<
+    | (Profile & {
+        user: Omit<User, 'password'>
+        permissions: { id: string; name: string }[]
+      })
+    | null
   > {
-    return (this.items.find((item) => item.user.id === id) as any) ?? null
+    const profile = this.items.find((item) => item.user.id === id)
+    return profile ?? null
   }
 
   async update(
@@ -72,9 +79,12 @@ export class InMemoryProfilesRepository implements ProfilesRepository {
   }
 
   async findMany(): Promise<
-    (Profile & { user: Omit<User, 'password'>; permissions?: { id: string; name?: string }[] })[]
+    (Profile & {
+      user: Omit<User, 'password'>
+      permissions: { id: string; name: string }[]
+    })[]
   > {
-    return this.items as any
+    return this.items
   }
 
   async incrementBalance(

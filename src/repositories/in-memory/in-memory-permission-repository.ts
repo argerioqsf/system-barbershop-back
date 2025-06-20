@@ -3,7 +3,9 @@ import { randomUUID } from 'crypto'
 import { PermissionRepository } from '../permission-repository'
 
 export class InMemoryPermissionRepository implements PermissionRepository {
-  constructor(public permissions: Permission[] = []) {}
+  constructor(
+    public permissions: (Permission & { roles?: { id: string }[] })[] = [],
+  ) {}
 
   async create(data: Prisma.PermissionCreateInput): Promise<Permission> {
     const permission: Permission = {
@@ -26,7 +28,7 @@ export class InMemoryPermissionRepository implements PermissionRepository {
 
   async findManyByRole(roleModelId: string): Promise<Permission[]> {
     return this.permissions.filter((p) =>
-      (p as any).roles?.some((r: any) => r.id === roleModelId),
+      p.roles?.some((r) => r.id === roleModelId),
     )
   }
 

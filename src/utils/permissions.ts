@@ -29,7 +29,7 @@ export type Feature = keyof typeof FEATURES
 async function getPermissionsFromUserId(userId: string): Promise<string[]> {
   const service = getProfileFromUserIdService()
   const { profile } = await service.execute({ id: userId })
-  return profile.permissions.map((p) => p.name)
+  return profile ? profile.permissions.map((p) => p.name) : []
 }
 
 export async function hasPermission(
