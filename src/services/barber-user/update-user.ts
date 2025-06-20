@@ -5,7 +5,6 @@ import { UserNotFoundError } from '@/services/@errors/user/user-not-found-error'
 import { UnitNotExistsError } from '@/services/@errors/unit/unit-not-exists-error'
 import { InvalidPermissionError } from '@/services/@errors/permission/invalid-permission-error'
 import { Profile, Unit, User } from '@prisma/client'
-import type { Role } from '@/@types/roles'
 
 interface UpdateUserRequest {
   id: string

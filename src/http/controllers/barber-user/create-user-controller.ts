@@ -1,6 +1,6 @@
 import { makeRegisterUserService } from '@/services/@factories/barber-user/make-register-user'
 import { FastifyReply, FastifyRequest } from 'fastify'
-import type { Role } from '@/@types/roles'
+import { RoleName } from '@prisma/client'
 import { z } from 'zod'
 import { UserToken } from '../authenticate-controller'
 
@@ -18,7 +18,7 @@ export const CreateBarberUserController = async (
     birthday: z.string(),
     pix: z.string(),
     unitId: z.string().optional(),
-    role: z.enum(['ADMIN','BARBER','CLIENT','ATTENDANT','MANAGER','OWNER']),
+    role: z.nativeEnum(RoleName),
     roleId: z.string(),
   })
 
@@ -26,7 +26,7 @@ export const CreateBarberUserController = async (
   const service = makeRegisterUserService()
   const userToken = request.user as UserToken
   if (
-    (data.role === 'ADMIN' || data.role === 'OWNER') &&
+    (data.role === RoleName.ADMIN || data.role === RoleName.OWNER) &&
     userToken.role !== 'ADMIN'
   ) {
     return reply.status(403).send({ message: 'Unauthorized' })

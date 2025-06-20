@@ -1,6 +1,6 @@
 import { makeUpdateUserService } from '@/services/@factories/barber-user/make-update-user'
 import { FastifyReply, FastifyRequest } from 'fastify'
-import type { Role } from '@/@types/roles'
+import { RoleName } from '@prisma/client'
 import { z } from 'zod'
 
 export const UpdateBarberUserController = async (
@@ -15,7 +15,7 @@ export const UpdateBarberUserController = async (
     genre: z.string().optional(),
     birthday: z.string().optional(),
     pix: z.string().optional(),
-    role: z.enum(['ADMIN','BARBER','CLIENT','ATTENDANT','MANAGER','OWNER']).optional(),
+    role: z.nativeEnum(RoleName).optional(),
     unitId: z.string().optional(),
     roleId: z.string().optional(),
     permissions: z.array(z.string()).optional(),
@@ -36,7 +36,7 @@ export const UpdateBarberUserController = async (
     sub: string
     organizationId: string
     unitId: string
-    role: Role
+    role: RoleName
   }
   if (
     (data.roleId || data.permissions) &&
