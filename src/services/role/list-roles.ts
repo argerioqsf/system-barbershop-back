@@ -1,15 +1,15 @@
 import { UserToken } from '@/http/controllers/authenticate-controller'
-import { RoleModelRepository } from '@/repositories/role-model-repository'
+import { RoleRepository } from '@/repositories/role-repository'
 import { assertPermission } from '@/utils/permissions'
 import { assertUser } from '@/utils/assert-user'
-import { RoleModel } from '@prisma/client'
+import { Role } from '@prisma/client'
 
 interface ListRolesResponse {
-  roles: RoleModel[]
+  roles: Role[]
 }
 
 export class ListRolesService {
-  constructor(private repository: RoleModelRepository) {}
+  constructor(private repository: RoleRepository) {}
 
   async execute(user: UserToken): Promise<ListRolesResponse> {
     assertUser(user)

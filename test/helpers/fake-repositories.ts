@@ -9,7 +9,7 @@ export { InMemoryCouponRepository as FakeCouponRepository } from '../../src/repo
 export { InMemoryBarberUsersRepository } from '../../src/repositories/in-memory/in-memory-barber-users-repository'
 export { InMemoryBarberUsersRepository as FakeBarberUsersRepository } from '../../src/repositories/in-memory/in-memory-barber-users-repository'
 export { InMemoryPermissionRepository } from '../../src/repositories/in-memory/in-memory-permission-repository'
-export { InMemoryRoleModelRepository } from '../../src/repositories/in-memory/in-memory-role-model-repository'
+export { InMemoryRoleRepository } from '../../src/repositories/in-memory/in-memory-role-repository'
 export { InMemoryCashRegisterRepository } from '../../src/repositories/in-memory/in-memory-cash-register-repository'
 export { InMemoryTransactionRepository as FakeTransactionRepository } from '../../src/repositories/in-memory/in-memory-transaction-repository'
 export { InMemoryOrganizationRepository as FakeOrganizationRepository } from '../../src/repositories/in-memory/in-memory-organization-repository'

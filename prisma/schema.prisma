@@ -8,7 +8,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
+enum RoleName {
   ADMIN
   BARBER
   CLIENT
@@ -49,9 +49,9 @@ model Feature {
   @@map("features")
 }
 
-model RoleModel {
+model Role {
   id          String       @id @default(uuid())
-  name        String
+  name        RoleName
   unitId      String
   permissions Permission[] @relation("RolePermissions")
   profiles    Profile[]
@@ -64,7 +64,7 @@ model Permission {
   id       String      @id @default(uuid())
   name     String
   unitId   String
-  roles    RoleModel[] @relation("RolePermissions")
+  roles    Role[] @relation("RolePermissions")
   profiles Profile[]   @relation("ProfilePermissions")
   features Feature[]   @relation("FeatureToPermission")
   unit     Unit        @relation(fields: [unitId], references: [id])
@@ -107,7 +107,7 @@ model Profile {
   pix                  String
   permissions          Permission[] @relation("ProfilePermissions")
   roleId               String
-  role                 RoleModel @relation(fields: [roleId], references: [id])
+  role                 Role @relation(fields: [roleId], references: [id])
   commissionPercentage Float    @default(100)
   totalBalance         Float    @default(0)
   userId               String   @unique
@@ -308,7 +308,7 @@ model Unit {
   transactions   Transaction[]
   sessions       CashRegisterSession[]
   users          User[]
-  roles          RoleModel[]
+  roles          Role[]
   permissions    Permission[]
 
   organization Organization @relation(fields: [organizationId], references: [id])

@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { CreateRoleService } from '../../../src/services/role/create-role'
-import { InMemoryRoleModelRepository } from '../../helpers/fake-repositories'
+import { InMemoryRoleRepository } from '../../helpers/fake-repositories'
 
 describe('Create role service', () => {
-  let repo: InMemoryRoleModelRepository
+  let repo: InMemoryRoleRepository
   let service: CreateRoleService
 
   beforeEach(() => {
-    repo = new InMemoryRoleModelRepository([])
+    repo = new InMemoryRoleRepository([])
     service = new CreateRoleService(repo)
   })
 

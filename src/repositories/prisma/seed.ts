@@ -45,23 +45,23 @@ async function main() {
   })
 
   let adminRoleModel: { id: string } | null = null
-  const defaultRoleMain = await prisma.roleModel.create({
+  const defaultRoleMain = await prisma.role.create({
     data: {
-      name: 'Default',
+      name: 'CLIENT',
       unit: { connect: { id: mainUnit.id } },
     },
   })
 
-  const defaultRoleUnit2 = await prisma.roleModel.create({
+  const defaultRoleUnit2 = await prisma.role.create({
     data: {
-      name: 'Default',
+      name: 'CLIENT',
       unit: { connect: { id: Unit2.id } },
     },
   })
 
-  adminRoleModel = await prisma.roleModel.create({
+  adminRoleModel = await prisma.role.create({
     data: {
-      name: 'Admin',
+      name: 'ADMIN',
       unit: { connect: { id: mainUnit.id } },
     },
   })
