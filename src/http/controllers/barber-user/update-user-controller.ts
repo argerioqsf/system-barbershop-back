@@ -18,6 +18,7 @@ export const UpdateBarberUserController = async (
     role: z.nativeEnum(Role).optional(),
     unitId: z.string().optional(),
     roleModelId: z.string().optional(),
+    permissions: z.array(z.string()).optional(),
     commissionPercentage: z.number().optional(),
     active: z
       .union([z.boolean(), z.string()])
@@ -36,6 +37,12 @@ export const UpdateBarberUserController = async (
     organizationId: string
     unitId: string
     role: Role
+  }
+  if (
+    (data.roleModelId || data.permissions) &&
+    !['ADMIN', 'OWNER'].includes(userToken.role)
+  ) {
+    return reply.status(403).send({ message: 'Unauthorized' })
   }
   const result = await service.execute({ id, ...data })
 

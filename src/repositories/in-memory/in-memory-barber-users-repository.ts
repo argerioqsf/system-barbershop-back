@@ -60,6 +60,7 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
     id: string,
     userData: Prisma.UserUpdateInput,
     profileData: Prisma.ProfileUncheckedUpdateInput,
+    permissionIds?: string[],
   ): Promise<{ user: User; profile: Profile | null }> {
     const index = this.users.findIndex((u) => u.id === id)
     if (index < 0) throw new Error('User not found')
@@ -85,13 +86,18 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
       if (profileData.pix) profile.pix = profileData.pix as string
       if (profileData.role) profile.role = profileData.role as Role
       if ('roleModelId' in profileData)
-        profile.roleModelId = (profileData as { roleModelId: string }).roleModelId
+        profile.roleModelId = (
+          profileData as { roleModelId: string }
+        ).roleModelId
       if (
         'commissionPercentage' in profileData &&
         profileData.commissionPercentage !== undefined
       )
         profile.commissionPercentage =
           profileData.commissionPercentage as number
+      if (permissionIds) {
+        ;(profile as any).permissions = permissionIds.map((id) => ({ id }))
+      }
     }
     this.users[index] = { ...current, ...updatedUser, profile }
     return { user: updatedUser, profile }

@@ -9,6 +9,7 @@ export interface BarberUsersRepository {
     id: string,
     userData: Prisma.UserUpdateInput,
     profileData: Prisma.ProfileUncheckedUpdateInput,
+    permissionIds?: string[],
   ): Promise<{ user: User; profile: Profile | null }>
   findMany(
     where?: Prisma.UserWhereInput,

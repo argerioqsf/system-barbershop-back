@@ -18,13 +18,19 @@ export class PrismaBarberUsersRepository implements BarberUsersRepository {
     id: string,
     userData: Prisma.UserUpdateInput,
     profileData: Prisma.ProfileUncheckedUpdateInput,
+    permissionIds?: string[],
   ): Promise<{ user: User; profile: Profile | null }> {
     const user = await prisma.user.update({
       where: { id },
       data: {
         ...userData,
         profile: {
-          update: profileData,
+          update: {
+            ...profileData,
+            ...(permissionIds && {
+              permissions: { set: permissionIds.map((id) => ({ id })) },
+            }),
+          },
         },
       },
       include: { profile: true },

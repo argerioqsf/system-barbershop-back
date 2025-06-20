@@ -1,7 +1,9 @@
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
+import { PermissionRepository } from '@/repositories/permission-repository'
 import { UnitRepository } from '@/repositories/unit-repository'
 import { UserNotFoundError } from '@/services/@errors/user/user-not-found-error'
 import { UnitNotExistsError } from '@/services/@errors/unit/unit-not-exists-error'
+import { InvalidPermissionError } from '@/services/@errors/permission/invalid-permission-error'
 import { Profile, Role, Unit, User } from '@prisma/client'
 
 interface UpdateUserRequest {
@@ -14,6 +16,7 @@ interface UpdateUserRequest {
   pix?: string
   role?: Role
   roleModelId?: string
+  permissions?: string[]
   active?: boolean
   email?: string
   unitId?: string
@@ -29,6 +32,7 @@ export class UpdateUserService {
   constructor(
     private repository: BarberUsersRepository,
     private unitRepository: UnitRepository,
+    private permissionRepository: PermissionRepository,
   ) {}
 
   async execute(data: UpdateUserRequest): Promise<UpdateUserResponse> {
@@ -40,6 +44,18 @@ export class UpdateUserService {
     if (data.unitId) {
       unit = (await this.unitRepository.findById(data.unitId)) ?? undefined
       if (!unit) throw new UnitNotExistsError()
+    }
+
+    let permissionIds: string[] | undefined
+    if (data.permissions) {
+      const roleId = data.roleModelId ?? existing.profile?.roleModelId
+      if (!roleId) throw new InvalidPermissionError()
+      const allowed = await this.permissionRepository.findManyByRole(roleId)
+      const allowedIds = allowed.map((p) => p.id)
+      if (!data.permissions.every((id) => allowedIds.includes(id))) {
+        throw new InvalidPermissionError()
+      }
+      permissionIds = data.permissions
     }
 
     const { user, profile } = await this.repository.update(
@@ -63,6 +79,7 @@ export class UpdateUserService {
         roleModelId: data.roleModelId,
         commissionPercentage: data.commissionPercentage,
       },
+      permissionIds,
     )
 
     return { user, profile }
