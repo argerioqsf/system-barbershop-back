@@ -82,7 +82,10 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
     userData: Prisma.UserUpdateInput,
     profileData: Prisma.ProfileUncheckedUpdateInput,
     permissionIds?: string[],
-  ): Promise<{ user: User; profile: (Profile & { role: Role }) | null }> {
+  ): Promise<{
+    user: User
+    profile: (Profile & { role: Role; permissions: Permission[] }) | null
+  }> {
     const index = this.users.findIndex((u) => u.id === id)
     if (index < 0) throw new Error('User not found')
     const current = this.users[index]
@@ -150,9 +153,13 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
     })
   }
 
-  async findById(
-    id: string,
-  ): Promise<(User & { profile: Profile | null; unit: Unit | null }) | null> {
+  async findById(id: string): Promise<
+    | (User & {
+        profile: (Profile & { role: Role; permissions: Permission[] }) | null
+        unit: Unit | null
+      })
+    | null
+  > {
     const user = this.users.find((u) => u.id === id)
     if (!user) return null
     return { ...user, unit: user.unit ?? null }
