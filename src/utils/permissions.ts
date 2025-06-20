@@ -58,8 +58,8 @@ export const FEATURES = {
   ] as Role[],
   MANAGE_USER_TRANSACTION_ADD: ['ADMIN', 'OWNER', 'MANAGER'] as Role[],
   MANAGE_OTHER_USER_TRANSACTION: ['ADMIN', 'OWNER', 'MANAGER'] as Role[],
-  LIST_ROLES: ['OWNER'] as Role[],
-  LIST_PERMISSIONS: ['MANAGER'] as Role[],
+  LIST_ROLES: ['ADMIN', 'OWNER'] as Role[],
+  LIST_PERMISSIONS: ['ADMIN', 'MANAGER'] as Role[],
 } as const
 
 export type Feature = keyof typeof FEATURES
