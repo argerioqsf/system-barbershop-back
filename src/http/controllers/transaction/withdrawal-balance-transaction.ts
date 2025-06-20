@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { UserToken } from '../authenticate-controller'
 import { makeWithdrawalBalanceTransaction } from '@/services/@factories/transaction/make-withdrawal-balance-transaction'
 import { assertPermission } from '@/utils/permissions'
+import { getProfileFromUserIdService } from '@/services/@factories/profile/get-profile-from-userId-service'
 
 export const WithdrawalBalanceTransactionController = async (
   request: FastifyRequest,
@@ -17,7 +18,10 @@ export const WithdrawalBalanceTransactionController = async (
   const data = bodySchema.parse(request.body)
 
   if (data.affectedUserId) {
-    assertPermission(user.role, 'MANAGE_OTHER_USER_TRANSACTION')
+    const getProfileFromUserId = getProfileFromUserIdService()
+    const { profile } = await getProfileFromUserId.execute({ id: user.sub })
+    const permissions = profile.permissions.map((p) => p.name)
+    assertPermission(permissions, 'MANAGE_OTHER_USER_TRANSACTION')
   }
 
   const receiptUrl = request.file

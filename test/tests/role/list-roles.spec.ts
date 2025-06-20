@@ -21,6 +21,7 @@ describe('List roles service', () => {
       role: 'OWNER',
       unitId: 'unit-1',
       organizationId: 'org-1',
+      permissions: ['LIST_ROLES'],
     } as any)
     expect(res.roles).toHaveLength(1)
     expect(res.roles[0].id).toBe('r1')

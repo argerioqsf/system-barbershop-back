@@ -3,73 +3,40 @@ import { PermissionDeniedError } from '@/services/@errors/permission/permission-
 import { UnitRepository } from '@/repositories/unit-repository'
 
 export const FEATURES = {
-  // UNIT
-  LIST_UNITS: ['ADMIN', 'OWNER', 'BARBER', 'MANAGER', 'ATTENDANT'] as Role[],
-  LIST_ALL_UNITS: ['ADMIN'] as Role[],
-  LIST_ORG_UNIT: ['OWNER', 'BARBER', 'MANAGER', 'ATTENDANT'] as Role[],
-  CREATE_UNIT: ['ADMIN'] as Role[],
-  // SERVICE
-  LIST_SERVICES: ['ADMIN', 'OWNER', 'BARBER', 'MANAGER', 'ATTENDANT'] as Role[],
-  LIST_TRANSACTIONS: [
-    'ADMIN',
-    'OWNER',
-    'BARBER',
-    'MANAGER',
-    'ATTENDANT',
-  ] as Role[],
-  // ORGANIZATION
-  LIST_ORGANIZATIONS: [
-    'ADMIN',
-    'OWNER',
-    'BARBER',
-    'MANAGER',
-    'ATTENDANT',
-  ] as Role[],
-  // PRODUCT
-  LIST_PRODUCTS: ['ADMIN', 'OWNER', 'BARBER', 'MANAGER', 'ATTENDANT'] as Role[],
-  // APPOINTMENT
-  LIST_APPOINTMENTS: [
-    'ADMIN',
-    'OWNER',
-    'BARBER',
-    'MANAGER',
-    'ATTENDANT',
-  ] as Role[],
-  // USER
-  LIST_USERS: ['ADMIN', 'OWNER', 'BARBER', 'MANAGER'] as Role[],
-  // COUPON
-  LIST_COUPONS: ['ADMIN', 'OWNER', 'BARBER', 'MANAGER', 'ATTENDANT'] as Role[],
-  // CASH
-  LIST_CASH_SESSIONS: [
-    'ADMIN',
-    'OWNER',
-    'BARBER',
-    'MANAGER',
-    'ATTENDANT',
-  ] as Role[],
-  // SALE
-  LIST_SALES: ['ADMIN', 'OWNER', 'BARBER', 'MANAGER', 'ATTENDANT'] as Role[],
-  // TRANSACTION
-  MANAGE_USER_TRANSACTION_WITHDRAWAL: [
-    'ADMIN',
-    'OWNER',
-    'MANAGER',
-    'BARBER',
-  ] as Role[],
-  MANAGE_USER_TRANSACTION_ADD: ['ADMIN', 'OWNER', 'MANAGER'] as Role[],
-  MANAGE_OTHER_USER_TRANSACTION: ['ADMIN', 'OWNER', 'MANAGER'] as Role[],
-  LIST_ROLES: ['OWNER'] as Role[],
-  LIST_PERMISSIONS: ['MANAGER'] as Role[],
+  LIST_UNITS: ['LIST_UNITS'],
+  LIST_ALL_UNITS: ['LIST_ALL_UNITS'],
+  LIST_ORG_UNIT: ['LIST_ORG_UNIT'],
+  CREATE_UNIT: ['CREATE_UNIT'],
+  LIST_SERVICES: ['LIST_SERVICES'],
+  LIST_TRANSACTIONS: ['LIST_TRANSACTIONS'],
+  LIST_ORGANIZATIONS: ['LIST_ORGANIZATIONS'],
+  LIST_PRODUCTS: ['LIST_PRODUCTS'],
+  LIST_APPOINTMENTS: ['LIST_APPOINTMENTS'],
+  LIST_USERS: ['LIST_USERS'],
+  LIST_COUPONS: ['LIST_COUPONS'],
+  LIST_CASH_SESSIONS: ['LIST_CASH_SESSIONS'],
+  LIST_SALES: ['LIST_SALES'],
+  MANAGE_USER_TRANSACTION_WITHDRAWAL: ['MANAGE_USER_TRANSACTION_WITHDRAWAL'],
+  MANAGE_USER_TRANSACTION_ADD: ['MANAGE_USER_TRANSACTION_ADD'],
+  MANAGE_OTHER_USER_TRANSACTION: ['MANAGE_OTHER_USER_TRANSACTION'],
+  LIST_ROLES: ['LIST_ROLES'],
+  LIST_PERMISSIONS: ['LIST_PERMISSIONS'],
 } as const
 
 export type Feature = keyof typeof FEATURES
 
-export function hasPermission(role: Role, feature: Feature): boolean {
-  return FEATURES[feature].includes(role)
+export function hasPermission(
+  permissions: string[],
+  feature: Feature,
+): boolean {
+  return FEATURES[feature].some((p) => permissions.includes(p))
 }
 
-export function assertPermission(role: Role, feature: Feature): void {
-  if (!hasPermission(role, feature)) {
+export function assertPermission(
+  permissions: string[],
+  feature: Feature,
+): void {
+  if (!hasPermission(permissions, feature)) {
     throw new PermissionDeniedError()
   }
 }

@@ -4,7 +4,7 @@ import crypto from 'node:crypto'
 import { ProfilesRepository } from '../profiles-repository'
 
 export class InMemoryProfilesRepository implements ProfilesRepository {
-  public items: (Profile & { user: Omit<User, 'password'> })[] = []
+  public items: (Profile & { user: Omit<User, 'password'>; permissions?: { id: string; name?: string }[] })[] = []
 
   async create(
     data: Prisma.ProfileUncheckedCreateInput,
@@ -25,7 +25,7 @@ export class InMemoryProfilesRepository implements ProfilesRepository {
       createdAt: new Date(),
     }
     if (permissionIds) {
-      ;(profile as any).permissions = permissionIds.map((id) => ({ id }))
+      ;(profile as any).permissions = permissionIds.map((id) => ({ id, name: id }))
     }
     const user: Omit<User, 'password'> = {
       id: data.userId,
@@ -42,14 +42,18 @@ export class InMemoryProfilesRepository implements ProfilesRepository {
 
   async findById(
     id: string,
-  ): Promise<(Profile & { user: Omit<User, 'password'> }) | null> {
-    return this.items.find((item) => item.id === id) ?? null
+  ): Promise<
+    (Profile & { user: Omit<User, 'password'>; permissions: { id: string; name?: string }[] }) | null
+  > {
+    return (this.items.find((item) => item.id === id) as any) ?? null
   }
 
   async findByUserId(
     id: string,
-  ): Promise<(Profile & { user: Omit<User, 'password'> }) | null> {
-    return this.items.find((item) => item.user.id === id) ?? null
+  ): Promise<
+    (Profile & { user: Omit<User, 'password'>; permissions: { id: string; name?: string }[] }) | null
+  > {
+    return (this.items.find((item) => item.user.id === id) as any) ?? null
   }
 
   async update(
@@ -67,8 +71,10 @@ export class InMemoryProfilesRepository implements ProfilesRepository {
     throw new ProfileNotFoundError()
   }
 
-  async findMany(): Promise<(Profile & { user: Omit<User, 'password'> })[]> {
-    return this.items
+  async findMany(): Promise<
+    (Profile & { user: Omit<User, 'password'>; permissions?: { id: string; name?: string }[] })[]
+  > {
+    return this.items as any
   }
 
   async incrementBalance(

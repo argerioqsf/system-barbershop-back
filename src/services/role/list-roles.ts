@@ -11,9 +11,9 @@ interface ListRolesResponse {
 export class ListRolesService {
   constructor(private repository: RoleModelRepository) {}
 
-  async execute(user: UserToken): Promise<ListRolesResponse> {
+  async execute(user: UserToken & { permissions: string[] }): Promise<ListRolesResponse> {
     assertUser(user)
-    assertPermission(user.role, 'LIST_ROLES')
+    assertPermission(user.permissions, 'LIST_ROLES')
     const roles = await this.repository.findMany({ unitId: user.unitId })
     return { roles }
   }

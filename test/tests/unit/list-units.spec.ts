@@ -21,6 +21,7 @@ describe('List units service', () => {
       role: 'ADMIN',
       organizationId: 'org-1',
       unitId: 'unit-1',
+      permissions: ['LIST_ALL_UNITS'],
     } as any)
     expect(result.units).toHaveLength(2)
   })
@@ -31,6 +32,7 @@ describe('List units service', () => {
       role: 'BARBER',
       organizationId: 'org-1',
       unitId: 'unit-1',
+      permissions: ['LIST_ORG_UNIT'],
     } as any)
     expect(result.units).toHaveLength(2)
     expect(result.units[0].id).toBe('unit-1')
@@ -42,6 +44,7 @@ describe('List units service', () => {
       role: 'MANAGER',
       organizationId: 'org-1',
       unitId: 'unit-1',
+      permissions: ['LIST_ORG_UNIT'],
     } as any)
     expect(result.units).toHaveLength(2)
     expect(result.units[0].id).toBe('unit-1')
@@ -54,6 +57,7 @@ describe('List units service', () => {
         role: 'ADMIN',
         organizationId: 'org-1',
         unitId: 'unit-1',
+        permissions: ['LIST_ALL_UNITS'],
       } as any),
     ).rejects.toThrow('User not found')
   })

@@ -22,6 +22,7 @@ describe('List sales service', () => {
       role: 'ADMIN',
       unitId: 'unit-1',
       organizationId: 'org-1',
+      permissions: ['LIST_SALES'],
     } as any)
     expect(res.sales).toHaveLength(2)
   })
@@ -32,6 +33,7 @@ describe('List sales service', () => {
       role: 'OWNER',
       unitId: 'unit-1',
       organizationId: 'org-1',
+      permissions: ['LIST_SALES'],
     } as any)
     expect(res.sales).toHaveLength(1)
     expect(res.sales[0].id).toBe('s1')
@@ -43,6 +45,7 @@ describe('List sales service', () => {
       role: 'BARBER',
       unitId: 'unit-2',
       organizationId: 'org-2',
+      permissions: ['LIST_SALES'],
     } as any)
     expect(res.sales).toHaveLength(1)
     expect(res.sales[0].id).toBe('s2')
@@ -55,6 +58,7 @@ describe('List sales service', () => {
         role: 'ADMIN',
         unitId: 'unit-1',
         organizationId: 'org-1',
+        permissions: ['LIST_SALES'],
       } as any),
     ).rejects.toThrow('User not found')
   })

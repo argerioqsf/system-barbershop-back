@@ -7,9 +7,9 @@ import { assertUser } from '@/utils/assert-user'
 export class ListSalesService {
   constructor(private repository: SaleRepository) {}
 
-  async execute(userToken: UserToken): Promise<ListSalesResponse> {
+  async execute(userToken: UserToken & { permissions: string[] }): Promise<ListSalesResponse> {
     assertUser(userToken)
-    assertPermission(userToken.role, 'LIST_SALES')
+    assertPermission(userToken.permissions, 'LIST_SALES')
     const scope = getScope(userToken)
     const where = buildUnitWhere(scope)
     const sales = await this.repository.findMany(where)
