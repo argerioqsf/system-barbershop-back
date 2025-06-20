@@ -1,11 +1,11 @@
-import { Prisma, Profile, Unit, User, Role } from '@prisma/client'
+import { Permission, Prisma, Profile, Role, Unit, User } from '@prisma/client'
 import { BarberUsersRepository } from '../barber-users-repository'
 import { randomUUID } from 'crypto'
 
 export class InMemoryBarberUsersRepository implements BarberUsersRepository {
   constructor(
     public users: (User & {
-      profile: Profile | null
+      profile: (Profile & { permissions: Permission[]; role: Role }) | null
       unit?: Unit | null
     })[] = [],
   ) {}
@@ -26,7 +26,7 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
       unitId: (data.unit as { connect: { id: string } }).connect.id,
       createdAt: new Date(),
     }
-    const profile: Profile & { permissions?: { id: string }[] } = {
+    const profile: Profile & { permissions: Permission[]; role: Role } = {
       id: randomUUID(),
       userId: user.id,
       phone: profileData.phone as string,
@@ -34,16 +34,23 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
       genre: profileData.genre as string,
       birthday: profileData.birthday as string,
       pix: profileData.pix as string,
-      role: profileData.role as Role,
-      roleModelId: (profileData as { roleModelId: string }).roleModelId,
+      roleId: (profileData as { roleId: string }).roleId,
+      role: {
+        id: (profileData as { roleId: string }).roleId,
+        name: 'ADMIN',
+        unitId: randomUUID(),
+      },
       commissionPercentage:
         (profileData as { commissionPercentage?: number })
           .commissionPercentage ?? 100,
       totalBalance: 0,
       createdAt: new Date(),
-    }
-    if (permissionIds) {
-      profile.permissions = permissionIds.map((id) => ({ id }))
+      permissions:
+        permissionIds?.map((id) => ({
+          id,
+          name: 'LIST_APPOINTMENTS_UNIT',
+          unitId: randomUUID(),
+        })) ?? [],
     }
     this.users.push({
       ...user,
@@ -88,11 +95,8 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
       if (profileData.birthday)
         profile.birthday = profileData.birthday as string
       if (profileData.pix) profile.pix = profileData.pix as string
-      if (profileData.role) profile.role = profileData.role as Role
-      if ('roleModelId' in profileData)
-        profile.roleModelId = (
-          profileData as { roleModelId: string }
-        ).roleModelId
+      if ('roleId' in profileData)
+        profile.roleId = (profileData as { roleId: string }).roleId
       if (
         'commissionPercentage' in profileData &&
         profileData.commissionPercentage !== undefined
@@ -100,7 +104,12 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
         profile.commissionPercentage =
           profileData.commissionPercentage as number
       if (permissionIds) {
-        ;(profile as any).permissions = permissionIds.map((id) => ({ id }))
+        profile.permissions =
+          permissionIds?.map((id) => ({
+            id,
+            name: 'LIST_APPOINTMENTS_UNIT',
+            unitId: randomUUID(),
+          })) ?? []
       }
     }
     this.users[index] = { ...current, ...updatedUser, profile }
@@ -134,7 +143,12 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
     return { ...user, unit: user.unit ?? null }
   }
 
-  async findByEmail(email: string): Promise<User | null> {
+  async findByEmail(email: string): Promise<
+    | (User & {
+        profile: (Profile & { role: Role; permissions: Permission[] }) | null
+      })
+    | null
+  > {
     const user = this.users.find((u) => u.email === email)
     return user ?? null
   }

@@ -1,5 +1,4 @@
 import { MakeUpdateProfileUserService } from '@/services/@factories/profile/update-profile-user-service'
-import { Role } from '@prisma/client'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
@@ -12,7 +11,7 @@ const bodySchema = z.object({
   genre: z.string(),
   birthday: z.string(),
   pix: z.string(),
-  role: z.nativeEnum(Role),
+  roleId: z.string(),
 })
 
 const routeSchema = z.object({
@@ -23,7 +22,7 @@ export const UpdateWithId = async (
   request: FastifyRequest,
   reply: FastifyReply,
 ) => {
-  const { active, birthday, cpf, email, genre, name, phone, pix, role } =
+  const { active, birthday, cpf, email, genre, name, phone, pix, roleId } =
     bodySchema.parse(request.body)
 
   const updateProfileUserService = MakeUpdateProfileUserService()
@@ -40,7 +39,7 @@ export const UpdateWithId = async (
     name,
     phone,
     pix,
-    role,
+    roleId,
   })
   return reply.status(201).send({ profile })
 }

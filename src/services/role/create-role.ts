@@ -1,5 +1,5 @@
-import { RoleModelRepository } from '@/repositories/role-model-repository'
-import { RoleModel } from '@prisma/client'
+import { RoleRepository } from '@/repositories/role-repository'
+import { Role } from '@prisma/client'
 
 interface CreateRoleRequest {
   name: string
@@ -8,15 +8,15 @@ interface CreateRoleRequest {
 }
 
 interface CreateRoleResponse {
-  role: RoleModel
+  role: Role
 }
 
 export class CreateRoleService {
-  constructor(private repository: RoleModelRepository) {}
+  constructor(private repository: RoleRepository) {}
 
   async execute(data: CreateRoleRequest): Promise<CreateRoleResponse> {
     const role = await this.repository.create({
-      name: data.name,
+      name: data.name as any,
       unit: { connect: { id: data.unitId } },
       permissions: { connect: data.permissionIds.map((id) => ({ id })) },
     })

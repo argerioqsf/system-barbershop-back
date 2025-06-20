@@ -1,7 +1,7 @@
 import { makeRegisterService } from '@/services/@factories/make-register-service'
 import { FastifyReply, FastifyRequest } from 'fastify'
-import { Role } from '@prisma/client'
 import { z } from 'zod'
+import { UserToken } from './authenticate-controller'
 
 export const registerUser = async (
   request: FastifyRequest,
@@ -16,21 +16,21 @@ export const registerUser = async (
     genre: z.string(),
     birthday: z.string(),
     pix: z.string(),
-    role: z.nativeEnum(Role),
     unitId: z.string(),
-    roleModelId: z.string(),
+    roleId: z.string(),
     permissions: z.array(z.string()).optional(),
   })
 
   const data = registerBodySchema.parse(request.body)
 
-  if (data.role === 'ADMIN' || data.role === 'OWNER') {
-    return replay.status(403).send({ message: 'Unauthorized role' })
-  }
+  // if (data.role === RoleName.ADMIN || data.role === RoleName.OWNER) {
+  //   return replay.status(403).send({ message: 'Unauthorized role' })
+  // }
 
   const registerService = makeRegisterService()
 
-  await registerService.execute({
+  const user = request.user as UserToken
+  await registerService.execute(user, {
     name: data.name,
     email: data.email,
     password: data.password,
@@ -39,8 +39,7 @@ export const registerUser = async (
     genre: data.genre,
     birthday: data.birthday,
     pix: data.pix,
-    role: data.role,
-    roleModelId: data.roleModelId,
+    roleId: data.roleId,
     unitId: data.unitId,
     permissions: data.permissions,
   })

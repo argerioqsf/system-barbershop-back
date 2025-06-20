@@ -1,2 +1,0 @@
--- Migration to reintroduce features and adjust permissions
--- This file was generated during automated refactor

@@ -1,11 +1,15 @@
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { PermissionRepository } from '@/repositories/permission-repository'
 import { UnitRepository } from '@/repositories/unit-repository'
-import { Profile, Role, User } from '@prisma/client'
+import { Profile, RoleName, User } from '@prisma/client'
 import { hash } from 'bcryptjs'
 import { UserAlreadyExistsError } from '@/services/@errors/user/user-already-exists-error'
 import { UnitNotExistsError } from '@/services/@errors/unit/unit-not-exists-error'
 import { InvalidPermissionError } from '../@errors/permission/invalid-permission-error'
+import { RolesNotFoundError } from '../@errors/role/role-not-found-error'
+import { RoleRepository } from '@/repositories/role-repository'
+import { UserToken } from '@/http/controllers/authenticate-controller'
+import { UnauthorizedError } from '../@errors/auth/unauthorized-error'
 
 interface RegisterUserRequest {
   name: string
@@ -16,8 +20,7 @@ interface RegisterUserRequest {
   genre: string
   birthday: string
   pix: string
-  role: Role
-  roleModelId: string
+  roleId: string
   unitId: string
   permissions?: string[]
 }
@@ -32,9 +35,25 @@ export class RegisterUserService {
     private repository: BarberUsersRepository,
     private unitRepository: UnitRepository,
     private permissionRepository: PermissionRepository,
+    private roleRepository: RoleRepository,
   ) {}
 
-  async execute(data: RegisterUserRequest): Promise<RegisterUserResponse> {
+  async execute(
+    userToken: UserToken,
+    data: RegisterUserRequest,
+  ): Promise<RegisterUserResponse> {
+    const role = await this.roleRepository.findById(data.roleId)
+    if (!role) {
+      throw new RolesNotFoundError()
+    }
+
+    if (
+      (role?.name === RoleName.ADMIN || role?.name === RoleName.OWNER) &&
+      userToken.role !== 'ADMIN'
+    ) {
+      throw new UnauthorizedError()
+    }
+
     const existing = await this.repository.findByEmail(data.email)
     if (existing) {
       throw new UserAlreadyExistsError()
@@ -46,7 +65,7 @@ export class RegisterUserService {
     let permissionIds: string[] | undefined
     if (data.permissions) {
       const allowed = await this.permissionRepository.findManyByRole(
-        data.roleModelId,
+        data.roleId,
       )
       const allowedIds = allowed.map((p) => p.id)
       if (!data.permissions.every((id) => allowedIds.includes(id))) {
@@ -70,8 +89,7 @@ export class RegisterUserService {
         genre: data.genre,
         birthday: data.birthday,
         pix: data.pix,
-        role: data.role,
-        roleModelId: data.roleModelId,
+        roleId: data.roleId,
       },
       permissionIds,
     )

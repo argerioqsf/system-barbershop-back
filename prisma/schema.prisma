@@ -8,13 +8,32 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
+enum RoleName {
   ADMIN
   BARBER
   CLIENT
   ATTENDANT
   MANAGER
   OWNER
+}
+
+enum PermissionName {
+  LIST_USER_ALL
+  LIST_USER_UNIT
+  LIST_USER_ORG
+  UPDATE_USER_ADMIN
+  UPDATE_USER_OWNER
+  UPDATE_USER_BARBER
+  MANAGE_OTHER_USER_TRANSACTION
+  LIST_PERMISSIONS_UNIT
+  LIST_ROLES_UNIT
+  LIST_SALES_UNIT
+  LIST_APPOINTMENTS_UNIT
+  LIST_SERVICES_UNIT
+  MANAGE_USER_TRANSACTION_ADD
+  MANAGE_USER_TRANSACTION_WITHDRAWAL
+  LIST_UNIT_ALL
+  LIST_UNIT_ORG
 }
 
 enum PaymentMethod {
@@ -49,9 +68,9 @@ model Feature {
   @@map("features")
 }
 
-model RoleModel {
+model Role {
   id          String       @id @default(uuid())
-  name        String
+  name        RoleName
   unitId      String
   permissions Permission[] @relation("RolePermissions")
   profiles    Profile[]
@@ -62,9 +81,9 @@ model RoleModel {
 
 model Permission {
   id       String      @id @default(uuid())
-  name     String
+  name     PermissionName
   unitId   String
-  roles    RoleModel[] @relation("RolePermissions")
+  roles    Role[] @relation("RolePermissions")
   profiles Profile[]   @relation("ProfilePermissions")
   features Feature[]   @relation("FeatureToPermission")
   unit     Unit        @relation(fields: [unitId], references: [id])
@@ -105,10 +124,9 @@ model Profile {
   genre                String
   birthday             String
   pix                  String
-  role                 Role     @default(CLIENT)
   permissions          Permission[] @relation("ProfilePermissions")
-  roleModelId          String
-  roleModel            RoleModel @relation(fields: [roleModelId], references: [id])
+  roleId               String
+  role                 Role @relation(fields: [roleId], references: [id])
   commissionPercentage Float    @default(100)
   totalBalance         Float    @default(0)
   userId               String   @unique
@@ -309,7 +327,7 @@ model Unit {
   transactions   Transaction[]
   sessions       CashRegisterSession[]
   users          User[]
-  roles          RoleModel[]
+  roles          Role[]
   permissions    Permission[]
 
   organization Organization @relation(fields: [organizationId], references: [id])

@@ -3,7 +3,6 @@ import {
   DiscountType,
   PaymentMethod,
   PaymentStatus,
-  Role,
 } from '@prisma/client'
 import {
   SaleRepository,
@@ -82,8 +81,7 @@ export class InMemorySaleRepository implements SaleRepository {
               genre: '',
               birthday: '',
               pix: '',
-              role: 'BARBER' as Role,
-              roleModelId: randomUUID(),
+              roleId: randomUUID(),
               commissionPercentage: it.porcentagemBarbeiro ?? 100,
               totalBalance: 0,
               userId: it.barber.connect.id,

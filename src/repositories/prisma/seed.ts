@@ -1,11 +1,11 @@
 import { env } from '@/env'
 import {
   PrismaClient,
-  Role,
   PaymentMethod,
   PaymentStatus,
   TransactionType,
   DiscountType,
+  PermissionName,
 } from '@prisma/client'
 import { hash } from 'bcryptjs'
 import 'dotenv/config'
@@ -46,32 +46,24 @@ async function main() {
   })
 
   let adminRoleModel: { id: string } | null = null
-  const defaultRoleMain = await prisma.roleModel.create({
+  const defaultRoleMain = await prisma.role.create({
     data: {
-      name: 'Default',
+      name: 'CLIENT',
       unit: { connect: { id: mainUnit.id } },
     },
   })
 
-  const defaultRoleUnit2 = await prisma.roleModel.create({
+  const defaultRoleUnit2 = await prisma.role.create({
     data: {
-      name: 'Default',
+      name: 'CLIENT',
       unit: { connect: { id: Unit2.id } },
     },
   })
 
-  adminRoleModel = await prisma.roleModel.create({
+  adminRoleModel = await prisma.role.create({
     data: {
-      name: 'Admin',
+      name: 'ADMIN',
       unit: { connect: { id: mainUnit.id } },
-    },
-  })
-
-  await prisma.permission.create({
-    data: {
-      name: 'List units',
-      unit: { connect: { id: mainUnit.id } },
-      roles: { connect: { id: adminRoleModel.id } },
     },
   })
 
@@ -91,9 +83,16 @@ async function main() {
           genre: 'M',
           birthday: '1980-04-15',
           pix: 'ownerpix',
-          role: Role.OWNER,
           totalBalance: 0,
-          roleModel: { connect: { id: defaultRoleMain.id } },
+          role: { connect: { id: defaultRoleMain.id } },
+          permissions: {
+            create: [
+              {
+                name: PermissionName.LIST_USER_ALL,
+                unitId: mainUnit.id,
+              },
+            ],
+          },
         },
       },
       unit: { connect: { id: mainUnit.id } },
@@ -114,9 +113,8 @@ async function main() {
           genre: 'M',
           birthday: '1980-04-15',
           pix: 'ownerpix',
-          role: Role.OWNER,
           totalBalance: 0,
-          roleModel: { connect: { id: defaultRoleUnit2.id } },
+          role: { connect: { id: defaultRoleUnit2.id } },
         },
       },
       unit: { connect: { id: Unit2.id } },
@@ -137,9 +135,28 @@ async function main() {
           genre: 'M',
           birthday: '2000-01-01',
           pix: 'adminpix',
-          role: Role.ADMIN,
           totalBalance: 0,
-          roleModel: { connect: { id: adminRoleId } },
+          role: { connect: { id: adminRoleId } },
+          permissions: {
+            create: [
+              {
+                name: PermissionName.LIST_USER_ALL,
+                unitId: mainUnit.id,
+              },
+              {
+                name: PermissionName.UPDATE_USER_ADMIN,
+                unitId: mainUnit.id,
+              },
+              {
+                name: PermissionName.UPDATE_USER_BARBER,
+                unitId: mainUnit.id,
+              },
+              {
+                name: PermissionName.UPDATE_USER_OWNER,
+                unitId: mainUnit.id,
+              },
+            ],
+          },
         },
       },
       unit: { connect: { id: mainUnit.id } },
@@ -160,9 +177,8 @@ async function main() {
           genre: 'M',
           birthday: '1990-03-10',
           pix: 'managerpix',
-          role: Role.MANAGER,
           totalBalance: 0,
-          roleModel: { connect: { id: defaultRoleMain.id } },
+          role: { connect: { id: defaultRoleMain.id } },
         },
       },
       unit: { connect: { id: mainUnit.id } },
@@ -184,9 +200,8 @@ async function main() {
           birthday: '1995-05-10',
           pix: 'barberpix',
           commissionPercentage: 70,
-          role: Role.BARBER,
           totalBalance: 0,
-          roleModel: { connect: { id: defaultRoleMain.id } },
+          role: { connect: { id: defaultRoleMain.id } },
         },
       },
       unit: { connect: { id: mainUnit.id } },
@@ -207,9 +222,8 @@ async function main() {
           genre: 'F',
           birthday: '2001-07-20',
           pix: 'clientpix',
-          role: Role.CLIENT,
           totalBalance: 0,
-          roleModel: { connect: { id: defaultRoleMain.id } },
+          role: { connect: { id: defaultRoleMain.id } },
         },
       },
       unit: { connect: { id: mainUnit.id } },

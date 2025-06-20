@@ -4,7 +4,7 @@ import { UnitRepository } from '@/repositories/unit-repository'
 import { UserNotFoundError } from '@/services/@errors/user/user-not-found-error'
 import { UnitNotExistsError } from '@/services/@errors/unit/unit-not-exists-error'
 import { InvalidPermissionError } from '@/services/@errors/permission/invalid-permission-error'
-import { Profile, Role, Unit, User } from '@prisma/client'
+import { Profile, Unit, User } from '@prisma/client'
 
 interface UpdateUserRequest {
   id: string
@@ -14,8 +14,7 @@ interface UpdateUserRequest {
   genre?: string
   birthday?: string
   pix?: string
-  role?: Role
-  roleModelId?: string
+  roleId?: string
   permissions?: string[]
   active?: boolean
   email?: string
@@ -48,7 +47,7 @@ export class UpdateUserService {
 
     let permissionIds: string[] | undefined
     if (data.permissions) {
-      const roleId = data.roleModelId ?? existing.profile?.roleModelId
+      const roleId = data.roleId ?? existing.profile?.roleId
       if (!roleId) throw new InvalidPermissionError()
       const allowed = await this.permissionRepository.findManyByRole(roleId)
       const allowedIds = allowed.map((p) => p.id)
@@ -75,8 +74,7 @@ export class UpdateUserService {
         genre: data.genre,
         birthday: data.birthday,
         pix: data.pix,
-        role: data.role,
-        roleModelId: data.roleModelId,
+        roleId: data.roleId,
         commissionPercentage: data.commissionPercentage,
       },
       permissionIds,

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { ListRolesService } from '../../../src/services/role/list-roles'
-import { InMemoryRoleModelRepository, FakeProfilesRepository } from '../../helpers/fake-repositories'
-import { makeRoleModel, makeProfile } from '../../helpers/default-values'
+import { InMemoryRoleRepository, FakeProfilesRepository } from '../../helpers/fake-repositories'
+import { makeRole, makeProfile } from '../../helpers/default-values'
 import { GetUserProfileFromUserIdService } from '../../../src/services/profile/get-profile-from-userId-service'
 
 const profileRepo = new FakeProfilesRepository()
@@ -10,15 +10,15 @@ vi.mock('../../../src/services/@factories/profile/get-profile-from-userId-servic
   getProfileFromUserIdService: () => new GetUserProfileFromUserIdService(profileRepo),
 }))
 
-const r1 = makeRoleModel('r1', 'unit-1')
-const r2 = makeRoleModel('r2', 'unit-2')
+const r1 = makeRole('r1', 'unit-1')
+const r2 = makeRole('r2', 'unit-2')
 
 describe('List roles service', () => {
-  let repo: InMemoryRoleModelRepository
+  let repo: InMemoryRoleRepository
   let service: ListRolesService
 
   beforeEach(() => {
-    repo = new InMemoryRoleModelRepository([r1, r2])
+    repo = new InMemoryRoleRepository([r1, r2])
     service = new ListRolesService(repo)
     const profile = makeProfile('prof-1', '1')
     ;(profile as any).permissions = [{ id: 'perm', name: 'LIST_ROLES' }]

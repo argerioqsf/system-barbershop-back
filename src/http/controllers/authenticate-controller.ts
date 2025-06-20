@@ -1,13 +1,14 @@
 import { makeAuthenticateService } from '@/services/@factories/make-authenticate-service'
-import { Role } from '@prisma/client'
 import { FastifyReply, FastifyRequest } from 'fastify'
+import { PermissionName, RoleName } from '@prisma/client'
 import { z } from 'zod'
 
 export interface UserToken {
   unitId: string
   organizationId: string
-  role: Role
+  role: RoleName
   sub: string
+  permissions?: PermissionName[]
 }
 
 export const authenticate = async (
@@ -27,21 +28,24 @@ export const authenticate = async (
     email,
     password,
   })
-
+  const permissions: PermissionName[] | undefined =
+    user.profile?.permissions.map((permission) => permission.name)
   const token = await replay.jwtSign(
     {
       unitId: user.unitId,
       organizationId: user.organizationId,
-      role: user.profile?.role,
+      role: user.profile?.role?.name,
+      permissions,
     },
     { sign: { sub: user.id } },
   )
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { password: _, ...userWithoutPassword } = user
+  const Roles = Object.values(RoleName) as readonly RoleName[]
   return replay.status(200).send({
     user: userWithoutPassword,
-    roles: Role,
+    roles: Roles,
     token,
   })
 }

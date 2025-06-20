@@ -37,7 +37,7 @@ describe('Update profile user service', () => {
       genre: '',
       birthday: '',
       pix: '',
-      role: 'BARBER' as any,
+      roleId: 'role-1',
     })
 
     expect(res.user?.name).toBe('New')
@@ -56,7 +56,7 @@ describe('Update profile user service', () => {
         genre: '',
         birthday: '',
         pix: '',
-        role: 'BARBER' as any,
+        roleId: 'role-1',
       }),
     ).rejects.toBeInstanceOf(UserNotFoundError)
   })
@@ -81,7 +81,7 @@ describe('Update profile user service', () => {
         genre: '',
         birthday: '',
         pix: '',
-        role: 'BARBER' as any,
+        roleId: 'role-1',
       }),
     ).rejects.toBeInstanceOf(ProfileNotFoundError)
   })

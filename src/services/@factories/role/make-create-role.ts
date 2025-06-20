@@ -1,6 +1,6 @@
-import { PrismaRoleModelRepository } from '@/repositories/prisma/prisma-role-model-repository'
+import { PrismaRoleRepository } from '@/repositories/prisma/prisma-role-repository'
 import { CreateRoleService } from '@/services/role/create-role'
 
 export function makeCreateRoleService() {
-  return new CreateRoleService(new PrismaRoleModelRepository())
+  return new CreateRoleService(new PrismaRoleRepository())
 }

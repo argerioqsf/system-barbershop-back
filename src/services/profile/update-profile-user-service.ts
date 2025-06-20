@@ -1,6 +1,6 @@
 import { ProfilesRepository } from '@/repositories/profiles-repository'
 import { UsersRepository } from '@/repositories/users-repository'
-import { Profile, Role, User } from '@prisma/client'
+import { Profile, User } from '@prisma/client'
 import { UserNotFoundError } from '../@errors/user/user-not-found-error'
 import { ProfileNotFoundError } from '../@errors/profile/profile-not-found-error'
 
@@ -14,7 +14,7 @@ interface UpdateProfileUserRequest {
   genre: string
   birthday: string
   pix: string
-  role: Role
+  roleId: string
 }
 
 interface UpdateProfileUserResponse {
@@ -53,7 +53,7 @@ export class UpdateProfileUserService {
       genre: data.genre,
       birthday: data.birthday,
       pix: data.pix,
-      role: data.role,
+      roleId: data.roleId,
     })
 
     const updatedUser = await this.usersRepository.findById(data.id)

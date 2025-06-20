@@ -37,10 +37,12 @@ export class PrismaProfilesRepository implements ProfilesRepository {
     return profile as (Profile & { user: Omit<User, 'password'> }) | null
   }
 
-  async findByUserId(
-    id: string,
-  ): Promise<
-    (Profile & { user: Omit<User, 'password'>; permissions: { id: string; name: string }[] }) | null
+  async findByUserId(id: string): Promise<
+    | (Profile & {
+        user: Omit<User, 'password'>
+        permissions: { id: string; name: string }[]
+      })
+    | null
   > {
     const profile = await prisma.profile.findUnique({
       where: { userId: id },
@@ -60,7 +62,10 @@ export class PrismaProfilesRepository implements ProfilesRepository {
       },
     })
     return profile as unknown as
-      | (Profile & { user: Omit<User, 'password'>; permissions: { id: string; name: string }[] })
+      | (Profile & {
+          user: Omit<User, 'password'>
+          permissions: { id: string; name: string }[]
+        })
       | null
   }
 
