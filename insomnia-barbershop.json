@@ -383,6 +383,22 @@
       ]
     },
     {
+      "_id": "req_update_barber_user",
+      "_type": "request",
+      "parentId": "fld_barber_users",
+      "name": "Update barber user",
+      "method": "PUT",
+      "url": "{{ baseURL }}/barber/users/{id}",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"New Name\",\n  \"phone\": \"999999999\",\n  \"unitId\": \"\",\n  \"roleId\": \"\",\n  \"commissionPercentage\": 0\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ token }}" }
+      ]
+    },
+    {
       "_id": "fld_coupons",
       "_type": "request_group",
       "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
