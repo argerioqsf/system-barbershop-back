@@ -47,7 +47,8 @@ export class CreateProfileService {
 
     let permissionIds: string[] | undefined
     if (permissions) {
-      const allowed = await this.permissionRepository.findManyByRole(roleModelId)
+      const allowed =
+        await this.permissionRepository.findManyByRole(roleModelId)
       const allowedIds = allowed.map((p) => p.id)
       if (!permissions.every((id) => allowedIds.includes(id))) {
         throw new InvalidPermissionError()

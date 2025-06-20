@@ -8,7 +8,10 @@ export class PrismaRoleModelRepository implements RoleModelRepository {
   }
 
   async findMany(where: Prisma.RoleModelWhereInput = {}): Promise<RoleModel[]> {
-    return prisma.roleModel.findMany({ where })
+    return prisma.roleModel.findMany({
+      where,
+      include: { permissions: { include: { features: true } } },
+    })
   }
 
   async findById(id: string): Promise<RoleModel | null> {
