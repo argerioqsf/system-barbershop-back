@@ -1,6 +1,5 @@
 import { makeRegisterUserService } from '@/services/@factories/barber-user/make-register-user'
 import { FastifyReply, FastifyRequest } from 'fastify'
-import { RoleName } from '@prisma/client'
 import { z } from 'zod'
 import { UserToken } from '../authenticate-controller'
 

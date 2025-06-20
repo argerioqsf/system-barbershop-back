@@ -22,8 +22,8 @@ describe('List units service', () => {
     service = new ListUnitsService(repo)
     const profile = makeProfile('prof-1', '1')
     ;(profile as any).permissions = [
-      { id: 'perm1', name: 'LIST_ALL_UNITS' },
-      { id: 'perm2', name: 'LIST_ORG_UNIT' },
+      { id: 'perm1', name: 'LIST_UNIT_ALL' },
+      { id: 'perm2', name: 'LIST_UNIT_ORG' },
     ]
     profileRepo.profiles = [profile]
   })
@@ -34,6 +34,7 @@ describe('List units service', () => {
       role: 'ADMIN',
       organizationId: 'org-1',
       unitId: 'unit-1',
+      permissions: ['LIST_UNIT_ALL', 'LIST_UNIT_ORG'],
     } as any)
     expect(result.units).toHaveLength(2)
   })
@@ -44,6 +45,7 @@ describe('List units service', () => {
       role: 'BARBER',
       organizationId: 'org-1',
       unitId: 'unit-1',
+      permissions: ['LIST_UNIT_ALL', 'LIST_UNIT_ORG'],
     } as any)
     expect(result.units).toHaveLength(2)
     expect(result.units[0].id).toBe('unit-1')
@@ -55,6 +57,7 @@ describe('List units service', () => {
       role: 'MANAGER',
       organizationId: 'org-1',
       unitId: 'unit-1',
+      permissions: ['LIST_UNIT_ALL', 'LIST_UNIT_ORG'],
     } as any)
     expect(result.units).toHaveLength(2)
     expect(result.units[0].id).toBe('unit-1')

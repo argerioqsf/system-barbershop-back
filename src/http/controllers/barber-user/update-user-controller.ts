@@ -1,6 +1,5 @@
 import { makeUpdateUserService } from '@/services/@factories/barber-user/make-update-user'
 import { FastifyReply, FastifyRequest } from 'fastify'
-import { RoleName } from '@prisma/client'
 import { z } from 'zod'
 import { hasPermission } from '@/utils/permissions'
 import { UserToken } from '../authenticate-controller'
