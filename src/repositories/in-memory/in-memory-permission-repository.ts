@@ -1,4 +1,9 @@
-import { Prisma, Permission, PermissionName } from '@prisma/client'
+import {
+  Prisma,
+  Permission,
+  PermissionName,
+  PermissionCategory,
+} from '@prisma/client'
 import { randomUUID } from 'crypto'
 import { PermissionRepository } from '../permission-repository'
 
@@ -42,7 +47,7 @@ export class InMemoryPermissionRepository implements PermissionRepository {
     const permission = this.permissions.find((p) => p.id === id)
     if (!permission) throw new Error('Permission not found')
     if (data.name) permission.name = data.name as PermissionName
-    if (data.category) permission.category = data.category as any
+    if (data.category) permission.category = data.category as PermissionCategory
     return permission
   }
 }
