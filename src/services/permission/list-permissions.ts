@@ -11,9 +11,9 @@ interface ListPermissionsResponse {
 export class ListPermissionsService {
   constructor(private repository: PermissionRepository) {}
 
-  async execute(user: UserToken & { permissions: string[] }): Promise<ListPermissionsResponse> {
+  async execute(user: UserToken): Promise<ListPermissionsResponse> {
     assertUser(user)
-    assertPermission(user.permissions, 'LIST_PERMISSIONS')
+    await assertPermission(user.sub, 'LIST_PERMISSIONS')
     const permissions = await this.repository.findMany({ unitId: user.unitId })
     return { permissions }
   }

@@ -1,7 +1,14 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { ListSalesService } from '../../../src/services/sale/list-sales'
-import { FakeSaleRepository } from '../../helpers/fake-repositories'
-import { makeSale } from '../../helpers/default-values'
+import { FakeSaleRepository, FakeProfilesRepository } from '../../helpers/fake-repositories'
+import { makeSale, makeProfile } from '../../helpers/default-values'
+import { GetUserProfileFromUserIdService } from '../../../src/services/profile/get-profile-from-userId-service'
+
+const profileRepo = new FakeProfilesRepository()
+
+vi.mock('../../../src/services/@factories/profile/get-profile-from-userId-service', () => ({
+  getProfileFromUserIdService: () => new GetUserProfileFromUserIdService(profileRepo),
+}))
 
 const s1 = makeSale('s1', 'unit-1', 'org-1')
 const s2 = makeSale('s2', 'unit-2', 'org-2')
@@ -14,6 +21,9 @@ describe('List sales service', () => {
     repo = new FakeSaleRepository()
     repo.sales.push(s1, s2)
     service = new ListSalesService(repo)
+    const profile = makeProfile('prof-1', '1')
+    ;(profile as any).permissions = [{ id: 'perm', name: 'LIST_SALES' }]
+    profileRepo.profiles = [profile]
   })
 
   it('lists all for admin', async () => {
@@ -22,7 +32,6 @@ describe('List sales service', () => {
       role: 'ADMIN',
       unitId: 'unit-1',
       organizationId: 'org-1',
-      permissions: ['LIST_SALES'],
     } as any)
     expect(res.sales).toHaveLength(2)
   })
@@ -33,7 +42,6 @@ describe('List sales service', () => {
       role: 'OWNER',
       unitId: 'unit-1',
       organizationId: 'org-1',
-      permissions: ['LIST_SALES'],
     } as any)
     expect(res.sales).toHaveLength(1)
     expect(res.sales[0].id).toBe('s1')
@@ -45,7 +53,6 @@ describe('List sales service', () => {
       role: 'BARBER',
       unitId: 'unit-2',
       organizationId: 'org-2',
-      permissions: ['LIST_SALES'],
     } as any)
     expect(res.sales).toHaveLength(1)
     expect(res.sales[0].id).toBe('s2')
@@ -58,7 +65,6 @@ describe('List sales service', () => {
         role: 'ADMIN',
         unitId: 'unit-1',
         organizationId: 'org-1',
-        permissions: ['LIST_SALES'],
       } as any),
     ).rejects.toThrow('User not found')
   })

@@ -1,6 +1,7 @@
 import { Role, Unit } from '@prisma/client'
 import { PermissionDeniedError } from '@/services/@errors/permission/permission-denied-error'
 import { UnitRepository } from '@/repositories/unit-repository'
+import { getProfileFromUserIdService } from '@/services/@factories/profile/get-profile-from-userId-service'
 
 export const FEATURES = {
   LIST_UNITS: ['LIST_UNITS'],
@@ -25,18 +26,25 @@ export const FEATURES = {
 
 export type Feature = keyof typeof FEATURES
 
-export function hasPermission(
-  permissions: string[],
+async function getPermissionsFromUserId(userId: string): Promise<string[]> {
+  const service = getProfileFromUserIdService()
+  const { profile } = await service.execute({ id: userId })
+  return profile.permissions.map((p) => p.name)
+}
+
+export async function hasPermission(
+  userId: string,
   feature: Feature,
-): boolean {
+): Promise<boolean> {
+  const permissions = await getPermissionsFromUserId(userId)
   return FEATURES[feature].some((p) => permissions.includes(p))
 }
 
-export function assertPermission(
-  permissions: string[],
+export async function assertPermission(
+  userId: string,
   feature: Feature,
-): void {
-  if (!hasPermission(permissions, feature)) {
+): Promise<void> {
+  if (!(await hasPermission(userId, feature))) {
     throw new PermissionDeniedError()
   }
 }
