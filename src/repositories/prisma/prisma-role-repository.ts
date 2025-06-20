@@ -18,7 +18,20 @@ export class PrismaRoleRepository implements RoleRepository {
     return prisma.role.findUnique({ where: { id } })
   }
 
-  async update(id: string, data: Prisma.RoleUpdateInput): Promise<Role> {
-    return prisma.role.update({ where: { id }, data })
+  async update(
+    id: string,
+    data: Prisma.RoleUpdateInput,
+    permissionIds?: string[],
+  ): Promise<Role> {
+    return prisma.role.update({
+      where: { id },
+      data: {
+        ...data,
+
+        ...(permissionIds && {
+          permissions: { connect: permissionIds.map((id) => ({ id })) },
+        }),
+      },
+    })
   }
 }

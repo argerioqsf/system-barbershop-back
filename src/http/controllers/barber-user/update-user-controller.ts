@@ -1,8 +1,28 @@
 import { makeUpdateUserService } from '@/services/@factories/barber-user/make-update-user'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
-import { hasPermission } from '@/utils/permissions'
 import { UserToken } from '../authenticate-controller'
+import { UpdateUserResponse } from '@/services/barber-user/update-user'
+
+function handleChangeCredentials(
+  result: UpdateUserResponse,
+  data: { roleId?: string; unitId?: string; permissions?: string[] },
+): boolean {
+  const oldPermissions =
+    result.oldUser?.profile?.permissions.map((permission) => permission.id) ??
+    []
+  const changedRole = data.roleId
+    ? data?.roleId !== result.oldUser?.profile?.roleId
+    : false
+  const changedUnit = data?.unitId
+    ? data?.unitId !== result.oldUser?.unitId
+    : false
+  const changedPermission = !data.permissions?.every((permission) =>
+    oldPermissions.includes(permission),
+  )
+
+  return changedRole || changedUnit || !!changedPermission
+}
 
 export const UpdateBarberUserController = async (
   request: FastifyRequest,
@@ -33,26 +53,21 @@ export const UpdateBarberUserController = async (
   const data = bodySchema.parse(request.body)
   const service = makeUpdateUserService()
   const userToken = request.user as UserToken
-  console.log('userToken: ', userToken)
-  if (
-    data.roleId ||
-    (data.permissions &&
-      !hasPermission(
-        ['UPDATE_USER_ADMIN', 'UPDATE_USER_OWNER'],
-        userToken.permissions,
-      ))
-  ) {
-    return reply.status(403).send({ message: 'Unauthorized' })
-  }
 
   const result = await service.execute({ id, ...data })
 
-  if (id === userToken.sub && (data.unitId || data.roleId)) {
+  const changeCredentials = handleChangeCredentials(result, data)
+
+  if (id === userToken.sub && changeCredentials) {
+    const permissions = result.profile?.permissions.map(
+      (permission) => permission.name,
+    )
     const token = await reply.jwtSign(
       {
         unitId: result.user.unitId,
         organizationId: result.user.organizationId,
         role: result.profile?.role?.name ?? userToken.role,
+        permissions,
       },
       { sign: { sub: result.user.id } },
     )

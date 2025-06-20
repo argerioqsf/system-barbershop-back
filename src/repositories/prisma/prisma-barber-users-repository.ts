@@ -26,7 +26,10 @@ export class PrismaBarberUsersRepository implements BarberUsersRepository {
     userData: Prisma.UserUpdateInput,
     profileData: Prisma.ProfileUncheckedUpdateInput,
     permissionIds?: string[],
-  ): Promise<{ user: User; profile: (Profile & { role: Role }) | null }> {
+  ): Promise<{
+    user: User
+    profile: (Profile & { role: Role; permissions: Permission[] }) | null
+  }> {
     const user = await prisma.user.update({
       where: { id },
       data: {
@@ -40,7 +43,7 @@ export class PrismaBarberUsersRepository implements BarberUsersRepository {
           },
         },
       },
-      include: { profile: { include: { role: true } } },
+      include: { profile: { include: { role: true, permissions: true } } },
     })
 
     return { user, profile: user.profile }
@@ -52,12 +55,19 @@ export class PrismaBarberUsersRepository implements BarberUsersRepository {
     return prisma.user.findMany({ where, include: { profile: true } })
   }
 
-  async findById(
-    id: string,
-  ): Promise<(User & { profile: Profile | null; unit: Unit | null }) | null> {
+  async findById(id: string): Promise<
+    | (User & {
+        profile: (Profile & { role: Role; permissions: Permission[] }) | null
+        unit: Unit | null
+      })
+    | null
+  > {
     return prisma.user.findUnique({
       where: { id },
-      include: { profile: true, unit: true },
+      include: {
+        profile: { include: { role: true, permissions: true } },
+        unit: true,
+      },
     })
   }
 

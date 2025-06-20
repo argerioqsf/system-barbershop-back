@@ -19,12 +19,13 @@ export class UpdateRoleService {
     name,
     permissionIds,
   }: UpdateRoleRequest): Promise<UpdateRoleResponse> {
-    const role = await this.repository.update(id, {
-      ...(name && { name }),
-      ...(permissionIds && {
-        permissions: { set: permissionIds.map((pid) => ({ id: pid })) },
-      }),
-    })
+    const role = await this.repository.update(
+      id,
+      {
+        ...(name && { name }),
+      },
+      permissionIds,
+    )
     return { role }
   }
 }

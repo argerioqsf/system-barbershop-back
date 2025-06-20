@@ -11,13 +11,20 @@ export interface BarberUsersRepository {
     userData: Prisma.UserUpdateInput,
     profileData: Prisma.ProfileUncheckedUpdateInput,
     permissionIds?: string[],
-  ): Promise<{ user: User; profile: (Profile & { role: Role }) | null }>
+  ): Promise<{
+    user: User
+    profile: (Profile & { role: Role; permissions: Permission[] }) | null
+  }>
   findMany(
     where?: Prisma.UserWhereInput,
   ): Promise<(User & { profile: Profile | null })[]>
-  findById(
-    id: string,
-  ): Promise<(User & { profile: Profile | null; unit: Unit | null }) | null>
+  findById(id: string): Promise<
+    | (User & {
+        profile: (Profile & { role: Role; permissions: Permission[] }) | null
+        unit: Unit | null
+      })
+    | null
+  >
   findByEmail(email: string): Promise<
     | (User & {
         profile: (Profile & { role: Role; permissions: Permission[] }) | null
