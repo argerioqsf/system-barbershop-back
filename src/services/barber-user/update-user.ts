@@ -45,10 +45,9 @@ export class UpdateUserService {
     private permissionRepository: PermissionRepository,
   ) {}
 
-  private async verifyPermissions(data: UpdateUserRequest, user: OldUser) {
-    if (user && user.profile) {
-      const permissions =
-        user.profile.permissions?.map((perm) => perm.name) ?? []
+  private async verifyPermissions(user: OldUser, userToken?: UserToken) {
+    if (user && user.profile && userToken?.role !== 'ADMIN') {
+      const permissions = userToken?.permissions
       if (
         user.profile.role.name === 'OWNER' &&
         !hasPermission(['UPDATE_USER_OWNER'], permissions)
@@ -91,7 +90,7 @@ export class UpdateUserService {
     if (!oldUser) {
       throw new UserNotFoundError()
     }
-    await this.verifyPermissions(data, oldUser)
+    await this.verifyPermissions(oldUser, userToken)
 
     let unit: Unit | undefined
     if (data.unitId) {
