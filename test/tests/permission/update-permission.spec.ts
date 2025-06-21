@@ -7,7 +7,6 @@ const perm = {
   id: 'perm-1',
   name: PermissionName.LIST_USER_ALL,
   category: PermissionCategory.USER,
-  unitId: 'unit-1',
 }
 
 describe('Update permission service', () => {

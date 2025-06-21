@@ -44,6 +44,9 @@ enum PermissionCategory {
   PRODUCT
   PROFILE
   ROLE
+  PERMISSIONS
+  SALE
+  TRANSACTION
 }
 
 enum PaymentMethod {

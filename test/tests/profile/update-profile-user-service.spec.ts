@@ -25,7 +25,10 @@ describe('Update profile user service', () => {
       organization: { connect: { id: 'org-1' } },
       unit: { connect: { id: 'unit-1' } },
     })
-    profileRepo.profiles.push({ ...makeProfile('p1', user.id, 0), user: { ...user, password: '' } })
+    profileRepo.profiles.push({
+      ...makeProfile('p1', user.id, 0),
+      user: { ...user },
+    })
 
     const res = await service.execute({
       id: user.id,
@@ -86,4 +89,3 @@ describe('Update profile user service', () => {
     ).rejects.toBeInstanceOf(ProfileNotFoundError)
   })
 })
-

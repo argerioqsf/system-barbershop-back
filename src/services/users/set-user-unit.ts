@@ -24,11 +24,11 @@ export class SetUserUnitService {
 
   async execute(
     { user, unitId }: SetUserUnitRequest,
-    reply: FastifyReply,
-    request: FastifyRequest,
+    reply?: FastifyReply,
+    request?: FastifyRequest,
   ): Promise<void> {
-    const changeUnit = unitId !== user.unitId
     if (!user) throw new UserNotFoundError()
+    const changeUnit = unitId !== user.unitId
 
     const unit = await this.unitRepository.findById(unitId)
     if (!unit) throw new UnitNotFoundError()
@@ -45,7 +45,7 @@ export class SetUserUnitService {
       }),
     })
 
-    if (changeUnit) {
+    if (changeUnit && reply && request) {
       const permissions = userUpdated?.profile?.permissions.map(
         (permission) => permission.name,
       )
