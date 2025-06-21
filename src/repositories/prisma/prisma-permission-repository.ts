@@ -22,4 +22,11 @@ export class PrismaPermissionRepository implements PermissionRepository {
   async findManyByIds(ids: string[]): Promise<Permission[]> {
     return prisma.permission.findMany({ where: { id: { in: ids } } })
   }
+
+  async update(
+    id: string,
+    data: Prisma.PermissionUpdateInput,
+  ): Promise<Permission> {
+    return prisma.permission.update({ where: { id }, data })
+  }
 }

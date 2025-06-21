@@ -4,7 +4,6 @@ import { Permission, PermissionCategory, PermissionName } from '@prisma/client'
 interface CreatePermissionRequest {
   name: PermissionName
   category: PermissionCategory
-  unitId: string
 }
 
 interface CreatePermissionResponse {
@@ -20,7 +19,6 @@ export class CreatePermissionService {
     const permission = await this.repository.create({
       name: data.name,
       category: data.category,
-      unit: { connect: { id: data.unitId } },
     })
     return { permission }
   }

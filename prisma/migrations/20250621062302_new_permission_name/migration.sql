@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `permissions` MODIFY `category` ENUM('UNIT', 'SERVICE', 'USER', 'PRODUCT', 'PROFILE', 'ROLE', 'PERMISSIONS', 'SALE', 'TRANSACTION') NOT NULL;

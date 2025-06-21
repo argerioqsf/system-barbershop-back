@@ -14,11 +14,9 @@ describe('Create permission service', () => {
   it('creates a permission', async () => {
     const res = await service.execute({
       name: 'LIST_APPOINTMENTS_UNIT',
-      category: 'UINIT',
-      unitId: 'unit-1',
+      category: 'UNIT',
     })
     expect(repo.permissions).toHaveLength(1)
     expect(res.permission.name).toBe('LIST_APPOINTMENTS_UNIT')
-    expect(res.permission.unitId).toBe('unit-1')
   })
 })

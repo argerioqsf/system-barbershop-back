@@ -25,7 +25,7 @@ enum PermissionName {
   UPDATE_USER_OWNER
   UPDATE_USER_BARBER
   MANAGE_OTHER_USER_TRANSACTION
-  LIST_PERMISSIONS_UNIT
+  LIST_PERMISSIONS_ALL
   LIST_ROLES_UNIT
   LIST_SALES_UNIT
   LIST_APPOINTMENTS_UNIT
@@ -34,6 +34,19 @@ enum PermissionName {
   MANAGE_USER_TRANSACTION_WITHDRAWAL
   LIST_UNIT_ALL
   LIST_UNIT_ORG
+  LIST_ROLES_ALL
+}
+
+enum PermissionCategory {
+  UNIT
+  SERVICE
+  USER
+  PRODUCT
+  PROFILE
+  ROLE
+  PERMISSIONS
+  SALE
+  TRANSACTION
 }
 
 enum PaymentMethod {
@@ -58,14 +71,6 @@ enum PaymentStatus {
   PENDING
 }
 
-enum PermissionCategory {
-  UNIT
-  SERVICE
-  USER
-  PRODUCT
-  PROFILE
-}
-
 model Role {
   id          String       @id @default(uuid())
   name        RoleName
@@ -78,13 +83,11 @@ model Role {
 }
 
 model Permission {
-  id       String      @id @default(uuid())
-  name     PermissionName
+  id       String              @id @default(uuid())
+  name     PermissionName      @unique
   category PermissionCategory
-  unitId   String
-  roles    Role[] @relation("RolePermissions")
-  profiles Profile[]   @relation("ProfilePermissions")
-  unit     Unit        @relation(fields: [unitId], references: [id])
+  roles    Role[]              @relation("RolePermissions")
+  profiles  Profile[]            @relation("ProfilePermissions")
 
   @@map("permissions")
 }
@@ -107,6 +110,8 @@ model User {
   affectedTransactions Transaction[]         @relation("AffectedUser")
   sessions             CashRegisterSession[]
   passwordResetTokens  PasswordResetToken[]
+  versionToken         Int      @default(1)
+  versionTokenInvalidate Int?
   createdAt            DateTime              @default(now())
 
   organization Organization @relation(fields: [organizationId], references: [id])
@@ -326,7 +331,6 @@ model Unit {
   sessions       CashRegisterSession[]
   users          User[]
   roles          Role[]
-  permissions    Permission[]
 
   organization Organization @relation(fields: [organizationId], references: [id])
   Coupon       Coupon[]

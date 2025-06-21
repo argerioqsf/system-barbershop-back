@@ -59,4 +59,30 @@ describe('Update user service', () => {
       service.execute({ id: stored.id, permissions: ['p2'] })
     ).rejects.toThrow('permission not allowed for role')
   })
+
+  it('adds permissions instead of replacing', async () => {
+    repo.users[0].profile = {
+      ...repo.users[0].profile,
+      roleId: 'role-1',
+      permissions: [
+        {
+          id: 'p1',
+          name: 'A1',
+          category: 'USER',
+          unitId: defaultUnit.id,
+        },
+      ],
+    } as any
+    permissionRepo.permissions.push(
+      { id: 'p1', name: 'A1', unitId: defaultUnit.id },
+      { id: 'p2', name: 'A2', unitId: defaultUnit.id },
+    )
+    permissionRepo.permissions.forEach((p) =>
+      ((p as any).roles = [{ id: 'role-1' }]),
+    )
+    await service.execute({ id: stored.id, permissions: ['p2'] })
+    const ids = repo.users[0].profile?.permissions?.map((p) => p.id)
+    expect(ids).toContain('p1')
+    expect(ids).toContain('p2')
+  })
 })

@@ -7,12 +7,24 @@ export class PrismaUsersRepository implements UsersRepository {
   async update(
     id: string,
     data: Prisma.UserUpdateInput,
-  ): Promise<Omit<User, 'password'>> {
+  ): Promise<
+    Omit<User, 'password'> & {
+      profile: (Profile & { role: Role; permissions: Permission[] }) | null
+    }
+  > {
     const user = await prisma.user.update({
       where: {
         id,
       },
       data,
+      include: {
+        profile: {
+          include: {
+            role: true,
+            permissions: true,
+          },
+        },
+      },
     })
 
     return user
@@ -35,6 +47,8 @@ export class PrismaUsersRepository implements UsersRepository {
         active: true,
         organizationId: true,
         unitId: true,
+        versionToken: true,
+        versionTokenInvalidate: true,
         createdAt: true,
         profile: {
           select: {
@@ -59,20 +73,20 @@ export class PrismaUsersRepository implements UsersRepository {
     return userIndicator
   }
 
-  async findById(
-    id: string,
-  ): Promise<
-    | (Omit<User, 'password'> & { profile: Omit<Profile, 'userId'> | null })
+  async findById(id: string): Promise<
+    | (Omit<User, 'password'> & {
+        profile: (Profile & { role: Role; permissions: Permission[] }) | null
+      })
     | null
   > {
     const user = await prisma.user.findUnique({
       where: { id },
-      include: { profile: { include: { role: true } } },
+      include: { profile: { include: { role: true, permissions: true } } },
     })
     if (!user) return null
     const { ...rest } = user
     return rest as Omit<User, 'password'> & {
-      profile: Omit<Profile, 'userId'> | null
+      profile: (Profile & { role: Role; permissions: Permission[] }) | null
     }
   }
 
@@ -117,6 +131,8 @@ export class PrismaUsersRepository implements UsersRepository {
         active: true,
         organizationId: true,
         unitId: true,
+        versionToken: true,
+        versionTokenInvalidate: true,
         createdAt: true,
         profile: {
           select: {

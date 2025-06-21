@@ -23,6 +23,8 @@ export const defaultUser = {
   active: true,
   organizationId: 'org-1',
   unitId: 'unit-1',
+  versionToken: 1,
+  versionTokenInvalidate: null,
   createdAt: new Date(),
   profile: null,
 }
@@ -48,6 +50,8 @@ export const defaultClient = {
   active: true,
   organizationId: 'org-1',
   unitId: 'unit-1',
+  versionToken: 1,
+  versionTokenInvalidate: null,
   createdAt: new Date(),
   profile: null,
 }
@@ -157,7 +161,7 @@ export function makeProfile(
   id: string,
   userId: string,
   balance = 0,
-): Profile & { user: Omit<User, 'password'> } {
+): Profile & { user: Omit<User, 'password'>; permissions: Permission[] } {
   return {
     id,
     phone: '',
@@ -171,6 +175,7 @@ export function makeProfile(
     userId,
     user: { ...defaultUser, id: userId },
     createdAt: new Date(),
+    permissions: [],
   }
 }
 
@@ -418,9 +423,6 @@ export function makeRole(id = 'role-1', unitId = 'unit-1'): Role {
   return { id, name: 'ADMIN', unitId }
 }
 
-export function makePermission(
-  id = 'perm-1',
-  unitId = 'unit-1',
-): Permission {
-  return { id, name: 'Permission', unitId }
+export function makePermission(id = 'perm-1'): Permission {
+  return { id, name: 'LIST_APPOINTMENTS_UNIT', category: 'UNIT' }
 }

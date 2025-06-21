@@ -34,6 +34,8 @@ export class InMemoryProfilesRepository implements ProfilesRepository {
       active: false,
       organizationId: '',
       unitId: '',
+      versionToken: 1,
+      versionTokenInvalidate: null,
       createdAt: new Date(),
     }
     this.items.push({ ...profile, user })

@@ -16,10 +16,9 @@ export class ListUnitsService {
     assertUser(userToken)
 
     let units: Unit[] = []
-
-    if (await hasPermission(['LIST_UNIT_ALL'], userToken.permissions)) {
+    if (hasPermission(['LIST_UNIT_ALL'], userToken.permissions)) {
       units = await this.repository.findMany()
-    } else if (await hasPermission(['LIST_UNIT_ORG'], userToken.permissions)) {
+    } else if (hasPermission(['LIST_UNIT_ORG'], userToken.permissions)) {
       units = await this.repository.findMany({
         organizationId: userToken.organizationId,
       })

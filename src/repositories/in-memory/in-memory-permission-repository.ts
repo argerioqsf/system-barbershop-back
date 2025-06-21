@@ -1,4 +1,9 @@
-import { Prisma, Permission, PermissionName } from '@prisma/client'
+import {
+  Prisma,
+  Permission,
+  PermissionName,
+  PermissionCategory,
+} from '@prisma/client'
 import { randomUUID } from 'crypto'
 import { PermissionRepository } from '../permission-repository'
 
@@ -12,19 +17,13 @@ export class InMemoryPermissionRepository implements PermissionRepository {
       category: 'UNIT',
       id: randomUUID(),
       name: data.name as PermissionName,
-      unitId: (data.unit as { connect: { id: string } }).connect.id,
     }
     this.permissions.push(permission)
     return permission
   }
 
-  async findMany(
-    where: Prisma.PermissionWhereInput = {},
-  ): Promise<Permission[]> {
-    return this.permissions.filter((p) => {
-      if (where.unitId && p.unitId !== where.unitId) return false
-      return true
-    })
+  async findMany(): Promise<Permission[]> {
+    return this.permissions
   }
 
   async findManyByRole(roleId: string): Promise<Permission[]> {
@@ -33,5 +32,16 @@ export class InMemoryPermissionRepository implements PermissionRepository {
 
   async findManyByIds(ids: string[]): Promise<Permission[]> {
     return this.permissions.filter((p) => ids.includes(p.id))
+  }
+
+  async update(
+    id: string,
+    data: Prisma.PermissionUpdateInput,
+  ): Promise<Permission> {
+    const permission = this.permissions.find((p) => p.id === id)
+    if (!permission) throw new Error('Permission not found')
+    if (data.name) permission.name = data.name as PermissionName
+    if (data.category) permission.category = data.category as PermissionCategory
+    return permission
   }
 }

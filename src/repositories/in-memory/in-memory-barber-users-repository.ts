@@ -1,4 +1,13 @@
-import { Permission, Prisma, Profile, Role, Unit, User } from '@prisma/client'
+import {
+  Permission,
+  PermissionName,
+  PermissionCategory,
+  Prisma,
+  Profile,
+  Role,
+  Unit,
+  User,
+} from '@prisma/client'
 import { BarberUsersRepository } from '../barber-users-repository'
 import { randomUUID } from 'crypto'
 
@@ -24,6 +33,8 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
       organizationId: (data.organization as { connect: { id: string } }).connect
         .id,
       unitId: (data.unit as { connect: { id: string } }).connect.id,
+      versionToken: 1,
+      versionTokenInvalidate: null,
       createdAt: new Date(),
     }
     const profile: Profile & { permissions: Permission[]; role: Role } = {
@@ -73,7 +84,10 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
     userData: Prisma.UserUpdateInput,
     profileData: Prisma.ProfileUncheckedUpdateInput,
     permissionIds?: string[],
-  ): Promise<{ user: User; profile: (Profile & { role: Role }) | null }> {
+  ): Promise<{
+    user: User
+    profile: (Profile & { role: Role; permissions: Permission[] }) | null
+  }> {
     const index = this.users.findIndex((u) => u.id === id)
     if (index < 0) throw new Error('User not found')
     const current = this.users[index]
@@ -105,13 +119,17 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
         profile.commissionPercentage =
           profileData.commissionPercentage as number
       if (permissionIds) {
-        profile.permissions =
-          permissionIds?.map((id) => ({
+        const existingIds = profile.permissions?.map((p) => p.id) ?? []
+        const toAdd = permissionIds.filter((id) => !existingIds.includes(id))
+        profile.permissions = [
+          ...(profile.permissions ?? []),
+          ...toAdd.map((id) => ({
             id,
-            name: 'LIST_APPOINTMENTS_UNIT',
-            category: 'USER',
-            unitId: randomUUID(),
-          })) ?? []
+            name: 'LIST_APPOINTMENTS_UNIT' as PermissionName,
+            category: 'USER' as PermissionCategory,
+            unitId: randomUUID() as string,
+          })),
+        ]
       }
     }
     this.users[index] = { ...current, ...updatedUser, profile }
@@ -137,9 +155,13 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
     })
   }
 
-  async findById(
-    id: string,
-  ): Promise<(User & { profile: Profile | null; unit: Unit | null }) | null> {
+  async findById(id: string): Promise<
+    | (User & {
+        profile: (Profile & { role: Role; permissions: Permission[] }) | null
+        unit: Unit | null
+      })
+    | null
+  > {
     const user = this.users.find((u) => u.id === id)
     if (!user) return null
     return { ...user, unit: user.unit ?? null }

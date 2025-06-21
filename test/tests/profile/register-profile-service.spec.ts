@@ -81,4 +81,3 @@ describe('Create profile service', () => {
     ).rejects.toThrow('permission not allowed for role')
   })
 })
-
