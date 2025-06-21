@@ -1,14 +1,21 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { ListRolesService } from '../../../src/services/role/list-roles'
-import { InMemoryRoleRepository, FakeProfilesRepository } from '../../helpers/fake-repositories'
+import {
+  InMemoryRoleRepository,
+  FakeProfilesRepository,
+} from '../../helpers/fake-repositories'
 import { makeRole, makeProfile } from '../../helpers/default-values'
 import { GetUserProfileFromUserIdService } from '../../../src/services/profile/get-profile-from-userId-service'
 
 const profileRepo = new FakeProfilesRepository()
 
-vi.mock('../../../src/services/@factories/profile/get-profile-from-userId-service', () => ({
-  getProfileFromUserIdService: () => new GetUserProfileFromUserIdService(profileRepo),
-}))
+vi.mock(
+  '../../../src/services/@factories/profile/get-profile-from-userId-service',
+  () => ({
+    getProfileFromUserIdService: () =>
+      new GetUserProfileFromUserIdService(profileRepo),
+  }),
+)
 
 const r1 = makeRole('r1', 'unit-1')
 const r2 = makeRole('r2', 'unit-2')

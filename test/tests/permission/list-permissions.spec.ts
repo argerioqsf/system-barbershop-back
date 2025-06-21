@@ -1,17 +1,24 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { ListPermissionsService } from '../../../src/services/permission/list-permissions'
-import { InMemoryPermissionRepository, FakeProfilesRepository } from '../../helpers/fake-repositories'
+import {
+  InMemoryPermissionRepository,
+  FakeProfilesRepository,
+} from '../../helpers/fake-repositories'
 import { makePermission, makeProfile } from '../../helpers/default-values'
 import { GetUserProfileFromUserIdService } from '../../../src/services/profile/get-profile-from-userId-service'
 
 const profileRepo = new FakeProfilesRepository()
 
-vi.mock('../../../src/services/@factories/profile/get-profile-from-userId-service', () => ({
-  getProfileFromUserIdService: () => new GetUserProfileFromUserIdService(profileRepo),
-}))
+vi.mock(
+  '../../../src/services/@factories/profile/get-profile-from-userId-service',
+  () => ({
+    getProfileFromUserIdService: () =>
+      new GetUserProfileFromUserIdService(profileRepo),
+  }),
+)
 
-const p1 = makePermission('p1', 'unit-1')
-const p2 = makePermission('p2', 'unit-2')
+const p1 = makePermission('p1')
+const p2 = makePermission('p2')
 
 describe('List permissions service', () => {
   let repo: InMemoryPermissionRepository
@@ -30,7 +37,7 @@ describe('List permissions service', () => {
   it('lists all permissions', async () => {
     const res = await service.execute({
       sub: '1',
-      role: 'MANAGER',
+      permissions: ['LIST_PERMISSIONS_ALL'],
       organizationId: 'org-1',
     } as any)
     expect(res.permissions).toHaveLength(2)
