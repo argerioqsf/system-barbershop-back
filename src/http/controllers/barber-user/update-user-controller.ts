@@ -8,7 +8,6 @@ function handleChangeCredentials(
   result: UpdateUserResponse,
   data: { roleId?: string; unitId?: string; permissions?: string[] },
 ): boolean {
-  const oldPermissions =
     result.oldUser?.profile?.permissions.map((permission) => permission.id) ??
     []
   const changedRole = data.roleId

@@ -61,20 +61,20 @@ export class PrismaUsersRepository implements UsersRepository {
     return userIndicator
   }
 
-  async findById(
-    id: string,
-  ): Promise<
-    | (Omit<User, 'password'> & { profile: Omit<Profile, 'userId'> | null })
+  async findById(id: string): Promise<
+    | (Omit<User, 'password'> & {
+        profile: (Profile & { role: Role; permissions: Permission[] }) | null
+      })
     | null
   > {
     const user = await prisma.user.findUnique({
       where: { id },
-      include: { profile: { include: { role: true } } },
+      include: { profile: { include: { role: true, permissions: true } } },
     })
     if (!user) return null
     const { ...rest } = user
     return rest as Omit<User, 'password'> & {
-      profile: Omit<Profile, 'userId'> | null
+      profile: (Profile & { role: Role; permissions: Permission[] }) | null
     }
   }
 

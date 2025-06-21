@@ -116,6 +116,19 @@ app.register(fastifyJwt, {
   secret: env.JWT_SECRET,
 })
 
+app.addHook('onSend', async (request, reply, payload) => {
+  if ((request as any).newToken) {
+    try {
+      const parsed = JSON.parse(payload as any)
+      parsed.token = (request as any).newToken
+      return JSON.stringify(parsed)
+    } catch {
+      reply.header('x-new-token', (request as any).newToken)
+    }
+  }
+  return payload
+})
+
 app.register(authRoute)
 app.register(sessionRoute)
 app.register(profileRoute)

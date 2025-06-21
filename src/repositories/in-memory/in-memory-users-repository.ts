@@ -7,10 +7,10 @@ export class InMemoryUserRepository implements UsersRepository {
     profile: (Profile & { role: Role; permissions: Permission[] }) | null
   })[] = []
 
-  async findById(
-    id: string,
-  ): Promise<
-    | (Omit<User, 'password'> & { profile: Omit<Profile, 'userId'> | null })
+  async findById(id: string): Promise<
+    | (Omit<User, 'password'> & {
+        profile: (Profile & { role: Role; permissions: Permission[] }) | null
+      })
     | null
   > {
     const user = this.items.find((item) => item.id === id)
@@ -24,7 +24,10 @@ export class InMemoryUserRepository implements UsersRepository {
     return {
       ...rest,
       profile: profile
-        ? ({ ...profile, userId: undefined } as Omit<Profile, 'userId'>)
+        ? ({
+            ...profile,
+            permissions: profile.permissions ?? [],
+          } as Profile & { role: Role; permissions: Permission[] })
         : null,
     }
   }
