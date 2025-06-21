@@ -9,6 +9,7 @@ export interface UserToken {
   role: RoleName
   sub: string
   permissions?: PermissionName[]
+  versionToken?: number
 }
 
 export const authenticate = async (
@@ -36,6 +37,7 @@ export const authenticate = async (
       organizationId: user.organizationId,
       role: user.profile?.role?.name,
       permissions,
+      versionToken: user.versionToken,
     },
     { sign: { sub: user.id } },
   )

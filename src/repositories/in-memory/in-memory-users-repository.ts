@@ -53,6 +53,8 @@ export class InMemoryUserRepository implements UsersRepository {
       active: false,
       organizationId: data.organization.connect?.id ?? 'org-1',
       unitId: data.unit.connect?.id ?? 'unit-1',
+      versionToken: 1,
+      versionTokenInvalidate: null,
       createdAt: new Date(),
     }
     this.items.push({ ...user, profile: null })

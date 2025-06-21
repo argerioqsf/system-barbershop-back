@@ -32,6 +32,8 @@ export class InMemoryCashRegisterRepository implements CashRegisterRepository {
         active: true,
         organizationId: 'org-1',
         unitId: session.unitId,
+        versionToken: 1,
+        versionTokenInvalidate: null,
         createdAt: new Date(),
       },
       unit: {

@@ -15,7 +15,12 @@ export const SetUserUnitController = async (
   await service.execute({ user, unitId })
 
   const token = await reply.jwtSign(
-    { unitId, organizationId: user.organizationId, role: user.role },
+    {
+      unitId,
+      organizationId: user.organizationId,
+      role: user.role,
+      versionToken: user.versionToken,
+    },
     { sign: { sub: user.sub } },
   )
 

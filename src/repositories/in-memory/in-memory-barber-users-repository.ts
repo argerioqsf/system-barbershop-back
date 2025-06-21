@@ -33,6 +33,8 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
       organizationId: (data.organization as { connect: { id: string } }).connect
         .id,
       unitId: (data.unit as { connect: { id: string } }).connect.id,
+      versionToken: 1,
+      versionTokenInvalidate: null,
       createdAt: new Date(),
     }
     const profile: Profile & { permissions: Permission[]; role: Role } = {

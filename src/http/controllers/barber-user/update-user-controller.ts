@@ -28,6 +28,7 @@ export const UpdateBarberUserController = async (
   request: FastifyRequest,
   reply: FastifyReply,
 ) => {
+        versionToken: result.user.versionToken,
   const paramsSchema = z.object({ id: z.string() })
   const bodySchema = z.object({
     name: z.string().optional(),

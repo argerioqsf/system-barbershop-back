@@ -107,6 +107,8 @@ model User {
   affectedTransactions Transaction[]         @relation("AffectedUser")
   sessions             CashRegisterSession[]
   passwordResetTokens  PasswordResetToken[]
+  versionToken         Int      @default(1)
+  versionTokenInvalidate Int?
   createdAt            DateTime              @default(now())
 
   organization Organization @relation(fields: [organizationId], references: [id])

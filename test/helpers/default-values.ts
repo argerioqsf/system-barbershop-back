@@ -23,6 +23,8 @@ export const defaultUser = {
   active: true,
   organizationId: 'org-1',
   unitId: 'unit-1',
+  versionToken: 1,
+  versionTokenInvalidate: null,
   createdAt: new Date(),
   profile: null,
 }
@@ -48,6 +50,8 @@ export const defaultClient = {
   active: true,
   organizationId: 'org-1',
   unitId: 'unit-1',
+  versionToken: 1,
+  versionTokenInvalidate: null,
   createdAt: new Date(),
   profile: null,
 }

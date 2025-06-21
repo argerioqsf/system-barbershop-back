@@ -35,6 +35,8 @@ export class PrismaUsersRepository implements UsersRepository {
         active: true,
         organizationId: true,
         unitId: true,
+        versionToken: true,
+        versionTokenInvalidate: true,
         createdAt: true,
         profile: {
           select: {
@@ -117,6 +119,8 @@ export class PrismaUsersRepository implements UsersRepository {
         active: true,
         organizationId: true,
         unitId: true,
+        versionToken: true,
+        versionTokenInvalidate: true,
         createdAt: true,
         profile: {
           select: {

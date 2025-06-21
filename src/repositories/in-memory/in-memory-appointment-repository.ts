@@ -37,6 +37,8 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
         active: true,
         organizationId: 'org-1',
         unitId: appointment.unitId,
+        versionToken: 1,
+        versionTokenInvalidate: null,
         createdAt: new Date(),
       },
       barber: {
@@ -47,6 +49,8 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
         active: true,
         organizationId: 'org-1',
         unitId: appointment.unitId,
+        versionToken: 1,
+        versionTokenInvalidate: null,
         createdAt: new Date(),
       },
       unit: {
