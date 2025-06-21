@@ -7,12 +7,24 @@ export class PrismaUsersRepository implements UsersRepository {
   async update(
     id: string,
     data: Prisma.UserUpdateInput,
-  ): Promise<Omit<User, 'password'>> {
+  ): Promise<
+    Omit<User, 'password'> & {
+      profile: (Profile & { role: Role; permissions: Permission[] }) | null
+    }
+  > {
     const user = await prisma.user.update({
       where: {
         id,
       },
       data,
+      include: {
+        profile: {
+          include: {
+            role: true,
+            permissions: true,
+          },
+        },
+      },
     })
 
     return user

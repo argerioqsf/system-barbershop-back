@@ -2,27 +2,6 @@ import { makeUpdateUserService } from '@/services/@factories/barber-user/make-up
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { UserToken } from '../authenticate-controller'
-import { UpdateUserResponse } from '@/services/barber-user/update-user'
-
-function handleChangeCredentials(
-  result: UpdateUserResponse,
-  data: { roleId?: string; unitId?: string; permissions?: string[] },
-): boolean {
-  const oldPermissions =
-    result.oldUser?.profile?.permissions.map((permission) => permission.id) ??
-    []
-  const changedRole = data.roleId
-    ? data?.roleId !== result.oldUser?.profile?.roleId
-    : false
-  const changedUnit = data?.unitId
-    ? data?.unitId !== result.oldUser?.unitId
-    : false
-  const changedPermission = !data.permissions?.every((permission) =>
-    oldPermissions.includes(permission),
-  )
-
-  return changedRole || changedUnit || !!changedPermission
-}
 
 export const UpdateBarberUserController = async (
   request: FastifyRequest,
@@ -54,25 +33,12 @@ export const UpdateBarberUserController = async (
   const service = makeUpdateUserService()
   const userToken = request.user as UserToken
 
-  const result = await service.execute({ id, ...data })
+  const { user } = await service.execute(
+    { id, ...data },
+    userToken,
+    reply,
+    request,
+  )
 
-  const changeCredentials = handleChangeCredentials(result, data)
-
-  if (id === userToken.sub && changeCredentials) {
-    const permissions = result.profile?.permissions.map(
-      (permission) => permission.name,
-    )
-    const token = await reply.jwtSign(
-      {
-        unitId: result.user.unitId,
-        organizationId: result.user.organizationId,
-        role: result.profile?.role?.name ?? userToken.role,
-        permissions,
-      },
-      { sign: { sub: result.user.id } },
-    )
-    return reply.status(200).send({ ...result, token })
-  }
-
-  return reply.status(200).send(result)
+  return reply.status(200).send({ user })
 }

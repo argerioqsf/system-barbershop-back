@@ -38,6 +38,55 @@ async function main() {
     },
   })
 
+  const permission_1 = await prisma.permission.create({
+    data: {
+      name: PermissionName.UPDATE_USER_BARBER,
+      category: PermissionCategory.USER,
+    },
+  })
+
+  const permission_2 = await prisma.permission.create({
+    data: {
+      name: PermissionName.UPDATE_USER_OWNER,
+      category: PermissionCategory.USER,
+    },
+  })
+
+  const permission_3 = await prisma.permission.create({
+    data: {
+      name: PermissionName.LIST_UNIT_ALL,
+      category: PermissionCategory.UNIT,
+    },
+  })
+
+  const permission_4 = await prisma.permission.create({
+    data: {
+      name: PermissionName.LIST_UNIT_ORG,
+      category: PermissionCategory.UNIT,
+    },
+  })
+
+  const permission_5 = await prisma.permission.create({
+    data: {
+      name: PermissionName.UPDATE_USER_ADMIN,
+      category: PermissionCategory.USER,
+    },
+  })
+
+  const permission_6 = await prisma.permission.create({
+    data: {
+      name: PermissionName.LIST_USER_ALL,
+      category: PermissionCategory.USER,
+    },
+  })
+
+  const permission_7 = await prisma.permission.create({
+    data: {
+      name: PermissionName.LIST_USER_ORG,
+      category: PermissionCategory.USER,
+    },
+  })
+
   const Unit2 = await prisma.unit.create({
     data: {
       name: 'Unit 2',
@@ -65,6 +114,17 @@ async function main() {
     data: {
       name: 'ADMIN',
       unit: { connect: { id: mainUnit.id } },
+      permissions: {
+        connect: [
+          { id: permission_1.id },
+          { id: permission_2.id },
+          { id: permission_3.id },
+          { id: permission_4.id },
+          { id: permission_5.id },
+          { id: permission_6.id },
+          { id: permission_7.id },
+        ],
+      },
     },
   })
 
@@ -87,13 +147,7 @@ async function main() {
           totalBalance: 0,
           role: { connect: { id: defaultRoleMain.id } },
           permissions: {
-            create: [
-              {
-                name: PermissionName.LIST_USER_ALL,
-                category: PermissionCategory.USER,
-                unitId: mainUnit.id,
-              },
-            ],
+            connect: [{ id: permission_7.id }],
           },
         },
       },
@@ -140,27 +194,14 @@ async function main() {
           totalBalance: 0,
           role: { connect: { id: adminRoleId } },
           permissions: {
-            create: [
-              {
-                name: PermissionName.LIST_USER_ALL,
-                category: PermissionCategory.USER,
-                unitId: mainUnit.id,
-              },
-              {
-                name: PermissionName.UPDATE_USER_ADMIN,
-                category: PermissionCategory.USER,
-                unitId: mainUnit.id,
-              },
-              {
-                name: PermissionName.UPDATE_USER_BARBER,
-                category: PermissionCategory.USER,
-                unitId: mainUnit.id,
-              },
-              {
-                name: PermissionName.UPDATE_USER_OWNER,
-                category: PermissionCategory.USER,
-                unitId: mainUnit.id,
-              },
+            connect: [
+              { id: permission_1.id },
+              { id: permission_2.id },
+              { id: permission_3.id },
+              { id: permission_4.id },
+              { id: permission_5.id },
+              { id: permission_6.id },
+              { id: permission_7.id },
             ],
           },
         },

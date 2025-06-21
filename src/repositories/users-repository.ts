@@ -24,5 +24,9 @@ export interface UsersRepository {
   update(
     id: string,
     data: Prisma.UserUpdateInput,
-  ): Promise<Omit<User, 'password'>>
+  ): Promise<
+    Omit<User, 'password'> & {
+      profile: (Profile & { role: Role; permissions: Permission[] }) | null
+    }
+  >
 }

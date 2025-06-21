@@ -17,19 +17,13 @@ export class InMemoryPermissionRepository implements PermissionRepository {
       category: 'UNIT',
       id: randomUUID(),
       name: data.name as PermissionName,
-      unitId: (data.unit as { connect: { id: string } }).connect.id,
     }
     this.permissions.push(permission)
     return permission
   }
 
-  async findMany(
-    where: Prisma.PermissionWhereInput = {},
-  ): Promise<Permission[]> {
-    return this.permissions.filter((p) => {
-      if (where.unitId && p.unitId !== where.unitId) return false
-      return true
-    })
+  async findMany(): Promise<Permission[]> {
+    return this.permissions
   }
 
   async findManyByRole(roleId: string): Promise<Permission[]> {

@@ -20,9 +20,8 @@ export async function verifyJWT(request: FastifyRequest, replay: FastifyReply) {
     }
     if (token.versionToken && token.versionToken < user.versionToken) {
       const permissions = user.profile?.permissions.map((p) => p.name)
-      const newVersion = user.versionToken + 1
+      const newVersion = user.versionToken
       await repo.update(user.id, {
-        versionToken: newVersion,
         versionTokenInvalidate: token.versionToken,
       })
       request.user = {

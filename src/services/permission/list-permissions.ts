@@ -13,8 +13,8 @@ export class ListPermissionsService {
 
   async execute(user: UserToken): Promise<ListPermissionsResponse> {
     assertUser(user)
-    await assertPermission(['LIST_PERMISSIONS_UNIT'], user.permissions)
-    const permissions = await this.repository.findMany({ unitId: user.unitId })
+    await assertPermission(['LIST_PERMISSIONS_ALL'], user.permissions)
+    const permissions = await this.repository.findMany()
     return { permissions }
   }
 }
