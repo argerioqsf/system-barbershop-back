@@ -35,6 +35,7 @@ type OldUser =
 
 export interface UpdateUserResponse {
   user: Omit<User, 'password'>
+  profile: Profile | null
 }
 
 export class UpdateUserService {
@@ -46,7 +47,8 @@ export class UpdateUserService {
 
   private async verifyPermissions(data: UpdateUserRequest, user: OldUser) {
     if (user && user.profile) {
-      const permissions = user.profile.permissions.map((perm) => perm.name)
+      const permissions =
+        user.profile.permissions?.map((perm) => perm.name) ?? []
       if (
         user.profile.role.name === 'OWNER' &&
         !hasPermission(['UPDATE_USER_OWNER'], permissions)
@@ -67,7 +69,7 @@ export class UpdateUserService {
     data: { roleId?: string; unitId?: string; permissions?: string[] },
   ): boolean {
     const oldPermissions =
-      oldUser?.profile?.permissions.map((permission) => permission.id) ?? []
+      oldUser?.profile?.permissions?.map((permission) => permission.id) ?? []
     const changedRole = data.roleId
       ? data?.roleId !== oldUser?.profile?.roleId
       : false
@@ -81,15 +83,15 @@ export class UpdateUserService {
 
   async execute(
     data: UpdateUserRequest,
-    userToken: UserToken,
-    reply: FastifyReply,
-    request: FastifyRequest,
+    userToken?: UserToken,
+    reply?: FastifyReply,
+    request?: FastifyRequest,
   ): Promise<UpdateUserResponse> {
     const oldUser = await this.repository.findById(data.id)
     if (!oldUser) {
       throw new UserNotFoundError()
     }
-    this.verifyPermissions(data, oldUser)
+    await this.verifyPermissions(data, oldUser)
 
     let unit: Unit | undefined
     if (data.unitId) {
@@ -124,7 +126,7 @@ export class UpdateUserService {
         ...(unit && { unit: { connect: { id: unit.id } } }),
         ...(changeCredentials && { versionToken: { increment: 1 } }),
         ...(changeCredentials &&
-          data.id === userToken.sub && {
+          userToken?.sub === data.id && {
             versionTokenInvalidate: userToken.versionToken,
           }),
       },
@@ -140,7 +142,13 @@ export class UpdateUserService {
       permissionIds,
     )
 
-    if (data.id === userToken.sub && changeCredentials) {
+    if (
+      userToken &&
+      reply &&
+      request &&
+      data.id === userToken.sub &&
+      changeCredentials
+    ) {
       const permissions = profile?.permissions.map(
         (permission) => permission.name,
       )
@@ -159,6 +167,6 @@ export class UpdateUserService {
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...userRest } = user
-    return { user: userRest }
+    return { user: userRest, profile }
   }
 }

@@ -424,7 +424,7 @@ export function makeRole(id = 'role-1', unitId = 'unit-1'): Role {
 
 export function makePermission(
   id = 'perm-1',
-  unitId = 'unit-1',
+  _unitId = 'unit-1',
 ): Permission {
-  return { id, name: 'Permission', unitId }
+  return { id, name: 'Permission' }
 }

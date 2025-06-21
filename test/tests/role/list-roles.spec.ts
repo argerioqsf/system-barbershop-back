@@ -21,7 +21,7 @@ describe('List roles service', () => {
     repo = new InMemoryRoleRepository([r1, r2])
     service = new ListRolesService(repo)
     const profile = makeProfile('prof-1', '1')
-    ;(profile as any).permissions = [{ id: 'perm', name: 'LIST_ROLES' }]
+    ;(profile as any).permissions = [{ id: 'perm', name: 'LIST_ROLES_UNIT' }]
     profileRepo.profiles = [profile]
   })
 
@@ -31,6 +31,7 @@ describe('List roles service', () => {
       role: 'OWNER',
       unitId: 'unit-1',
       organizationId: 'org-1',
+      permissions: ['LIST_ROLES_UNIT'],
     } as any)
     expect(res.roles).toHaveLength(1)
     expect(res.roles[0].id).toBe('r1')

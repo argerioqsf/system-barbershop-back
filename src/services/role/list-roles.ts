@@ -1,8 +1,8 @@
 import { UserToken } from '@/http/controllers/authenticate-controller'
 import { RoleRepository } from '@/repositories/role-repository'
-import { hasPermission } from '@/utils/permissions'
 import { assertUser } from '@/utils/assert-user'
 import { Role } from '@prisma/client'
+import { hasPermission } from '@/utils/permissions'
 import { UnauthorizedError } from '../@errors/auth/unauthorized-error'
 
 interface ListRolesResponse {

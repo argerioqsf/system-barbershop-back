@@ -21,18 +21,19 @@ describe('List permissions service', () => {
     repo = new InMemoryPermissionRepository([p1, p2])
     service = new ListPermissionsService(repo)
     const profile = makeProfile('prof-1', '1')
-    ;(profile as any).permissions = [{ id: 'perm', name: 'LIST_PERMISSIONS' }]
+    ;(profile as any).permissions = [
+      { id: 'perm', name: 'LIST_PERMISSIONS_ALL' },
+    ]
     profileRepo.profiles = [profile]
   })
 
-  it('lists permissions from user unit', async () => {
+  it('lists all permissions', async () => {
     const res = await service.execute({
       sub: '1',
       role: 'MANAGER',
-      unitId: 'unit-1',
       organizationId: 'org-1',
     } as any)
-    expect(res.permissions).toHaveLength(1)
-    expect(res.permissions[0].id).toBe('p1')
+    expect(res.permissions).toHaveLength(2)
+    expect(res.permissions.map((p) => p.id)).toContain('p1')
   })
 })
