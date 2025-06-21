@@ -17,7 +17,7 @@ export function assertPermission(
   permissionsRequired: PermissionName[],
   permissionsUser?: PermissionName[],
 ): void {
-  if (hasPermission(permissionsRequired, permissionsUser)) {
+  if (!hasPermission(permissionsRequired, permissionsUser)) {
     throw new PermissionDeniedError()
   }
 }
