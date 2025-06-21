@@ -38,7 +38,7 @@ export class PrismaBarberUsersRepository implements BarberUsersRepository {
           update: {
             ...profileData,
             ...(permissionIds && {
-              permissions: { connect: permissionIds.map((id) => ({ id })) },
+              permissions: { set: permissionIds.map((id) => ({ id })) },
             }),
           },
         },

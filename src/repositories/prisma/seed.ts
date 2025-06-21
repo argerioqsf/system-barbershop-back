@@ -95,22 +95,21 @@ async function main() {
     },
   })
 
-  let adminRoleModel: { id: string } | null = null
-  const defaultRoleMain = await prisma.role.create({
+  const roleOwner = await prisma.role.create({
     data: {
-      name: 'CLIENT',
+      name: 'OWNER',
       unit: { connect: { id: mainUnit.id } },
     },
   })
 
-  const defaultRoleUnit2 = await prisma.role.create({
+  const roleMenager = await prisma.role.create({
     data: {
-      name: 'CLIENT',
-      unit: { connect: { id: Unit2.id } },
+      name: 'MANAGER',
+      unit: { connect: { id: mainUnit.id } },
     },
   })
 
-  adminRoleModel = await prisma.role.create({
+  const roleAdmin = await prisma.role.create({
     data: {
       name: 'ADMIN',
       unit: { connect: { id: mainUnit.id } },
@@ -128,7 +127,19 @@ async function main() {
     },
   })
 
-  const adminRoleId = adminRoleModel?.id ?? defaultRoleMain.id
+  const roleBarber = await prisma.role.create({
+    data: {
+      name: 'BARBER',
+      unit: { connect: { id: mainUnit.id } },
+    },
+  })
+
+  const roleClient = await prisma.role.create({
+    data: {
+      name: 'CLIENT',
+      unit: { connect: { id: mainUnit.id } },
+    },
+  })
 
   const owner = await prisma.user.create({
     data: {
@@ -145,7 +156,7 @@ async function main() {
           birthday: '1980-04-15',
           pix: 'ownerpix',
           totalBalance: 0,
-          role: { connect: { id: defaultRoleMain.id } },
+          role: { connect: { id: roleAdmin.id } },
           permissions: {
             connect: [{ id: permission_7.id }],
           },
@@ -170,7 +181,7 @@ async function main() {
           birthday: '1980-04-15',
           pix: 'ownerpix',
           totalBalance: 0,
-          role: { connect: { id: defaultRoleUnit2.id } },
+          role: { connect: { id: roleOwner.id } },
         },
       },
       unit: { connect: { id: Unit2.id } },
@@ -192,7 +203,7 @@ async function main() {
           birthday: '2000-01-01',
           pix: 'adminpix',
           totalBalance: 0,
-          role: { connect: { id: adminRoleId } },
+          role: { connect: { id: roleAdmin.id } },
           permissions: {
             connect: [
               { id: permission_1.id },
@@ -225,7 +236,7 @@ async function main() {
           birthday: '1990-03-10',
           pix: 'managerpix',
           totalBalance: 0,
-          role: { connect: { id: defaultRoleMain.id } },
+          role: { connect: { id: roleMenager.id } },
         },
       },
       unit: { connect: { id: mainUnit.id } },
@@ -248,7 +259,7 @@ async function main() {
           pix: 'barberpix',
           commissionPercentage: 70,
           totalBalance: 0,
-          role: { connect: { id: defaultRoleMain.id } },
+          role: { connect: { id: roleBarber.id } },
         },
       },
       unit: { connect: { id: mainUnit.id } },
@@ -270,7 +281,7 @@ async function main() {
           birthday: '2001-07-20',
           pix: 'clientpix',
           totalBalance: 0,
-          role: { connect: { id: defaultRoleMain.id } },
+          role: { connect: { id: roleClient.id } },
         },
       },
       unit: { connect: { id: mainUnit.id } },

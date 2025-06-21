@@ -27,9 +27,8 @@ export class PrismaRoleRepository implements RoleRepository {
       where: { id },
       data: {
         ...data,
-
         ...(permissionIds && {
-          permissions: { connect: permissionIds.map((id) => ({ id })) },
+          permissions: { set: permissionIds.map((id) => ({ id })) },
         }),
       },
     })
