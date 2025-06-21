@@ -117,13 +117,13 @@ app.register(fastifyJwt, {
 })
 
 app.addHook('onSend', async (request, reply, payload) => {
-  if ((request as any).newToken) {
+  if (request.newToken) {
     try {
-      const parsed = JSON.parse(payload as any)
-      parsed.token = (request as any).newToken
+      const parsed = JSON.parse(payload as string)
+      parsed.token = request.newToken
       return JSON.stringify(parsed)
     } catch {
-      reply.header('x-new-token', (request as any).newToken)
+      reply.header('x-new-token', request.newToken)
     }
   }
   return payload

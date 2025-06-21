@@ -4,6 +4,11 @@ import {
   PermissionName,
   PermissionCategory,
 } from '@prisma/client'
+    if (data.category) permission.category = data.category as PermissionCategory
+  Permission,
+  PermissionName,
+  PermissionCategory,
+} from '@prisma/client'
 import { randomUUID } from 'crypto'
 import { PermissionRepository } from '../permission-repository'
 
