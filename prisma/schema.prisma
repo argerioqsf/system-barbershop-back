@@ -8,13 +8,45 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
+enum RoleName {
   ADMIN
   BARBER
   CLIENT
   ATTENDANT
   MANAGER
   OWNER
+}
+
+enum PermissionName {
+  LIST_USER_ALL
+  LIST_USER_UNIT
+  LIST_USER_ORG
+  UPDATE_USER_ADMIN
+  UPDATE_USER_OWNER
+  UPDATE_USER_BARBER
+  MANAGE_OTHER_USER_TRANSACTION
+  LIST_PERMISSIONS_ALL
+  LIST_ROLES_UNIT
+  LIST_SALES_UNIT
+  LIST_APPOINTMENTS_UNIT
+  LIST_SERVICES_UNIT
+  MANAGE_USER_TRANSACTION_ADD
+  MANAGE_USER_TRANSACTION_WITHDRAWAL
+  LIST_UNIT_ALL
+  LIST_UNIT_ORG
+  LIST_ROLES_ALL
+}
+
+enum PermissionCategory {
+  UNIT
+  SERVICE
+  USER
+  PRODUCT
+  PROFILE
+  ROLE
+  PERMISSIONS
+  SALE
+  TRANSACTION
 }
 
 enum PaymentMethod {
@@ -39,6 +71,27 @@ enum PaymentStatus {
   PENDING
 }
 
+model Role {
+  id          String       @id @default(uuid())
+  name        RoleName
+  unitId      String
+  permissions Permission[] @relation("RolePermissions")
+  profiles    Profile[]
+  unit        Unit         @relation(fields: [unitId], references: [id])
+
+  @@map("roles")
+}
+
+model Permission {
+  id       String              @id @default(uuid())
+  name     PermissionName      @unique
+  category PermissionCategory
+  roles    Role[]              @relation("RolePermissions")
+  profiles  Profile[]            @relation("ProfilePermissions")
+
+  @@map("permissions")
+}
+
 model User {
   id                   String                @id @default(uuid())
   name                 String
@@ -57,6 +110,8 @@ model User {
   affectedTransactions Transaction[]         @relation("AffectedUser")
   sessions             CashRegisterSession[]
   passwordResetTokens  PasswordResetToken[]
+  versionToken         Int      @default(1)
+  versionTokenInvalidate Int?
   createdAt            DateTime              @default(now())
 
   organization Organization @relation(fields: [organizationId], references: [id])
@@ -72,7 +127,9 @@ model Profile {
   genre                String
   birthday             String
   pix                  String
-  role                 Role     @default(CLIENT)
+  permissions          Permission[] @relation("ProfilePermissions")
+  roleId               String
+  role                 Role @relation(fields: [roleId], references: [id])
   commissionPercentage Float    @default(100)
   totalBalance         Float    @default(0)
   userId               String   @unique
@@ -273,6 +330,7 @@ model Unit {
   transactions   Transaction[]
   sessions       CashRegisterSession[]
   users          User[]
+  roles          Role[]
 
   organization Organization @relation(fields: [organizationId], references: [id])
   Coupon       Coupon[]

@@ -17,7 +17,7 @@ export const WithdrawalBalanceTransactionController = async (
   const data = bodySchema.parse(request.body)
 
   if (data.affectedUserId) {
-    assertPermission(user.role, 'MANAGE_OTHER_USER_TRANSACTION')
+    await assertPermission(['MANAGE_OTHER_USER_TRANSACTION'], user.permissions)
   }
 
   const receiptUrl = request.file

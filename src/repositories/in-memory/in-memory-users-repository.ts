@@ -1,14 +1,16 @@
-import { Prisma, Profile, User } from '@prisma/client'
+import { Permission, Prisma, Profile, Role, User } from '@prisma/client'
 import { UserNotFoundError } from '@/services/@errors/user/user-not-found-error'
 import { UsersRepository } from '../users-repository'
 
 export class InMemoryUserRepository implements UsersRepository {
-  public items: (User & { profile: Profile | null })[] = []
+  public items: (User & {
+    profile: (Profile & { role: Role; permissions: Permission[] }) | null
+  })[] = []
 
-  async findById(
-    id: string,
-  ): Promise<
-    | (Omit<User, 'password'> & { profile: Omit<Profile, 'userId'> | null })
+  async findById(id: string): Promise<
+    | (Omit<User, 'password'> & {
+        profile: (Profile & { role: Role; permissions: Permission[] }) | null
+      })
     | null
   > {
     const user = this.items.find((item) => item.id === id)
@@ -22,14 +24,20 @@ export class InMemoryUserRepository implements UsersRepository {
     return {
       ...rest,
       profile: profile
-        ? ({ ...profile, userId: undefined } as Omit<Profile, 'userId'>)
+        ? ({
+            ...profile,
+            permissions: profile.permissions ?? [],
+          } as Profile & { role: Role; permissions: Permission[] })
         : null,
     }
   }
 
-  async findByEmail(
-    email: string,
-  ): Promise<(User & { profile: Profile | null }) | null> {
+  async findByEmail(email: string): Promise<
+    | (User & {
+        profile: (Profile & { role: Role; permissions: Permission[] }) | null
+      })
+    | null
+  > {
     const user = this.items.find((item) => item.email === email)
 
     if (!user) {
@@ -48,6 +56,8 @@ export class InMemoryUserRepository implements UsersRepository {
       active: false,
       organizationId: data.organization.connect?.id ?? 'org-1',
       unitId: data.unit.connect?.id ?? 'unit-1',
+      versionToken: 1,
+      versionTokenInvalidate: null,
       createdAt: new Date(),
     }
     this.items.push({ ...user, profile: null })
@@ -73,7 +83,11 @@ export class InMemoryUserRepository implements UsersRepository {
   async update(
     id: string,
     data: { unit: { connect: { id: string } } },
-  ): Promise<Omit<User, 'password'>> {
+  ): Promise<
+    Omit<User, 'password'> & {
+      profile: (Profile & { role: Role; permissions: Permission[] }) | null
+    }
+  > {
     const index = this.items.findIndex((u) => u.id === id)
     if (index >= 0) {
       const current = this.items[index]

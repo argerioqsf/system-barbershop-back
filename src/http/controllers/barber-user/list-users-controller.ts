@@ -18,5 +18,5 @@ export const ListBarberUsersController = async (
     }),
   )
 
-  return reply.status(200).send(usersWithBalance)
+  return reply.status(200).send({ users: usersWithBalance })
 }

@@ -1,15 +1,18 @@
-import { Prisma, Profile, User } from '@prisma/client'
+import { Permission, Prisma, Profile, Role, User } from '@prisma/client'
 
 export interface UsersRepository {
-  findById(
-    id: string,
-  ): Promise<
-    | (Omit<User, 'password'> & { profile: Omit<Profile, 'userId'> | null })
+  findById(id: string): Promise<
+    | (Omit<User, 'password'> & {
+        profile: (Profile & { role: Role; permissions: Permission[] }) | null
+      })
     | null
   >
-  findByEmail(
-    email: string,
-  ): Promise<(User & { profile: Profile | null }) | null>
+  findByEmail(email: string): Promise<
+    | (User & {
+        profile: (Profile & { role: Role; permissions: Permission[] }) | null
+      })
+    | null
+  >
   create(data: Prisma.UserCreateInput): Promise<User>
   findMany(
     page: number,
@@ -21,5 +24,9 @@ export interface UsersRepository {
   update(
     id: string,
     data: Prisma.UserUpdateInput,
-  ): Promise<Omit<User, 'password'>>
+  ): Promise<
+    Omit<User, 'password'> & {
+      profile: (Profile & { role: Role; permissions: Permission[] }) | null
+    }
+  >
 }

@@ -1,6 +1,5 @@
 import { makeCreateProfileService } from '@/services/@factories/profile/make-create-profile-service'
 
-import { Role } from '@prisma/client'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
@@ -10,7 +9,8 @@ const bodySchema = z.object({
   genre: z.string(),
   birthday: z.string(),
   pix: z.string(),
-  role: z.nativeEnum(Role),
+  roleId: z.string(),
+  permissions: z.array(z.string()).optional(),
 })
 
 export const Create = async (request: FastifyRequest, reply: FastifyReply) => {
@@ -26,8 +26,9 @@ export const Create = async (request: FastifyRequest, reply: FastifyReply) => {
     genre: body.genre,
     birthday: body.birthday,
     pix: body.pix,
-    role: body.role,
+    roleId: body.roleId,
     userId,
+    permissions: body.permissions,
   })
   return reply.status(201).send(profile)
 }

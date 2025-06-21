@@ -1,24 +1,31 @@
-import { Prisma, Profile, Role, User } from '@prisma/client'
+import { Prisma, Profile, User } from '@prisma/client'
 import { ProfileNotFoundError } from '@/services/@errors/profile/profile-not-found-error'
 import crypto from 'node:crypto'
 import { ProfilesRepository } from '../profiles-repository'
 
 export class InMemoryProfilesRepository implements ProfilesRepository {
-  public items: (Profile & { user: Omit<User, 'password'> })[] = []
+  public items: (Profile & {
+    user: Omit<User, 'password'>
+    permissions: { id: string; name: string }[]
+  })[] = []
 
-  async create(data: Prisma.ProfileUncheckedCreateInput): Promise<Profile> {
-    const profile: Profile = {
+  async create(
+    data: Prisma.ProfileUncheckedCreateInput,
+    permissionIds?: string[],
+  ): Promise<Profile> {
+    const profile: Profile & { permissions: { id: string; name: string }[] } = {
       id: crypto.randomUUID(),
       phone: data.phone,
       cpf: data.cpf,
       genre: data.genre,
       birthday: data.birthday,
       pix: data.pix,
-      role: data.role as Role,
+      roleId: (data as { roleId: string }).roleId,
       commissionPercentage: 100,
       totalBalance: 0,
       userId: data.userId,
       createdAt: new Date(),
+      permissions: permissionIds?.map((id) => ({ id, name: id })) ?? [],
     }
     const user: Omit<User, 'password'> = {
       id: data.userId,
@@ -27,22 +34,34 @@ export class InMemoryProfilesRepository implements ProfilesRepository {
       active: false,
       organizationId: '',
       unitId: '',
+      versionToken: 1,
+      versionTokenInvalidate: null,
       createdAt: new Date(),
     }
     this.items.push({ ...profile, user })
     return profile
   }
 
-  async findById(
-    id: string,
-  ): Promise<(Profile & { user: Omit<User, 'password'> }) | null> {
-    return this.items.find((item) => item.id === id) ?? null
+  async findById(id: string): Promise<
+    | (Profile & {
+        user: Omit<User, 'password'>
+        permissions: { id: string; name: string }[]
+      })
+    | null
+  > {
+    const profile = this.items.find((item) => item.id === id)
+    return profile ?? null
   }
 
-  async findByUserId(
-    id: string,
-  ): Promise<(Profile & { user: Omit<User, 'password'> }) | null> {
-    return this.items.find((item) => item.user.id === id) ?? null
+  async findByUserId(id: string): Promise<
+    | (Profile & {
+        user: Omit<User, 'password'>
+        permissions: { id: string; name: string }[]
+      })
+    | null
+  > {
+    const profile = this.items.find((item) => item.user.id === id)
+    return profile ?? null
   }
 
   async update(
@@ -60,7 +79,12 @@ export class InMemoryProfilesRepository implements ProfilesRepository {
     throw new ProfileNotFoundError()
   }
 
-  async findMany(): Promise<(Profile & { user: Omit<User, 'password'> })[]> {
+  async findMany(): Promise<
+    (Profile & {
+      user: Omit<User, 'password'>
+      permissions: { id: string; name: string }[]
+    })[]
+  > {
     return this.items
   }
 

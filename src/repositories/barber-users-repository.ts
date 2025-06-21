@@ -1,21 +1,35 @@
-import { Prisma, Profile, Unit, User } from '@prisma/client'
+import { Permission, Prisma, Profile, Role, Unit, User } from '@prisma/client'
 
 export interface BarberUsersRepository {
   create(
     data: Prisma.UserCreateInput,
-    profile: Omit<Prisma.ProfileCreateInput, 'user'>,
+    profile: Omit<Prisma.ProfileUncheckedCreateInput, 'userId'>,
+    permissionIds?: string[],
   ): Promise<{ user: User; profile: Profile }>
   update(
     id: string,
     userData: Prisma.UserUpdateInput,
-    profileData: Prisma.ProfileUpdateInput,
-  ): Promise<{ user: User; profile: Profile | null }>
+    profileData: Prisma.ProfileUncheckedUpdateInput,
+    permissionIds?: string[],
+  ): Promise<{
+    user: User
+    profile: (Profile & { role: Role; permissions: Permission[] }) | null
+  }>
   findMany(
     where?: Prisma.UserWhereInput,
   ): Promise<(User & { profile: Profile | null })[]>
-  findById(
-    id: string,
-  ): Promise<(User & { profile: Profile | null; unit: Unit | null }) | null>
-  findByEmail(email: string): Promise<User | null>
+  findById(id: string): Promise<
+    | (User & {
+        profile: (Profile & { role: Role; permissions: Permission[] }) | null
+        unit: Unit | null
+      })
+    | null
+  >
+  findByEmail(email: string): Promise<
+    | (User & {
+        profile: (Profile & { role: Role; permissions: Permission[] }) | null
+      })
+    | null
+  >
   delete(id: string): Promise<void>
 }

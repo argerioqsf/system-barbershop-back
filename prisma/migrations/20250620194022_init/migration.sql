@@ -1,4 +1,23 @@
 -- CreateTable
+CREATE TABLE `roles` (
+    `id` VARCHAR(191) NOT NULL,
+    `name` ENUM('ADMIN', 'BARBER', 'CLIENT', 'ATTENDANT', 'MANAGER', 'OWNER') NOT NULL,
+    `unitId` VARCHAR(191) NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `permissions` (
+    `id` VARCHAR(191) NOT NULL,
+    `name` ENUM('LIST_USER_ALL', 'LIST_USER_UNIT', 'LIST_USER_ORG', 'UPDATE_USER_ADMIN', 'UPDATE_USER_OWNER', 'UPDATE_USER_BARBER', 'MANAGE_OTHER_USER_TRANSACTION', 'LIST_PERMISSIONS_UNIT', 'LIST_ROLES_UNIT', 'LIST_SALES_UNIT', 'LIST_APPOINTMENTS_UNIT', 'LIST_SERVICES_UNIT', 'MANAGE_USER_TRANSACTION_ADD', 'MANAGE_USER_TRANSACTION_WITHDRAWAL', 'LIST_UNIT_ALL', 'LIST_UNIT_ORG') NOT NULL,
+    `category` ENUM('UNIT', 'SERVICE', 'USER', 'PRODUCT', 'PROFILE') NOT NULL,
+    `unitId` VARCHAR(191) NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
 CREATE TABLE `users` (
     `id` VARCHAR(191) NOT NULL,
     `name` VARCHAR(191) NOT NULL,
@@ -21,7 +40,7 @@ CREATE TABLE `profiles` (
     `genre` VARCHAR(191) NOT NULL,
     `birthday` VARCHAR(191) NOT NULL,
     `pix` VARCHAR(191) NOT NULL,
-    `role` ENUM('ADMIN', 'BARBER', 'CLIENT', 'ATTENDANT', 'MANAGER', 'OWNER') NOT NULL DEFAULT 'CLIENT',
+    `roleId` VARCHAR(191) NOT NULL,
     `commissionPercentage` DOUBLE NOT NULL DEFAULT 100,
     `totalBalance` DOUBLE NOT NULL DEFAULT 0,
     `userId` VARCHAR(191) NOT NULL,
@@ -81,6 +100,7 @@ CREATE TABLE `transactions` (
     `type` ENUM('ADDITION', 'WITHDRAWAL') NOT NULL,
     `description` VARCHAR(191) NOT NULL,
     `amount` DOUBLE NOT NULL,
+    `isLoan` BOOLEAN NOT NULL DEFAULT false,
     `receiptUrl` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `saleId` VARCHAR(191) NULL,
@@ -167,7 +187,6 @@ CREATE TABLE `organizations` (
     `id` VARCHAR(191) NOT NULL,
     `name` VARCHAR(191) NOT NULL,
     `slug` VARCHAR(191) NOT NULL,
-    `ownerId` VARCHAR(191) NULL,
     `totalBalance` DOUBLE NOT NULL DEFAULT 0,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
@@ -188,11 +207,38 @@ CREATE TABLE `units` (
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+-- CreateTable
+CREATE TABLE `_RolePermissions` (
+    `A` VARCHAR(191) NOT NULL,
+    `B` VARCHAR(191) NOT NULL,
+
+    UNIQUE INDEX `_RolePermissions_AB_unique`(`A`, `B`),
+    INDEX `_RolePermissions_B_index`(`B`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `_ProfilePermissions` (
+    `A` VARCHAR(191) NOT NULL,
+    `B` VARCHAR(191) NOT NULL,
+
+    UNIQUE INDEX `_ProfilePermissions_AB_unique`(`A`, `B`),
+    INDEX `_ProfilePermissions_B_index`(`B`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- AddForeignKey
+ALTER TABLE `roles` ADD CONSTRAINT `roles_unitId_fkey` FOREIGN KEY (`unitId`) REFERENCES `units`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `permissions` ADD CONSTRAINT `permissions_unitId_fkey` FOREIGN KEY (`unitId`) REFERENCES `units`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
 -- AddForeignKey
 ALTER TABLE `users` ADD CONSTRAINT `users_organizationId_fkey` FOREIGN KEY (`organizationId`) REFERENCES `organizations`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `users` ADD CONSTRAINT `users_unitId_fkey` FOREIGN KEY (`unitId`) REFERENCES `units`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `profiles` ADD CONSTRAINT `profiles_roleId_fkey` FOREIGN KEY (`roleId`) REFERENCES `roles`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `profiles` ADD CONSTRAINT `profiles_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -273,7 +319,16 @@ ALTER TABLE `coupons` ADD CONSTRAINT `coupons_unitId_fkey` FOREIGN KEY (`unitId`
 ALTER TABLE `password_reset_tokens` ADD CONSTRAINT `password_reset_tokens_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `organizations` ADD CONSTRAINT `organizations_ownerId_fkey` FOREIGN KEY (`ownerId`) REFERENCES `users`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE `units` ADD CONSTRAINT `units_organizationId_fkey` FOREIGN KEY (`organizationId`) REFERENCES `organizations`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `units` ADD CONSTRAINT `units_organizationId_fkey` FOREIGN KEY (`organizationId`) REFERENCES `organizations`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `_RolePermissions` ADD CONSTRAINT `_RolePermissions_A_fkey` FOREIGN KEY (`A`) REFERENCES `permissions`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `_RolePermissions` ADD CONSTRAINT `_RolePermissions_B_fkey` FOREIGN KEY (`B`) REFERENCES `roles`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `_ProfilePermissions` ADD CONSTRAINT `_ProfilePermissions_A_fkey` FOREIGN KEY (`A`) REFERENCES `permissions`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `_ProfilePermissions` ADD CONSTRAINT `_ProfilePermissions_B_fkey` FOREIGN KEY (`B`) REFERENCES `profiles`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

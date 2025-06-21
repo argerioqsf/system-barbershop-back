@@ -1,7 +1,7 @@
 import { makeUpdateUserService } from '@/services/@factories/barber-user/make-update-user'
 import { FastifyReply, FastifyRequest } from 'fastify'
-import { Role } from '@prisma/client'
 import { z } from 'zod'
+import { UserToken } from '../authenticate-controller'
 
 export const UpdateBarberUserController = async (
   request: FastifyRequest,
@@ -15,8 +15,9 @@ export const UpdateBarberUserController = async (
     genre: z.string().optional(),
     birthday: z.string().optional(),
     pix: z.string().optional(),
-    role: z.nativeEnum(Role).optional(),
     unitId: z.string().optional(),
+    roleId: z.string().optional(),
+    permissions: z.array(z.string()).optional(),
     commissionPercentage: z.number().optional(),
     active: z
       .union([z.boolean(), z.string()])
@@ -30,25 +31,14 @@ export const UpdateBarberUserController = async (
   const { id } = paramsSchema.parse(request.params)
   const data = bodySchema.parse(request.body)
   const service = makeUpdateUserService()
-  const userToken = request.user as {
-    sub: string
-    organizationId: string
-    unitId: string
-    role: Role
-  }
-  const result = await service.execute({ id, ...data })
+  const userToken = request.user as UserToken
 
-  if (id === userToken.sub && (data.unitId || data.role)) {
-    const token = await reply.jwtSign(
-      {
-        unitId: result.user.unitId,
-        organizationId: result.user.organizationId,
-        role: result.profile?.role ?? userToken.role,
-      },
-      { sign: { sub: result.user.id } },
-    )
-    return reply.status(200).send({ ...result, token })
-  }
+  const { user } = await service.execute(
+    { id, ...data },
+    userToken,
+    reply,
+    request,
+  )
 
-  return reply.status(200).send(result)
+  return reply.status(200).send({ user })
 }

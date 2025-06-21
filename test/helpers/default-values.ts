@@ -11,6 +11,8 @@ import {
   PaymentStatus,
   TransactionType,
   Sale,
+  Permission,
+  Role,
 } from '@prisma/client'
 
 export const defaultUser = {
@@ -21,6 +23,8 @@ export const defaultUser = {
   active: true,
   organizationId: 'org-1',
   unitId: 'unit-1',
+  versionToken: 1,
+  versionTokenInvalidate: null,
   createdAt: new Date(),
   profile: null,
 }
@@ -46,6 +50,8 @@ export const defaultClient = {
   active: true,
   organizationId: 'org-1',
   unitId: 'unit-1',
+  versionToken: 1,
+  versionTokenInvalidate: null,
   createdAt: new Date(),
   profile: null,
 }
@@ -57,8 +63,8 @@ export const barberProfile = {
   genre: '',
   birthday: '',
   pix: '',
-  role: 'BARBER' as any,
   commissionPercentage: 50,
+  roleId: 'role-1',
   totalBalance: 0,
   userId: 'barber-1',
   createdAt: new Date(),
@@ -144,7 +150,7 @@ export const defaultProfile: Profile = {
   genre: '',
   birthday: '',
   pix: '',
-  role: 'BARBER' as any,
+  roleId: 'role-1',
   commissionPercentage: 100,
   totalBalance: 0,
   userId: defaultUser.id,
@@ -155,7 +161,7 @@ export function makeProfile(
   id: string,
   userId: string,
   balance = 0,
-): Profile & { user: Omit<User, 'password'> } {
+): Profile & { user: Omit<User, 'password'>; permissions: Permission[] } {
   return {
     id,
     phone: '',
@@ -163,12 +169,13 @@ export function makeProfile(
     genre: '',
     birthday: '',
     pix: '',
-    role: 'BARBER' as any,
+    roleId: 'role-1',
     commissionPercentage: 100,
     totalBalance: balance,
     userId,
     user: { ...defaultUser, id: userId },
     createdAt: new Date(),
+    permissions: [],
   }
 }
 
@@ -343,7 +350,7 @@ export const baseRegisterUserData = {
   genre: 'M',
   birthday: '2000',
   pix: 'x',
-  role: 'BARBER' as any,
+  roleId: 'role-1',
 }
 
 export const listUser1 = {
@@ -411,3 +418,11 @@ export const appointment2 = {
   hour: '11',
   unit: { organizationId: 'org-2' },
 } as any
+
+export function makeRole(id = 'role-1', unitId = 'unit-1'): Role {
+  return { id, name: 'ADMIN', unitId }
+}
+
+export function makePermission(id = 'perm-1'): Permission {
+  return { id, name: 'LIST_APPOINTMENTS_UNIT', category: 'UNIT' }
+}

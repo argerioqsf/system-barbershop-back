@@ -1,11 +1,12 @@
 import { env } from '@/env'
 import {
   PrismaClient,
-  Role,
   PaymentMethod,
   PaymentStatus,
   TransactionType,
   DiscountType,
+  PermissionName,
+  PermissionCategory,
 } from '@prisma/client'
 import { hash } from 'bcryptjs'
 import 'dotenv/config'
@@ -37,6 +38,55 @@ async function main() {
     },
   })
 
+  const permission_1 = await prisma.permission.create({
+    data: {
+      name: PermissionName.UPDATE_USER_BARBER,
+      category: PermissionCategory.USER,
+    },
+  })
+
+  const permission_2 = await prisma.permission.create({
+    data: {
+      name: PermissionName.UPDATE_USER_OWNER,
+      category: PermissionCategory.USER,
+    },
+  })
+
+  const permission_3 = await prisma.permission.create({
+    data: {
+      name: PermissionName.LIST_UNIT_ALL,
+      category: PermissionCategory.UNIT,
+    },
+  })
+
+  const permission_4 = await prisma.permission.create({
+    data: {
+      name: PermissionName.LIST_UNIT_ORG,
+      category: PermissionCategory.UNIT,
+    },
+  })
+
+  const permission_5 = await prisma.permission.create({
+    data: {
+      name: PermissionName.UPDATE_USER_ADMIN,
+      category: PermissionCategory.USER,
+    },
+  })
+
+  const permission_6 = await prisma.permission.create({
+    data: {
+      name: PermissionName.LIST_USER_ALL,
+      category: PermissionCategory.USER,
+    },
+  })
+
+  const permission_7 = await prisma.permission.create({
+    data: {
+      name: PermissionName.LIST_USER_ORG,
+      category: PermissionCategory.USER,
+    },
+  })
+
   const Unit2 = await prisma.unit.create({
     data: {
       name: 'Unit 2',
@@ -44,6 +94,41 @@ async function main() {
       organization: { connect: { id: organization2.id } },
     },
   })
+
+  let adminRoleModel: { id: string } | null = null
+  const defaultRoleMain = await prisma.role.create({
+    data: {
+      name: 'CLIENT',
+      unit: { connect: { id: mainUnit.id } },
+    },
+  })
+
+  const defaultRoleUnit2 = await prisma.role.create({
+    data: {
+      name: 'CLIENT',
+      unit: { connect: { id: Unit2.id } },
+    },
+  })
+
+  adminRoleModel = await prisma.role.create({
+    data: {
+      name: 'ADMIN',
+      unit: { connect: { id: mainUnit.id } },
+      permissions: {
+        connect: [
+          { id: permission_1.id },
+          { id: permission_2.id },
+          { id: permission_3.id },
+          { id: permission_4.id },
+          { id: permission_5.id },
+          { id: permission_6.id },
+          { id: permission_7.id },
+        ],
+      },
+    },
+  })
+
+  const adminRoleId = adminRoleModel?.id ?? defaultRoleMain.id
 
   const owner = await prisma.user.create({
     data: {
@@ -59,8 +144,11 @@ async function main() {
           genre: 'M',
           birthday: '1980-04-15',
           pix: 'ownerpix',
-          role: Role.OWNER,
           totalBalance: 0,
+          role: { connect: { id: defaultRoleMain.id } },
+          permissions: {
+            connect: [{ id: permission_7.id }],
+          },
         },
       },
       unit: { connect: { id: mainUnit.id } },
@@ -81,8 +169,8 @@ async function main() {
           genre: 'M',
           birthday: '1980-04-15',
           pix: 'ownerpix',
-          role: Role.OWNER,
           totalBalance: 0,
+          role: { connect: { id: defaultRoleUnit2.id } },
         },
       },
       unit: { connect: { id: Unit2.id } },
@@ -103,8 +191,19 @@ async function main() {
           genre: 'M',
           birthday: '2000-01-01',
           pix: 'adminpix',
-          role: Role.ADMIN,
           totalBalance: 0,
+          role: { connect: { id: adminRoleId } },
+          permissions: {
+            connect: [
+              { id: permission_1.id },
+              { id: permission_2.id },
+              { id: permission_3.id },
+              { id: permission_4.id },
+              { id: permission_5.id },
+              { id: permission_6.id },
+              { id: permission_7.id },
+            ],
+          },
         },
       },
       unit: { connect: { id: mainUnit.id } },
@@ -125,8 +224,8 @@ async function main() {
           genre: 'M',
           birthday: '1990-03-10',
           pix: 'managerpix',
-          role: Role.MANAGER,
           totalBalance: 0,
+          role: { connect: { id: defaultRoleMain.id } },
         },
       },
       unit: { connect: { id: mainUnit.id } },
@@ -148,8 +247,8 @@ async function main() {
           birthday: '1995-05-10',
           pix: 'barberpix',
           commissionPercentage: 70,
-          role: Role.BARBER,
           totalBalance: 0,
+          role: { connect: { id: defaultRoleMain.id } },
         },
       },
       unit: { connect: { id: mainUnit.id } },
@@ -170,8 +269,8 @@ async function main() {
           genre: 'F',
           birthday: '2001-07-20',
           pix: 'clientpix',
-          role: Role.CLIENT,
           totalBalance: 0,
+          role: { connect: { id: defaultRoleMain.id } },
         },
       },
       unit: { connect: { id: mainUnit.id } },

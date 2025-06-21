@@ -383,6 +383,22 @@
       ]
     },
     {
+      "_id": "req_update_barber_user",
+      "_type": "request",
+      "parentId": "fld_barber_users",
+      "name": "Update barber user",
+      "method": "PUT",
+      "url": "{{ baseURL }}/barber/users/{id}",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"New Name\",\n  \"phone\": \"999999999\",\n  \"unitId\": \"\",\n  \"roleId\": \"\",\n  \"commissionPercentage\": 0\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ token }}" }
+      ]
+    },
+    {
       "_id": "fld_coupons",
       "_type": "request_group",
       "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
@@ -945,5 +961,105 @@
         }
       ]
     }
+,
+    {
+      "_id": "fld_permissions",
+      "_type": "request_group",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Permissions"
+    },
+    {
+      "_id": "req_create_permission",
+      "_type": "request",
+      "parentId": "fld_permissions",
+      "name": "Create permission",
+      "method": "POST",
+      "url": "{{ baseURL }}/permissions",
+      "body": {
+        "mimeType": "application/json",
+      "text": "{\n  \"name\": \"\"\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ token }}" }
+      ]
+    },
+    {
+      "_id": "req_list_permissions",
+      "_type": "request",
+      "parentId": "fld_permissions",
+      "name": "List permissions",
+      "method": "GET",
+      "url": "{{ baseURL }}/permissions",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ token }}" }
+      ]
+    },
+    {
+      "_id": "req_update_permission",
+      "_type": "request",
+      "parentId": "fld_permissions",
+      "name": "Update permission",
+      "method": "PUT",
+      "url": "{{ baseURL }}/permissions/{id}",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\\n  \\\"name\\\": \\\"\\\",\\n  \\\"category\\\": \\\"ACCESS\\\"\\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ token }}" }
+      ]
+    },
+    {
+      "_id": "fld_roles",
+      "_type": "request_group",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Roles"
+    },
+    {
+      "_id": "req_create_role",
+      "_type": "request",
+      "parentId": "fld_roles",
+      "name": "Create role",
+      "method": "POST",
+      "url": "{{ baseURL }}/roles",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"\",\n  \"permissionIds\": []\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ token }}" }
+      ]
+    },
+    {
+      "_id": "req_list_roles",
+      "_type": "request",
+      "parentId": "fld_roles",
+      "name": "List roles",
+      "method": "GET",
+      "url": "{{ baseURL }}/roles",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ token }}" }
+      ]
+    },
+    {
+      "_id": "req_update_role",
+      "_type": "request",
+      "parentId": "fld_roles",
+      "name": "Update role",
+      "method": "PUT",
+      "url": "{{ baseURL }}/roles/{id}",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\\n  \\\"name\\\": \\\"ADMIN\\\",\\n  \\\"permissionIds\\\": []\\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ token }}" }
+      ]
+    }
+
   ]
 }

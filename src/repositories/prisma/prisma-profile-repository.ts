@@ -37,9 +37,13 @@ export class PrismaProfilesRepository implements ProfilesRepository {
     return profile as (Profile & { user: Omit<User, 'password'> }) | null
   }
 
-  async findByUserId(
-    id: string,
-  ): Promise<(Profile & { user: Omit<User, 'password'> }) | null> {
+  async findByUserId(id: string): Promise<
+    | (Profile & {
+        user: Omit<User, 'password'>
+        permissions: { id: string; name: string }[]
+      })
+    | null
+  > {
     const profile = await prisma.profile.findUnique({
       where: { userId: id },
       include: {
@@ -54,13 +58,29 @@ export class PrismaProfilesRepository implements ProfilesRepository {
             createdAt: true,
           },
         },
+        permissions: { select: { id: true, name: true } },
       },
     })
-    return profile as (Profile & { user: Omit<User, 'password'> }) | null
+    return profile as unknown as
+      | (Profile & {
+          user: Omit<User, 'password'>
+          permissions: { id: string; name: string }[]
+        })
+      | null
   }
 
-  async create(data: Prisma.ProfileUncheckedCreateInput): Promise<Profile> {
-    return prisma.profile.create({ data })
+  async create(
+    data: Prisma.ProfileUncheckedCreateInput,
+    permissionIds?: string[],
+  ): Promise<Profile> {
+    return prisma.profile.create({
+      data: {
+        ...data,
+        ...(permissionIds && {
+          permissions: { connect: permissionIds.map((id) => ({ id })) },
+        }),
+      },
+    })
   }
 
   async findMany(

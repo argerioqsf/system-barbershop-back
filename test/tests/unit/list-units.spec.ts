@@ -1,7 +1,14 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { ListUnitsService } from '../../../src/services/unit/list-units'
-import { FakeUnitRepository } from '../../helpers/fake-repositories'
-import { makeUnit } from '../../helpers/default-values'
+import { FakeUnitRepository, FakeProfilesRepository } from '../../helpers/fake-repositories'
+import { makeUnit, makeProfile } from '../../helpers/default-values'
+import { GetUserProfileFromUserIdService } from '../../../src/services/profile/get-profile-from-userId-service'
+
+const profileRepo = new FakeProfilesRepository()
+
+vi.mock('../../../src/services/@factories/profile/get-profile-from-userId-service', () => ({
+  getProfileFromUserIdService: () => new GetUserProfileFromUserIdService(profileRepo),
+}))
 
 const unit1 = makeUnit('unit-1', 'A', 'a', 'org-1')
 const unit2 = makeUnit('unit-2', 'B', 'b', 'org-2')
@@ -13,6 +20,12 @@ describe('List units service', () => {
   beforeEach(() => {
     repo = new FakeUnitRepository(unit1, [unit1, unit2])
     service = new ListUnitsService(repo)
+    const profile = makeProfile('prof-1', '1')
+    ;(profile as any).permissions = [
+      { id: 'perm1', name: 'LIST_UNIT_ALL' },
+      { id: 'perm2', name: 'LIST_UNIT_ORG' },
+    ]
+    profileRepo.profiles = [profile]
   })
 
   it('lists all units for admin', async () => {
@@ -21,6 +34,7 @@ describe('List units service', () => {
       role: 'ADMIN',
       organizationId: 'org-1',
       unitId: 'unit-1',
+      permissions: ['LIST_UNIT_ALL', 'LIST_UNIT_ORG'],
     } as any)
     expect(result.units).toHaveLength(2)
   })
@@ -31,6 +45,7 @@ describe('List units service', () => {
       role: 'BARBER',
       organizationId: 'org-1',
       unitId: 'unit-1',
+      permissions: ['LIST_UNIT_ALL', 'LIST_UNIT_ORG'],
     } as any)
     expect(result.units).toHaveLength(2)
     expect(result.units[0].id).toBe('unit-1')
@@ -42,6 +57,7 @@ describe('List units service', () => {
       role: 'MANAGER',
       organizationId: 'org-1',
       unitId: 'unit-1',
+      permissions: ['LIST_UNIT_ALL', 'LIST_UNIT_ORG'],
     } as any)
     expect(result.units).toHaveLength(2)
     expect(result.units[0].id).toBe('unit-1')

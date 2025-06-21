@@ -3,7 +3,6 @@ import {
   DiscountType,
   PaymentMethod,
   PaymentStatus,
-  Role,
 } from '@prisma/client'
 import {
   SaleRepository,
@@ -74,6 +73,8 @@ export class InMemorySaleRepository implements SaleRepository {
             active: true,
             organizationId: 'org-1',
             unitId: 'unit-1',
+            versionToken: 1,
+            versionTokenInvalidate: null,
             createdAt: new Date(),
             profile: {
               id: 'profile-' + it.barber.connect.id,
@@ -82,7 +83,7 @@ export class InMemorySaleRepository implements SaleRepository {
               genre: '',
               birthday: '',
               pix: '',
-              role: 'BARBER' as Role,
+              roleId: randomUUID(),
               commissionPercentage: it.porcentagemBarbeiro ?? 100,
               totalBalance: 0,
               userId: it.barber.connect.id,
@@ -128,6 +129,8 @@ export class InMemorySaleRepository implements SaleRepository {
         active: true,
         organizationId: 'org-1',
         unitId: 'unit-1',
+        versionToken: 1,
+        versionTokenInvalidate: null,
         createdAt: new Date(),
         profile: null,
       },
@@ -139,6 +142,8 @@ export class InMemorySaleRepository implements SaleRepository {
         active: true,
         organizationId: 'org-1',
         unitId: 'unit-1',
+        versionToken: 1,
+        versionTokenInvalidate: null,
         createdAt: new Date(),
         profile: null,
       },

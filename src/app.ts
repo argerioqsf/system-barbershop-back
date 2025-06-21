@@ -19,6 +19,8 @@ import { saleRoute } from './http/controllers/sale/route'
 import { transactionRoute } from './http/controllers/transaction/route'
 import { reportRoute } from './http/controllers/report/route'
 import { configRoute } from './http/controllers/config/route'
+import { permissionRoute } from './http/controllers/permission/route'
+import { roleRoute } from './http/controllers/role/route'
 import { authRoute } from './http/controllers/auth/route'
 import { organizationRoute } from './http/controllers/organization/route'
 import { unitRoute } from './http/controllers/unit/route'
@@ -114,6 +116,19 @@ app.register(fastifyJwt, {
   secret: env.JWT_SECRET,
 })
 
+app.addHook('onSend', async (request, reply, payload) => {
+  if (request.newToken) {
+    try {
+      const parsed = JSON.parse(payload as string)
+      parsed.token = request.newToken
+      return JSON.stringify(parsed)
+    } catch {
+      reply.header('x-new-token', request.newToken)
+    }
+  }
+  return payload
+})
+
 app.register(authRoute)
 app.register(sessionRoute)
 app.register(profileRoute)
@@ -124,6 +139,8 @@ app.register(barberUserRoute)
 app.register(couponRoute)
 app.register(cashRegisterRoute)
 app.register(transactionRoute)
+app.register(permissionRoute)
+app.register(roleRoute)
 app.register(organizationRoute)
 app.register(unitRoute)
 app.register(saleRoute)

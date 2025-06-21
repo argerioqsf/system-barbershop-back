@@ -1,73 +1,23 @@
-import { Role, Unit } from '@prisma/client'
+import { PermissionName, Unit } from '@prisma/client'
 import { PermissionDeniedError } from '@/services/@errors/permission/permission-denied-error'
 import { UnitRepository } from '@/repositories/unit-repository'
 
-export const FEATURES = {
-  // UNIT
-  LIST_UNITS: ['ADMIN', 'OWNER', 'BARBER', 'MANAGER', 'ATTENDANT'] as Role[],
-  LIST_ALL_UNITS: ['ADMIN'] as Role[],
-  LIST_ORG_UNIT: ['OWNER', 'BARBER', 'MANAGER', 'ATTENDANT'] as Role[],
-  CREATE_UNIT: ['ADMIN'] as Role[],
-  // SERVICE
-  LIST_SERVICES: ['ADMIN', 'OWNER', 'BARBER', 'MANAGER', 'ATTENDANT'] as Role[],
-  LIST_TRANSACTIONS: [
-    'ADMIN',
-    'OWNER',
-    'BARBER',
-    'MANAGER',
-    'ATTENDANT',
-  ] as Role[],
-  // ORGANIZATION
-  LIST_ORGANIZATIONS: [
-    'ADMIN',
-    'OWNER',
-    'BARBER',
-    'MANAGER',
-    'ATTENDANT',
-  ] as Role[],
-  // PRODUCT
-  LIST_PRODUCTS: ['ADMIN', 'OWNER', 'BARBER', 'MANAGER', 'ATTENDANT'] as Role[],
-  // APPOINTMENT
-  LIST_APPOINTMENTS: [
-    'ADMIN',
-    'OWNER',
-    'BARBER',
-    'MANAGER',
-    'ATTENDANT',
-  ] as Role[],
-  // USER
-  LIST_USERS: ['ADMIN', 'OWNER', 'BARBER', 'MANAGER'] as Role[],
-  // COUPON
-  LIST_COUPONS: ['ADMIN', 'OWNER', 'BARBER', 'MANAGER', 'ATTENDANT'] as Role[],
-  // CASH
-  LIST_CASH_SESSIONS: [
-    'ADMIN',
-    'OWNER',
-    'BARBER',
-    'MANAGER',
-    'ATTENDANT',
-  ] as Role[],
-  // SALE
-  LIST_SALES: ['ADMIN', 'OWNER', 'BARBER', 'MANAGER', 'ATTENDANT'] as Role[],
-  // TRANSACTION
-  MANAGE_USER_TRANSACTION_WITHDRAWAL: [
-    'ADMIN',
-    'OWNER',
-    'MANAGER',
-    'BARBER',
-  ] as Role[],
-  MANAGE_USER_TRANSACTION_ADD: ['ADMIN', 'OWNER', 'MANAGER'] as Role[],
-  MANAGE_OTHER_USER_TRANSACTION: ['ADMIN', 'OWNER', 'MANAGER'] as Role[],
-} as const
-
-export type Feature = keyof typeof FEATURES
-
-export function hasPermission(role: Role, feature: Feature): boolean {
-  return FEATURES[feature].includes(role)
+export function hasPermission(
+  permissionsRequired: PermissionName[],
+  permissionsUser?: PermissionName[],
+): boolean {
+  if (!permissionsUser) return false
+  const userHavePermission = permissionsRequired.every((p) =>
+    permissionsUser.includes(p),
+  )
+  return userHavePermission
 }
 
-export function assertPermission(role: Role, feature: Feature): void {
-  if (!hasPermission(role, feature)) {
+export function assertPermission(
+  permissionsRequired: PermissionName[],
+  permissionsUser?: PermissionName[],
+): void {
+  if (!hasPermission(permissionsRequired, permissionsUser)) {
     throw new PermissionDeniedError()
   }
 }
@@ -78,7 +28,7 @@ export interface DataScope {
 }
 
 export function getScope(user: {
-  role: Role
+  role: string
   organizationId: string
   unitId: string
 }): DataScope {

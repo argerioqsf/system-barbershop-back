@@ -25,7 +25,10 @@ describe('Update profile user service', () => {
       organization: { connect: { id: 'org-1' } },
       unit: { connect: { id: 'unit-1' } },
     })
-    profileRepo.profiles.push({ ...makeProfile('p1', user.id, 0), user: { ...user, password: '' } })
+    profileRepo.profiles.push({
+      ...makeProfile('p1', user.id, 0),
+      user: { ...user },
+    })
 
     const res = await service.execute({
       id: user.id,
@@ -37,7 +40,7 @@ describe('Update profile user service', () => {
       genre: '',
       birthday: '',
       pix: '',
-      role: 'BARBER' as any,
+      roleId: 'role-1',
     })
 
     expect(res.user?.name).toBe('New')
@@ -56,7 +59,7 @@ describe('Update profile user service', () => {
         genre: '',
         birthday: '',
         pix: '',
-        role: 'BARBER' as any,
+        roleId: 'role-1',
       }),
     ).rejects.toBeInstanceOf(UserNotFoundError)
   })
@@ -81,9 +84,8 @@ describe('Update profile user service', () => {
         genre: '',
         birthday: '',
         pix: '',
-        role: 'BARBER' as any,
+        roleId: 'role-1',
       }),
     ).rejects.toBeInstanceOf(ProfileNotFoundError)
   })
 })
-

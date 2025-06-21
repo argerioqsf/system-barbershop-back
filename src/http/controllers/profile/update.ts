@@ -42,7 +42,7 @@ export const Update = async (request: FastifyRequest, reply: FastifyReply) => {
     name,
     phone,
     pix,
-    role: profile.role,
+    roleId: profile.roleId,
   })
   return reply.status(201).send({ profile: profileUpdate })
 }
