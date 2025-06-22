@@ -13,6 +13,7 @@ import { BarberNotFromUserUnitError } from '../@errors/barber/barber-not-from-us
 import { CouponNotFromUserUnitError } from '../@errors/coupon/coupon-not-from-user-unit-error'
 import { UnitRepository } from '@/repositories/unit-repository'
 import { distributeProfits } from './profit-distribution'
+import { calculateBarberCommission } from './barber-commission'
 import { ItemNeedsServiceOrProductError } from '../@errors/sale/item-needs-service-or-product-error'
 import { ServiceNotFoundError } from '../@errors/service/service-not-found-error'
 import { ProductNotFoundError } from '../@errors/product/product-not-found-error'
@@ -99,25 +100,11 @@ export class CreateSaleService {
               service.id,
             )
           : null
-      if (relation) {
-        switch (relation.commissionType) {
-          case 'PERCENTAGE_OF_SERVICE':
-            barberCommission =
-              service?.commissionPercentage ??
-              barber?.profile?.commissionPercentage
-            break
-          case 'PERCENTAGE_OF_USER':
-            barberCommission = barber?.profile?.commissionPercentage
-            break
-          case 'PERCENTAGE_OF_USER_SERVICE':
-            barberCommission =
-              relation.commissionPercentage ??
-              barber?.profile?.commissionPercentage
-            break
-        }
-      } else {
-        barberCommission = barber?.profile?.commissionPercentage
-      }
+      barberCommission = calculateBarberCommission(
+        service,
+        barber?.profile,
+        relation,
+      )
     }
 
     const resultLogicSalesCoupons = await this.applyCouponToSale(

@@ -5,16 +5,18 @@ import { TransactionRepository } from '@/repositories/transaction-repository'
 import { OrganizationRepository } from '@/repositories/organization-repository'
 import { ProfilesRepository } from '@/repositories/profiles-repository'
 import { UnitRepository } from '@/repositories/unit-repository'
-import { PaymentStatus } from '@prisma/client'
+import { CommissionCalcType, PaymentStatus } from '@prisma/client'
 import { SaleNotFoundError } from '@/services/@errors/sale/sale-not-found-error'
 import { CashRegisterClosedError } from '@/services/@errors/cash-register/cash-register-closed-error'
 import { distributeProfits } from './profit-distribution'
+import { calculateBarberCommission } from './barber-commission'
 import { SetSaleStatusRequest, SetSaleStatusResponse } from './types'
 
 export class SetSaleStatusService {
   constructor(
     private saleRepository: SaleRepository,
     private barberUserRepository: BarberUsersRepository,
+    private barberServiceRepository: import('@/repositories/barber-service-repository').BarberServiceRepository,
     private cashRegisterRepository: CashRegisterRepository,
     private transactionRepository: TransactionRepository,
     private organizationRepository: OrganizationRepository,
@@ -40,6 +42,24 @@ export class SetSaleStatusService {
         user?.unitId as string,
       )
       if (!session) throw new CashRegisterClosedError()
+
+      for (const item of sale.items) {
+        if (!item.barberId || !item.serviceId) continue
+        const barber = await this.barberUserRepository.findById(item.barberId)
+        if (!barber?.profile) continue
+        const relation =
+          await this.barberServiceRepository.findByProfileService(
+            barber.profile.id,
+            item.serviceId,
+          )
+        const commission = calculateBarberCommission(
+          item.service ?? null,
+          barber.profile,
+          relation,
+        )
+        item.porcentagemBarbeiro =
+          commission ?? item.porcentagemBarbeiro ?? null
+      }
 
       const updatedSale = await this.saleRepository.update(saleId, {
         paymentStatus,

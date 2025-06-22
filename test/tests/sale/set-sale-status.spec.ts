@@ -4,6 +4,7 @@ import { CreateTransactionService } from '../../../src/services/transaction/crea
 import {
   FakeSaleRepository,
   FakeBarberUsersRepository,
+  FakeBarberServiceRelRepository,
   FakeCashRegisterRepository,
   FakeTransactionRepository,
   FakeOrganizationRepository,
@@ -17,11 +18,15 @@ import {
   defaultOrganization,
   defaultUnit,
   makeSaleWithBarber,
+  makeSale,
+  makeService,
+  makeBarberServiceRel,
 } from '../../helpers/default-values'
 
 let transactionRepo: FakeTransactionRepository
 let barberRepo: FakeBarberUsersRepository
 let cashRepo: FakeCashRegisterRepository
+let barberServiceRepo: FakeBarberServiceRelRepository
 
 vi.mock('../../../src/services/@factories/transaction/make-create-transaction', () => ({
   makeCreateTransaction: () => new CreateTransactionService(transactionRepo, barberRepo, cashRepo),
@@ -38,6 +43,7 @@ describe('Set sale status service', () => {
   beforeEach(() => {
     saleRepo = new FakeSaleRepository()
     barberRepo = new FakeBarberUsersRepository()
+    barberServiceRepo = new FakeBarberServiceRelRepository()
     cashRepo = new FakeCashRegisterRepository()
     transactionRepo = new FakeTransactionRepository()
     orgRepo = new FakeOrganizationRepository({ ...defaultOrganization })
@@ -75,6 +81,7 @@ describe('Set sale status service', () => {
     service = new SetSaleStatusService(
       saleRepo,
       barberRepo,
+      barberServiceRepo,
       cashRepo,
       transactionRepo,
       orgRepo,
@@ -103,6 +110,46 @@ describe('Set sale status service', () => {
     expect(transactionRepo.transactions).toHaveLength(2)
     expect(profileRepo.profiles[0].totalBalance).toBeCloseTo(50)
     expect(unitRepo.unit.totalBalance).toBeCloseTo(50)
+  })
+
+  it('uses relation percentage when paying a pending sale', async () => {
+    const serviceDef = { ...makeService('svc-1', 100), commissionPercentage: 30 }
+    const sale = makeSale('sale-2')
+    sale.items.push({
+      id: 'it2',
+      saleId: sale.id,
+      serviceId: serviceDef.id,
+      productId: null,
+      quantity: 1,
+      barberId: barberUser.id,
+      couponId: null,
+      price: 100,
+      discount: null,
+      discountType: null,
+      porcentagemBarbeiro: null,
+      service: serviceDef,
+      product: null,
+      barber: { ...barberUser, profile: barberProfile },
+      coupon: null,
+    })
+    saleRepo.sales.push(sale)
+    barberServiceRepo.items.push(
+      makeBarberServiceRel(
+        barberProfile.id,
+        serviceDef.id,
+        'PERCENTAGE_OF_SERVICE',
+      ),
+    )
+
+    const res = await service.execute({
+      saleId: 'sale-2',
+      userId: 'cashier',
+      paymentStatus: PaymentStatus.PAID,
+    })
+
+    expect(res.sale.items[0].porcentagemBarbeiro).toBe(30)
+    expect(profileRepo.profiles[0].totalBalance).toBeCloseTo(30)
+    expect(unitRepo.unit.totalBalance).toBeCloseTo(70)
   })
 })
 

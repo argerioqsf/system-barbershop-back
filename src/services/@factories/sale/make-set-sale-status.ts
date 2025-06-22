@@ -5,6 +5,7 @@ import { PrismaTransactionRepository } from '@/repositories/prisma/prisma-transa
 import { PrismaOrganizationRepository } from '@/repositories/prisma/prisma-organization-repository'
 import { PrismaProfilesRepository } from '@/repositories/prisma/prisma-profile-repository'
 import { PrismaUnitRepository } from '@/repositories/prisma/prisma-unit-repository'
+import { PrismaBarberServiceRepository } from '@/repositories/prisma/prisma-barber-service-repository'
 import { SetSaleStatusService } from '@/services/sale/set-sale-status'
 
 export function makeSetSaleStatus() {
@@ -15,9 +16,11 @@ export function makeSetSaleStatus() {
   const organizationRepository = new PrismaOrganizationRepository()
   const profileRepository = new PrismaProfilesRepository()
   const unitRepository = new PrismaUnitRepository()
+  const barberServiceRepository = new PrismaBarberServiceRepository()
   return new SetSaleStatusService(
     saleRepository,
     barberUserRepository,
+    barberServiceRepository,
     cashRegisterRepository,
     transactionRepository,
     organizationRepository,
