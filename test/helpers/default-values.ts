@@ -115,6 +115,21 @@ export function makeBarberServiceRel(
   }
 }
 
+export function makeBarberProductRel(
+  profileId: string,
+  productId: string,
+  type: CommissionCalcType = CommissionCalcType.PERCENTAGE_OF_USER,
+  commission?: number,
+): any {
+  return {
+    id: `rel-prod-${profileId}-${productId}`,
+    profileId,
+    productId,
+    commissionPercentage: commission ?? null,
+    commissionType: type,
+  }
+}
+
 export function makeProduct(id: string, price = 50, quantity = 5): Product {
   return {
     id,

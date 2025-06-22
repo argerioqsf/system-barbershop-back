@@ -6,6 +6,7 @@ import { ListProductsController } from './list-products-controller'
 import { GetProductController } from './get-product-controller'
 import { UpdateProductController } from './update-product-controller'
 import { DeleteProductController } from './delete-product-controller'
+import { ListProductSellersController } from './list-sellers-controller'
 
 export async function productRoute(app: FastifyInstance) {
   app.addHook('onRequest', verifyJWT)
@@ -19,4 +20,5 @@ export async function productRoute(app: FastifyInstance) {
   app.get('/products/:id', GetProductController)
   app.patch('/products/:id', UpdateProductController)
   app.delete('/products/:id', DeleteProductController)
+  app.get('/product-sellers', ListProductSellersController)
 }

@@ -5,6 +5,7 @@ import { InMemoryProfilesRepository } from '../../src/repositories/in-memory/in-
 import { Profile, User } from '@prisma/client'
 export { InMemoryServiceRepository as FakeServiceRepository } from '../../src/repositories/in-memory/in-memory-service-repository'
 export { InMemoryBarberServiceRepository as FakeBarberServiceRelRepository } from '../../src/repositories/in-memory/in-memory-barber-service-repository'
+export { InMemoryBarberProductRepository as FakeBarberProductRepository } from '../../src/repositories/in-memory/in-memory-barber-product-repository'
 export { InMemoryProductRepository as FakeProductRepository } from '../../src/repositories/in-memory/in-memory-product-repository'
 export { InMemoryCouponRepository as FakeCouponRepository } from '../../src/repositories/in-memory/in-memory-coupon-repository'
 export { InMemoryBarberUsersRepository } from '../../src/repositories/in-memory/in-memory-barber-users-repository'

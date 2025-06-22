@@ -5,6 +5,7 @@ import {
   FakeSaleRepository,
   FakeBarberUsersRepository,
   FakeBarberServiceRelRepository,
+  FakeBarberProductRepository,
   FakeCashRegisterRepository,
   FakeTransactionRepository,
   FakeOrganizationRepository,
@@ -27,6 +28,7 @@ let transactionRepo: FakeTransactionRepository
 let barberRepo: FakeBarberUsersRepository
 let cashRepo: FakeCashRegisterRepository
 let barberServiceRepo: FakeBarberServiceRelRepository
+let barberProductRepo: FakeBarberProductRepository
 
 vi.mock('../../../src/services/@factories/transaction/make-create-transaction', () => ({
   makeCreateTransaction: () => new CreateTransactionService(transactionRepo, barberRepo, cashRepo),
@@ -44,6 +46,7 @@ describe('Set sale status service', () => {
     saleRepo = new FakeSaleRepository()
     barberRepo = new FakeBarberUsersRepository()
     barberServiceRepo = new FakeBarberServiceRelRepository()
+    barberProductRepo = new FakeBarberProductRepository()
     cashRepo = new FakeCashRegisterRepository()
     transactionRepo = new FakeTransactionRepository()
     orgRepo = new FakeOrganizationRepository({ ...defaultOrganization })
@@ -82,6 +85,7 @@ describe('Set sale status service', () => {
       saleRepo,
       barberRepo,
       barberServiceRepo,
+      barberProductRepo,
       cashRepo,
       transactionRepo,
       orgRepo,

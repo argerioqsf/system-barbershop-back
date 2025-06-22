@@ -30,6 +30,7 @@ enum PermissionName {
   LIST_SALES_UNIT
   LIST_APPOINTMENTS_UNIT
   LIST_SERVICES_UNIT
+  SELL_PRODUCT
   MANAGE_USER_TRANSACTION_ADD
   MANAGE_USER_TRANSACTION_WITHDRAWAL
   LIST_UNIT_ALL
@@ -139,6 +140,7 @@ model Profile {
   commissionPercentage Float    @default(100)
   totalBalance         Float    @default(0)
   barberServices       BarberService[]
+  barberProducts       BarberProduct[]
   userId               String   @unique
   user                 User     @relation(fields: [userId], references: [id])
   createdAt            DateTime @default(now())
@@ -198,6 +200,20 @@ model BarberService {
   @@map("barber_services")
 }
 
+model BarberProduct {
+  id        String            @id @default(uuid())
+  profileId String
+  productId String
+  commissionPercentage Float?
+  commissionType CommissionCalcType @default(PERCENTAGE_OF_SERVICE)
+
+  profile Profile @relation(fields: [profileId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([profileId, productId])
+  @@map("barber_products")
+}
+
 model Product {
   id          String     @id @default(uuid())
   name        String
@@ -208,6 +224,7 @@ model Product {
   price       Float
   unitId      String
   saleItems   SaleItem[]
+  barberProducts BarberProduct[]
 
   unit Unit @relation(fields: [unitId], references: [id])
 

@@ -43,7 +43,7 @@ export async function distributeProfits(
 
   for (const item of sale.items) {
     const value = item.price ?? 0
-    if (item.product) {
+    if (item.product && !item.barberId) {
       ownerShare += value
     } else if (item.barberId) {
       const perc = item.porcentagemBarbeiro ?? 0

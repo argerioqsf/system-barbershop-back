@@ -10,6 +10,7 @@ import { SaleNotFoundError } from '@/services/@errors/sale/sale-not-found-error'
 import { CashRegisterClosedError } from '@/services/@errors/cash-register/cash-register-closed-error'
 import { distributeProfits } from './profit-distribution'
 import { calculateBarberCommission } from './barber-commission'
+import { calculateBarberProductCommission } from './barber-product-commission'
 import { SetSaleStatusRequest, SetSaleStatusResponse } from './types'
 
 export class SetSaleStatusService {
@@ -17,6 +18,7 @@ export class SetSaleStatusService {
     private saleRepository: SaleRepository,
     private barberUserRepository: BarberUsersRepository,
     private barberServiceRepository: import('@/repositories/barber-service-repository').BarberServiceRepository,
+    private barberProductRepository: import('@/repositories/barber-product-repository').BarberProductRepository,
     private cashRegisterRepository: CashRegisterRepository,
     private transactionRepository: TransactionRepository,
     private organizationRepository: OrganizationRepository,
@@ -44,21 +46,36 @@ export class SetSaleStatusService {
       if (!session) throw new CashRegisterClosedError()
 
       for (const item of sale.items) {
-        if (!item.barberId || !item.serviceId) continue
+        if (!item.barberId) continue
         const barber = await this.barberUserRepository.findById(item.barberId)
         if (!barber?.profile) continue
-        const relation =
-          await this.barberServiceRepository.findByProfileService(
-            barber.profile.id,
-            item.serviceId,
+        let commission: number | undefined
+        if (item.serviceId && item.service) {
+          const relation =
+            await this.barberServiceRepository.findByProfileService(
+              barber.profile.id,
+              item.serviceId,
+            )
+          commission = calculateBarberCommission(
+            item.service,
+            barber.profile,
+            relation,
           )
-        const commission = calculateBarberCommission(
-          item.service ?? null,
-          barber.profile,
-          relation,
-        )
-        item.porcentagemBarbeiro =
-          commission ?? item.porcentagemBarbeiro ?? null
+        } else if (item.productId && item.product) {
+          const relation =
+            await this.barberProductRepository.findByProfileProduct(
+              barber.profile.id,
+              item.productId,
+            )
+          commission = calculateBarberProductCommission(
+            item.product,
+            barber.profile,
+            relation,
+          )
+        }
+        if (commission !== undefined) {
+          item.porcentagemBarbeiro = commission
+        }
       }
 
       const updatedSale = await this.saleRepository.update(saleId, {
