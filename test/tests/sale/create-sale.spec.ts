@@ -8,6 +8,7 @@ import {
   FakeCouponRepository,
   FakeSaleRepository,
   FakeBarberUsersRepository,
+  FakeBarberServiceRelRepository,
   FakeCashRegisterRepository,
   FakeTransactionRepository,
   FakeOrganizationRepository,
@@ -43,6 +44,7 @@ function setup() {
   const couponRepo = new FakeCouponRepository()
   const saleRepo = new FakeSaleRepository()
   barberRepo = new FakeBarberUsersRepository()
+  const barberServiceRepo = new FakeBarberServiceRelRepository()
   cashRepo = new FakeCashRegisterRepository()
   transactionRepo = new FakeTransactionRepository()
   const organization = {
@@ -70,6 +72,7 @@ function setup() {
     productRepo,
     couponRepo,
     barberRepo,
+    barberServiceRepo,
     cashRepo,
     transactionRepo,
     organizationRepo,
@@ -83,6 +86,7 @@ function setup() {
     couponRepo,
     saleRepo,
     barberRepo,
+    barberServiceRepo,
     cashRepo,
     transactionRepo,
     organizationRepo,

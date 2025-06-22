@@ -4,6 +4,7 @@ import { PrismaProductRepository } from '@/repositories/prisma/prisma-product-re
 import { PrismaCouponRepository } from '@/repositories/prisma/prisma-coupon-repository'
 import { CreateSaleService } from '@/services/sale/create-sale'
 import { PrismaBarberUsersRepository } from '@/repositories/prisma/prisma-barber-users-repository'
+import { PrismaBarberServiceRepository } from '@/repositories/prisma/prisma-barber-service-repository'
 import { PrismaCashRegisterRepository } from '@/repositories/prisma/prisma-cash-register-repository'
 import { PrismaTransactionRepository } from '@/repositories/prisma/prisma-transaction-repository'
 import { PrismaOrganizationRepository } from '@/repositories/prisma/prisma-organization-repository'
@@ -16,6 +17,7 @@ export function makeCreateSale() {
   const productRepository = new PrismaProductRepository()
   const couponRepository = new PrismaCouponRepository()
   const barberUserRepository = new PrismaBarberUsersRepository()
+  const barberServiceRepository = new PrismaBarberServiceRepository()
   const cashRegisterRepository = new PrismaCashRegisterRepository()
   const transactionRepository = new PrismaTransactionRepository()
   const organizationRepository = new PrismaOrganizationRepository()
@@ -27,6 +29,7 @@ export function makeCreateSale() {
     productRepository,
     couponRepository,
     barberUserRepository,
+    barberServiceRepository,
     cashRegisterRepository,
     transactionRepository,
     organizationRepository,

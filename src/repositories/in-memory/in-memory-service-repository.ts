@@ -15,6 +15,9 @@ export class InMemoryServiceRepository implements ServiceRepository {
       imageUrl: (data.imageUrl as string | null) ?? null,
       cost: data.cost as number,
       price: data.price as number,
+      category: (data.category as string | null) ?? null,
+      defaultTime: (data.defaultTime as number | null) ?? null,
+      commissionPercentage: (data.commissionPercentage as number | null) ?? null,
       unitId: (data.unit as { connect: { id: string } }).connect.id,
     }
     this.services.push(service)

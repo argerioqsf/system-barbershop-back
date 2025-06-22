@@ -37,6 +37,7 @@ export class CreateSaleService {
     private productRepository: ProductRepository,
     private couponRepository: CouponRepository,
     private barberUserRepository: BarberUsersRepository,
+    private barberServiceRepository: import('@/repositories/barber-service-repository').BarberServiceRepository,
     private cashRegisterRepository: CashRegisterRepository,
     private transactionRepository: TransactionRepository,
     private organizationRepository: OrganizationRepository,
@@ -58,8 +59,9 @@ export class CreateSaleService {
       quantity: item.quantity,
     }
 
+    let service: import('@prisma/client').Service | null = null
     if (item.serviceId) {
-      const service = await this.serviceRepository.findById(item.serviceId)
+      service = await this.serviceRepository.findById(item.serviceId)
       if (!service) throw new ServiceNotFoundError()
       if (service.unitId !== userUnitId) {
         throw new ServiceNotFromUserUnitError()
@@ -90,7 +92,28 @@ export class CreateSaleService {
       if (barber && barber.unitId !== userUnitId) {
         throw new BarberNotFromUserUnitError()
       }
-      barberCommission = barber?.profile?.commissionPercentage
+      const relation =
+        service && barber?.profile
+          ? await this.barberServiceRepository.findByProfileService(
+              barber.profile.id,
+              service.id,
+            )
+          : null
+      if (relation) {
+        switch (relation.commissionType) {
+          case 'PERCENTAGE_OF_SERVICE':
+            barberCommission = service?.commissionPercentage ?? barber?.profile?.commissionPercentage
+            break
+          case 'PERCENTAGE_OF_USER':
+            barberCommission = barber?.profile?.commissionPercentage
+            break
+          case 'PERCENTAGE_OF_USER_SERVICE':
+            barberCommission = relation.commissionPercentage ?? barber?.profile?.commissionPercentage
+            break
+        }
+      } else {
+        barberCommission = barber?.profile?.commissionPercentage
+      }
     }
 
     const resultLogicSalesCoupons = await this.applyCouponToSale(

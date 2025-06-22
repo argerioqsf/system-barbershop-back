@@ -7,6 +7,9 @@ interface CreateServiceRequest {
   imageUrl?: string | null
   cost: number
   price: number
+  category?: string | null
+  defaultTime?: number | null
+  commissionPercentage?: number | null
   unitId: string
 }
 
@@ -24,6 +27,9 @@ export class CreateServiceService {
       imageUrl: data.imageUrl,
       cost: data.cost,
       price: data.price,
+      category: data.category ?? null,
+      defaultTime: data.defaultTime ?? null,
+      commissionPercentage: data.commissionPercentage ?? null,
       unit: { connect: { id: data.unitId } },
     })
     return { service }
