@@ -2,7 +2,7 @@ import { SaleRepository } from '../../repositories/sale-repository'
 import { ServiceRepository } from '../../repositories/service-repository'
 import { ProductRepository } from '../../repositories/product-repository'
 import { CouponRepository } from '../../repositories/coupon-repository'
-import { DiscountType, PaymentStatus } from '@prisma/client'
+import { DiscountType, PaymentStatus, Service } from '@prisma/client'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { CashRegisterRepository } from '@/repositories/cash-register-repository'
 import { TransactionRepository } from '@/repositories/transaction-repository'
@@ -59,7 +59,7 @@ export class CreateSaleService {
       quantity: item.quantity,
     }
 
-    let service: import('@prisma/client').Service | null = null
+    let service: Service | null = null
     if (item.serviceId) {
       service = await this.serviceRepository.findById(item.serviceId)
       if (!service) throw new ServiceNotFoundError()
@@ -102,13 +102,17 @@ export class CreateSaleService {
       if (relation) {
         switch (relation.commissionType) {
           case 'PERCENTAGE_OF_SERVICE':
-            barberCommission = service?.commissionPercentage ?? barber?.profile?.commissionPercentage
+            barberCommission =
+              service?.commissionPercentage ??
+              barber?.profile?.commissionPercentage
             break
           case 'PERCENTAGE_OF_USER':
             barberCommission = barber?.profile?.commissionPercentage
             break
           case 'PERCENTAGE_OF_USER_SERVICE':
-            barberCommission = relation.commissionPercentage ?? barber?.profile?.commissionPercentage
+            barberCommission =
+              relation.commissionPercentage ??
+              barber?.profile?.commissionPercentage
             break
         }
       } else {
