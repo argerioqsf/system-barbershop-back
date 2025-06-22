@@ -2,7 +2,7 @@ import { SaleRepository } from '../../repositories/sale-repository'
 import { ServiceRepository } from '../../repositories/service-repository'
 import { ProductRepository } from '../../repositories/product-repository'
 import { CouponRepository } from '../../repositories/coupon-repository'
-import { DiscountType, PaymentStatus, Service } from '@prisma/client'
+import { DiscountType, PaymentStatus, Product, Service } from '@prisma/client'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { CashRegisterRepository } from '@/repositories/cash-register-repository'
 import { TransactionRepository } from '@/repositories/transaction-repository'
@@ -30,6 +30,7 @@ import {
   TempItems,
   SaleItemTemp,
 } from './types'
+import { BarberNotFoundError } from '../@errors/barber/barber-not-found-error'
 
 export class CreateSaleService {
   constructor(
@@ -61,6 +62,8 @@ export class CreateSaleService {
     }
 
     let service: Service | null = null
+    let product: Product | null = null
+
     if (item.serviceId) {
       service = await this.serviceRepository.findById(item.serviceId)
       if (!service) throw new ServiceNotFoundError()
@@ -70,7 +73,7 @@ export class CreateSaleService {
       basePrice = service.price * item.quantity
       dataItem.service = { connect: { id: item.serviceId } }
     } else if (item.productId) {
-      const product = await this.productRepository.findById(item.productId)
+      product = await this.productRepository.findById(item.productId)
       if (!product) throw new ProductNotFoundError()
       if (product.unitId !== userUnitId) {
         throw new ServiceNotFromUserUnitError()
@@ -90,9 +93,11 @@ export class CreateSaleService {
 
     if (item.barberId) {
       const barber = await this.barberUserRepository.findById(item.barberId)
+      if (!barber) throw new BarberNotFoundError()
       if (barber && barber.unitId !== userUnitId) {
         throw new BarberNotFromUserUnitError()
       }
+
       const relation =
         service && barber?.profile
           ? await this.barberServiceRepository.findByProfileService(
@@ -100,6 +105,7 @@ export class CreateSaleService {
               service.id,
             )
           : null
+
       barberCommission = calculateBarberCommission(
         service,
         barber?.profile,

@@ -4,6 +4,7 @@ import {
   Profile,
   Service,
 } from '@prisma/client'
+import { BarberDoesNotHaveThisServiceError } from '../@errors/barber/barber-does-not-have-this-service'
 
 export function calculateBarberCommission(
   service: Service | null | undefined,
@@ -12,14 +13,18 @@ export function calculateBarberCommission(
 ): number | undefined {
   if (!profile) return undefined
   if (relation) {
-    switch (relation.commissionType) {
-      case CommissionCalcType.PERCENTAGE_OF_SERVICE:
-        return service?.commissionPercentage ?? profile.commissionPercentage
-      case CommissionCalcType.PERCENTAGE_OF_USER:
-        return profile.commissionPercentage
-      case CommissionCalcType.PERCENTAGE_OF_USER_SERVICE:
-        return relation.commissionPercentage ?? profile.commissionPercentage
+    if (service) {
+      switch (relation.commissionType) {
+        case CommissionCalcType.PERCENTAGE_OF_SERVICE:
+          return service.commissionPercentage ?? 0
+        case CommissionCalcType.PERCENTAGE_OF_USER:
+          return profile.commissionPercentage
+        case CommissionCalcType.PERCENTAGE_OF_USER_SERVICE:
+          return relation.commissionPercentage ?? 0
+      }
     }
+    return 0
+  } else {
+    throw new BarberDoesNotHaveThisServiceError()
   }
-  return profile.commissionPercentage
 }

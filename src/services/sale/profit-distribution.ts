@@ -46,7 +46,7 @@ export async function distributeProfits(
     if (item.product) {
       ownerShare += value
     } else if (item.barberId) {
-      const perc = item.porcentagemBarbeiro ?? 100
+      const perc = item.porcentagemBarbeiro ?? 0
       const valueBarber = (value * perc) / 100
       barberTotals[item.barberId] =
         (barberTotals[item.barberId] || 0) + valueBarber
