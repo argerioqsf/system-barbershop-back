@@ -31,6 +31,7 @@ import {
   SaleItemTemp,
 } from './types'
 import { BarberNotFoundError } from '../@errors/barber/barber-not-found-error'
+import { ProfileNotFoundError } from '../@errors/profile/profile-not-found-error'
 
 export class CreateSaleService {
   constructor(
@@ -94,17 +95,17 @@ export class CreateSaleService {
     if (item.barberId) {
       const barber = await this.barberUserRepository.findById(item.barberId)
       if (!barber) throw new BarberNotFoundError()
+      if (!barber.profile) throw new ProfileNotFoundError()
       if (barber && barber.unitId !== userUnitId) {
         throw new BarberNotFromUserUnitError()
       }
 
-      const relation =
-        service && barber?.profile
-          ? await this.barberServiceRepository.findByProfileService(
-              barber.profile.id,
-              service.id,
-            )
-          : null
+      const relation = service
+        ? await this.barberServiceRepository.findByProfileService(
+            barber.profile.id,
+            service.id,
+          )
+        : null
 
       barberCommission = calculateBarberCommission(
         service,
