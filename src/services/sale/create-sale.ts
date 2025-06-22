@@ -2,7 +2,7 @@ import { SaleRepository } from '../../repositories/sale-repository'
 import { ServiceRepository } from '../../repositories/service-repository'
 import { ProductRepository } from '../../repositories/product-repository'
 import { CouponRepository } from '../../repositories/coupon-repository'
-import { DiscountType, PaymentStatus } from '@prisma/client'
+import { DiscountType, PaymentStatus, Product, Service } from '@prisma/client'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { CashRegisterRepository } from '@/repositories/cash-register-repository'
 import { TransactionRepository } from '@/repositories/transaction-repository'
@@ -13,6 +13,7 @@ import { BarberNotFromUserUnitError } from '../@errors/barber/barber-not-from-us
 import { CouponNotFromUserUnitError } from '../@errors/coupon/coupon-not-from-user-unit-error'
 import { UnitRepository } from '@/repositories/unit-repository'
 import { distributeProfits } from './profit-distribution'
+import { calculateBarberCommission } from './barber-commission'
 import { ItemNeedsServiceOrProductError } from '../@errors/sale/item-needs-service-or-product-error'
 import { ServiceNotFoundError } from '../@errors/service/service-not-found-error'
 import { ProductNotFoundError } from '../@errors/product/product-not-found-error'
@@ -29,6 +30,8 @@ import {
   TempItems,
   SaleItemTemp,
 } from './types'
+import { BarberNotFoundError } from '../@errors/barber/barber-not-found-error'
+import { ProfileNotFoundError } from '../@errors/profile/profile-not-found-error'
 
 export class CreateSaleService {
   constructor(
@@ -37,6 +40,7 @@ export class CreateSaleService {
     private productRepository: ProductRepository,
     private couponRepository: CouponRepository,
     private barberUserRepository: BarberUsersRepository,
+    private barberServiceRepository: import('@/repositories/barber-service-repository').BarberServiceRepository,
     private cashRegisterRepository: CashRegisterRepository,
     private transactionRepository: TransactionRepository,
     private organizationRepository: OrganizationRepository,
@@ -58,8 +62,11 @@ export class CreateSaleService {
       quantity: item.quantity,
     }
 
+    let service: Service | null = null
+    let product: Product | null = null
+
     if (item.serviceId) {
-      const service = await this.serviceRepository.findById(item.serviceId)
+      service = await this.serviceRepository.findById(item.serviceId)
       if (!service) throw new ServiceNotFoundError()
       if (service.unitId !== userUnitId) {
         throw new ServiceNotFromUserUnitError()
@@ -67,7 +74,7 @@ export class CreateSaleService {
       basePrice = service.price * item.quantity
       dataItem.service = { connect: { id: item.serviceId } }
     } else if (item.productId) {
-      const product = await this.productRepository.findById(item.productId)
+      product = await this.productRepository.findById(item.productId)
       if (!product) throw new ProductNotFoundError()
       if (product.unitId !== userUnitId) {
         throw new ServiceNotFromUserUnitError()
@@ -87,10 +94,24 @@ export class CreateSaleService {
 
     if (item.barberId) {
       const barber = await this.barberUserRepository.findById(item.barberId)
+      if (!barber) throw new BarberNotFoundError()
+      if (!barber.profile) throw new ProfileNotFoundError()
       if (barber && barber.unitId !== userUnitId) {
         throw new BarberNotFromUserUnitError()
       }
-      barberCommission = barber?.profile?.commissionPercentage
+
+      const relation = service
+        ? await this.barberServiceRepository.findByProfileService(
+            barber.profile.id,
+            service.id,
+          )
+        : null
+
+      barberCommission = calculateBarberCommission(
+        service,
+        barber?.profile,
+        relation,
+      )
     }
 
     const resultLogicSalesCoupons = await this.applyCouponToSale(

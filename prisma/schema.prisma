@@ -71,6 +71,12 @@ enum PaymentStatus {
   PENDING
 }
 
+enum CommissionCalcType {
+  PERCENTAGE_OF_SERVICE
+  PERCENTAGE_OF_USER
+  PERCENTAGE_OF_USER_SERVICE
+}
+
 model Role {
   id          String       @id @default(uuid())
   name        RoleName
@@ -132,6 +138,7 @@ model Profile {
   role                 Role @relation(fields: [roleId], references: [id])
   commissionPercentage Float    @default(100)
   totalBalance         Float    @default(0)
+  barberServices       BarberService[]
   userId               String   @unique
   user                 User     @relation(fields: [userId], references: [id])
   createdAt            DateTime @default(now())
@@ -163,13 +170,32 @@ model Service {
   imageUrl     String?
   cost         Float
   price        Float
+  category     String?
+  defaultTime  Int?
+  commissionPercentage Float?
   unitId       String
   appointments Appointment[]
   saleItems    SaleItem[]
+  barberServices BarberService[]
 
   unit Unit @relation(fields: [unitId], references: [id])
 
   @@map("services")
+}
+
+model BarberService {
+  id        String            @id @default(uuid())
+  profileId String
+  serviceId String
+  time      Int?
+  commissionPercentage Float?
+  commissionType CommissionCalcType @default(PERCENTAGE_OF_SERVICE)
+
+  profile Profile @relation(fields: [profileId], references: [id])
+  service Service @relation(fields: [serviceId], references: [id])
+
+  @@unique([profileId, serviceId])
+  @@map("barber_services")
 }
 
 model Product {

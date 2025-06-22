@@ -27,6 +27,9 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
         imageUrl: null,
         cost: 0,
         price: 0,
+        category: null,
+        defaultTime: null,
+        commissionPercentage: null,
         unitId: appointment.unitId,
       },
       client: {

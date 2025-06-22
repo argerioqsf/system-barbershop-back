@@ -1,5 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { PaymentMethod, DiscountType, PaymentStatus } from '@prisma/client'
+import {
+  PaymentMethod,
+  DiscountType,
+  PaymentStatus,
+  CommissionCalcType,
+} from '@prisma/client'
 import { CreateSaleService } from '../../../src/services/sale/create-sale'
 import { CreateTransactionService } from '../../../src/services/transaction/create-transaction'
 import {
@@ -8,6 +13,7 @@ import {
   FakeCouponRepository,
   FakeSaleRepository,
   FakeBarberUsersRepository,
+  FakeBarberServiceRelRepository,
   FakeCashRegisterRepository,
   FakeTransactionRepository,
   FakeOrganizationRepository,
@@ -23,6 +29,7 @@ import {
   makeService,
   makeProduct,
   makeCoupon,
+  makeBarberServiceRel,
 } from '../../helpers/default-values'
 
 let transactionRepo: FakeTransactionRepository
@@ -43,6 +50,7 @@ function setup() {
   const couponRepo = new FakeCouponRepository()
   const saleRepo = new FakeSaleRepository()
   barberRepo = new FakeBarberUsersRepository()
+  const barberServiceRepo = new FakeBarberServiceRelRepository()
   cashRepo = new FakeCashRegisterRepository()
   transactionRepo = new FakeTransactionRepository()
   const organization = {
@@ -70,6 +78,7 @@ function setup() {
     productRepo,
     couponRepo,
     barberRepo,
+    barberServiceRepo,
     cashRepo,
     transactionRepo,
     organizationRepo,
@@ -83,6 +92,7 @@ function setup() {
     couponRepo,
     saleRepo,
     barberRepo,
+    barberServiceRepo,
     cashRepo,
     transactionRepo,
     organizationRepo,
@@ -450,10 +460,16 @@ describe('Create sale service', () => {
   it('updates balances on paid sale with barber and product', async () => {
     const service = makeService('service-11', 100)
     const product = makeProduct('product-13', 50)
+    const serviceBarber = makeBarberServiceRel(
+      barberUser.profile.id,
+      service.id,
+      CommissionCalcType.PERCENTAGE_OF_USER,
+    )
     const coupon = makeCoupon('pcpaid', 'PAID10', 10, DiscountType.VALUE)
     ctx.serviceRepo.services.push(service)
     ctx.productRepo.products.push(product)
     ctx.couponRepo.coupons.push(coupon)
+    ctx.barberServiceRepo.items.push(serviceBarber)
     ctx.cashRepo.session = {
       id: 'session-1',
       openedById: defaultUser.id,
@@ -487,5 +503,102 @@ describe('Create sale service', () => {
     expect(ctx.unitRepo.unit.totalBalance).toBeCloseTo(ownerShare)
     expect(product.quantity).toBe(4)
     expect(result.sale.total).toBe(140)
+  })
+
+  it('sets barber commission from profile when no relation exists', async () => {
+    const service = makeService('service-rel1', 100)
+    const serviceBarber = makeBarberServiceRel(
+      barberUser.profile.id,
+      service.id,
+      CommissionCalcType.PERCENTAGE_OF_USER,
+    )
+    ctx.serviceRepo.services.push(service)
+    ctx.profilesRepo.profiles.push({ ...barberProfile, user: barberUser })
+    ctx.barberServiceRepo.items.push(serviceBarber)
+
+    const result = await ctx.createSale.execute({
+      userId: defaultUser.id,
+      method: PaymentMethod.CASH,
+      items: [{ serviceId: service.id, quantity: 1, barberId: barberUser.id }],
+      clientId: defaultClient.id,
+    })
+
+    expect(result.sale.items[0].porcentagemBarbeiro).toBe(
+      barberProfile.commissionPercentage,
+    )
+  })
+
+  it('uses service percentage when relation type is PERCENTAGE_OF_SERVICE', async () => {
+    const service = {
+      ...makeService('service-rel2', 100),
+      commissionPercentage: 30,
+    }
+    ctx.serviceRepo.services.push(service)
+    ctx.barberServiceRepo.items.push(
+      makeBarberServiceRel(
+        barberProfile.id,
+        service.id,
+        'PERCENTAGE_OF_SERVICE',
+      ),
+    )
+    ctx.profilesRepo.profiles.push({ ...barberProfile, user: barberUser })
+
+    const result = await ctx.createSale.execute({
+      userId: defaultUser.id,
+      method: PaymentMethod.CASH,
+      items: [{ serviceId: service.id, quantity: 1, barberId: barberUser.id }],
+      clientId: defaultClient.id,
+    })
+
+    expect(result.sale.items[0].porcentagemBarbeiro).toBe(30)
+  })
+
+  it('uses profile percentage when relation type is PERCENTAGE_OF_USER', async () => {
+    const service = {
+      ...makeService('service-rel3', 100),
+      commissionPercentage: 30,
+    }
+    ctx.serviceRepo.services.push(service)
+    ctx.barberServiceRepo.items.push(
+      makeBarberServiceRel(barberProfile.id, service.id, 'PERCENTAGE_OF_USER'),
+    )
+    ctx.profilesRepo.profiles.push({ ...barberProfile, user: barberUser })
+
+    const result = await ctx.createSale.execute({
+      userId: defaultUser.id,
+      method: PaymentMethod.CASH,
+      items: [{ serviceId: service.id, quantity: 1, barberId: barberUser.id }],
+      clientId: defaultClient.id,
+    })
+
+    expect(result.sale.items[0].porcentagemBarbeiro).toBe(
+      barberProfile.commissionPercentage,
+    )
+  })
+
+  it('uses relation percentage when relation type is PERCENTAGE_OF_USER_SERVICE', async () => {
+    const service = {
+      ...makeService('service-rel4', 100),
+      commissionPercentage: 30,
+    }
+    ctx.serviceRepo.services.push(service)
+    ctx.barberServiceRepo.items.push(
+      makeBarberServiceRel(
+        barberProfile.id,
+        service.id,
+        'PERCENTAGE_OF_USER_SERVICE',
+        60,
+      ),
+    )
+    ctx.profilesRepo.profiles.push({ ...barberProfile, user: barberUser })
+
+    const result = await ctx.createSale.execute({
+      userId: defaultUser.id,
+      method: PaymentMethod.CASH,
+      items: [{ serviceId: service.id, quantity: 1, barberId: barberUser.id }],
+      clientId: defaultClient.id,
+    })
+
+    expect(result.sale.items[0].porcentagemBarbeiro).toBe(60)
   })
 })

@@ -13,6 +13,8 @@ import {
   Sale,
   Permission,
   Role,
+  BarberService,
+  CommissionCalcType,
 } from '@prisma/client'
 
 export const defaultUser = {
@@ -90,7 +92,26 @@ export function makeService(id: string, price = 100): Service {
     imageUrl: null,
     cost: 0,
     price,
+    category: null,
+    defaultTime: null,
+    commissionPercentage: null,
     unitId: 'unit-1',
+  }
+}
+
+export function makeBarberServiceRel(
+  profileId: string,
+  serviceId: string,
+  type: CommissionCalcType = CommissionCalcType.PERCENTAGE_OF_SERVICE,
+  commission?: number,
+): BarberService {
+  return {
+    id: `rel-${profileId}-${serviceId}`,
+    profileId,
+    serviceId,
+    time: null,
+    commissionPercentage: commission ?? null,
+    commissionType: type,
   }
 }
 

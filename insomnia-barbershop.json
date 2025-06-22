@@ -153,6 +153,18 @@
             "value": "20"
           },
           {
+            "name": "category",
+            "value": ""
+          },
+          {
+            "name": "defaultTime",
+            "value": ""
+          },
+          {
+            "name": "commissionPercentage",
+            "value": ""
+          },
+          {
             "name": "unitId",
             "value": ""
           },
