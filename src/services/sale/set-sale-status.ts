@@ -9,6 +9,7 @@ import { CommissionCalcType, PaymentStatus } from '@prisma/client'
 import { SaleNotFoundError } from '@/services/@errors/sale/sale-not-found-error'
 import { CashRegisterClosedError } from '@/services/@errors/cash-register/cash-register-closed-error'
 import { distributeProfits } from './profit-distribution'
+import { calculateBarberCommission } from './barber-commission'
 import { SetSaleStatusRequest, SetSaleStatusResponse } from './types'
 
 export class SetSaleStatusService {
@@ -51,26 +52,11 @@ export class SetSaleStatusService {
             barber.profile.id,
             item.serviceId,
           )
-        let commission: number | undefined
-        if (relation) {
-          switch (relation.commissionType) {
-            case CommissionCalcType.PERCENTAGE_OF_SERVICE:
-              commission =
-                item.service?.commissionPercentage ??
-                barber.profile.commissionPercentage
-              break
-            case CommissionCalcType.PERCENTAGE_OF_USER:
-              commission = barber.profile.commissionPercentage
-              break
-            case CommissionCalcType.PERCENTAGE_OF_USER_SERVICE:
-              commission =
-                relation.commissionPercentage ??
-                barber.profile.commissionPercentage
-              break
-          }
-        } else {
-          commission = barber.profile.commissionPercentage
-        }
+        const commission = calculateBarberCommission(
+          item.service ?? null,
+          barber.profile,
+          relation,
+        )
         item.porcentagemBarbeiro =
           commission ?? item.porcentagemBarbeiro ?? null
       }
