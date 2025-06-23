@@ -16,6 +16,10 @@ export class AddProfileWorkHourService {
   async execute(
     data: AddProfileWorkHourRequest,
   ): Promise<AddProfileWorkHourResponse> {
+    const current = await this.repository.findManyByProfile(data.profileId)
+    const duplicate = current.some((w) => w.dayHourId === data.dayHourId)
+    if (duplicate) throw new Error('DayHour already added')
+
     const workHour = await this.repository.create({
       profileId: data.profileId,
       dayHourId: data.dayHourId,

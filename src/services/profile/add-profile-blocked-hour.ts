@@ -24,6 +24,14 @@ export class AddProfileBlockedHourService {
     const allowed = works.some((w) => w.dayHourId === data.dayHourId)
     if (!allowed) throw new Error('DayHour outside working hours')
 
+    const blockedExisting = await this.blockedRepository.findManyByProfile(
+      data.profileId,
+    )
+    const duplicate = blockedExisting.some(
+      (b) => b.dayHourId === data.dayHourId,
+    )
+    if (duplicate) throw new Error('DayHour already blocked')
+
     const blocked = await this.blockedRepository.create({
       profileId: data.profileId,
       dayHourId: data.dayHourId,

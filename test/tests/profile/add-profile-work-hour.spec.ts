@@ -26,4 +26,12 @@ describe('Add profile work hour service', () => {
     const items = await repo.findManyByProfile('p2')
     expect(items).toHaveLength(2)
   })
+
+  it('throws when adding duplicate work hour', async () => {
+    await service.execute({ profileId: 'p3', dayHourId: 'dh-4' })
+
+    await expect(
+      service.execute({ profileId: 'p3', dayHourId: 'dh-4' }),
+    ).rejects.toThrow()
+  })
 })

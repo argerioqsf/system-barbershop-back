@@ -54,4 +54,19 @@ describe('Add profile blocked hour', () => {
       addBlocked.execute({ profileId: 'prof-1', dayHourId: dayHour.id }),
     ).rejects.toThrow()
   })
+
+  it('throws when blocking same hour twice', async () => {
+    const { dayHour } = await createDayHour.execute({
+      weekDay: 3,
+      startHour: '10:00',
+      endHour: '12:00',
+    })
+    await addUnitHour.execute({ unitId: 'unit-1', dayHourId: dayHour.id })
+    await addWorkHour.execute({ profileId: 'prof-2', dayHourId: dayHour.id })
+    await addBlocked.execute({ profileId: 'prof-2', dayHourId: dayHour.id })
+
+    await expect(
+      addBlocked.execute({ profileId: 'prof-2', dayHourId: dayHour.id }),
+    ).rejects.toThrow()
+  })
 })
