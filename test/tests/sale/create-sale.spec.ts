@@ -34,6 +34,8 @@ import {
   makeCoupon,
   makeBarberServiceRel,
   makeBarberProductRel,
+  defaultOrganization,
+  defaultUnit,
 } from '../../helpers/default-values'
 
 let transactionRepo: FakeTransactionRepository
@@ -59,23 +61,11 @@ function setup() {
   cashRepo = new FakeCashRegisterRepository()
   transactionRepo = new FakeTransactionRepository()
   const appointmentRepo = new FakeAppointmentRepository()
-  const organization = {
-    id: 'org-1',
-    name: 'Org',
-    slug: 'org',
-    totalBalance: 0,
-    createdAt: new Date(),
-  }
-  const organizationRepo = new FakeOrganizationRepository(organization)
+  const organizationRepo = new FakeOrganizationRepository({
+    ...defaultOrganization,
+  })
   const profilesRepo = new FakeProfilesRepository()
-  const unit = {
-    id: 'unit-1',
-    name: 'Unit',
-    slug: 'unit',
-    organizationId: 'org-1',
-    totalBalance: 0,
-    allowsLoan: false,
-  }
+  const unit = { ...defaultUnit }
   const unitRepo = new FakeUnitRepository(unit)
 
   const createSale = new CreateSaleService(
@@ -754,5 +744,62 @@ describe('Create sale service', () => {
         appointmentId: appointment.id,
       }),
     ).rejects.toThrow('Appointment already linked')
+  })
+
+  it('creates a sale from appointment using discount only', async () => {
+    const service = makeService('svc-appt-disc', 80)
+    ctx.serviceRepo.services.push(service)
+    ctx.barberServiceRepo.items.push(
+      makeBarberServiceRel(barberProfile.id, service.id, 'PERCENTAGE_OF_USER'),
+    )
+    ctx.profilesRepo.profiles.push({ ...barberProfile, user: barberUser })
+    const appointment = await ctx.appointmentRepo.create({
+      client: { connect: { id: defaultClient.id } },
+      barber: { connect: { id: barberUser.id } },
+      service: { connect: { id: service.id } },
+      unit: { connect: { id: 'unit-1' } },
+      date: new Date('2024-03-01'),
+      hour: '08:00',
+      discount: 20,
+    })
+
+    const res = await ctx.createSale.execute({
+      userId: defaultUser.id,
+      method: PaymentMethod.CASH,
+      items: [],
+      clientId: defaultClient.id,
+      appointmentId: appointment.id,
+    })
+
+    expect(res.sale.total).toBe(60)
+    expect(res.sale.items[0].appointmentId).toBe(appointment.id)
+  })
+
+  it('creates a sale from appointment without discount', async () => {
+    const service = makeService('svc-appt-none', 70)
+    ctx.serviceRepo.services.push(service)
+    ctx.barberServiceRepo.items.push(
+      makeBarberServiceRel(barberProfile.id, service.id, 'PERCENTAGE_OF_USER'),
+    )
+    ctx.profilesRepo.profiles.push({ ...barberProfile, user: barberUser })
+    const appointment = await ctx.appointmentRepo.create({
+      client: { connect: { id: defaultClient.id } },
+      barber: { connect: { id: barberUser.id } },
+      service: { connect: { id: service.id } },
+      unit: { connect: { id: 'unit-1' } },
+      date: new Date('2024-04-01'),
+      hour: '12:00',
+    })
+
+    const res = await ctx.createSale.execute({
+      userId: defaultUser.id,
+      method: PaymentMethod.CASH,
+      items: [],
+      clientId: defaultClient.id,
+      appointmentId: appointment.id,
+    })
+
+    expect(res.sale.total).toBe(70)
+    expect(res.sale.items[0].appointmentId).toBe(appointment.id)
   })
 })

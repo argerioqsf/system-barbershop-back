@@ -25,6 +25,8 @@ import {
   makeBarberServiceRel,
   makeProduct,
   makeBarberProductRel,
+  makeServiceWithCommission,
+  makeAppointment,
 } from '../../helpers/default-values'
 import { PaymentStatus } from '@prisma/client'
 
@@ -126,10 +128,7 @@ describe('Set sale status service', () => {
   })
 
   it('uses relation percentage when paying a pending sale', async () => {
-    const serviceDef = {
-      ...makeService('svc-1', 100),
-      commissionPercentage: 30,
-    }
+    const serviceDef = makeServiceWithCommission('svc-1', 100, 30)
     const sale = makeSale('sale-2')
     sale.items.push({
       id: 'it2',
@@ -208,23 +207,11 @@ describe('Set sale status service', () => {
   })
 
   it('handles appointment relation when paying pending sale', async () => {
-    const serviceDef = { ...makeService('svc-appt', 80), commissionPercentage: 50 }
-    const appointment = {
-      id: 'appt-1',
-      clientId: defaultClient.id,
-      barberId: barberUser.id,
-      serviceId: serviceDef.id,
-      unitId: defaultUnit.id,
-      date: new Date(),
-      hour: '09:00',
-      observation: null,
+    const serviceDef = makeServiceWithCommission('svc-appt', 80, 50)
+    const appointment = makeAppointment('appt-1', serviceDef, {
       discount: 20,
       value: 80,
-      service: serviceDef,
-      client: defaultClient,
-      barber: barberUser,
-      unit: { organizationId: defaultOrganization.id },
-    } as any
+    })
     const sale = makeSale('sale-4')
     sale.items.push({
       id: 'ia1',
@@ -264,5 +251,49 @@ describe('Set sale status service', () => {
     expect(res.sale.items[0].porcentagemBarbeiro).toBe(50)
     expect(profileRepo.profiles[0].totalBalance).toBeCloseTo(40)
     expect(unitRepo.unit.totalBalance).toBeCloseTo(40)
+  })
+
+  it('applies USER_ITEM relation for appointment item', async () => {
+    const serviceDef = makeServiceWithCommission('svc-appt2', 90, 30)
+    const appointment = makeAppointment('appt-2', serviceDef, {
+      value: 90,
+    })
+    const sale = makeSale('sale-5')
+    sale.items.push({
+      id: 'ia2',
+      saleId: sale.id,
+      serviceId: serviceDef.id,
+      productId: null,
+      appointmentId: appointment.id,
+      quantity: 1,
+      barberId: barberUser.id,
+      couponId: null,
+      price: 90,
+      discount: null,
+      discountType: null,
+      porcentagemBarbeiro: null,
+      service: serviceDef,
+      product: null,
+      barber: { ...barberUser, profile: barberProfile },
+      appointment,
+      coupon: null,
+    })
+    saleRepo.sales.push(sale)
+    barberServiceRepo.items.push(
+      makeBarberServiceRel(
+        barberProfile.id,
+        serviceDef.id,
+        'PERCENTAGE_OF_USER_ITEM',
+        40,
+      ),
+    )
+
+    const res = await service.execute({
+      saleId: 'sale-5',
+      userId: 'cashier',
+      paymentStatus: PaymentStatus.PAID,
+    })
+
+    expect(res.sale.items[0].porcentagemBarbeiro).toBe(40)
   })
 })

@@ -237,6 +237,7 @@ export class CreateSaleService {
       .filter((i) => !i.ownDiscount)
       .reduce((acc, i) => acc + i.price, 0)
 
+      appointment: temp.data.appointment,
     const coupon = await this.couponRepository.findByCode(couponCode)
     if (!coupon) throw new CouponNotFoundError()
     if (coupon.unitId !== userUnitId) {

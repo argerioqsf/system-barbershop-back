@@ -479,3 +479,34 @@ export function makePermission(
     category: 'UNIT',
   }
 }
+
+export function makeServiceWithCommission(
+  id: string,
+  price: number,
+  commissionPercentage: number,
+): Service {
+  return { ...makeService(id, price), commissionPercentage }
+}
+
+export function makeAppointment(
+  id: string,
+  service: Service,
+  options: { discount?: number; value?: number; date?: Date; hour?: string } = {},
+): any {
+  return {
+    id,
+    clientId: defaultClient.id,
+    barberId: barberUser.id,
+    serviceId: service.id,
+    unitId: defaultUnit.id,
+    date: options.date ?? new Date(),
+    hour: options.hour ?? '09:00',
+    observation: null,
+    discount: options.discount ?? 0,
+    value: options.value ?? null,
+    service,
+    client: defaultClient,
+    barber: barberUser,
+    unit: { organizationId: defaultOrganization.id },
+  } as any
+}
