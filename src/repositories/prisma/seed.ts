@@ -299,10 +299,6 @@ async function main() {
     },
   })
 
-  if (!barber.profile) {
-    throw new Error('Barber profile not found')
-  }
-
   const client = await prisma.user.create({
     data: {
       name: 'Client',
@@ -386,9 +382,9 @@ async function main() {
     ],
   })
 
-      { profileId: barber.profile.id, dayHourId: dayHour1.id },
-      { profileId: barber.profile.id, dayHourId: dayHour2.id },
-    data: { profileId: barber.profile.id, dayHourId: dayHour2.id },
+      { profileId: barber.profile!.id, dayHourId: dayHour1.id },
+      { profileId: barber.profile!.id, dayHourId: dayHour2.id },
+    data: { profileId: barber.profile!.id, dayHourId: dayHour2.id },
         { profileId: barber.profile.id, dayHourId: dayHour1.id },
         { profileId: barber.profile.id, dayHourId: dayHour2.id },
       ],
