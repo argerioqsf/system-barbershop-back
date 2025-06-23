@@ -1,5 +1,5 @@
 -- AlterTable
-ALTER TABLE `appointments` ADD COLUMN `discount` DOUBLE NOT NULL DEFAULT 0;
+ALTER TABLE `appointments` ADD COLUMN `discount` DOUBLE NULL DEFAULT 0;
 
 -- AlterTable
 ALTER TABLE `sales` DROP FOREIGN KEY `sales_appointmentId_fkey`;

@@ -170,7 +170,7 @@ model Appointment {
   date      DateTime
   hour      String
   observation String?
-  discount   Float     @default(0)
+  discount   Float?    @default(0)
   value      Float?
   saleItem   SaleItem?
 
