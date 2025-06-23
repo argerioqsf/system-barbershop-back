@@ -173,6 +173,7 @@ export class InMemorySaleRepository implements SaleRepository {
         organizationId: 'org-1',
         totalBalance: 0,
         allowsLoan: false,
+        slotDuration: 60,
       },
     } as DetailedSale & { unit: { organizationId: string } }
     this.sales.push(sale)

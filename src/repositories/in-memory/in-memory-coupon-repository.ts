@@ -17,17 +17,18 @@ export class InMemoryCouponRepository implements CouponRepository {
       unitId: (data.unit as { connect: { id: string } }).connect.id,
       createdAt: new Date(),
     }
-    this.coupons.push({
-      ...coupon,
-      unit: {
-        id: coupon.unitId,
-        name: '',
-        slug: '',
-        organizationId: 'org-1',
-        totalBalance: 0,
-        allowsLoan: false,
-      },
-    } as Coupon & { unit: { organizationId: string } })
+      this.coupons.push({
+        ...coupon,
+        unit: {
+          id: coupon.unitId,
+          name: '',
+          slug: '',
+          organizationId: 'org-1',
+          totalBalance: 0,
+          allowsLoan: false,
+          slotDuration: 60,
+        },
+      } as Coupon & { unit: { organizationId: string } })
     return coupon
   }
 

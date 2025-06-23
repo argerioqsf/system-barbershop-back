@@ -43,6 +43,7 @@ export class InMemoryCashRegisterRepository implements CashRegisterRepository {
         organizationId: 'org-1',
         totalBalance: 0,
         allowsLoan: false,
+        slotDuration: 60,
       },
       sales: [],
       transactions: [],

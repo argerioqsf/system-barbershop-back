@@ -74,6 +74,7 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
         organizationId: user.organizationId,
         totalBalance: 0,
         allowsLoan: false,
+        slotDuration: 60,
       },
     })
     return { user, profile }
