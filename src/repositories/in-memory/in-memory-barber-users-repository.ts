@@ -155,10 +155,15 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
         where.profile &&
         typeof where.profile === 'object' &&
         'permissions' in where.profile &&
-        (where.profile as any).permissions?.some?.name
+        (
+          where.profile as {
+            permissions?: { some?: { name?: PermissionName } }
+          }
+        ).permissions?.some?.name
       ) {
-        const perm = (where.profile as any).permissions.some
-          .name as PermissionName
+        const perm = (
+          where.profile as { permissions: { some: { name: PermissionName } } }
+        ).permissions.some.name
         return u.profile?.permissions.some((p) => p.name === perm)
       }
       return true

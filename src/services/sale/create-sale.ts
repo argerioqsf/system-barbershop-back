@@ -9,6 +9,7 @@ import {
   Service,
   PermissionName,
   BarberService,
+  BarberProduct,
 } from '@prisma/client'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { CashRegisterRepository } from '@/repositories/cash-register-repository'
@@ -21,7 +22,6 @@ import { CouponNotFromUserUnitError } from '../@errors/coupon/coupon-not-from-us
 import { UnitRepository } from '@/repositories/unit-repository'
 import { distributeProfits } from './profit-distribution'
 import { calculateBarberCommission } from './barber-commission'
-import { calculateBarberProductCommission } from './barber-product-commission'
 import { ItemNeedsServiceOrProductError } from '../@errors/sale/item-needs-service-or-product-error'
 import { ServiceNotFoundError } from '../@errors/service/service-not-found-error'
 import { ProductNotFoundError } from '../@errors/product/product-not-found-error'
@@ -112,10 +112,6 @@ export class CreateSaleService {
       }
 
       if (service) {
-        await assertPermission(
-          [PermissionName.SELL_SERVICE],
-          barber.profile.permissions.map((p) => p.name as PermissionName),
-        )
         relation = await this.barberServiceRepository.findByProfileService(
           barber.profile.id,
           service.id,
@@ -125,7 +121,8 @@ export class CreateSaleService {
       if (product) {
         await assertPermission(
           [PermissionName.SELL_PRODUCT],
-          barber.profile.permissions.map((p) => p.name as PermissionName),
+          barber.profile.permissions?.map((p) => p.name as PermissionName) ??
+            [],
         )
         relation = await this.barberProductRepository.findByProfileProduct(
           barber.profile.id,
@@ -133,9 +130,9 @@ export class CreateSaleService {
         )
       }
 
-      const item = service ?? product
+      const selectedItem = service ?? product
       barberCommission = calculateBarberCommission(
-        item,
+        selectedItem,
         barber?.profile,
         relation,
       )

@@ -10,7 +10,6 @@ import { SaleNotFoundError } from '@/services/@errors/sale/sale-not-found-error'
 import { CashRegisterClosedError } from '@/services/@errors/cash-register/cash-register-closed-error'
 import { distributeProfits } from './profit-distribution'
 import { calculateBarberCommission } from './barber-commission'
-import { calculateBarberProductCommission } from './barber-product-commission'
 import { SetSaleStatusRequest, SetSaleStatusResponse } from './types'
 
 export class SetSaleStatusService {
@@ -67,7 +66,7 @@ export class SetSaleStatusService {
               barber.profile.id,
               item.productId,
             )
-          commission = calculateBarberProductCommission(
+          commission = calculateBarberCommission(
             item.product,
             barber.profile,
             relation,
