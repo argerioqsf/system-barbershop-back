@@ -5,6 +5,7 @@ import {
   PaymentStatus,
   TransactionType,
   DiscountType,
+  RoleName,
   PermissionName,
   PermissionCategory,
 } from '@prisma/client'
@@ -97,21 +98,21 @@ async function main() {
 
   const roleOwner = await prisma.role.create({
     data: {
-      name: 'OWNER',
+      name: RoleName.OWNER,
       unit: { connect: { id: mainUnit.id } },
     },
   })
 
   const roleMenager = await prisma.role.create({
     data: {
-      name: 'MANAGER',
+      name: RoleName.MANAGER,
       unit: { connect: { id: mainUnit.id } },
     },
   })
 
   const roleAdmin = await prisma.role.create({
     data: {
-      name: 'ADMIN',
+      name: RoleName.ADMIN,
       unit: { connect: { id: mainUnit.id } },
       permissions: {
         connect: [
@@ -129,14 +130,14 @@ async function main() {
 
   const roleBarber = await prisma.role.create({
     data: {
-      name: 'BARBER',
+      name: RoleName.BARBER,
       unit: { connect: { id: mainUnit.id } },
     },
   })
 
   const roleClient = await prisma.role.create({
     data: {
-      name: 'CLIENT',
+      name: RoleName.CLIENT,
       unit: { connect: { id: mainUnit.id } },
     },
   })

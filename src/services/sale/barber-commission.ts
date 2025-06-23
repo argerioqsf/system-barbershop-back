@@ -1,5 +1,6 @@
 import {
   BarberService,
+  BarberProduct,
   CommissionCalcType,
   Product,
   Profile,

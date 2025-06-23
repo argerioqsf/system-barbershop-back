@@ -10,8 +10,8 @@ import { SaleNotFoundError } from '@/services/@errors/sale/sale-not-found-error'
 import { CashRegisterClosedError } from '@/services/@errors/cash-register/cash-register-closed-error'
 import { distributeProfits } from './profit-distribution'
 import { calculateBarberCommission } from './barber-commission'
-import { calculateBarberProductCommission } from './barber-product-commission'
 import { SetSaleStatusRequest, SetSaleStatusResponse } from './types'
+import { ProfileNotFoundError } from '../@errors/profile/profile-not-found-error'
 
 export class SetSaleStatusService {
   constructor(
@@ -48,7 +48,7 @@ export class SetSaleStatusService {
       for (const item of sale.items) {
         if (!item.barberId) continue
         const barber = await this.barberUserRepository.findById(item.barberId)
-        if (!barber?.profile) continue
+        if (!barber?.profile) throw new ProfileNotFoundError()
         let commission: number | undefined
         if (item.serviceId && item.service) {
           const relation =
@@ -67,7 +67,7 @@ export class SetSaleStatusService {
               barber.profile.id,
               item.productId,
             )
-          commission = calculateBarberProductCommission(
+          commission = calculateBarberCommission(
             item.product,
             barber.profile,
             relation,

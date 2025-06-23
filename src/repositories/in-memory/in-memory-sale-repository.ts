@@ -63,6 +63,7 @@ export class InMemorySaleRepository implements SaleRepository {
             imageUrl: null,
             quantity: 0,
             cost: 0,
+            commissionPercentage: null,
             price: 0,
             unitId: 'unit-1',
           }
