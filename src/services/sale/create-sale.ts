@@ -286,6 +286,10 @@ export class CreateSaleService {
     const tempItems: TempItems[] = []
     const productsToUpdate: { id: string; quantity: number }[] = []
     const user = await this.barberUserRepository.findById(userId)
+    await assertPermission(
+      [PermissionName.CREATE_SALE],
+      user?.profile?.permissions?.map((p) => p.name),
+    )
     const session = await this.cashRegisterRepository.findOpenByUnit(
       user?.unitId as string,
     )

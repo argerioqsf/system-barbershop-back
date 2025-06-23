@@ -78,6 +78,11 @@ async function main() {
     { name: PermissionName.SELL_PRODUCT, category: PermissionCategory.PRODUCT },
     { name: PermissionName.SELL_SERVICE, category: PermissionCategory.SERVICE },
     {
+      name: PermissionName.ACCEPT_APPOINTMENT,
+      category: PermissionCategory.SERVICE,
+    },
+    { name: PermissionName.CREATE_SALE, category: PermissionCategory.SALE },
+    {
       name: PermissionName.MANAGE_USER_TRANSACTION_ADD,
       category: PermissionCategory.TRANSACTION,
     },

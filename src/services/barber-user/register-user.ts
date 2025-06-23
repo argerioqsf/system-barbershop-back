@@ -1,7 +1,7 @@
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { PermissionRepository } from '@/repositories/permission-repository'
 import { UnitRepository } from '@/repositories/unit-repository'
-import { Profile, RoleName, User } from '@prisma/client'
+import { Profile, RoleName, User, PermissionName } from '@prisma/client'
 import { hash } from 'bcryptjs'
 import { UserAlreadyExistsError } from '@/services/@errors/user/user-already-exists-error'
 import { UnitNotExistsError } from '@/services/@errors/unit/unit-not-exists-error'
@@ -10,6 +10,8 @@ import { RolesNotFoundError } from '../@errors/role/role-not-found-error'
 import { RoleRepository } from '@/repositories/role-repository'
 import { UserToken } from '@/http/controllers/authenticate-controller'
 import { UnauthorizedError } from '../@errors/auth/unauthorized-error'
+import { hasPermission } from '@/utils/permissions'
+import { PermissionDeniedError } from '../@errors/permission/permission-denied-error'
 
 interface RegisterUserRequest {
   name: string
@@ -52,6 +54,13 @@ export class RegisterUserService {
       userToken.role !== 'ADMIN'
     ) {
       throw new UnauthorizedError()
+    }
+
+    if (
+      role?.name === RoleName.CLIENT &&
+      !hasPermission([PermissionName.CREATE_SALE], userToken.permissions)
+    ) {
+      throw new PermissionDeniedError()
     }
 
     const existing = await this.repository.findByEmail(data.email)

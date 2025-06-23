@@ -107,4 +107,19 @@ describe('Register user service', () => {
       ),
     ).rejects.toThrow('Unit not exists')
   })
+
+  it('requires permission to create client', async () => {
+    const clientRole = { id: 'client', name: 'CLIENT', unitId: defaultUnit.id } as any
+    roleRepo = new InMemoryRoleRepository([
+      { id: 'role-1', name: 'ADMIN', unitId: defaultUnit.id } as any,
+      clientRole,
+    ])
+    service = new RegisterUserService(repo, unitRepo, permRepo, roleRepo)
+    await expect(
+      service.execute(
+        { sub: 'admin', role: 'ADMIN', organizationId: defaultUnit.organizationId, unitId: defaultUnit.id, permissions: [] } as any,
+        { ...baseRegisterUserData, unitId: defaultUnit.id, roleId: clientRole.id },
+      ),
+    ).rejects.toThrow('Permission denied')
+  })
 })
