@@ -112,6 +112,10 @@ export class CreateSaleService {
       }
 
       if (service) {
+        await assertPermission(
+          [PermissionName.SELL_SERVICE],
+          barber.profile.permissions?.map((p) => p.name) ?? [],
+        )
         relation = await this.barberServiceRepository.findByProfileService(
           barber.profile.id,
           service.id,
@@ -121,8 +125,7 @@ export class CreateSaleService {
       if (product) {
         await assertPermission(
           [PermissionName.SELL_PRODUCT],
-          barber.profile.permissions?.map((p) => p.name as PermissionName) ??
-            [],
+          barber.profile.permissions?.map((p) => p.name) ?? [],
         )
         relation = await this.barberProductRepository.findByProfileProduct(
           barber.profile.id,
