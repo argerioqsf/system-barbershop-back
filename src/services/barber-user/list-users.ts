@@ -5,7 +5,7 @@ import { getScope, buildUnitWhere } from '@/utils/permissions'
 import { Profile, User } from '@prisma/client'
 
 interface ListUsersResponse {
-  users: (User & { profile: Profile | null })[]
+  users: (Omit<User, 'password'> & { profile: Profile | null })[]
 }
 
 export class ListUsersService {

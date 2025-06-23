@@ -240,7 +240,7 @@ async function main() {
     },
   })
 
-  const barber: User & { profile: Profile } = await prisma.user.create({
+  const barber: User & { profile: Profile | null } = await prisma.user.create({
     data: {
       name: 'Barber',
       email: 'barber@barbershop.com',
@@ -306,7 +306,7 @@ async function main() {
 
   const serviceBarber = await prisma.barberService.create({
     data: {
-      profile: { connect: { id: barber.profile.id } },
+      profile: { connect: { id: barber?.profile?.id } },
       service: { connect: { id: haircut.id } },
     },
   })
@@ -324,7 +324,7 @@ async function main() {
 
   const productBarber = await prisma.barberProduct.create({
     data: {
-      profile: { connect: { id: barber.profile.id } },
+      profile: { connect: { id: barber?.profile?.id } },
       product: { connect: { id: shampoo.id } },
     },
   })
