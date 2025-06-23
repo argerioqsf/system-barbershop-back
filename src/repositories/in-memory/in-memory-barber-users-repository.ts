@@ -151,6 +151,16 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
           (where.unit as { organizationId: string }).organizationId
       )
         return false
+      if (
+        where.profile &&
+        typeof where.profile === 'object' &&
+        'permissions' in where.profile &&
+        (where.profile as any).permissions?.some?.name
+      ) {
+        const perm = (where.profile as any).permissions.some
+          .name as PermissionName
+        return u.profile?.permissions.some((p) => p.name === perm)
+      }
       return true
     })
   }

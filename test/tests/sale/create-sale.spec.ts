@@ -31,7 +31,9 @@ import {
   makeProduct,
   makeCoupon,
   makeBarberServiceRel,
+  makeBarberProductRel,
 } from '../../helpers/default-values'
+import { PermissionName } from '@prisma/client'
 
 let transactionRepo: FakeTransactionRepository
 let barberRepo: FakeBarberUsersRepository
@@ -604,5 +606,55 @@ describe('Create sale service', () => {
     })
 
     expect(result.sale.items[0].porcentagemBarbeiro).toBe(60)
+  })
+
+  it('throws when barber lacks permission to sell product', async () => {
+    const product = makeProduct('p-rel', 50)
+    ctx.productRepo.products.push(product)
+    const idx = ctx.barberRepo.users.findIndex((u) => u.id === barberUser.id)
+    ctx.barberRepo.users[idx] = {
+      ...barberUser,
+      profile: { ...barberProfile, permissions: [] },
+    }
+
+    await expect(
+      ctx.createSale.execute({
+        userId: defaultUser.id,
+        method: PaymentMethod.CASH,
+        items: [{ productId: product.id, quantity: 1, barberId: barberUser.id }],
+        clientId: defaultClient.id,
+      }),
+    ).rejects.toThrow('Permission denied')
+  })
+
+  it('uses profile percentage for product relation', async () => {
+    const product = makeProduct('p-rel2', 50)
+    ctx.productRepo.products.push(product)
+    ctx.barberProductRepo.items.push(
+      makeBarberProductRel(
+        barberProfile.id,
+        product.id,
+        'PERCENTAGE_OF_USER',
+      ),
+    )
+    const idx = ctx.barberRepo.users.findIndex((u) => u.id === barberUser.id)
+    ctx.barberRepo.users[idx] = {
+      ...barberUser,
+      profile: {
+        ...barberProfile,
+        permissions: [{ id: 'perm', name: PermissionName.SELL_PRODUCT }],
+      },
+    }
+
+    const res = await ctx.createSale.execute({
+      userId: defaultUser.id,
+      method: PaymentMethod.CASH,
+      items: [{ productId: product.id, quantity: 1, barberId: barberUser.id }],
+      clientId: defaultClient.id,
+    })
+
+    expect(res.sale.items[0].porcentagemBarbeiro).toBe(
+      barberProfile.commissionPercentage,
+    )
   })
 })

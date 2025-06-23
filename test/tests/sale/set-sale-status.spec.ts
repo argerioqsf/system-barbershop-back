@@ -22,6 +22,8 @@ import {
   makeSale,
   makeService,
   makeBarberServiceRel,
+  makeProduct,
+  makeBarberProductRel,
 } from '../../helpers/default-values'
 
 let transactionRepo: FakeTransactionRepository
@@ -154,6 +156,45 @@ describe('Set sale status service', () => {
     expect(res.sale.items[0].porcentagemBarbeiro).toBe(30)
     expect(profileRepo.profiles[0].totalBalance).toBeCloseTo(30)
     expect(unitRepo.unit.totalBalance).toBeCloseTo(70)
+  })
+
+  it('applies product relation when paying pending sale', async () => {
+    const product = makeProduct('prod-1', 50)
+    const sale = makeSale('sale-3')
+    sale.items.push({
+      id: 'ip1',
+      saleId: sale.id,
+      serviceId: null,
+      productId: product.id,
+      quantity: 1,
+      barberId: barberUser.id,
+      couponId: null,
+      price: 50,
+      discount: null,
+      discountType: null,
+      porcentagemBarbeiro: null,
+      service: null,
+      product,
+      barber: { ...barberUser, profile: barberProfile },
+      coupon: null,
+    })
+    saleRepo.sales.push(sale)
+    barberProductRepo.items.push(
+      makeBarberProductRel(
+        barberProfile.id,
+        product.id,
+        'PERCENTAGE_OF_USER_SERVICE',
+        60,
+      ),
+    )
+
+    const res = await service.execute({
+      saleId: 'sale-3',
+      userId: 'cashier',
+      paymentStatus: PaymentStatus.PAID,
+    })
+
+    expect(res.sale.items[0].porcentagemBarbeiro).toBe(60)
   })
 })
 
