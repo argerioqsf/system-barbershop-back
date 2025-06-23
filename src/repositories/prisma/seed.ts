@@ -37,6 +37,7 @@ async function main() {
     data: {
       name: 'Main Unit',
       slug: 'main-unit',
+      slotDuration: 60,
       organization: { connect: { id: organization.id } },
     },
   })
@@ -129,6 +130,7 @@ async function main() {
     data: {
       name: 'Unit 2',
       slug: 'unit-2',
+      slotDuration: 30,
       organization: { connect: { id: organization2.id } },
     },
   })
@@ -365,6 +367,32 @@ async function main() {
     },
   })
 
+  const dayHour1 = await prisma.dayHour.create({
+    data: { weekDay: 1, startHour: '08:00', endHour: '09:00' },
+  })
+
+  const dayHour2 = await prisma.dayHour.create({
+    data: { weekDay: 1, startHour: '09:00', endHour: '10:00' },
+  })
+
+  await prisma.unitDayHour.createMany({
+    data: [
+      { unitId: mainUnit.id, dayHourId: dayHour1.id },
+      { unitId: mainUnit.id, dayHourId: dayHour2.id },
+    ],
+  })
+
+  await prisma.profileWorkHour.createMany({
+    data: [
+      { profileId: barber.profile!.id, dayHourId: dayHour1.id },
+      { profileId: barber.profile!.id, dayHourId: dayHour2.id },
+    ],
+  })
+
+  await prisma.profileBlockedHour.create({
+    data: { profileId: barber.profile!.id, dayHourId: dayHour2.id },
+  })
+
   const appointment = await prisma.appointment.create({
     data: {
       clientId: client.id,
@@ -524,6 +552,8 @@ async function main() {
     sale,
     pendingSale,
     itemCoupon,
+    dayHour1,
+    dayHour2,
     manager,
     owner2,
     serviceBarber,

@@ -1188,6 +1188,76 @@
         { "name": "Content-Type", "value": "application/json" },
         { "name": "Authorization", "value": "Bearer {{ token }}" }
       ]
+    },
+    {
+      "_id": "fld_schedule",
+      "_type": "request_group",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Schedule"
+    },
+    {
+      "_id": "req_create_day_hour",
+      "_type": "request",
+      "parentId": "fld_schedule",
+      "name": "Create day hour",
+      "method": "POST",
+      "url": "{{ baseURL }}/day-hours",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"weekDay\": 1,\n  \"startHour\": \"08:00\",\n  \"endHour\": \"09:00\"\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ token }}" }
+      ]
+    },
+    {
+      "_id": "req_add_unit_day_hour",
+      "_type": "request",
+      "parentId": "fld_schedule",
+      "name": "Add unit day hour",
+      "method": "POST",
+      "url": "{{ baseURL }}/unit-day-hours",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"unitId\": \"\",\n  \"dayHourId\": \"\"\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ token }}" }
+      ]
+    },
+    {
+      "_id": "req_add_profile_work_hour",
+      "_type": "request",
+      "parentId": "fld_schedule",
+      "name": "Add profile work hour",
+      "method": "POST",
+      "url": "{{ baseURL }}/profile/work-hours",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"profileId\": \"\",\n  \"dayHourId\": \"\"\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ token }}" }
+      ]
+    },
+    {
+      "_id": "req_add_profile_blocked_hour",
+      "_type": "request",
+      "parentId": "fld_schedule",
+      "name": "Add profile blocked hour",
+      "method": "POST",
+      "url": "{{ baseURL }}/profile/blocked-hours",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"profileId\": \"\",\n  \"dayHourId\": \"\"\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ token }}" }
+      ]
     }
 
   ]

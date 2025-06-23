@@ -86,3 +86,7 @@ export { InMemoryUnitRepository as FakeUnitRepository } from '../../src/reposito
 export { InMemorySaleRepository as FakeSaleRepository } from '../../src/repositories/in-memory/in-memory-sale-repository'
 export { InMemoryPasswordResetTokenRepository as FakePasswordResetTokenRepository } from '../../src/repositories/in-memory/in-memory-password-reset-token-repository'
 export { InMemoryAppointmentRepository } from '../../src/repositories/in-memory/in-memory-appointment-repository'
+export { InMemoryDayHourRepository as FakeDayHourRepository } from '../../src/repositories/in-memory/in-memory-day-hour-repository'
+export { InMemoryUnitDayHourRepository as FakeUnitDayHourRepository } from '../../src/repositories/in-memory/in-memory-unit-day-hour-repository'
+export { InMemoryProfileWorkHourRepository as FakeProfileWorkHourRepository } from '../../src/repositories/in-memory/in-memory-profile-work-hour-repository'
+export { InMemoryProfileBlockedHourRepository as FakeProfileBlockedHourRepository } from '../../src/repositories/in-memory/in-memory-profile-blocked-hour-repository'

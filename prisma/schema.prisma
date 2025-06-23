@@ -153,6 +153,8 @@ model Profile {
   userId               String   @unique
   user                 User     @relation(fields: [userId], references: [id])
   createdAt            DateTime @default(now())
+  workHours            ProfileWorkHour[]
+  blockedHours         ProfileBlockedHour[]
 
   @@map("profiles")
 }
@@ -376,6 +378,7 @@ model Unit {
   organizationId String
   totalBalance   Float                 @default(0)
   allowsLoan     Boolean               @default(false)
+  slotDuration   Int                   @default(60)
   services       Service[]
   products       Product[]
   appointments   Appointment[]
@@ -384,9 +387,57 @@ model Unit {
   sessions       CashRegisterSession[]
   users          User[]
   roles          Role[]
+  dayHours       UnitDayHour[]
 
   organization Organization @relation(fields: [organizationId], references: [id])
   Coupon       Coupon[]
 
   @@map("units")
+}
+
+model DayHour {
+  id          String             @id @default(uuid())
+  weekDay     Int
+  startHour   String
+  endHour     String
+  unitDays    UnitDayHour[]
+  workHours   ProfileWorkHour[]
+  blockedHours ProfileBlockedHour[]
+
+  @@map("day_hours")
+}
+
+model UnitDayHour {
+  id        String   @id @default(uuid())
+  unitId    String
+  dayHourId String
+
+  unit    Unit    @relation(fields: [unitId], references: [id])
+  dayHour DayHour @relation(fields: [dayHourId], references: [id])
+
+  @@unique([unitId, dayHourId])
+  @@map("unit_day_hours")
+}
+
+model ProfileWorkHour {
+  id        String   @id @default(uuid())
+  profileId String
+  dayHourId String
+
+  profile Profile @relation(fields: [profileId], references: [id])
+  dayHour DayHour @relation(fields: [dayHourId], references: [id])
+
+  @@unique([profileId, dayHourId])
+  @@map("profile_work_hours")
+}
+
+model ProfileBlockedHour {
+  id        String   @id @default(uuid())
+  profileId String
+  dayHourId String
+
+  profile Profile @relation(fields: [profileId], references: [id])
+  dayHour DayHour @relation(fields: [dayHourId], references: [id])
+
+  @@map("profile_blocked_hours")
 }
