@@ -703,6 +703,7 @@ describe('Create sale service', () => {
       date: new Date('2024-01-01'),
       hour: '09:00',
       discount: 10,
+      value: 40,
     })
 
     const res = await ctx.createSale.execute({
@@ -716,5 +717,42 @@ describe('Create sale service', () => {
     expect(res.sale.items).toHaveLength(1)
     expect(res.sale.items[0].serviceId).toBe(service.id)
     expect(res.sale.total).toBe(40)
+  })
+
+  it('fails if appointment already linked', async () => {
+    const service = makeService('svc-appt2', 60)
+    ctx.serviceRepo.services.push(service)
+    ctx.barberServiceRepo.items.push(
+      makeBarberServiceRel(barberProfile.id, service.id, 'PERCENTAGE_OF_USER'),
+    )
+    ctx.profilesRepo.profiles.push({ ...barberProfile, user: barberUser })
+    const appointment = await ctx.appointmentRepo.create({
+      client: { connect: { id: defaultClient.id } },
+      barber: { connect: { id: barberUser.id } },
+      service: { connect: { id: service.id } },
+      unit: { connect: { id: 'unit-1' } },
+      date: new Date('2024-01-02'),
+      hour: '10:00',
+      value: 50,
+      discount: 10,
+    })
+
+    await ctx.createSale.execute({
+      userId: defaultUser.id,
+      method: PaymentMethod.CASH,
+      items: [],
+      clientId: defaultClient.id,
+      appointmentId: appointment.id,
+    })
+
+    await expect(
+      ctx.createSale.execute({
+        userId: defaultUser.id,
+        method: PaymentMethod.CASH,
+        items: [],
+        clientId: defaultClient.id,
+        appointmentId: appointment.id,
+      }),
+    ).rejects.toThrow('Appointment already linked')
   })
 })

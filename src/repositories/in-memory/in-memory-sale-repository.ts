@@ -54,6 +54,7 @@ export class InMemorySaleRepository implements SaleRepository {
             hour: '',
             observation: null,
             discount: 0,
+            value: null,
           }
         : null,
       service: it.service

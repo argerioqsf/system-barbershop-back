@@ -1,14 +1,16 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { CreateAppointmentService } from '../../../src/services/appointment/create-appointment'
-import { FakeAppointmentRepository } from '../../helpers/fake-repositories'
+import { FakeAppointmentRepository, FakeServiceRepository } from '../../helpers/fake-repositories'
 
 describe('Create appointment service', () => {
   let repo: FakeAppointmentRepository
   let service: CreateAppointmentService
+  let serviceRepo: FakeServiceRepository
 
   beforeEach(() => {
     repo = new FakeAppointmentRepository()
-    service = new CreateAppointmentService(repo)
+    serviceRepo = new FakeServiceRepository()
+    service = new CreateAppointmentService(repo, serviceRepo)
   })
 
   it('creates appointment', async () => {

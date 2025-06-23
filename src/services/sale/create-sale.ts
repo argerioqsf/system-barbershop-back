@@ -42,6 +42,7 @@ import { BarberNotFoundError } from '../@errors/barber/barber-not-found-error'
 import { ProfileNotFoundError } from '../@errors/profile/profile-not-found-error'
 import { assertPermission } from '@/utils/permissions'
 import { AppointmentRepository } from '@/repositories/appointment-repository'
+import { AppointmentAlreadyLinkedError } from '../@errors/appointment/appointment-already-linked-error'
 
 export class CreateSaleService {
   constructor(
@@ -316,6 +317,11 @@ export class CreateSaleService {
     }
 
     if (appointmentId) {
+      const exists = await this.saleRepository.findMany({
+        items: { some: { appointmentId } },
+      })
+      if (exists.length) throw new AppointmentAlreadyLinkedError()
+
       const appointment =
         await this.appointmentRepository.findById(appointmentId)
       if (appointment) {
@@ -323,12 +329,14 @@ export class CreateSaleService {
           appointment.serviceId,
         )
         const base = serviceInfo?.price ?? appointment.service.price
+        const value =
+          appointment.value ?? Math.max(base - appointment.discount, 0)
         const appointmentItem: CreateSaleItem = {
           serviceId: appointment.serviceId,
           quantity: 1,
           barberId: appointment.barberId,
           appointmentId: appointment.id,
-          price: Math.max(base - appointment.discount, 0),
+          price: value,
         }
         const temp = await this.buildItemData(
           appointmentItem,
