@@ -5,6 +5,7 @@ import {
   FakeSaleRepository,
   FakeBarberUsersRepository,
   FakeBarberServiceRelRepository,
+  FakeBarberProductRepository,
   FakeCashRegisterRepository,
   FakeTransactionRepository,
   FakeOrganizationRepository,
@@ -21,17 +22,24 @@ import {
   makeSale,
   makeService,
   makeBarberServiceRel,
+  makeProduct,
+  makeBarberProductRel,
 } from '../../helpers/default-values'
+import { PaymentStatus } from '@prisma/client'
 
 let transactionRepo: FakeTransactionRepository
 let barberRepo: FakeBarberUsersRepository
 let cashRepo: FakeCashRegisterRepository
 let barberServiceRepo: FakeBarberServiceRelRepository
+let barberProductRepo: FakeBarberProductRepository
 
-vi.mock('../../../src/services/@factories/transaction/make-create-transaction', () => ({
-  makeCreateTransaction: () => new CreateTransactionService(transactionRepo, barberRepo, cashRepo),
-}))
-import { PaymentStatus } from '@prisma/client'
+vi.mock(
+  '../../../src/services/@factories/transaction/make-create-transaction',
+  () => ({
+    makeCreateTransaction: () =>
+      new CreateTransactionService(transactionRepo, barberRepo, cashRepo),
+  }),
+)
 
 describe('Set sale status service', () => {
   let saleRepo: FakeSaleRepository
@@ -44,10 +52,13 @@ describe('Set sale status service', () => {
     saleRepo = new FakeSaleRepository()
     barberRepo = new FakeBarberUsersRepository()
     barberServiceRepo = new FakeBarberServiceRelRepository()
+    barberProductRepo = new FakeBarberProductRepository()
     cashRepo = new FakeCashRegisterRepository()
     transactionRepo = new FakeTransactionRepository()
     orgRepo = new FakeOrganizationRepository({ ...defaultOrganization })
-    profileRepo = new FakeProfilesRepository([{ ...barberProfile, user: barberUser }])
+    profileRepo = new FakeProfilesRepository([
+      { ...barberProfile, user: barberUser },
+    ])
     const unit = { ...defaultUnit }
     unitRepo = new FakeUnitRepository(unit, [unit])
 
@@ -82,6 +93,7 @@ describe('Set sale status service', () => {
       saleRepo,
       barberRepo,
       barberServiceRepo,
+      barberProductRepo,
       cashRepo,
       transactionRepo,
       orgRepo,
@@ -113,7 +125,10 @@ describe('Set sale status service', () => {
   })
 
   it('uses relation percentage when paying a pending sale', async () => {
-    const serviceDef = { ...makeService('svc-1', 100), commissionPercentage: 30 }
+    const serviceDef = {
+      ...makeService('svc-1', 100),
+      commissionPercentage: 30,
+    }
     const sale = makeSale('sale-2')
     sale.items.push({
       id: 'it2',
@@ -137,7 +152,7 @@ describe('Set sale status service', () => {
       makeBarberServiceRel(
         barberProfile.id,
         serviceDef.id,
-        'PERCENTAGE_OF_SERVICE',
+        'PERCENTAGE_OF_ITEM',
       ),
     )
 
@@ -151,5 +166,43 @@ describe('Set sale status service', () => {
     expect(profileRepo.profiles[0].totalBalance).toBeCloseTo(30)
     expect(unitRepo.unit.totalBalance).toBeCloseTo(70)
   })
-})
 
+  it('applies product relation when paying pending sale', async () => {
+    const product = makeProduct('prod-1', 50)
+    const sale = makeSale('sale-3')
+    sale.items.push({
+      id: 'ip1',
+      saleId: sale.id,
+      serviceId: null,
+      productId: product.id,
+      quantity: 1,
+      barberId: barberUser.id,
+      couponId: null,
+      price: 50,
+      discount: null,
+      discountType: null,
+      porcentagemBarbeiro: null,
+      service: null,
+      product,
+      barber: { ...barberUser, profile: barberProfile },
+      coupon: null,
+    })
+    saleRepo.sales.push(sale)
+    barberProductRepo.items.push(
+      makeBarberProductRel(
+        barberProfile.id,
+        product.id,
+        'PERCENTAGE_OF_USER_ITEM',
+        60,
+      ),
+    )
+
+    const res = await service.execute({
+      saleId: 'sale-3',
+      userId: 'cashier',
+      paymentStatus: PaymentStatus.PAID,
+    })
+
+    expect(res.sale.items[0].porcentagemBarbeiro).toBe(60)
+  })
+})

@@ -1,13 +1,13 @@
-import { DistributeProfitsDeps } from './types'
-import { IncrementBalanceUnitService } from '../unit/increment-balance'
-import { IncrementBalanceProfileService } from '../profile/increment-balance'
+import { DistributeProfitsDeps } from '../types'
 
 import { DetailedSale } from '@/repositories/sale-repository'
+import { BarberNotFoundError } from '@/services/@errors/barber/barber-not-found-error'
+import { SessionNotFoundError } from '@/services/@errors/cash-register/session-not-found-error'
+import { OrganizationNotFoundError } from '@/services/@errors/organization/organization-not-found-error'
+import { BarberProfileNotFoundError } from '@/services/@errors/profile/barber-profile-not-found-error'
+import { IncrementBalanceProfileService } from '@/services/profile/increment-balance'
+import { IncrementBalanceUnitService } from '@/services/unit/increment-balance'
 import { Transaction } from '@prisma/client'
-import { OrganizationNotFoundError } from '../@errors/organization/organization-not-found-error'
-import { SessionNotFoundError } from '../@errors/cash-register/session-not-found-error'
-import { BarberNotFoundError } from '../@errors/barber/barber-not-found-error'
-import { BarberProfileNotFoundError } from '../@errors/profile/barber-profile-not-found-error'
 
 export async function distributeProfits(
   sale: DetailedSale,
@@ -43,7 +43,7 @@ export async function distributeProfits(
 
   for (const item of sale.items) {
     const value = item.price ?? 0
-    if (item.product) {
+    if (item.product && !item.barberId) {
       ownerShare += value
     } else if (item.barberId) {
       const perc = item.porcentagemBarbeiro ?? 0

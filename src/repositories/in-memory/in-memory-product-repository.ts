@@ -13,6 +13,8 @@ export class InMemoryProductRepository implements ProductRepository {
       imageUrl: (data.imageUrl as string | null) ?? null,
       quantity: (data.quantity as number) ?? 0,
       cost: data.cost as number,
+      commissionPercentage:
+        (data.commissionPercentage as number | null) ?? null,
       price: data.price as number,
       unitId: (data.unit as { connect: { id: string } }).connect.id,
     }

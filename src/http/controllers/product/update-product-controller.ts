@@ -10,10 +10,10 @@ export const UpdateProductController = async (
   const bodySchema = z.object({
     name: z.string().optional(),
     description: z.string().optional(),
-    quantity: z.number().optional(),
-    cost: z.number().optional(),
-    price: z.number().optional(),
-    imageUrl: z.string().optional(),
+    quantity: z.coerce.number().optional(),
+    cost: z.coerce.number().optional(),
+    price: z.coerce.number().optional(),
+    commissionPercentage: z.coerce.number().optional(),
   })
   const { id } = paramsSchema.parse(request.params)
   const data = bodySchema.parse(request.body)

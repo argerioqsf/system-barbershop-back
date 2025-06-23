@@ -16,7 +16,7 @@ export class InMemoryBarberServiceRepository
       serviceId: data.serviceId,
       time: data.time ?? null,
       commissionPercentage: data.commissionPercentage ?? null,
-      commissionType: data.commissionType ?? 'PERCENTAGE_OF_SERVICE',
+      commissionType: data.commissionType ?? 'PERCENTAGE_OF_ITEM',
     }
     this.items.push(item)
     return item

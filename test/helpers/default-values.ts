@@ -15,6 +15,7 @@ import {
   Role,
   BarberService,
   CommissionCalcType,
+  PermissionName,
 } from '@prisma/client'
 
 export const defaultUser = {
@@ -58,7 +59,8 @@ export const defaultClient = {
   profile: null,
 }
 
-export const barberProfile = {
+const p1 = makePermission('p1', 'SELL_SERVICE')
+export const barberProfile: Profile & { permissions: Permission[] } = {
   id: 'profile-barber',
   phone: '',
   cpf: '',
@@ -70,6 +72,7 @@ export const barberProfile = {
   totalBalance: 0,
   userId: 'barber-1',
   createdAt: new Date(),
+  permissions: [p1],
 }
 
 export const barberUser = {
@@ -102,7 +105,7 @@ export function makeService(id: string, price = 100): Service {
 export function makeBarberServiceRel(
   profileId: string,
   serviceId: string,
-  type: CommissionCalcType = CommissionCalcType.PERCENTAGE_OF_SERVICE,
+  type: CommissionCalcType = CommissionCalcType.PERCENTAGE_OF_ITEM,
   commission?: number,
 ): BarberService {
   return {
@@ -110,6 +113,21 @@ export function makeBarberServiceRel(
     profileId,
     serviceId,
     time: null,
+    commissionPercentage: commission ?? null,
+    commissionType: type,
+  }
+}
+
+export function makeBarberProductRel(
+  profileId: string,
+  productId: string,
+  type: CommissionCalcType = CommissionCalcType.PERCENTAGE_OF_USER,
+  commission?: number,
+): any {
+  return {
+    id: `rel-prod-${profileId}-${productId}`,
+    profileId,
+    productId,
     commissionPercentage: commission ?? null,
     commissionType: type,
   }
@@ -164,7 +182,7 @@ export const defaultUnit: Unit = {
   allowsLoan: false,
 }
 
-export const defaultProfile: Profile = {
+export const defaultProfile: Profile & { permissions: Permission[] } = {
   id: 'profile-user',
   phone: '',
   cpf: '',
@@ -176,6 +194,7 @@ export const defaultProfile: Profile = {
   totalBalance: 0,
   userId: defaultUser.id,
   createdAt: new Date(),
+  permissions: [p1],
 }
 
 export function makeProfile(
@@ -444,6 +463,13 @@ export function makeRole(id = 'role-1', unitId = 'unit-1'): Role {
   return { id, name: 'ADMIN', unitId }
 }
 
-export function makePermission(id = 'perm-1'): Permission {
-  return { id, name: 'LIST_APPOINTMENTS_UNIT', category: 'UNIT' }
+export function makePermission(
+  id = 'perm-1',
+  name?: PermissionName,
+): Permission {
+  return {
+    id,
+    name: name ?? PermissionName.LIST_APPOINTMENTS_UNIT,
+    category: 'UNIT',
+  }
 }

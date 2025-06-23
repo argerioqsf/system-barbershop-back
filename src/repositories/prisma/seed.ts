@@ -5,8 +5,11 @@ import {
   PaymentStatus,
   TransactionType,
   DiscountType,
+  RoleName,
   PermissionName,
   PermissionCategory,
+  User,
+  Profile,
 } from '@prisma/client'
 import { hash } from 'bcryptjs'
 import 'dotenv/config'
@@ -38,54 +41,64 @@ async function main() {
     },
   })
 
-  const permission_1 = await prisma.permission.create({
-    data: {
-      name: PermissionName.UPDATE_USER_BARBER,
-      category: PermissionCategory.USER,
-    },
-  })
-
-  const permission_2 = await prisma.permission.create({
-    data: {
-      name: PermissionName.UPDATE_USER_OWNER,
-      category: PermissionCategory.USER,
-    },
-  })
-
-  const permission_3 = await prisma.permission.create({
-    data: {
-      name: PermissionName.LIST_UNIT_ALL,
-      category: PermissionCategory.UNIT,
-    },
-  })
-
-  const permission_4 = await prisma.permission.create({
-    data: {
-      name: PermissionName.LIST_UNIT_ORG,
-      category: PermissionCategory.UNIT,
-    },
-  })
-
-  const permission_5 = await prisma.permission.create({
-    data: {
+  const permissionData = [
+    { name: PermissionName.LIST_USER_ALL, category: PermissionCategory.USER },
+    { name: PermissionName.LIST_USER_UNIT, category: PermissionCategory.USER },
+    { name: PermissionName.LIST_USER_ORG, category: PermissionCategory.USER },
+    {
       name: PermissionName.UPDATE_USER_ADMIN,
       category: PermissionCategory.USER,
     },
-  })
-
-  const permission_6 = await prisma.permission.create({
-    data: {
-      name: PermissionName.LIST_USER_ALL,
+    {
+      name: PermissionName.UPDATE_USER_OWNER,
       category: PermissionCategory.USER,
     },
-  })
-
-  const permission_7 = await prisma.permission.create({
-    data: {
-      name: PermissionName.LIST_USER_ORG,
+    {
+      name: PermissionName.UPDATE_USER_BARBER,
       category: PermissionCategory.USER,
     },
-  })
+    {
+      name: PermissionName.MANAGE_OTHER_USER_TRANSACTION,
+      category: PermissionCategory.TRANSACTION,
+    },
+    {
+      name: PermissionName.LIST_PERMISSIONS_ALL,
+      category: PermissionCategory.PERMISSIONS,
+    },
+    { name: PermissionName.LIST_ROLES_UNIT, category: PermissionCategory.ROLE },
+    { name: PermissionName.LIST_SALES_UNIT, category: PermissionCategory.SALE },
+    {
+      name: PermissionName.LIST_APPOINTMENTS_UNIT,
+      category: PermissionCategory.SERVICE,
+    },
+    {
+      name: PermissionName.LIST_SERVICES_UNIT,
+      category: PermissionCategory.SERVICE,
+    },
+    { name: PermissionName.SELL_PRODUCT, category: PermissionCategory.PRODUCT },
+    { name: PermissionName.SELL_SERVICE, category: PermissionCategory.SERVICE },
+    {
+      name: PermissionName.MANAGE_USER_TRANSACTION_ADD,
+      category: PermissionCategory.TRANSACTION,
+    },
+    {
+      name: PermissionName.MANAGE_USER_TRANSACTION_WITHDRAWAL,
+      category: PermissionCategory.TRANSACTION,
+    },
+    { name: PermissionName.LIST_UNIT_ALL, category: PermissionCategory.UNIT },
+    { name: PermissionName.LIST_UNIT_ORG, category: PermissionCategory.UNIT },
+    { name: PermissionName.LIST_ROLES_ALL, category: PermissionCategory.ROLE },
+  ]
+
+  const permissions: Record<PermissionName, { id: string }> = {} as Record<
+    PermissionName,
+    { id: string }
+  >
+
+  for (const data of permissionData) {
+    const permission = await prisma.permission.create({ data })
+    permissions[data.name] = permission
+  }
 
   const Unit2 = await prisma.unit.create({
     data: {
@@ -97,46 +110,38 @@ async function main() {
 
   const roleOwner = await prisma.role.create({
     data: {
-      name: 'OWNER',
+      name: RoleName.OWNER,
       unit: { connect: { id: mainUnit.id } },
     },
   })
 
   const roleMenager = await prisma.role.create({
     data: {
-      name: 'MANAGER',
+      name: RoleName.MANAGER,
       unit: { connect: { id: mainUnit.id } },
     },
   })
 
   const roleAdmin = await prisma.role.create({
     data: {
-      name: 'ADMIN',
+      name: RoleName.ADMIN,
       unit: { connect: { id: mainUnit.id } },
       permissions: {
-        connect: [
-          { id: permission_1.id },
-          { id: permission_2.id },
-          { id: permission_3.id },
-          { id: permission_4.id },
-          { id: permission_5.id },
-          { id: permission_6.id },
-          { id: permission_7.id },
-        ],
+        connect: Object.values(permissions).map((p) => ({ id: p.id })),
       },
     },
   })
 
   const roleBarber = await prisma.role.create({
     data: {
-      name: 'BARBER',
+      name: RoleName.BARBER,
       unit: { connect: { id: mainUnit.id } },
     },
   })
 
   const roleClient = await prisma.role.create({
     data: {
-      name: 'CLIENT',
+      name: RoleName.CLIENT,
       unit: { connect: { id: mainUnit.id } },
     },
   })
@@ -158,7 +163,7 @@ async function main() {
           totalBalance: 0,
           role: { connect: { id: roleAdmin.id } },
           permissions: {
-            connect: [{ id: permission_7.id }],
+            connect: [{ id: permissions[PermissionName.LIST_USER_ORG].id }],
           },
         },
       },
@@ -205,15 +210,7 @@ async function main() {
           totalBalance: 0,
           role: { connect: { id: roleAdmin.id } },
           permissions: {
-            connect: [
-              { id: permission_1.id },
-              { id: permission_2.id },
-              { id: permission_3.id },
-              { id: permission_4.id },
-              { id: permission_5.id },
-              { id: permission_6.id },
-              { id: permission_7.id },
-            ],
+            connect: Object.values(permissions).map((p) => ({ id: p.id })),
           },
         },
       },
@@ -243,7 +240,7 @@ async function main() {
     },
   })
 
-  const barber = await prisma.user.create({
+  const barber: User & { profile: Profile | null } = await prisma.user.create({
     data: {
       name: 'Barber',
       email: 'barber@barbershop.com',
@@ -260,9 +257,18 @@ async function main() {
           commissionPercentage: 70,
           totalBalance: 0,
           role: { connect: { id: roleBarber.id } },
+          permissions: {
+            connect: [
+              { id: permissions[PermissionName.SELL_SERVICE].id },
+              { id: permissions[PermissionName.SELL_PRODUCT].id },
+            ],
+          },
         },
       },
       unit: { connect: { id: mainUnit.id } },
+    },
+    include: {
+      profile: true,
     },
   })
 
@@ -298,6 +304,13 @@ async function main() {
     },
   })
 
+  const serviceBarber = await prisma.barberService.create({
+    data: {
+      profile: { connect: { id: barber?.profile?.id } },
+      service: { connect: { id: haircut.id } },
+    },
+  })
+
   const shampoo = await prisma.product.create({
     data: {
       name: 'Shampoo',
@@ -306,6 +319,13 @@ async function main() {
       price: 15,
       quantity: 10,
       unit: { connect: { id: mainUnit.id } },
+    },
+  })
+
+  const productBarber = await prisma.barberProduct.create({
+    data: {
+      profile: { connect: { id: barber?.profile?.id } },
+      product: { connect: { id: shampoo.id } },
     },
   })
 
@@ -350,10 +370,12 @@ async function main() {
       receiptUrl: '/uploads/sample-receipt.png',
     },
   })
+
   await prisma.unit.update({
     where: { id: mainUnit.id },
     data: { totalBalance: { increment: 100 } },
   })
+
   await prisma.organization.update({
     where: { id: organization.id },
     data: { totalBalance: { increment: 100 } },
@@ -363,6 +385,7 @@ async function main() {
     where: { id: mainUnit.id },
     data: { totalBalance: { increment: 35 } },
   })
+
   await prisma.organization.update({
     where: { id: organization.id },
     data: { totalBalance: { increment: 35 } },
@@ -400,6 +423,7 @@ async function main() {
       },
     },
   })
+
   const pendingSale = await prisma.sale.create({
     data: {
       user: { connect: { id: admin.id } },
@@ -421,24 +445,29 @@ async function main() {
       },
     },
   })
+
   await prisma.product.update({
     where: { id: shampoo.id },
     data: { quantity: { decrement: 1 } },
   })
+
   const shareBarber = (25 * 70) / 100
   const shareOwner = 25 - shareBarber
   await prisma.profile.update({
     where: { userId: barber.id },
     data: { totalBalance: { increment: shareBarber } },
   })
+
   await prisma.profile.update({
     where: { userId: owner.id },
     data: { totalBalance: { increment: shareOwner } },
   })
+
   await prisma.unit.update({
     where: { id: mainUnit.id },
     data: { totalBalance: { increment: 35 } },
   })
+
   await prisma.organization.update({
     where: { id: organization.id },
     data: { totalBalance: { increment: 35 } },
@@ -472,6 +501,8 @@ async function main() {
     itemCoupon,
     manager,
     owner2,
+    serviceBarber,
+    productBarber,
   })
 }
 

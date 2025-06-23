@@ -84,10 +84,9 @@ export class PrismaUsersRepository implements UsersRepository {
       include: { profile: { include: { role: true, permissions: true } } },
     })
     if (!user) return null
-    const { ...rest } = user
-    return rest as Omit<User, 'password'> & {
-      profile: (Profile & { role: Role; permissions: Permission[] }) | null
-    }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...rest } = user
+    return rest
   }
 
   async findByEmail(email: string): Promise<
