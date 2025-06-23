@@ -41,6 +41,7 @@ describe('Add profile blocked hour', () => {
     await addWorkHour.execute({ profileId: 'prof-1', dayHourId: dayHour.id })
     const res = await addBlocked.execute({ profileId: 'prof-1', dayHourId: dayHour.id })
     expect(res.blocked.dayHourId).toBe(dayHour.id)
+    expect(blockedRepo.items).toHaveLength(1)
   })
 
   it('throws if hour not in work hours', async () => {
