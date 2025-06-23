@@ -18,6 +18,7 @@ import {
   defaultUser,
   defaultOrganization,
   defaultUnit,
+  defaultClient,
   makeSaleWithBarber,
   makeSale,
   makeService,
@@ -204,5 +205,64 @@ describe('Set sale status service', () => {
     })
 
     expect(res.sale.items[0].porcentagemBarbeiro).toBe(60)
+  })
+
+  it('handles appointment relation when paying pending sale', async () => {
+    const serviceDef = { ...makeService('svc-appt', 80), commissionPercentage: 50 }
+    const appointment = {
+      id: 'appt-1',
+      clientId: defaultClient.id,
+      barberId: barberUser.id,
+      serviceId: serviceDef.id,
+      unitId: defaultUnit.id,
+      date: new Date(),
+      hour: '09:00',
+      observation: null,
+      discount: 20,
+      value: 80,
+      service: serviceDef,
+      client: defaultClient,
+      barber: barberUser,
+      unit: { organizationId: defaultOrganization.id },
+    } as any
+    const sale = makeSale('sale-4')
+    sale.items.push({
+      id: 'ia1',
+      saleId: sale.id,
+      serviceId: serviceDef.id,
+      productId: null,
+      appointmentId: appointment.id,
+      quantity: 1,
+      barberId: barberUser.id,
+      couponId: null,
+      price: 80,
+      discount: null,
+      discountType: null,
+      porcentagemBarbeiro: null,
+      service: serviceDef,
+      product: null,
+      barber: { ...barberUser, profile: barberProfile },
+      appointment,
+      coupon: null,
+    })
+    saleRepo.sales.push(sale)
+    barberServiceRepo.items.push(
+      makeBarberServiceRel(
+        barberProfile.id,
+        serviceDef.id,
+        'PERCENTAGE_OF_ITEM',
+        50,
+      ),
+    )
+
+    const res = await service.execute({
+      saleId: 'sale-4',
+      userId: 'cashier',
+      paymentStatus: PaymentStatus.PAID,
+    })
+
+    expect(res.sale.items[0].porcentagemBarbeiro).toBe(50)
+    expect(profileRepo.profiles[0].totalBalance).toBeCloseTo(40)
+    expect(unitRepo.unit.totalBalance).toBeCloseTo(40)
   })
 })
