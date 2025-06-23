@@ -45,6 +45,8 @@ enum PermissionName {
   LIST_UNIT_ALL
   LIST_UNIT_ORG
   LIST_ROLES_ALL
+  MANAGE_SELF_BLOCKED_HOURS
+  MANAGE_SELF_WORK_HOURS
 }
 
 enum PermissionCategory {
@@ -167,6 +169,8 @@ model Appointment {
   unitId    String
   date      DateTime
   hour      String
+  observation String?
+  sale       Sale?    @relation("SaleAppointment")
 
   client  User    @relation("ClientAppointments", fields: [clientId], references: [id])
   barber  User    @relation("BarberAppointments", fields: [barberId], references: [id])
@@ -272,12 +276,14 @@ model Sale {
   userId        String
   clientId      String
   unitId        String
+  appointmentId String? @unique
   sessionId     String?
   couponId      String?
   total         Float
   method        PaymentMethod
   paymentStatus PaymentStatus @default(PAID)
   createdAt     DateTime      @default(now())
+  observation   String?
 
   user         User                 @relation(fields: [userId], references: [id])
   client       User                 @relation("SaleClient", fields: [clientId], references: [id])
@@ -285,6 +291,7 @@ model Sale {
   unit         Unit                 @relation(fields: [unitId], references: [id])
   coupon       Coupon?              @relation(fields: [couponId], references: [id])
   session      CashRegisterSession? @relation(fields: [sessionId], references: [id])
+  appointment  Appointment?         @relation("SaleAppointment", fields: [appointmentId], references: [id])
   transactions Transaction[]
 
   @@map("sales")

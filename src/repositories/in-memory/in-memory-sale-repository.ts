@@ -114,6 +114,9 @@ export class InMemorySaleRepository implements SaleRepository {
       userId: (data.user as { connect: { id: string } }).connect.id,
       clientId: (data.client as { connect: { id: string } }).connect.id,
       unitId,
+      appointmentId:
+        (data.appointment as { connect: { id: string } } | undefined)?.connect.id ??
+        null,
       sessionId:
         (data.session as { connect: { id: string } } | undefined)?.connect.id ??
         null,
@@ -124,6 +127,7 @@ export class InMemorySaleRepository implements SaleRepository {
       method: data.method as PaymentMethod,
       paymentStatus: data.paymentStatus as PaymentStatus,
       createdAt: new Date(),
+      observation: (data as any).observation ?? null,
       items,
       user: {
         id: (data.user as { connect: { id: string } }).connect.id,

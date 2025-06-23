@@ -33,6 +33,8 @@ export interface CreateSaleRequest {
   clientId: string
   couponCode?: string
   paymentStatus?: PaymentStatus
+  appointmentId?: string
+  observation?: string
 }
 
 export interface CreateSaleResponse {

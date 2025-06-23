@@ -19,6 +19,7 @@ export class PrismaSaleRepository implements SaleRepository {
         client: { include: { profile: true } },
         coupon: true,
         session: true,
+        appointment: true,
         transactions: true,
       },
     })
@@ -40,6 +41,7 @@ export class PrismaSaleRepository implements SaleRepository {
         client: { include: { profile: true } },
         coupon: true,
         session: true,
+        appointment: true,
         transactions: true,
       },
     })
@@ -61,6 +63,7 @@ export class PrismaSaleRepository implements SaleRepository {
         client: { include: { profile: true } },
         coupon: true,
         session: true,
+        appointment: true,
         transactions: true,
       },
     })
@@ -86,6 +89,7 @@ export class PrismaSaleRepository implements SaleRepository {
         client: { include: { profile: true } },
         coupon: true,
         session: true,
+        appointment: true,
         transactions: true,
       },
     })
@@ -107,6 +111,7 @@ export class PrismaSaleRepository implements SaleRepository {
         client: { include: { profile: true } },
         coupon: true,
         session: true,
+        appointment: true,
         transactions: true,
       },
     })
@@ -128,6 +133,7 @@ export class PrismaSaleRepository implements SaleRepository {
         client: { include: { profile: true } },
         coupon: true,
         session: true,
+        appointment: true,
         transactions: true,
       },
     })
