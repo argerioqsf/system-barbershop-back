@@ -330,7 +330,7 @@ export class CreateSaleService {
         )
         const base = serviceInfo?.price ?? appointment.service.price
         const value =
-          appointment.value ?? Math.max(base - appointment.discount, 0)
+          appointment.value ?? Math.max(base - (appointment.discount ?? 0), 0)
         const appointmentItem: CreateSaleItem = {
           serviceId: appointment.serviceId,
           quantity: 1,
