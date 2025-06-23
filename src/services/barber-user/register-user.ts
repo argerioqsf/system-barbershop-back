@@ -84,18 +84,13 @@ export class RegisterUserService {
             [PermissionName.CREATE_USER_CLIENT],
             userToken.permissions,
           )
-          if (
-            !hasPermission([PermissionName.CREATE_SALE], userToken.permissions)
-          ) {
-            throw new PermissionDeniedError()
-          }
           break
       }
-    } else if (
-      role?.name === RoleName.CLIENT &&
-      !hasPermission([PermissionName.CREATE_SALE], userToken.permissions)
-    ) {
-      throw new PermissionDeniedError()
+    } else if (role?.name === RoleName.CLIENT) {
+      await assertPermission(
+        [PermissionName.CREATE_USER_CLIENT],
+        userToken.permissions,
+      )
     }
 
     const existing = await this.repository.findByEmail(data.email)

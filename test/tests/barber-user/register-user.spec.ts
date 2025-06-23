@@ -7,6 +7,7 @@ import {
   InMemoryRoleRepository,
 } from '../../helpers/fake-repositories'
 import { defaultUnit, baseRegisterUserData } from '../../helpers/default-values'
+import { PermissionName } from '@prisma/client'
 
 describe('Register user service', () => {
   let repo: InMemoryBarberUsersRepository
@@ -166,5 +167,33 @@ describe('Register user service', () => {
         { ...baseRegisterUserData, unitId: defaultUnit.id, roleId: ownerRole.id },
       ),
     ).rejects.toThrow('Permission denied')
+  })
+
+  it('allows admin with permission to create client', async () => {
+    const clientRole = { id: 'client', name: 'CLIENT', unitId: defaultUnit.id } as any
+    roleRepo = new InMemoryRoleRepository([
+      { id: 'role-1', name: 'ADMIN', unitId: defaultUnit.id } as any,
+      clientRole,
+    ])
+    permRepo = new InMemoryPermissionRepository([
+      {
+        id: 'perm-client',
+        name: PermissionName.CREATE_USER_CLIENT,
+        unitId: defaultUnit.id,
+      } as any,
+    ])
+    ;(permRepo.permissions[0] as any).roles = [clientRole]
+    service = new RegisterUserService(repo, unitRepo, permRepo, roleRepo)
+    const res = await service.execute(
+      {
+        sub: 'admin',
+        role: 'ADMIN',
+        organizationId: defaultUnit.organizationId,
+        unitId: defaultUnit.id,
+        permissions: [PermissionName.CREATE_USER_CLIENT],
+      } as any,
+      { ...baseRegisterUserData, unitId: defaultUnit.id, roleId: clientRole.id },
+    )
+    expect(res.profile.roleId).toBe(clientRole.id)
   })
 })
