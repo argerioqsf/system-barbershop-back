@@ -328,7 +328,9 @@ export class CreateSaleService {
         const serviceInfo = await this.serviceRepository.findById(
           appointment.serviceId,
         )
-        const base = serviceInfo?.price ?? appointment.service.price
+        if (!serviceInfo) throw new ServiceNotFoundError()
+
+        const base = serviceInfo.price
         const value =
           appointment.value ?? Math.max(base - appointment.discount, 0)
         const appointmentItem: CreateSaleItem = {
