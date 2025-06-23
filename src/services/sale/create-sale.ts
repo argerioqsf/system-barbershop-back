@@ -41,8 +41,12 @@ import {
 import { BarberNotFoundError } from '../@errors/barber/barber-not-found-error'
 import { ProfileNotFoundError } from '../@errors/profile/profile-not-found-error'
 import { assertPermission } from '@/utils/permissions'
-import { AppointmentRepository } from '@/repositories/appointment-repository'
+import {
+  AppointmentRepository,
+  DetailedAppointment,
+} from '@/repositories/appointment-repository'
 import { AppointmentAlreadyLinkedError } from '../@errors/appointment/appointment-already-linked-error'
+import { AppointmentNotFoundError } from '../@errors/appointment/appointment-not-found-error'
 
 export class CreateSaleService {
   constructor(
@@ -77,6 +81,7 @@ export class CreateSaleService {
 
     let service: Service | null = null
     let product: Product | null = null
+    let appointment: DetailedAppointment | null = null
 
     if (item.serviceId) {
       service = await this.serviceRepository.findById(item.serviceId)
@@ -86,8 +91,7 @@ export class CreateSaleService {
       }
       basePrice = service.price * item.quantity
       dataItem.service = { connect: { id: item.serviceId } }
-    }
-    if (item.productId) {
+    } else if (item.productId) {
       product = await this.productRepository.findById(item.productId)
       if (!product) throw new ProductNotFoundError()
       if (product.unitId !== userUnitId) {
@@ -97,9 +101,15 @@ export class CreateSaleService {
       basePrice = product.price * item.quantity
       dataItem.product = { connect: { id: item.productId } }
       productsToUpdate.push({ id: item.productId, quantity: item.quantity })
-    }
-
-    if (item.appointmentId) {
+    } else if (item.appointmentId) {
+      appointment = await this.appointmentRepository.findById(
+        item.appointmentId,
+      )
+      if (!appointment) throw new AppointmentNotFoundError()
+      if (appointment.unitId !== userUnitId) {
+        throw new ServiceNotFromUserUnitError()
+      }
+      basePrice = appointment.value ?? appointment.service.price
       dataItem.appointment = { connect: { id: item.appointmentId } }
     }
 

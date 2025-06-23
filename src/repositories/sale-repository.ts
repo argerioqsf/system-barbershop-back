@@ -18,7 +18,7 @@ export type DetailedSaleItem = SaleItem & {
   product: Product | null
   barber: (User & { profile: Profile | null }) | null
   coupon: Coupon | null
-  appointment: Appointment | null
+  appointment: (Appointment & { service?: Service }) | null
   price: number
   discount: number | null
   discountType: DiscountType | null

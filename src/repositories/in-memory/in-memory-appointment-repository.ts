@@ -18,8 +18,8 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
       date: data.date as Date,
       hour: data.hour as string,
       observation: data.observation ?? null,
-      discount: (data as any).discount ?? 0,
-      value: (data as any).value ?? null,
+      discount: data.discount ?? 0,
+      value: data.value ?? null,
     }
     this.appointments.push({
       ...appointment,
