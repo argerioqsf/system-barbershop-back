@@ -23,6 +23,7 @@ export class InMemorySaleRepository implements SaleRepository {
       quantity: number
       barber?: { connect: { id: string } }
       coupon?: { connect: { id: string } }
+      appointment?: { connect: { id: string } }
       price: number
       discount?: number | null
       discountType?: DiscountType | null
@@ -34,6 +35,7 @@ export class InMemorySaleRepository implements SaleRepository {
       saleId,
       serviceId: it.service?.connect.id ?? null,
       productId: it.product?.connect.id ?? null,
+      appointmentId: it.appointment?.connect.id ?? null,
       quantity: it.quantity,
       barberId: it.barber?.connect.id ?? null,
       couponId: it.coupon?.connect.id ?? null,
@@ -41,6 +43,19 @@ export class InMemorySaleRepository implements SaleRepository {
       discount: it.discount ?? null,
       discountType: it.discountType ?? null,
       porcentagemBarbeiro: it.porcentagemBarbeiro ?? null,
+      appointment: it.appointment
+        ? {
+            id: it.appointment.connect.id,
+            clientId: '',
+            barberId: '',
+            serviceId: '',
+            unitId: '',
+            date: new Date(),
+            hour: '',
+            observation: null,
+            discount: 0,
+          }
+        : null,
       service: it.service
         ? {
             id: it.service.connect.id,
@@ -114,9 +129,6 @@ export class InMemorySaleRepository implements SaleRepository {
       userId: (data.user as { connect: { id: string } }).connect.id,
       clientId: (data.client as { connect: { id: string } }).connect.id,
       unitId,
-      appointmentId:
-        (data.appointment as { connect: { id: string } } | undefined)?.connect
-          .id ?? null,
       sessionId:
         (data.session as { connect: { id: string } } | undefined)?.connect.id ??
         null,

@@ -170,7 +170,8 @@ model Appointment {
   date      DateTime
   hour      String
   observation String?
-  sale       Sale?    @relation("SaleAppointment")
+  discount   Float     @default(0)
+  saleItems  SaleItem[]
 
   client  User    @relation("ClientAppointments", fields: [clientId], references: [id])
   barber  User    @relation("BarberAppointments", fields: [barberId], references: [id])
@@ -276,7 +277,6 @@ model Sale {
   userId        String
   clientId      String
   unitId        String
-  appointmentId String? @unique
   sessionId     String?
   couponId      String?
   total         Float
@@ -291,7 +291,6 @@ model Sale {
   unit         Unit                 @relation(fields: [unitId], references: [id])
   coupon       Coupon?              @relation(fields: [couponId], references: [id])
   session      CashRegisterSession? @relation(fields: [sessionId], references: [id])
-  appointment  Appointment?         @relation("SaleAppointment", fields: [appointmentId], references: [id])
   transactions Transaction[]
 
   @@map("sales")
@@ -304,6 +303,7 @@ model SaleItem {
   productId           String?
   quantity            Int           @default(1)
   barberId            String?
+  appointmentId       String?
   couponId            String?
   price               Float
   discount            Float?
@@ -314,6 +314,7 @@ model SaleItem {
   service Service? @relation(fields: [serviceId], references: [id])
   product Product? @relation(fields: [productId], references: [id])
   barber  User?    @relation(fields: [barberId], references: [id])
+  appointment Appointment? @relation(fields: [appointmentId], references: [id])
   coupon  Coupon?  @relation(fields: [couponId], references: [id])
 
   @@map("sale_items")

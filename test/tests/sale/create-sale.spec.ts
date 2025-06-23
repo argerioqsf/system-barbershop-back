@@ -21,6 +21,7 @@ import {
   FakeOrganizationRepository,
   FakeProfilesRepository,
   FakeUnitRepository,
+  FakeAppointmentRepository,
 } from '../../helpers/fake-repositories'
 
 import {
@@ -57,6 +58,7 @@ function setup() {
   const barberProductRepo = new FakeBarberProductRepository()
   cashRepo = new FakeCashRegisterRepository()
   transactionRepo = new FakeTransactionRepository()
+  const appointmentRepo = new FakeAppointmentRepository()
   const organization = {
     id: 'org-1',
     name: 'Org',
@@ -89,6 +91,7 @@ function setup() {
     organizationRepo,
     profilesRepo,
     unitRepo,
+    appointmentRepo,
   )
 
   return {
@@ -104,6 +107,7 @@ function setup() {
     organizationRepo,
     profilesRepo,
     unitRepo,
+    appointmentRepo,
     createSale,
   }
 }
@@ -682,5 +686,35 @@ describe('Create sale service', () => {
     expect(res.sale.items[0].porcentagemBarbeiro).toBe(
       barberProfile.commissionPercentage,
     )
+  })
+
+  it('creates a sale from appointment', async () => {
+    const service = makeService('svc-appt', 50)
+    ctx.serviceRepo.services.push(service)
+    ctx.barberServiceRepo.items.push(
+      makeBarberServiceRel(barberProfile.id, service.id, 'PERCENTAGE_OF_USER'),
+    )
+    ctx.profilesRepo.profiles.push({ ...barberProfile, user: barberUser })
+    const appointment = await ctx.appointmentRepo.create({
+      client: { connect: { id: defaultClient.id } },
+      barber: { connect: { id: barberUser.id } },
+      service: { connect: { id: service.id } },
+      unit: { connect: { id: 'unit-1' } },
+      date: new Date('2024-01-01'),
+      hour: '09:00',
+      discount: 10,
+    })
+
+    const res = await ctx.createSale.execute({
+      userId: defaultUser.id,
+      method: PaymentMethod.CASH,
+      items: [],
+      clientId: defaultClient.id,
+      appointmentId: appointment.id,
+    })
+
+    expect(res.sale.items).toHaveLength(1)
+    expect(res.sale.items[0].serviceId).toBe(service.id)
+    expect(res.sale.total).toBe(40)
   })
 })

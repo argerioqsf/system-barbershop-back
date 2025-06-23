@@ -85,7 +85,7 @@ export class FakeCashRegisterRepository extends BaseCashRegisterRepository {
 export { InMemoryUnitRepository as FakeUnitRepository } from '../../src/repositories/in-memory/in-memory-unit-repository'
 export { InMemorySaleRepository as FakeSaleRepository } from '../../src/repositories/in-memory/in-memory-sale-repository'
 export { InMemoryPasswordResetTokenRepository as FakePasswordResetTokenRepository } from '../../src/repositories/in-memory/in-memory-password-reset-token-repository'
-export { InMemoryAppointmentRepository } from '../../src/repositories/in-memory/in-memory-appointment-repository'
+export { InMemoryAppointmentRepository as FakeAppointmentRepository } from '../../src/repositories/in-memory/in-memory-appointment-repository'
 export { InMemoryDayHourRepository as FakeDayHourRepository } from '../../src/repositories/in-memory/in-memory-day-hour-repository'
 export { InMemoryUnitDayHourRepository as FakeUnitDayHourRepository } from '../../src/repositories/in-memory/in-memory-unit-day-hour-repository'
 export { InMemoryProfileWorkHourRepository as FakeProfileWorkHourRepository } from '../../src/repositories/in-memory/in-memory-profile-work-hour-repository'

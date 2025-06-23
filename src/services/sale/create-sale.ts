@@ -41,6 +41,7 @@ import {
 import { BarberNotFoundError } from '../@errors/barber/barber-not-found-error'
 import { ProfileNotFoundError } from '../@errors/profile/profile-not-found-error'
 import { assertPermission } from '@/utils/permissions'
+import { AppointmentRepository } from '@/repositories/appointment-repository'
 
 export class CreateSaleService {
   constructor(
@@ -56,6 +57,7 @@ export class CreateSaleService {
     private organizationRepository: OrganizationRepository,
     private profileRepository: ProfilesRepository,
     private unitRepository: UnitRepository,
+    private appointmentRepository: AppointmentRepository,
   ) {}
 
   private async buildItemData(
@@ -83,7 +85,8 @@ export class CreateSaleService {
       }
       basePrice = service.price * item.quantity
       dataItem.service = { connect: { id: item.serviceId } }
-    } else if (item.productId) {
+    }
+    if (item.productId) {
       product = await this.productRepository.findById(item.productId)
       if (!product) throw new ProductNotFoundError()
       if (product.unitId !== userUnitId) {
@@ -93,6 +96,10 @@ export class CreateSaleService {
       basePrice = product.price * item.quantity
       dataItem.product = { connect: { id: item.productId } }
       productsToUpdate.push({ id: item.productId, quantity: item.quantity })
+    }
+
+    if (item.appointmentId) {
+      dataItem.appointment = { connect: { id: item.appointmentId } }
     }
 
     const price = basePrice
@@ -308,6 +315,30 @@ export class CreateSaleService {
       tempItems.push(temp)
     }
 
+    if (appointmentId) {
+      const appointment =
+        await this.appointmentRepository.findById(appointmentId)
+      if (appointment) {
+        const serviceInfo = await this.serviceRepository.findById(
+          appointment.serviceId,
+        )
+        const base = serviceInfo?.price ?? appointment.service.price
+        const appointmentItem: CreateSaleItem = {
+          serviceId: appointment.serviceId,
+          quantity: 1,
+          barberId: appointment.barberId,
+          appointmentId: appointment.id,
+          price: Math.max(base - appointment.discount, 0),
+        }
+        const temp = await this.buildItemData(
+          appointmentItem,
+          user?.unitId as string,
+          productsToUpdate,
+        )
+        tempItems.push(temp)
+      }
+    }
+
     let couponConnect: ConnectRelation | undefined
     if (couponCode) {
       couponConnect = await this.applyCouponToItems(
@@ -327,9 +358,6 @@ export class CreateSaleService {
       user: { connect: { id: userId } },
       client: { connect: { id: clientId } },
       unit: { connect: { id: user?.unitId } },
-      appointment: appointmentId
-        ? { connect: { id: appointmentId } }
-        : undefined,
       session:
         paymentStatus === PaymentStatus.PAID && session
           ? { connect: { id: session.id } }

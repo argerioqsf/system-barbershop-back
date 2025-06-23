@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { CreateAppointmentService } from '../../../src/services/appointment/create-appointment'
-import { InMemoryAppointmentRepository } from '../../helpers/fake-repositories'
+import { FakeAppointmentRepository } from '../../helpers/fake-repositories'
 
 describe('Create appointment service', () => {
-  let repo: InMemoryAppointmentRepository
+  let repo: FakeAppointmentRepository
   let service: CreateAppointmentService
 
   beforeEach(() => {
-    repo = new InMemoryAppointmentRepository()
+    repo = new FakeAppointmentRepository()
     service = new CreateAppointmentService(repo)
   })
 
@@ -19,8 +19,10 @@ describe('Create appointment service', () => {
       unitId: 'unit-1',
       date: new Date('2024-01-01'),
       hour: '10:00',
+      discount: 5,
     })
     expect(repo.appointments).toHaveLength(1)
     expect(res.appointment.clientId).toBe('c1')
+    expect(res.appointment.discount).toBe(5)
   })
 })

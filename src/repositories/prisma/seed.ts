@@ -402,6 +402,7 @@ async function main() {
       unitId: mainUnit.id,
       date: new Date(),
       hour: '10:00',
+      discount: 0,
     },
   })
 

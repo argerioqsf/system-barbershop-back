@@ -9,6 +9,7 @@ interface CreateAppointmentRequest {
   date: Date
   hour: string
   observation?: string
+  discount?: number
 }
 
 interface CreateAppointmentResponse {
@@ -29,6 +30,7 @@ export class CreateAppointmentService {
       date: data.date,
       hour: data.hour,
       observation: data.observation,
+      discount: data.discount ?? 0,
     })
     return { appointment }
   }

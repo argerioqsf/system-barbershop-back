@@ -1,14 +1,14 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { ListAppointmentsService } from '../../../src/services/appointment/list-appointments'
-import { InMemoryAppointmentRepository } from '../../helpers/fake-repositories'
+import { FakeAppointmentRepository } from '../../helpers/fake-repositories'
 import { appointment1 as a1, appointment2 as a2 } from '../../helpers/default-values'
 
 describe('List appointments service', () => {
-  let repo: InMemoryAppointmentRepository
+  let repo: FakeAppointmentRepository
   let service: ListAppointmentsService
 
   beforeEach(() => {
-    repo = new InMemoryAppointmentRepository()
+    repo = new FakeAppointmentRepository()
     repo.appointments.push(a1, a2)
     service = new ListAppointmentsService(repo)
   })

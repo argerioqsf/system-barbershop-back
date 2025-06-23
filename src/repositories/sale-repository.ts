@@ -10,6 +10,7 @@ import {
   CashRegisterSession,
   Transaction,
   DiscountType,
+  Appointment,
 } from '@prisma/client'
 
 export type DetailedSaleItem = SaleItem & {
@@ -17,6 +18,7 @@ export type DetailedSaleItem = SaleItem & {
   product: Product | null
   barber: (User & { profile: Profile | null }) | null
   coupon: Coupon | null
+  appointment: Appointment | null
   price: number
   discount: number | null
   discountType: DiscountType | null

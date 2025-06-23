@@ -447,6 +447,7 @@ export const appointment1 = {
   barber: {},
   date: new Date(),
   hour: '10',
+  discount: 0,
   unit: { organizationId: 'org-1' },
 } as any
 
@@ -458,6 +459,7 @@ export const appointment2 = {
   barber: {},
   date: new Date(),
   hour: '11',
+  discount: 0,
   unit: { organizationId: 'org-2' },
 } as any
 
