@@ -1,0 +1,21 @@
+/*
+  Warnings:
+
+  - A unique constraint covering the columns `[appointmentId]` on the table `sales` will be added. If there are existing duplicate values, this will fail.
+
+*/
+-- AlterTable
+ALTER TABLE `appointments` ADD COLUMN `observation` VARCHAR(191) NULL;
+
+-- AlterTable
+ALTER TABLE `permissions` MODIFY `name` ENUM('LIST_USER_ALL', 'LIST_USER_UNIT', 'LIST_USER_ORG', 'UPDATE_USER_ADMIN', 'UPDATE_USER_OWNER', 'UPDATE_USER_BARBER', 'MANAGE_OTHER_USER_TRANSACTION', 'LIST_PERMISSIONS_ALL', 'LIST_ROLES_UNIT', 'LIST_SALES_UNIT', 'LIST_APPOINTMENTS_UNIT', 'LIST_SERVICES_UNIT', 'SELL_PRODUCT', 'SELL_SERVICE', 'ACCEPT_APPOINTMENT', 'CREATE_SALE', 'CREATE_USER_OWNER', 'CREATE_USER_MANAGER', 'CREATE_USER_ATTENDANT', 'CREATE_USER_BARBER', 'CREATE_USER_CLIENT', 'CREATE_USER_ADMIN', 'MANAGE_USER_TRANSACTION_ADD', 'MANAGE_USER_TRANSACTION_WITHDRAWAL', 'LIST_UNIT_ALL', 'LIST_UNIT_ORG', 'LIST_ROLES_ALL', 'MANAGE_SELF_BLOCKED_HOURS', 'MANAGE_SELF_WORK_HOURS') NOT NULL;
+
+-- AlterTable
+ALTER TABLE `sales` ADD COLUMN `appointmentId` VARCHAR(191) NULL,
+    ADD COLUMN `observation` VARCHAR(191) NULL;
+
+-- CreateIndex
+CREATE UNIQUE INDEX `sales_appointmentId_key` ON `sales`(`appointmentId`);
+
+-- AddForeignKey
+ALTER TABLE `sales` ADD CONSTRAINT `sales_appointmentId_fkey` FOREIGN KEY (`appointmentId`) REFERENCES `appointments`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;

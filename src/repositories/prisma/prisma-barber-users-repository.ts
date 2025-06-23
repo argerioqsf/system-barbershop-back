@@ -111,7 +111,12 @@ export class PrismaBarberUsersRepository implements BarberUsersRepository {
     })
     return this.sanitizeUsers<
       User & {
-        profile: (Profile & { workHours: ProfileWorkHour[]; blockedHours: ProfileBlockedHour[] }) | null
+        profile:
+          | (Profile & {
+              workHours: ProfileWorkHour[]
+              blockedHours: ProfileBlockedHour[]
+            })
+          | null
       }
     >(users)
   }

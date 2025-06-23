@@ -115,8 +115,8 @@ export class InMemorySaleRepository implements SaleRepository {
       clientId: (data.client as { connect: { id: string } }).connect.id,
       unitId,
       appointmentId:
-        (data.appointment as { connect: { id: string } } | undefined)?.connect.id ??
-        null,
+        (data.appointment as { connect: { id: string } } | undefined)?.connect
+          .id ?? null,
       sessionId:
         (data.session as { connect: { id: string } } | undefined)?.connect.id ??
         null,
