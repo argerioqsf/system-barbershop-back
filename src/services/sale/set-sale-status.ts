@@ -51,8 +51,21 @@ export class SetSaleStatusService {
         if (!item.barberId) continue
         const barber = await this.barberUserRepository.findById(item.barberId)
         if (!barber?.profile) throw new ProfileNotFoundError()
+
         let commission: number | undefined
-        if (item.serviceId && item.service) {
+
+        if (item.appointmentId && item.serviceId && item.service) {
+          const relation =
+            await this.barberServiceRepository.findByProfileService(
+              barber.profile.id,
+              item.serviceId,
+            )
+          commission = calculateBarberCommission(
+            item.service,
+            barber.profile,
+            relation,
+          )
+        } else if (item.serviceId && item.service) {
           const relation =
             await this.barberServiceRepository.findByProfileService(
               barber.profile.id,
@@ -75,6 +88,7 @@ export class SetSaleStatusService {
             relation,
           )
         }
+
         if (commission !== undefined) {
           item.porcentagemBarbeiro = commission
         }
