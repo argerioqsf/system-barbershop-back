@@ -3,6 +3,18 @@ import { Permission, Prisma, Profile, Role, Unit, User } from '@prisma/client'
 import { BarberUsersRepository } from '../barber-users-repository'
 
 export class PrismaBarberUsersRepository implements BarberUsersRepository {
+  private sanitizeUser<T>(user: T & { password: string }): Omit<T, 'password'> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...safeUser } = user
+    return safeUser
+  }
+
+  private sanitizeUsers<T>(
+    users: (T & { password: string })[],
+  ): Omit<T, 'password'>[] {
+    return users.map((user) => this.sanitizeUser(user))
+  }
+
   async create(
     data: Prisma.UserCreateInput,
     profileData: Omit<Prisma.ProfileUncheckedCreateInput, 'userId'>,
@@ -51,8 +63,19 @@ export class PrismaBarberUsersRepository implements BarberUsersRepository {
 
   async findMany(
     where: Prisma.UserWhereInput = {},
-  ): Promise<(User & { profile: Profile | null })[]> {
-    return prisma.user.findMany({ where, include: { profile: true } })
+  ): Promise<(Omit<User, 'password'> & { profile: Profile | null })[]> {
+    const users = await prisma.user.findMany({
+      where,
+      include: {
+        profile: {
+          include: {
+            barberServices: true,
+            barberProducts: true,
+          },
+        },
+      },
+    })
+    return this.sanitizeUsers<User & { profile: Profile | null }>(users)
   }
 
   async findById(id: string): Promise<

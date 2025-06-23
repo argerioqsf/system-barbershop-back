@@ -5,12 +5,16 @@ import {
   SaleItem,
 } from '@prisma/client'
 import { DetailedSale } from '@/repositories/sale-repository'
+import { OrganizationRepository } from '@/repositories/organization-repository'
+import { ProfilesRepository } from '@/repositories/profiles-repository'
+import { UnitRepository } from '@/repositories/unit-repository'
+import { TransactionRepository } from '@/repositories/transaction-repository'
 
 export interface DistributeProfitsDeps {
-  organizationRepository: import('@/repositories/organization-repository').OrganizationRepository
-  profileRepository: import('@/repositories/profiles-repository').ProfilesRepository
-  unitRepository: import('@/repositories/unit-repository').UnitRepository
-  transactionRepository: import('@/repositories/transaction-repository').TransactionRepository
+  organizationRepository: OrganizationRepository
+  profileRepository: ProfilesRepository
+  unitRepository: UnitRepository
+  transactionRepository: TransactionRepository
 }
 
 export interface CreateSaleItem {

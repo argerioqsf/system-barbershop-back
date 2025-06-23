@@ -6,7 +6,7 @@ import {
   Profile,
   Service,
 } from '@prisma/client'
-import { BarberDoesNotHaveThisServiceError } from '../@errors/barber/barber-does-not-have-this-service'
+import { BarberDoesNotHaveThisServiceError } from '../../@errors/barber/barber-does-not-have-this-service'
 
 export function calculateBarberCommission(
   item: Service | Product | null | undefined,

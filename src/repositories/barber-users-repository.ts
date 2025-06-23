@@ -17,7 +17,7 @@ export interface BarberUsersRepository {
   }>
   findMany(
     where?: Prisma.UserWhereInput,
-  ): Promise<(User & { profile: Profile | null })[]>
+  ): Promise<(Omit<User, 'password'> & { profile: Profile | null })[]>
   findById(id: string): Promise<
     | (User & {
         profile: (Profile & { role: Role; permissions: Permission[] }) | null

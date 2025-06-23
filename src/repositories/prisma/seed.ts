@@ -8,6 +8,8 @@ import {
   RoleName,
   PermissionName,
   PermissionCategory,
+  User,
+  Profile,
 } from '@prisma/client'
 import { hash } from 'bcryptjs'
 import 'dotenv/config'
@@ -238,7 +240,7 @@ async function main() {
     },
   })
 
-  const barber = await prisma.user.create({
+  const barber: User & { profile: Profile } = await prisma.user.create({
     data: {
       name: 'Barber',
       email: 'barber@barbershop.com',
@@ -264,6 +266,9 @@ async function main() {
         },
       },
       unit: { connect: { id: mainUnit.id } },
+    },
+    include: {
+      profile: true,
     },
   })
 
@@ -299,6 +304,13 @@ async function main() {
     },
   })
 
+  const serviceBarber = await prisma.barberService.create({
+    data: {
+      profile: { connect: { id: barber.profile.id } },
+      service: { connect: { id: haircut.id } },
+    },
+  })
+
   const shampoo = await prisma.product.create({
     data: {
       name: 'Shampoo',
@@ -307,6 +319,13 @@ async function main() {
       price: 15,
       quantity: 10,
       unit: { connect: { id: mainUnit.id } },
+    },
+  })
+
+  const productBarber = await prisma.barberProduct.create({
+    data: {
+      profile: { connect: { id: barber.profile.id } },
+      product: { connect: { id: shampoo.id } },
     },
   })
 
@@ -482,6 +501,8 @@ async function main() {
     itemCoupon,
     manager,
     owner2,
+    serviceBarber,
+    productBarber,
   })
 }
 

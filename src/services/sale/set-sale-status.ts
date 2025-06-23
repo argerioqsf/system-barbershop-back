@@ -8,17 +8,19 @@ import { UnitRepository } from '@/repositories/unit-repository'
 import { PaymentStatus } from '@prisma/client'
 import { SaleNotFoundError } from '@/services/@errors/sale/sale-not-found-error'
 import { CashRegisterClosedError } from '@/services/@errors/cash-register/cash-register-closed-error'
-import { distributeProfits } from './profit-distribution'
-import { calculateBarberCommission } from './barber-commission'
+import { distributeProfits } from './utils/profit-distribution'
+import { calculateBarberCommission } from './utils/barber-commission'
 import { SetSaleStatusRequest, SetSaleStatusResponse } from './types'
 import { ProfileNotFoundError } from '../@errors/profile/profile-not-found-error'
+import { BarberServiceRepository } from '@/repositories/barber-service-repository'
+import { BarberProductRepository } from '@/repositories/barber-product-repository'
 
 export class SetSaleStatusService {
   constructor(
     private saleRepository: SaleRepository,
     private barberUserRepository: BarberUsersRepository,
-    private barberServiceRepository: import('@/repositories/barber-service-repository').BarberServiceRepository,
-    private barberProductRepository: import('@/repositories/barber-product-repository').BarberProductRepository,
+    private barberServiceRepository: BarberServiceRepository,
+    private barberProductRepository: BarberProductRepository,
     private cashRegisterRepository: CashRegisterRepository,
     private transactionRepository: TransactionRepository,
     private organizationRepository: OrganizationRepository,
