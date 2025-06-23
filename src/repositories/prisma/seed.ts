@@ -88,7 +88,10 @@ async function main() {
     { name: PermissionName.LIST_ROLES_ALL, category: PermissionCategory.ROLE },
   ]
 
-  const permissions: Partial<Record<PermissionName, { id: string }>> = {}
+  const permissions: Record<PermissionName, { id: string }> = {} as Record<
+    PermissionName,
+    { id: string }
+  >
 
   for (const data of permissionData) {
     const permission = await prisma.permission.create({ data })
@@ -158,7 +161,7 @@ async function main() {
           totalBalance: 0,
           role: { connect: { id: roleAdmin.id } },
           permissions: {
-            connect: [{ id: permissions[PermissionName.LIST_USER_ORG]!.id }],
+            connect: [{ id: permissions[PermissionName.LIST_USER_ORG].id }],
           },
         },
       },
@@ -254,8 +257,8 @@ async function main() {
           role: { connect: { id: roleBarber.id } },
           permissions: {
             connect: [
-              { id: permissions[PermissionName.SELL_SERVICE]!.id },
-              { id: permissions[PermissionName.SELL_PRODUCT]!.id },
+              { id: permissions[PermissionName.SELL_SERVICE].id },
+              { id: permissions[PermissionName.SELL_PRODUCT].id },
             ],
           },
         },
