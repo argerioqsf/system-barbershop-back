@@ -31,6 +31,7 @@ enum PermissionName {
   LIST_APPOINTMENTS_UNIT
   LIST_SERVICES_UNIT
   SELL_PRODUCT
+  SELL_SERVICE
   MANAGE_USER_TRANSACTION_ADD
   MANAGE_USER_TRANSACTION_WITHDRAWAL
   LIST_UNIT_ALL
@@ -73,9 +74,9 @@ enum PaymentStatus {
 }
 
 enum CommissionCalcType {
-  PERCENTAGE_OF_SERVICE
+  PERCENTAGE_OF_ITEM
   PERCENTAGE_OF_USER
-  PERCENTAGE_OF_USER_SERVICE
+  PERCENTAGE_OF_USER_ITEM
 }
 
 model Role {
@@ -137,7 +138,7 @@ model Profile {
   permissions          Permission[] @relation("ProfilePermissions")
   roleId               String
   role                 Role @relation(fields: [roleId], references: [id])
-  commissionPercentage Float    @default(100)
+  commissionPercentage Float    @default(0)
   totalBalance         Float    @default(0)
   barberServices       BarberService[]
   barberProducts       BarberProduct[]
@@ -191,7 +192,7 @@ model BarberService {
   serviceId String
   time      Int?
   commissionPercentage Float?
-  commissionType CommissionCalcType @default(PERCENTAGE_OF_SERVICE)
+  commissionType CommissionCalcType @default(PERCENTAGE_OF_ITEM)
 
   profile Profile @relation(fields: [profileId], references: [id])
   service Service @relation(fields: [serviceId], references: [id])
@@ -205,7 +206,7 @@ model BarberProduct {
   profileId String
   productId String
   commissionPercentage Float?
-  commissionType CommissionCalcType @default(PERCENTAGE_OF_SERVICE)
+  commissionType CommissionCalcType @default(PERCENTAGE_OF_ITEM)
 
   profile Profile @relation(fields: [profileId], references: [id])
   product Product @relation(fields: [productId], references: [id])
@@ -221,6 +222,7 @@ model Product {
   imageUrl    String?
   quantity    Int        @default(0)
   cost        Float
+  commissionPercentage Float?
   price       Float
   unitId      String
   saleItems   SaleItem[]

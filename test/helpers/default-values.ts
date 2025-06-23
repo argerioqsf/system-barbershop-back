@@ -102,7 +102,7 @@ export function makeService(id: string, price = 100): Service {
 export function makeBarberServiceRel(
   profileId: string,
   serviceId: string,
-  type: CommissionCalcType = CommissionCalcType.PERCENTAGE_OF_SERVICE,
+  type: CommissionCalcType = CommissionCalcType.PERCENTAGE_OF_ITEM,
   commission?: number,
 ): BarberService {
   return {

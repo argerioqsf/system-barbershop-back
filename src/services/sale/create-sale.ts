@@ -8,6 +8,7 @@ import {
   Product,
   Service,
   PermissionName,
+  BarberService,
 } from '@prisma/client'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { CashRegisterRepository } from '@/repositories/cash-register-repository'
@@ -100,6 +101,7 @@ export class CreateSaleService {
     let couponRel: { connect: { id: string } } | undefined
     const ownDiscount = false
     let barberCommission: number | undefined
+    let relation: BarberService | BarberProduct | null | undefined = null
 
     if (item.barberId) {
       const barber = await this.barberUserRepository.findById(item.barberId)
@@ -109,32 +111,34 @@ export class CreateSaleService {
         throw new BarberNotFromUserUnitError()
       }
 
+      if (service) {
+        await assertPermission(
+          [PermissionName.SELL_SERVICE],
+          barber.profile.permissions.map((p) => p.name as PermissionName),
+        )
+        relation = await this.barberServiceRepository.findByProfileService(
+          barber.profile.id,
+          service.id,
+        )
+      }
+
       if (product) {
         await assertPermission(
           [PermissionName.SELL_PRODUCT],
           barber.profile.permissions.map((p) => p.name as PermissionName),
         )
+        relation = await this.barberProductRepository.findByProfileProduct(
+          barber.profile.id,
+          product.id,
+        )
       }
 
-      const relation = service
-        ? await this.barberServiceRepository.findByProfileService(
-            barber.profile.id,
-            service.id,
-          )
-        : product
-          ? await this.barberProductRepository.findByProfileProduct(
-              barber.profile.id,
-              product.id,
-            )
-          : null
-
-      barberCommission = service
-        ? calculateBarberCommission(service, barber?.profile, relation as any)
-        : calculateBarberProductCommission(
-            product,
-            barber?.profile,
-            relation as any,
-          )
+      const item = service ?? product
+      barberCommission = calculateBarberCommission(
+        item,
+        barber?.profile,
+        relation,
+      )
     }
 
     const resultLogicSalesCoupons = await this.applyCouponToSale(

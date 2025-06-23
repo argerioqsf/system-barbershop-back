@@ -350,10 +350,12 @@ async function main() {
       receiptUrl: '/uploads/sample-receipt.png',
     },
   })
+
   await prisma.unit.update({
     where: { id: mainUnit.id },
     data: { totalBalance: { increment: 100 } },
   })
+
   await prisma.organization.update({
     where: { id: organization.id },
     data: { totalBalance: { increment: 100 } },
@@ -363,6 +365,7 @@ async function main() {
     where: { id: mainUnit.id },
     data: { totalBalance: { increment: 35 } },
   })
+
   await prisma.organization.update({
     where: { id: organization.id },
     data: { totalBalance: { increment: 35 } },
@@ -400,6 +403,7 @@ async function main() {
       },
     },
   })
+
   const pendingSale = await prisma.sale.create({
     data: {
       user: { connect: { id: admin.id } },
@@ -421,24 +425,29 @@ async function main() {
       },
     },
   })
+
   await prisma.product.update({
     where: { id: shampoo.id },
     data: { quantity: { decrement: 1 } },
   })
+
   const shareBarber = (25 * 70) / 100
   const shareOwner = 25 - shareBarber
   await prisma.profile.update({
     where: { userId: barber.id },
     data: { totalBalance: { increment: shareBarber } },
   })
+
   await prisma.profile.update({
     where: { userId: owner.id },
     data: { totalBalance: { increment: shareOwner } },
   })
+
   await prisma.unit.update({
     where: { id: mainUnit.id },
     data: { totalBalance: { increment: 35 } },
   })
+
   await prisma.organization.update({
     where: { id: organization.id },
     data: { totalBalance: { increment: 35 } },

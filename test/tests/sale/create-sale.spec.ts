@@ -4,6 +4,7 @@ import {
   DiscountType,
   PaymentStatus,
   CommissionCalcType,
+  PermissionName,
 } from '@prisma/client'
 import { CreateSaleService } from '../../../src/services/sale/create-sale'
 import { CreateTransactionService } from '../../../src/services/transaction/create-transaction'
@@ -33,7 +34,6 @@ import {
   makeBarberServiceRel,
   makeBarberProductRel,
 } from '../../helpers/default-values'
-import { PermissionName } from '@prisma/client'
 
 let transactionRepo: FakeTransactionRepository
 let barberRepo: FakeBarberUsersRepository
@@ -534,18 +534,14 @@ describe('Create sale service', () => {
     )
   })
 
-  it('uses service percentage when relation type is PERCENTAGE_OF_SERVICE', async () => {
+  it('uses service percentage when relation type is PERCENTAGE_OF_ITEM', async () => {
     const service = {
       ...makeService('service-rel2', 100),
       commissionPercentage: 30,
     }
     ctx.serviceRepo.services.push(service)
     ctx.barberServiceRepo.items.push(
-      makeBarberServiceRel(
-        barberProfile.id,
-        service.id,
-        'PERCENTAGE_OF_SERVICE',
-      ),
+      makeBarberServiceRel(barberProfile.id, service.id, 'PERCENTAGE_OF_ITEM'),
     )
     ctx.profilesRepo.profiles.push({ ...barberProfile, user: barberUser })
 
@@ -582,7 +578,7 @@ describe('Create sale service', () => {
     )
   })
 
-  it('uses relation percentage when relation type is PERCENTAGE_OF_USER_SERVICE', async () => {
+  it('uses relation percentage when relation type is PERCENTAGE_OF_USER_ITEM', async () => {
     const service = {
       ...makeService('service-rel4', 100),
       commissionPercentage: 30,
@@ -592,7 +588,7 @@ describe('Create sale service', () => {
       makeBarberServiceRel(
         barberProfile.id,
         service.id,
-        'PERCENTAGE_OF_USER_SERVICE',
+        'PERCENTAGE_OF_USER_ITEM',
         60,
       ),
     )
@@ -621,7 +617,9 @@ describe('Create sale service', () => {
       ctx.createSale.execute({
         userId: defaultUser.id,
         method: PaymentMethod.CASH,
-        items: [{ productId: product.id, quantity: 1, barberId: barberUser.id }],
+        items: [
+          { productId: product.id, quantity: 1, barberId: barberUser.id },
+        ],
         clientId: defaultClient.id,
       }),
     ).rejects.toThrow('Permission denied')
@@ -631,11 +629,7 @@ describe('Create sale service', () => {
     const product = makeProduct('p-rel2', 50)
     ctx.productRepo.products.push(product)
     ctx.barberProductRepo.items.push(
-      makeBarberProductRel(
-        barberProfile.id,
-        product.id,
-        'PERCENTAGE_OF_USER',
-      ),
+      makeBarberProductRel(barberProfile.id, product.id, 'PERCENTAGE_OF_USER'),
     )
     const idx = ctx.barberRepo.users.findIndex((u) => u.id === barberUser.id)
     ctx.barberRepo.users[idx] = {
