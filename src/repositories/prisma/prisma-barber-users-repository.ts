@@ -1,5 +1,14 @@
 import { prisma } from '@/lib/prisma'
-import { Permission, Prisma, Profile, Role, Unit, User } from '@prisma/client'
+import {
+  Permission,
+  Prisma,
+  Profile,
+  ProfileWorkHour,
+  ProfileBlockedHour,
+  Role,
+  Unit,
+  User,
+} from '@prisma/client'
 import { BarberUsersRepository } from '../barber-users-repository'
 
 export class PrismaBarberUsersRepository implements BarberUsersRepository {
@@ -40,7 +49,14 @@ export class PrismaBarberUsersRepository implements BarberUsersRepository {
     permissionIds?: string[],
   ): Promise<{
     user: User
-    profile: (Profile & { role: Role; permissions: Permission[] }) | null
+    profile:
+      | (Profile & {
+          role: Role
+          permissions: Permission[]
+          workHours: ProfileWorkHour[]
+          blockedHours: ProfileBlockedHour[]
+        })
+      | null
   }> {
     const user = await prisma.user.update({
       where: { id },
@@ -55,15 +71,31 @@ export class PrismaBarberUsersRepository implements BarberUsersRepository {
           },
         },
       },
-      include: { profile: { include: { role: true, permissions: true } } },
+      include: {
+        profile: {
+          include: {
+            role: true,
+            permissions: true,
+            workHours: true,
+            blockedHours: true,
+          },
+        },
+      },
     })
 
     return { user, profile: user.profile }
   }
 
-  async findMany(
-    where: Prisma.UserWhereInput = {},
-  ): Promise<(Omit<User, 'password'> & { profile: Profile | null })[]> {
+  async findMany(where: Prisma.UserWhereInput = {}): Promise<
+    (Omit<User, 'password'> & {
+      profile:
+        | (Profile & {
+            workHours: ProfileWorkHour[]
+            blockedHours: ProfileBlockedHour[]
+          })
+        | null
+    })[]
+  > {
     const users = await prisma.user.findMany({
       where,
       include: {
@@ -71,16 +103,29 @@ export class PrismaBarberUsersRepository implements BarberUsersRepository {
           include: {
             barberServices: true,
             barberProducts: true,
+            workHours: true,
+            blockedHours: true,
           },
         },
       },
     })
-    return this.sanitizeUsers<User & { profile: Profile | null }>(users)
+    return this.sanitizeUsers<
+      User & {
+        profile: (Profile & { workHours: ProfileWorkHour[]; blockedHours: ProfileBlockedHour[] }) | null
+      }
+    >(users)
   }
 
   async findById(id: string): Promise<
     | (User & {
-        profile: (Profile & { role: Role; permissions: Permission[] }) | null
+        profile:
+          | (Profile & {
+              role: Role
+              permissions: Permission[]
+              workHours: ProfileWorkHour[]
+              blockedHours: ProfileBlockedHour[]
+            })
+          | null
         unit: Unit | null
       })
     | null
@@ -88,7 +133,14 @@ export class PrismaBarberUsersRepository implements BarberUsersRepository {
     return prisma.user.findUnique({
       where: { id },
       include: {
-        profile: { include: { role: true, permissions: true } },
+        profile: {
+          include: {
+            role: true,
+            permissions: true,
+            workHours: true,
+            blockedHours: true,
+          },
+        },
         unit: true,
       },
     })
@@ -96,13 +148,29 @@ export class PrismaBarberUsersRepository implements BarberUsersRepository {
 
   async findByEmail(email: string): Promise<
     | (User & {
-        profile: (Profile & { role: Role; permissions: Permission[] }) | null
+        profile:
+          | (Profile & {
+              role: Role
+              permissions: Permission[]
+              workHours: ProfileWorkHour[]
+              blockedHours: ProfileBlockedHour[]
+            })
+          | null
       })
     | null
   > {
     return prisma.user.findUnique({
       where: { email },
-      include: { profile: { include: { role: true, permissions: true } } },
+      include: {
+        profile: {
+          include: {
+            role: true,
+            permissions: true,
+            workHours: true,
+            blockedHours: true,
+          },
+        },
+      },
     })
   }
 

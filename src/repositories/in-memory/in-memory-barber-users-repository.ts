@@ -4,6 +4,8 @@ import {
   PermissionCategory,
   Prisma,
   Profile,
+  ProfileWorkHour,
+  ProfileBlockedHour,
   Role,
   Unit,
   User,
@@ -14,7 +16,14 @@ import { randomUUID } from 'crypto'
 export class InMemoryBarberUsersRepository implements BarberUsersRepository {
   constructor(
     public users: (User & {
-      profile: (Profile & { permissions: Permission[]; role: Role }) | null
+      profile:
+        | (Profile & {
+            permissions: Permission[]
+            role: Role
+            workHours: ProfileWorkHour[]
+            blockedHours: ProfileBlockedHour[]
+          })
+        | null
       unit?: Unit | null
     })[] = [],
   ) {}
@@ -37,7 +46,12 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
       versionTokenInvalidate: null,
       createdAt: new Date(),
     }
-    const profile: Profile & { permissions: Permission[]; role: Role } = {
+    const profile: Profile & {
+      permissions: Permission[]
+      role: Role
+      workHours: ProfileWorkHour[]
+      blockedHours: ProfileBlockedHour[]
+    } = {
       id: randomUUID(),
       userId: user.id,
       phone: profileData.phone as string,
@@ -63,6 +77,8 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
           category: 'USER',
           unitId: randomUUID(),
         })) ?? [],
+      workHours: [],
+      blockedHours: [],
     }
     this.users.push({
       ...user,
@@ -87,7 +103,14 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
     permissionIds?: string[],
   ): Promise<{
     user: User
-    profile: (Profile & { role: Role; permissions: Permission[] }) | null
+    profile:
+      | (Profile & {
+          role: Role
+          permissions: Permission[]
+          workHours: ProfileWorkHour[]
+          blockedHours: ProfileBlockedHour[]
+        })
+      | null
   }> {
     const index = this.users.findIndex((u) => u.id === id)
     if (index < 0) throw new Error('User not found')
@@ -137,9 +160,18 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
     return { user: updatedUser, profile }
   }
 
-  async findMany(
-    where: Prisma.UserWhereInput = {},
-  ): Promise<(User & { profile: Profile | null })[]> {
+  async findMany(where: Prisma.UserWhereInput = {}): Promise<
+    (User & {
+      profile:
+        | (Profile & {
+            permissions: Permission[]
+            role: Role
+            workHours: ProfileWorkHour[]
+            blockedHours: ProfileBlockedHour[]
+          })
+        | null
+    })[]
+  > {
     return this.users.filter((u) => {
       if (where.unitId && u.unit?.id !== where.unitId) return false
       if (where.organizationId && u.organizationId !== where.organizationId)
@@ -173,7 +205,14 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
 
   async findById(id: string): Promise<
     | (User & {
-        profile: (Profile & { role: Role; permissions: Permission[] }) | null
+        profile:
+          | (Profile & {
+              role: Role
+              permissions: Permission[]
+              workHours: ProfileWorkHour[]
+              blockedHours: ProfileBlockedHour[]
+            })
+          | null
         unit: Unit | null
       })
     | null
@@ -185,7 +224,14 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
 
   async findByEmail(email: string): Promise<
     | (User & {
-        profile: (Profile & { role: Role; permissions: Permission[] }) | null
+        profile:
+          | (Profile & {
+              role: Role
+              permissions: Permission[]
+              workHours: ProfileWorkHour[]
+              blockedHours: ProfileBlockedHour[]
+            })
+          | null
       })
     | null
   > {

@@ -15,11 +15,13 @@ describe('Get user service', () => {
 
   it('returns user by id', async () => {
     const user = makeUser()
-    const profile = makeProfile({ userId: user.id })
+    const profile = { ...makeProfile({ userId: user.id }), workHours: [], blockedHours: [] }
     repo.users.push({ ...user, profile } as any)
 
     const res = await service.execute({ id: user.id })
     expect(res.user?.id).toBe(user.id)
+    expect(res.user?.profile?.workHours).toBeDefined()
+    expect(res.user?.profile?.blockedHours).toBeDefined()
   })
 
   it('returns null when not found', async () => {

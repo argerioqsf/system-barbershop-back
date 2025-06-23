@@ -9,6 +9,7 @@ import { ZodError } from 'zod'
 import { env } from './env'
 import { handleControllerError } from './utils/http-error-handler'
 import { profileRoute } from './http/controllers/profile/route'
+import { profileHoursRoute } from './http/controllers/profile-hours/route'
 import { barberShopServiceRoute } from './http/controllers/barber-shop/route'
 import { productRoute } from './http/controllers/product/route'
 import { appointmentRoute } from './http/controllers/appointment/route'
@@ -132,6 +133,7 @@ app.addHook('onSend', async (request, reply, payload) => {
 app.register(authRoute)
 app.register(sessionRoute)
 app.register(profileRoute)
+app.register(profileHoursRoute)
 app.register(productRoute)
 app.register(barberShopServiceRoute)
 app.register(appointmentRoute)
