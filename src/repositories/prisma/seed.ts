@@ -83,6 +83,26 @@ async function main() {
     },
     { name: PermissionName.CREATE_SALE, category: PermissionCategory.SALE },
     {
+      name: PermissionName.CREATE_USER_OWNER,
+      category: PermissionCategory.USER,
+    },
+    {
+      name: PermissionName.CREATE_USER_MANAGER,
+      category: PermissionCategory.USER,
+    },
+    {
+      name: PermissionName.CREATE_USER_ATTENDANT,
+      category: PermissionCategory.USER,
+    },
+    {
+      name: PermissionName.CREATE_USER_BARBER,
+      category: PermissionCategory.USER,
+    },
+    {
+      name: PermissionName.CREATE_USER_CLIENT,
+      category: PermissionCategory.USER,
+    },
+    {
       name: PermissionName.MANAGE_USER_TRANSACTION_ADD,
       category: PermissionCategory.TRANSACTION,
     },

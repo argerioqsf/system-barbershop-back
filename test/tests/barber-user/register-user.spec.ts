@@ -122,4 +122,49 @@ describe('Register user service', () => {
       ),
     ).rejects.toThrow('Permission denied')
   })
+
+  it('requires permission to create barber', async () => {
+    const barberRole = { id: 'barber', name: 'BARBER', unitId: defaultUnit.id } as any
+    roleRepo = new InMemoryRoleRepository([
+      { id: 'role-1', name: 'MANAGER', unitId: defaultUnit.id } as any,
+      barberRole,
+    ])
+    service = new RegisterUserService(repo, unitRepo, permRepo, roleRepo)
+    await expect(
+      service.execute(
+        { sub: 'manager', role: 'MANAGER', organizationId: defaultUnit.organizationId, unitId: defaultUnit.id, permissions: [] } as any,
+        { ...baseRegisterUserData, unitId: defaultUnit.id, roleId: barberRole.id },
+      ),
+    ).rejects.toThrow('Permission denied')
+  })
+
+  it('requires permission to create attendant', async () => {
+    const attendantRole = { id: 'att', name: 'ATTENDANT', unitId: defaultUnit.id } as any
+    roleRepo = new InMemoryRoleRepository([
+      { id: 'role-1', name: 'MANAGER', unitId: defaultUnit.id } as any,
+      attendantRole,
+    ])
+    service = new RegisterUserService(repo, unitRepo, permRepo, roleRepo)
+    await expect(
+      service.execute(
+        { sub: 'manager', role: 'MANAGER', organizationId: defaultUnit.organizationId, unitId: defaultUnit.id, permissions: [] } as any,
+        { ...baseRegisterUserData, unitId: defaultUnit.id, roleId: attendantRole.id },
+      ),
+    ).rejects.toThrow('Permission denied')
+  })
+
+  it('requires permission to create owner', async () => {
+    const ownerRole = { id: 'owner', name: 'OWNER', unitId: defaultUnit.id } as any
+    roleRepo = new InMemoryRoleRepository([
+      { id: 'role-1', name: 'MANAGER', unitId: defaultUnit.id } as any,
+      ownerRole,
+    ])
+    service = new RegisterUserService(repo, unitRepo, permRepo, roleRepo)
+    await expect(
+      service.execute(
+        { sub: 'manager', role: 'MANAGER', organizationId: defaultUnit.organizationId, unitId: defaultUnit.id, permissions: [] } as any,
+        { ...baseRegisterUserData, unitId: defaultUnit.id, roleId: ownerRole.id },
+      ),
+    ).rejects.toThrow('Permission denied')
+  })
 })

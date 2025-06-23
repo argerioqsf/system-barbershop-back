@@ -10,7 +10,7 @@ import { RolesNotFoundError } from '../@errors/role/role-not-found-error'
 import { RoleRepository } from '@/repositories/role-repository'
 import { UserToken } from '@/http/controllers/authenticate-controller'
 import { UnauthorizedError } from '../@errors/auth/unauthorized-error'
-import { hasPermission } from '@/utils/permissions'
+import { assertPermission, hasPermission } from '@/utils/permissions'
 import { PermissionDeniedError } from '../@errors/permission/permission-denied-error'
 
 interface RegisterUserRequest {
@@ -49,14 +49,49 @@ export class RegisterUserService {
       throw new RolesNotFoundError()
     }
 
-    if (
-      (role?.name === RoleName.ADMIN || role?.name === RoleName.OWNER) &&
-      userToken.role !== 'ADMIN'
-    ) {
+    if (role?.name === RoleName.ADMIN && userToken.role !== 'ADMIN') {
       throw new UnauthorizedError()
     }
 
-    if (
+    if (userToken.role !== 'ADMIN') {
+      switch (role.name) {
+        case RoleName.OWNER:
+          await assertPermission(
+            [PermissionName.CREATE_USER_OWNER],
+            userToken.permissions,
+          )
+          break
+        case RoleName.MANAGER:
+          await assertPermission(
+            [PermissionName.CREATE_USER_MANAGER],
+            userToken.permissions,
+          )
+          break
+        case RoleName.ATTENDANT:
+          await assertPermission(
+            [PermissionName.CREATE_USER_ATTENDANT],
+            userToken.permissions,
+          )
+          break
+        case RoleName.BARBER:
+          await assertPermission(
+            [PermissionName.CREATE_USER_BARBER],
+            userToken.permissions,
+          )
+          break
+        case RoleName.CLIENT:
+          await assertPermission(
+            [PermissionName.CREATE_USER_CLIENT],
+            userToken.permissions,
+          )
+          if (
+            !hasPermission([PermissionName.CREATE_SALE], userToken.permissions)
+          ) {
+            throw new PermissionDeniedError()
+          }
+          break
+      }
+    } else if (
       role?.name === RoleName.CLIENT &&
       !hasPermission([PermissionName.CREATE_SALE], userToken.permissions)
     ) {
