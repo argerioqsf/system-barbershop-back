@@ -117,6 +117,11 @@ export class PrismaBarberUsersRepository implements BarberUsersRepository {
               blockedHours: ProfileBlockedHour[]
             })
           | null
+          | (Profile & {
+              workHours: ProfileWorkHour[]
+              blockedHours: ProfileBlockedHour[]
+            })
+          | null
       }
     >(users)
   }

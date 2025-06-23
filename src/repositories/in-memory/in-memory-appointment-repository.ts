@@ -17,7 +17,7 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
       unitId: (data.unit as { connect: { id: string } }).connect.id,
       date: data.date as Date,
       hour: data.hour as string,
-      observation: (data as any).observation ?? null,
+      observation: data.observation ?? null,
     }
     this.appointments.push({
       ...appointment,

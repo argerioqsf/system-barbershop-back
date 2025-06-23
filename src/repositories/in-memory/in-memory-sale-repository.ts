@@ -127,7 +127,7 @@ export class InMemorySaleRepository implements SaleRepository {
       method: data.method as PaymentMethod,
       paymentStatus: data.paymentStatus as PaymentStatus,
       createdAt: new Date(),
-      observation: (data as any).observation ?? null,
+      observation: data.observation ?? null,
       items,
       user: {
         id: (data.user as { connect: { id: string } }).connect.id,
