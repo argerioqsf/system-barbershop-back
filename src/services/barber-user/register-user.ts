@@ -1,7 +1,7 @@
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { PermissionRepository } from '@/repositories/permission-repository'
 import { UnitRepository } from '@/repositories/unit-repository'
-import { Profile, RoleName, User } from '@prisma/client'
+import { Profile, RoleName, User, PermissionName, Role } from '@prisma/client'
 import { hash } from 'bcryptjs'
 import { UserAlreadyExistsError } from '@/services/@errors/user/user-already-exists-error'
 import { UnitNotExistsError } from '@/services/@errors/unit/unit-not-exists-error'
@@ -10,6 +10,8 @@ import { RolesNotFoundError } from '../@errors/role/role-not-found-error'
 import { RoleRepository } from '@/repositories/role-repository'
 import { UserToken } from '@/http/controllers/authenticate-controller'
 import { UnauthorizedError } from '../@errors/auth/unauthorized-error'
+import { assertPermission } from '@/utils/permissions'
+import { PermissionDeniedError } from '../@errors/permission/permission-denied-error'
 
 interface RegisterUserRequest {
   name: string
@@ -38,6 +40,49 @@ export class RegisterUserService {
     private roleRepository: RoleRepository,
   ) {}
 
+  private async verifyPermissions(role: Role, userToken: UserToken) {
+    switch (role.name) {
+      case RoleName.OWNER:
+        await assertPermission(
+          [PermissionName.CREATE_USER_OWNER],
+          userToken.permissions,
+        )
+        break
+      case RoleName.MANAGER:
+        await assertPermission(
+          [PermissionName.CREATE_USER_MANAGER],
+          userToken.permissions,
+        )
+        break
+      case RoleName.ATTENDANT:
+        await assertPermission(
+          [PermissionName.CREATE_USER_ATTENDANT],
+          userToken.permissions,
+        )
+        break
+      case RoleName.BARBER:
+        await assertPermission(
+          [PermissionName.CREATE_USER_BARBER],
+          userToken.permissions,
+        )
+        break
+      case RoleName.CLIENT:
+        await assertPermission(
+          [PermissionName.CREATE_USER_CLIENT],
+          userToken.permissions,
+        )
+        break
+      case RoleName.ADMIN:
+        await assertPermission(
+          [PermissionName.CREATE_USER_ADMIN],
+          userToken.permissions,
+        )
+        break
+      default:
+        throw new PermissionDeniedError()
+    }
+  }
+
   async execute(
     userToken: UserToken,
     data: RegisterUserRequest,
@@ -47,10 +92,9 @@ export class RegisterUserService {
       throw new RolesNotFoundError()
     }
 
-    if (
-      (role?.name === RoleName.ADMIN || role?.name === RoleName.OWNER) &&
-      userToken.role !== 'ADMIN'
-    ) {
+    await this.verifyPermissions(role, userToken)
+
+    if (role?.name === RoleName.ADMIN && userToken.role !== 'ADMIN') {
       throw new UnauthorizedError()
     }
 

@@ -112,7 +112,26 @@ describe('Create sale service', () => {
   let ctx: ReturnType<typeof setup>
   beforeEach(() => {
     ctx = setup()
-    ctx.barberRepo.users.push(defaultUser, defaultClient, barberUser)
+    const profile = {
+      id: 'profile-user',
+      phone: '',
+      cpf: '',
+      genre: '',
+      birthday: '',
+      pix: '',
+      roleId: 'role-1',
+      commissionPercentage: 0,
+      totalBalance: 0,
+      userId: defaultUser.id,
+      createdAt: new Date(),
+      permissions: [{ id: 'perm-sale', name: PermissionName.CREATE_SALE } as any],
+      role: { id: 'role-1', name: 'ADMIN', unitId: 'unit-1' } as any,
+    }
+    ctx.barberRepo.users.push(
+      { ...defaultUser, profile },
+      defaultClient,
+      barberUser,
+    )
   })
 
   it('creates a sale with one service item without coupon', async () => {
@@ -620,6 +639,19 @@ describe('Create sale service', () => {
         items: [
           { productId: product.id, quantity: 1, barberId: barberUser.id },
         ],
+        clientId: defaultClient.id,
+      }),
+    ).rejects.toThrow('Permission denied')
+  })
+
+  it('requires permission to create sale', async () => {
+    const product = makeProduct('p-sale', 50)
+    ctx.productRepo.products.push(product)
+    await expect(
+      ctx.createSale.execute({
+        userId: defaultUser.id,
+        method: PaymentMethod.CASH,
+        items: [{ productId: product.id, quantity: 1, barberId: barberUser.id }],
         clientId: defaultClient.id,
       }),
     ).rejects.toThrow('Permission denied')
