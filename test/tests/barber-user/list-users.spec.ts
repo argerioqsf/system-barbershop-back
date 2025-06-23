@@ -20,6 +20,8 @@ describe('List users service', () => {
       organizationId: 'org-1',
     } as any)
     expect(res.users).toHaveLength(2)
+    expect(res.users[0].profile?.workHours).toBeDefined()
+    expect(res.users[0].profile?.blockedHours).toBeDefined()
   })
 
   it('filters by organization for owner', async () => {

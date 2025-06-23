@@ -1,6 +1,9 @@
 import { ProfileBlockedHourRepository } from '@/repositories/profile-blocked-hour-repository'
 import { ProfileWorkHourRepository } from '@/repositories/profile-work-hour-repository'
-import { ProfileBlockedHour } from '@prisma/client'
+import { ProfileBlockedHour, PermissionName } from '@prisma/client'
+import { UserToken } from '@/http/controllers/authenticate-controller'
+import { assertPermission } from '@/utils/permissions'
+import { PermissionDeniedError } from '../@errors/permission/permission-denied-error'
 
 interface AddProfileBlockedHourRequest {
   profileId: string
@@ -18,8 +21,14 @@ export class AddProfileBlockedHourService {
   ) {}
 
   async execute(
+    user: UserToken,
     data: AddProfileBlockedHourRequest,
   ): Promise<AddProfileBlockedHourResponse> {
+    await assertPermission(
+      [PermissionName.MANAGE_SELF_BLOCKED_HOURS],
+      user.permissions,
+    )
+    if (user.sub !== data.profileId) throw new PermissionDeniedError()
     const works = await this.workRepository.findManyByProfile(data.profileId)
     const allowed = works.some((w) => w.dayHourId === data.dayHourId)
     if (!allowed) throw new Error('DayHour outside working hours')

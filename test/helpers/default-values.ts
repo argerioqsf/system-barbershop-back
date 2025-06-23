@@ -216,6 +216,8 @@ export function makeProfile(
     user: { ...defaultUser, id: userId },
     createdAt: new Date(),
     permissions: [],
+    workHours: [],
+    blockedHours: [],
   }
 }
 
@@ -396,7 +398,7 @@ export const baseRegisterUserData = {
 export const listUser1 = {
   id: 'u1',
   email: 'a@a.com',
-  profile: null,
+  profile: makeProfile('p-u1', 'u1'),
   unit: { id: 'unit-1', organizationId: 'org-1' },
   organizationId: 'org-1',
 } as any
@@ -404,7 +406,7 @@ export const listUser1 = {
 export const listUser2 = {
   id: 'u2',
   email: 'b@b.com',
-  profile: null,
+  profile: makeProfile('p-u2', 'u2'),
   unit: { id: 'unit-2', organizationId: 'org-2' },
   organizationId: 'org-2',
 } as any

@@ -1,4 +1,13 @@
-import { Permission, Prisma, Profile, Role, Unit, User } from '@prisma/client'
+import {
+  Permission,
+  Prisma,
+  Profile,
+  ProfileWorkHour,
+  ProfileBlockedHour,
+  Role,
+  Unit,
+  User,
+} from '@prisma/client'
 
 export interface BarberUsersRepository {
   create(
@@ -15,19 +24,40 @@ export interface BarberUsersRepository {
     user: User
     profile: (Profile & { role: Role; permissions: Permission[] }) | null
   }>
-  findMany(
-    where?: Prisma.UserWhereInput,
-  ): Promise<(Omit<User, 'password'> & { profile: Profile | null })[]>
+  findMany(where?: Prisma.UserWhereInput): Promise<
+    (Omit<User, 'password'> & {
+      profile:
+        | (Profile & {
+            workHours: ProfileWorkHour[]
+            blockedHours: ProfileBlockedHour[]
+          })
+        | null
+    })[]
+  >
   findById(id: string): Promise<
     | (User & {
-        profile: (Profile & { role: Role; permissions: Permission[] }) | null
+        profile:
+          | (Profile & {
+              role: Role
+              permissions: Permission[]
+              workHours: ProfileWorkHour[]
+              blockedHours: ProfileBlockedHour[]
+            })
+          | null
         unit: Unit | null
       })
     | null
   >
   findByEmail(email: string): Promise<
     | (User & {
-        profile: (Profile & { role: Role; permissions: Permission[] }) | null
+        profile:
+          | (Profile & {
+              role: Role
+              permissions: Permission[]
+              workHours: ProfileWorkHour[]
+              blockedHours: ProfileBlockedHour[]
+            })
+          | null
       })
     | null
   >

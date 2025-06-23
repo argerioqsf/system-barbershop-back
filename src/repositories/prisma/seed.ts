@@ -382,16 +382,17 @@ async function main() {
     ],
   })
 
-  await prisma.profileWorkHour.createMany({
-    data: [
-      { profileId: barber.profile!.id, dayHourId: dayHour1.id },
-      { profileId: barber.profile!.id, dayHourId: dayHour2.id },
-    ],
-  })
-
-  await prisma.profileBlockedHour.create({
-    data: { profileId: barber.profile!.id, dayHourId: dayHour2.id },
-  })
+  if (barber.profile) {
+    await prisma.profileWorkHour.createMany({
+      data: [
+        { profileId: barber.profile.id, dayHourId: dayHour1.id },
+        { profileId: barber.profile.id, dayHourId: dayHour2.id },
+      ],
+    })
+    await prisma.profileBlockedHour.create({
+      data: { profileId: barber.profile.id, dayHourId: dayHour2.id },
+    })
+  }
 
   const appointment = await prisma.appointment.create({
     data: {

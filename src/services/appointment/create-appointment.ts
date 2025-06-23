@@ -8,6 +8,7 @@ interface CreateAppointmentRequest {
   unitId: string
   date: Date
   hour: string
+  observation?: string
 }
 
 interface CreateAppointmentResponse {
@@ -27,6 +28,7 @@ export class CreateAppointmentService {
       unit: { connect: { id: data.unitId } },
       date: data.date,
       hour: data.hour,
+      observation: data.observation,
     })
     return { appointment }
   }

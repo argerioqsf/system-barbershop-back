@@ -282,6 +282,8 @@ export class CreateSaleService {
     clientId,
     couponCode,
     paymentStatus = PaymentStatus.PENDING,
+    appointmentId,
+    observation,
   }: CreateSaleRequest): Promise<CreateSaleResponse> {
     const tempItems: TempItems[] = []
     const productsToUpdate: { id: string; quantity: number }[] = []
@@ -325,12 +327,16 @@ export class CreateSaleService {
       user: { connect: { id: userId } },
       client: { connect: { id: clientId } },
       unit: { connect: { id: user?.unitId } },
+      appointment: appointmentId
+        ? { connect: { id: appointmentId } }
+        : undefined,
       session:
         paymentStatus === PaymentStatus.PAID && session
           ? { connect: { id: session.id } }
           : undefined,
       items: { create: saleItems },
       coupon: couponConnect,
+      observation,
     })
 
     if (paymentStatus === PaymentStatus.PAID) {

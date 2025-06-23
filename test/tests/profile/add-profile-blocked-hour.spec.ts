@@ -3,6 +3,7 @@ import { AddProfileBlockedHourService } from '../../../src/services/profile/add-
 import { AddProfileWorkHourService } from '../../../src/services/profile/add-profile-work-hour'
 import { CreateDayHourService } from '../../../src/services/day-hour/create-day-hour'
 import { AddUnitDayHourService } from '../../../src/services/unit/add-unit-day-hour'
+import { PermissionName } from '@prisma/client'
 import {
   FakeDayHourRepository,
   FakeUnitDayHourRepository,
@@ -38,8 +39,22 @@ describe('Add profile blocked hour', () => {
       endHour: '12:00',
     })
     await addUnitHour.execute({ unitId: 'unit-1', dayHourId: dayHour.id })
-    await addWorkHour.execute({ profileId: 'prof-1', dayHourId: dayHour.id })
-    const res = await addBlocked.execute({ profileId: 'prof-1', dayHourId: dayHour.id })
+    const token: any = {
+      sub: 'prof-1',
+      unitId: 'unit-1',
+      organizationId: 'org-1',
+      role: 'BARBER',
+      permissions: [PermissionName.MANAGE_SELF_WORK_HOURS],
+    }
+    const tokenBlock: any = {
+      sub: 'prof-1',
+      unitId: 'unit-1',
+      organizationId: 'org-1',
+      role: 'BARBER',
+      permissions: [PermissionName.MANAGE_SELF_BLOCKED_HOURS],
+    }
+    await addWorkHour.execute(token, { profileId: 'prof-1', dayHourId: dayHour.id })
+    const res = await addBlocked.execute(tokenBlock, { profileId: 'prof-1', dayHourId: dayHour.id })
     expect(res.blocked.dayHourId).toBe(dayHour.id)
     expect(blockedRepo.items).toHaveLength(1)
   })
@@ -50,8 +65,15 @@ describe('Add profile blocked hour', () => {
       startHour: '09:00',
       endHour: '12:00',
     })
+    const token: any = {
+      sub: 'prof-1',
+      unitId: 'unit-1',
+      organizationId: 'org-1',
+      role: 'BARBER',
+      permissions: [PermissionName.MANAGE_SELF_BLOCKED_HOURS],
+    }
     await expect(
-      addBlocked.execute({ profileId: 'prof-1', dayHourId: dayHour.id }),
+      addBlocked.execute(token, { profileId: 'prof-1', dayHourId: dayHour.id }),
     ).rejects.toThrow()
   })
 
@@ -62,11 +84,25 @@ describe('Add profile blocked hour', () => {
       endHour: '12:00',
     })
     await addUnitHour.execute({ unitId: 'unit-1', dayHourId: dayHour.id })
-    await addWorkHour.execute({ profileId: 'prof-2', dayHourId: dayHour.id })
-    await addBlocked.execute({ profileId: 'prof-2', dayHourId: dayHour.id })
+    const tokenWork: any = {
+      sub: 'prof-2',
+      unitId: 'unit-1',
+      organizationId: 'org-1',
+      role: 'BARBER',
+      permissions: [PermissionName.MANAGE_SELF_WORK_HOURS],
+    }
+    const tokenBlock: any = {
+      sub: 'prof-2',
+      unitId: 'unit-1',
+      organizationId: 'org-1',
+      role: 'BARBER',
+      permissions: [PermissionName.MANAGE_SELF_BLOCKED_HOURS],
+    }
+    await addWorkHour.execute(tokenWork, { profileId: 'prof-2', dayHourId: dayHour.id })
+    await addBlocked.execute(tokenBlock, { profileId: 'prof-2', dayHourId: dayHour.id })
 
     await expect(
-      addBlocked.execute({ profileId: 'prof-2', dayHourId: dayHour.id }),
+      addBlocked.execute(tokenBlock, { profileId: 'prof-2', dayHourId: dayHour.id }),
     ).rejects.toThrow()
   })
 })
