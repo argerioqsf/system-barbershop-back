@@ -1,7 +1,6 @@
 import { UserToken } from '@/http/controllers/authenticate-controller'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { AppointmentRepository } from '@/repositories/appointment-repository'
-import { DayHourRepository } from '@/repositories/day-hour-repository'
 import { assertUser } from '@/utils/assert-user'
 import { getScope, buildUnitWhere } from '@/utils/permissions'
 import {
@@ -32,7 +31,6 @@ export class ListUsersService {
   constructor(
     private repository: BarberUsersRepository,
     private appointmentRepository: AppointmentRepository,
-    private dayHourRepository: DayHourRepository,
   ) {}
 
   async execute(userToken: UserToken): Promise<ListUsersResponse> {
@@ -46,9 +44,8 @@ export class ListUsersService {
         availableSlots: await listAvailableSlots(
           u as BarberWithHours,
           this.appointmentRepository,
-          this.dayHourRepository,
         ),
-      })),
+        })),
     )
     return { users: withSlots }
   }

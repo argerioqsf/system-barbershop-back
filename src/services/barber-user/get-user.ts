@@ -1,6 +1,5 @@
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { AppointmentRepository } from '@/repositories/appointment-repository'
-import { DayHourRepository } from '@/repositories/day-hour-repository'
 import {
   BarberService,
   Permission,
@@ -40,7 +39,6 @@ export class GetUserService {
   constructor(
     private repository: BarberUsersRepository,
     private appointmentRepository: AppointmentRepository,
-    private dayHourRepository: DayHourRepository,
   ) {}
 
   async execute({ id }: GetUserRequest): Promise<GetUserResponse> {
@@ -50,7 +48,6 @@ export class GetUserService {
     const availableSlots = await listAvailableSlots(
       user as BarberWithHours,
       this.appointmentRepository,
-      this.dayHourRepository,
     )
 
     return { user: { ...user, availableSlots } }

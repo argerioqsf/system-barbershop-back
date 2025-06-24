@@ -7,7 +7,9 @@ import { UserToken } from '@/http/controllers/authenticate-controller'
 
 interface AddProfileWorkHourRequest {
   profileId: string
-  dayHourId: string
+  weekDay: number
+  startHour: string
+  endHour: string
 }
 
 interface AddProfileWorkHourResponse {
@@ -27,12 +29,19 @@ export class AddProfileWorkHourService {
     )
     if (user.sub !== data.profileId) throw new PermissionDeniedError()
     const current = await this.repository.findManyByProfile(data.profileId)
-    const duplicate = current.some((w) => w.dayHourId === data.dayHourId)
+    const duplicate = current.some(
+      (w) =>
+        w.weekDay === data.weekDay &&
+        w.startHour === data.startHour &&
+        w.endHour === data.endHour,
+    )
     if (duplicate) throw new Error('DayHour already added')
 
     const workHour = await this.repository.create({
       profileId: data.profileId,
-      dayHourId: data.dayHourId,
+      weekDay: data.weekDay,
+      startHour: data.startHour,
+      endHour: data.endHour,
     })
     return { workHour }
   }

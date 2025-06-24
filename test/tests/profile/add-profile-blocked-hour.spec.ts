@@ -1,48 +1,41 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { AddProfileBlockedHourService } from '../../../src/services/profile/add-profile-blocked-hour'
 import { AddProfileWorkHourService } from '../../../src/services/profile/add-profile-work-hour'
-import { CreateDayHourService } from '../../../src/services/day-hour/create-day-hour'
-import { AddUnitDayHourService } from '../../../src/services/unit/add-unit-day-hour'
+import { AddUnitOpeningHourService } from '../../../src/services/unit/add-unit-opening-hour'
 import { PermissionName } from '@prisma/client'
 import {
-  FakeDayHourRepository,
-  FakeUnitDayHourRepository,
+  FakeUnitOpeningHourRepository,
   FakeProfileWorkHourRepository,
   FakeProfileBlockedHourRepository,
 } from '../../helpers/fake-repositories'
 
 describe('Add profile blocked hour', () => {
-  let dayHourRepo: FakeDayHourRepository
-  let unitRelRepo: FakeUnitDayHourRepository
+  let unitRelRepo: FakeUnitOpeningHourRepository
   let workRepo: FakeProfileWorkHourRepository
   let blockedRepo: FakeProfileBlockedHourRepository
-  let createDayHour: CreateDayHourService
-  let addUnitHour: AddUnitDayHourService
+  let addUnitHour: AddUnitOpeningHourService
   let addWorkHour: AddProfileWorkHourService
   let addBlocked: AddProfileBlockedHourService
 
   beforeEach(() => {
-    dayHourRepo = new FakeDayHourRepository()
-    unitRelRepo = new FakeUnitDayHourRepository()
+    unitRelRepo = new FakeUnitOpeningHourRepository()
     workRepo = new FakeProfileWorkHourRepository()
     blockedRepo = new FakeProfileBlockedHourRepository()
-    createDayHour = new CreateDayHourService(dayHourRepo)
-    addUnitHour = new AddUnitDayHourService(unitRelRepo)
+    addUnitHour = new AddUnitOpeningHourService(unitRelRepo)
     addWorkHour = new AddProfileWorkHourService(workRepo)
     addBlocked = new AddProfileBlockedHourService(
       blockedRepo,
       workRepo,
-      dayHourRepo,
     )
   })
 
   it('blocks hour when in work hours', async () => {
-    const { dayHour } = await createDayHour.execute({
+    await addUnitHour.execute({
+      unitId: 'unit-1',
       weekDay: 1,
       startHour: '08:00',
       endHour: '12:00',
     })
-    await addUnitHour.execute({ unitId: 'unit-1', dayHourId: dayHour.id })
     const token = {
       sub: 'prof-1',
       unitId: 'unit-1',
@@ -59,7 +52,9 @@ describe('Add profile blocked hour', () => {
     }
     await addWorkHour.execute(token, {
       profileId: 'prof-1',
-      dayHourId: dayHour.id,
+      weekDay: 1,
+      startHour: '08:00',
+      endHour: '12:00',
     })
     const res = await addBlocked.execute(tokenBlock, {
       profileId: 'prof-1',
@@ -71,11 +66,6 @@ describe('Add profile blocked hour', () => {
   })
 
   it('throws if hour not in work hours', async () => {
-    const { dayHour } = await createDayHour.execute({
-      weekDay: 2,
-      startHour: '09:00',
-      endHour: '12:00',
-    })
     const token = {
       sub: 'prof-1',
       unitId: 'unit-1',
@@ -93,12 +83,12 @@ describe('Add profile blocked hour', () => {
   })
 
   it('throws when blocking same hour twice', async () => {
-    const { dayHour } = await createDayHour.execute({
+    await addUnitHour.execute({
+      unitId: 'unit-1',
       weekDay: 3,
       startHour: '10:00',
       endHour: '12:00',
     })
-    await addUnitHour.execute({ unitId: 'unit-1', dayHourId: dayHour.id })
     const tokenWork = {
       sub: 'prof-2',
       unitId: 'unit-1',
@@ -115,7 +105,9 @@ describe('Add profile blocked hour', () => {
     }
     await addWorkHour.execute(tokenWork, {
       profileId: 'prof-2',
-      dayHourId: dayHour.id,
+      weekDay: 3,
+      startHour: '10:00',
+      endHour: '12:00',
     })
     await addBlocked.execute(tokenBlock, {
       profileId: 'prof-2',

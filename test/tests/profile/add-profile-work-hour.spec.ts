@@ -22,7 +22,9 @@ describe('Add profile work hour service', () => {
     }
     const res = await service.execute(token, {
       profileId: 'p1',
-      dayHourId: 'dh-1',
+      weekDay: 1,
+      startHour: '08:00',
+      endHour: '12:00',
     })
 
     expect(repo.items).toHaveLength(1)
@@ -37,8 +39,18 @@ describe('Add profile work hour service', () => {
       role: 'BARBER',
       permissions: [PermissionName.MANAGE_SELF_WORK_HOURS],
     }
-    await service.execute(token, { profileId: 'p2', dayHourId: 'dh-2' })
-    await service.execute(token, { profileId: 'p2', dayHourId: 'dh-3' })
+    await service.execute(token, {
+      profileId: 'p2',
+      weekDay: 1,
+      startHour: '08:00',
+      endHour: '10:00',
+    })
+    await service.execute(token, {
+      profileId: 'p2',
+      weekDay: 2,
+      startHour: '09:00',
+      endHour: '12:00',
+    })
 
     const items = await repo.findManyByProfile('p2')
     expect(items).toHaveLength(2)
@@ -52,10 +64,20 @@ describe('Add profile work hour service', () => {
       role: 'BARBER',
       permissions: [PermissionName.MANAGE_SELF_WORK_HOURS],
     }
-    await service.execute(token, { profileId: 'p3', dayHourId: 'dh-4' })
+    await service.execute(token, {
+      profileId: 'p3',
+      weekDay: 1,
+      startHour: '09:00',
+      endHour: '12:00',
+    })
 
     await expect(
-      service.execute(token, { profileId: 'p3', dayHourId: 'dh-4' }),
+      service.execute(token, {
+        profileId: 'p3',
+        weekDay: 1,
+        startHour: '09:00',
+        endHour: '12:00',
+      }),
     ).rejects.toThrow()
   })
 })

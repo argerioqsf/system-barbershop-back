@@ -13,7 +13,9 @@ export class InMemoryProfileWorkHourRepository
     const item: ProfileWorkHour = {
       id: randomUUID(),
       profileId: data.profileId,
-      dayHourId: data.dayHourId,
+      weekDay: data.weekDay,
+      startHour: data.startHour,
+      endHour: data.endHour,
     }
     this.items.push(item)
     return item

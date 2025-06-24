@@ -1,5 +1,4 @@
 import { AppointmentRepository } from '@/repositories/appointment-repository'
-import { DayHourRepository } from '@/repositories/day-hour-repository'
 import {
   BarberService,
   Profile,
@@ -28,12 +27,10 @@ export type BarberWithHours = User & {
 export async function listAvailableSlots(
   barber: BarberWithHours,
   appointmentRepo: AppointmentRepository,
-  dayHourRepo: DayHourRepository,
 ): Promise<DayHour[]> {
   if (!barber.profile) return []
-  const workIds = barber.profile.workHours.map((w) => w.dayHourId)
-  if (workIds.length === 0) return []
-  const workHours = await dayHourRepo.findMany({ id: { in: workIds } })
+  const workHours = barber.profile.workHours
+  if (workHours.length === 0) return []
 
   const blockedMap = new Map<number, { start: number; end: number }[]>()
   for (const b of barber.profile.blockedHours) {
@@ -85,13 +82,13 @@ export async function isAppointmentAvailable(
   startTime: Date,
   duration: number,
   appointmentRepo: AppointmentRepository,
-  dayHourRepo: DayHourRepository,
 ): Promise<boolean> {
   if (!barber.profile) return false
   const weekDay = startTime.getDay()
-  const workIds = barber.profile.workHours.map((w) => w.dayHourId)
-  if (workIds.length === 0) return false
-  const workHours = await dayHourRepo.findMany({ id: { in: workIds }, weekDay })
+  const workHours = barber.profile.workHours.filter(
+    (w) => w.weekDay === weekDay,
+  )
+  if (workHours.length === 0) return false
   const blockedHours = barber.profile.blockedHours.filter(
     (b) =>
       b.startHour.getDay() === weekDay &&
