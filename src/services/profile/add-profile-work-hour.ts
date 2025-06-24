@@ -35,7 +35,7 @@ export class AddProfileWorkHourService {
         w.startHour === data.startHour &&
         w.endHour === data.endHour,
     )
-    if (duplicate) throw new Error('DayHour already added')
+    if (duplicate) throw new Error('WorkHour already added')
 
     const workHour = await this.repository.create({
       profileId: data.profileId,

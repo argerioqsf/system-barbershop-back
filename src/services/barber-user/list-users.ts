@@ -8,11 +8,11 @@ import {
   ProfileBlockedHour,
   ProfileWorkHour,
   User,
-  DayHour,
 } from '@prisma/client'
 import {
   listAvailableSlots,
   BarberWithHours,
+  AvailableSlot,
 } from '@/utils/barber-availability'
 
 interface ListUsersResponse {
@@ -23,7 +23,7 @@ interface ListUsersResponse {
           blockedHours: ProfileBlockedHour[]
         })
       | null
-    availableSlots: DayHour[]
+    availableSlots: AvailableSlot[]
   })[]
 }
 
@@ -45,7 +45,7 @@ export class ListUsersService {
           u as BarberWithHours,
           this.appointmentRepository,
         ),
-        })),
+      })),
     )
     return { users: withSlots }
   }

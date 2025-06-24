@@ -8,11 +8,11 @@ import {
   ProfileWorkHour,
   Role,
   User,
-  DayHour,
 } from '@prisma/client'
 import {
   listAvailableSlots,
   BarberWithHours,
+  AvailableSlot,
 } from '@/utils/barber-availability'
 
 interface GetUserRequest {
@@ -31,7 +31,7 @@ interface GetUserResponse {
               barberServices: BarberService[]
             })
           | null
-      }) & { availableSlots: DayHour[] })
+      }) & { availableSlots: AvailableSlot[] })
     | null
 }
 

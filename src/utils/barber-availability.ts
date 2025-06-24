@@ -5,7 +5,6 @@ import {
   ProfileBlockedHour,
   ProfileWorkHour,
   User,
-  DayHour,
 } from '@prisma/client'
 import {
   timeToMinutes,
@@ -24,10 +23,17 @@ export type BarberWithHours = User & {
     | null
 }
 
+export interface AvailableSlot {
+  id: string
+  weekDay: number
+  startHour: string
+  endHour: string
+}
+
 export async function listAvailableSlots(
   barber: BarberWithHours,
   appointmentRepo: AppointmentRepository,
-): Promise<DayHour[]> {
+): Promise<AvailableSlot[]> {
   if (!barber.profile) return []
   const workHours = barber.profile.workHours
   if (workHours.length === 0) return []
@@ -55,7 +61,7 @@ export async function listAvailableSlots(
     appMap.set(day, list)
   }
 
-  const result: DayHour[] = []
+  const result: AvailableSlot[] = []
   for (const dh of workHours) {
     const base = [
       { start: timeToMinutes(dh.startHour), end: timeToMinutes(dh.endHour) },
@@ -71,7 +77,7 @@ export async function listAvailableSlots(
         weekDay: dh.weekDay,
         startHour: minutesToTime(r.start),
         endHour: minutesToTime(r.end),
-      } as DayHour)
+      })
     }
   }
   return result
