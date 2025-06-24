@@ -9,8 +9,8 @@ export class InMemoryDayHourRepository implements DayHourRepository {
     const dayHour: DayHour = {
       id: randomUUID(),
       weekDay: data.weekDay as number,
-      startHour: data.startHour as Date,
-      endHour: data.endHour as Date,
+      startHour: data.startHour as string,
+      endHour: data.endHour as string,
     }
     this.items.push(dayHour)
     return dayHour

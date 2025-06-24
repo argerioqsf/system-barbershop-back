@@ -35,8 +35,8 @@ describe('Add profile blocked hour', () => {
   it('blocks hour when in work hours', async () => {
     const { dayHour } = await createDayHour.execute({
       weekDay: 1,
-      startHour: new Date('1970-01-01T08:00:00Z'),
-      endHour: new Date('1970-01-01T12:00:00Z'),
+      startHour: '08:00',
+      endHour: '12:00',
     })
     await addUnitHour.execute({ unitId: 'unit-1', dayHourId: dayHour.id })
     const token = {
@@ -68,8 +68,8 @@ describe('Add profile blocked hour', () => {
   it('throws if hour not in work hours', async () => {
     const { dayHour } = await createDayHour.execute({
       weekDay: 2,
-      startHour: new Date('1970-01-01T09:00:00Z'),
-      endHour: new Date('1970-01-01T12:00:00Z'),
+      startHour: '09:00',
+      endHour: '12:00',
     })
     const token = {
       sub: 'prof-1',
@@ -86,8 +86,8 @@ describe('Add profile blocked hour', () => {
   it('throws when blocking same hour twice', async () => {
     const { dayHour } = await createDayHour.execute({
       weekDay: 3,
-      startHour: new Date('1970-01-01T10:00:00Z'),
-      endHour: new Date('1970-01-01T12:00:00Z'),
+      startHour: '10:00',
+      endHour: '12:00',
     })
     await addUnitHour.execute({ unitId: 'unit-1', dayHourId: dayHour.id })
     const tokenWork = {
