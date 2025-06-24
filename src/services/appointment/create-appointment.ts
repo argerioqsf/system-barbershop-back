@@ -7,7 +7,10 @@ import { BarberNotFoundError } from '../@errors/barber/barber-not-found-error'
 import { BarberDoesNotHaveThisServiceError } from '../@errors/barber/barber-does-not-have-this-service'
 import { UserNotFoundError } from '../@errors/user/user-not-found-error'
 import { DayHourRepository } from '@/repositories/day-hour-repository'
-import { isAppointmentAvailable } from '@/utils/barber-availability'
+import {
+  isAppointmentAvailable,
+  BarberWithHours,
+} from '@/utils/barber-availability'
 import { BarberNotAvailableError } from '../@errors/barber/barber-not-available-error'
 
 interface CreateAppointmentRequest {
@@ -60,7 +63,7 @@ export class CreateAppointmentService {
 
     const duration = durationService ?? 0
     const available = await isAppointmentAvailable(
-      barber as any,
+      barber as BarberWithHours,
       data.date,
       data.hour,
       duration,

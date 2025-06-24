@@ -10,7 +10,10 @@ import {
   ProfileWorkHour,
   User,
 } from '@prisma/client'
-import { countAvailableSlots } from '@/utils/barber-availability'
+import {
+  countAvailableSlots,
+  BarberWithHours,
+} from '@/utils/barber-availability'
 
 interface ListUsersResponse {
   users: (Omit<User, 'password'> & {
@@ -40,11 +43,11 @@ export class ListUsersService {
       users.map(async (u) => ({
         ...u,
         availableSlots: await countAvailableSlots(
-          u as any,
+          u as BarberWithHours,
           this.appointmentRepository,
           this.dayHourRepository,
         ),
-      }))
+      })),
     )
     return { users: withSlots }
   }

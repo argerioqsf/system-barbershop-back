@@ -41,8 +41,7 @@ export async function countAvailableSlots(
   const taken = new Set<string>()
   for (const app of appointments) {
     const start = timeToMinutes(app.hour)
-    const dur =
-      app.durationService ?? app.service.defaultTime ?? 0
+    const dur = app.durationService ?? app.service.defaultTime ?? 0
     const end = start + dur
     const wDay = app.date.getDay()
     for (const slot of slots) {
@@ -71,7 +70,10 @@ export async function isAppointmentAvailable(
   const blocked = new Set(barber.profile.blockedHours.map((b) => b.dayHourId))
   const available = workHours
     .filter((dh) => !blocked.has(dh.id))
-    .map((dh) => ({ start: timeToMinutes(dh.startHour), end: timeToMinutes(dh.endHour) }))
+    .map((dh) => ({
+      start: timeToMinutes(dh.startHour),
+      end: timeToMinutes(dh.endHour),
+    }))
   if (available.length === 0) return false
   const ranges = mergeIntervals(available)
   const start = timeToMinutes(startHour)

@@ -10,7 +10,10 @@ import {
   Role,
   User,
 } from '@prisma/client'
-import { countAvailableSlots } from '@/utils/barber-availability'
+import {
+  countAvailableSlots,
+  BarberWithHours,
+} from '@/utils/barber-availability'
 
 interface GetUserRequest {
   id: string
@@ -18,7 +21,7 @@ interface GetUserRequest {
 
 interface GetUserResponse {
   user:
-    | (User & {
+    | ((User & {
         profile:
           | (Profile & {
               role: Role
@@ -28,7 +31,7 @@ interface GetUserResponse {
               barberServices: BarberService[]
             })
           | null
-      }) & { availableSlots: number }
+      }) & { availableSlots: number })
     | null
 }
 
@@ -44,7 +47,7 @@ export class GetUserService {
     if (!user) return { user: null }
 
     const availableSlots = await countAvailableSlots(
-      user as any,
+      user as BarberWithHours,
       this.appointmentRepository,
       this.dayHourRepository,
     )

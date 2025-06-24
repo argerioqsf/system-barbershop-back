@@ -37,11 +37,19 @@ describe('Create appointment service', () => {
   it('creates appointment', async () => {
     const serviceAppointment = makeService('service-11', 100)
     serviceRepo.services.push({ ...serviceAppointment, defaultTime: 40 })
+    const dh = await dayHourRepo.create({
+      weekDay: 1,
+      startHour: '09:00',
+      endHour: '18:00',
+    })
     const barberWithRel = {
       ...barberUser,
       profile: {
         ...barberProfile,
         barberServices: [makeBarberServiceRel(barberProfile.id, 'service-11')],
+        workHours: [
+          { id: 'wh-cre-1', profileId: barberProfile.id, dayHourId: dh.id },
+        ],
       },
     }
     barberUserRepo.users.push(barberWithRel, defaultClient)
@@ -62,12 +70,20 @@ describe('Create appointment service', () => {
   it('uses barber time when set', async () => {
     const serviceAppointment = makeService('service-22', 100)
     serviceRepo.services.push({ ...serviceAppointment, defaultTime: 30 })
+    const dh = await dayHourRepo.create({
+      weekDay: 2,
+      startHour: '09:00',
+      endHour: '18:00',
+    })
     const barberWithService = {
       ...barberUser,
       profile: {
         ...barberProfile,
         barberServices: [
           makeBarberServiceRel(barberProfile.id, 'service-22', undefined, undefined, 50),
+        ],
+        workHours: [
+          { id: 'wh-cre-2', profileId: barberProfile.id, dayHourId: dh.id },
         ],
       },
     }
@@ -85,7 +101,7 @@ describe('Create appointment service', () => {
 
   it('fails when overlapping appointment', async () => {
     const dh1 = await dayHourRepo.create({
-      weekDay: 1,
+      weekDay: 3,
       startHour: '08:00',
       endHour: '10:00',
     })
@@ -124,7 +140,7 @@ describe('Create appointment service', () => {
 
   it('fails when time blocked', async () => {
     const dh1 = await dayHourRepo.create({
-      weekDay: 2,
+      weekDay: 4,
       startHour: '09:00',
       endHour: '10:00',
     })
