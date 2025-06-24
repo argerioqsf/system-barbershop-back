@@ -173,7 +173,7 @@ describe('Create appointment service', () => {
 
   it('allows scheduling around blocked interval', async () => {
     const dh = await dayHourRepo.create({
-      weekDay: 1,
+      weekDay: 6,
       startHour: '08:00',
       endHour: '12:00',
     })
@@ -243,6 +243,88 @@ describe('Create appointment service', () => {
         date: new Date("2024-01-05T08:30:00"),
       }),
     ).rejects.toThrow("Barber not available")
+  })
+
+  it('throws when service not found', async () => {
+    barberUserRepo.users.push(barberUser, defaultClient)
+    await expect(
+      service.execute({
+        clientId: defaultClient.id,
+        barberId: barberUser.id,
+        serviceId: 'missing',
+        unitId: 'unit-1',
+        date: new Date('2024-01-01T09:00:00'),
+      }),
+    ).rejects.toThrow('Service not found')
+  })
+
+  it('throws when barber not found', async () => {
+    const svc = makeService('svc-err', 100)
+    serviceRepo.services.push({ ...svc, defaultTime: 30 })
+    barberUserRepo.users.push(defaultClient)
+    await expect(
+      service.execute({
+        clientId: defaultClient.id,
+        barberId: 'no',
+        serviceId: 'svc-err',
+        unitId: 'unit-1',
+        date: new Date('2024-01-01T09:00:00'),
+      }),
+    ).rejects.toThrow('Barber not found')
+  })
+
+  it('throws when client not found', async () => {
+    const svc = makeService('svc-err2', 100)
+    serviceRepo.services.push({ ...svc, defaultTime: 30 })
+    barberUserRepo.users.push(barberUser)
+    await expect(
+      service.execute({
+        clientId: 'no',
+        barberId: barberUser.id,
+        serviceId: 'svc-err2',
+        unitId: 'unit-1',
+        date: new Date('2024-01-01T09:00:00'),
+      }),
+    ).rejects.toThrow('User not found')
+  })
+
+  it('throws when barber lacks service', async () => {
+    const svc = makeService('svc-none', 100)
+    serviceRepo.services.push({ ...svc, defaultTime: 30 })
+    barberUserRepo.users.push({ ...barberUser, profile: { ...barberProfile, barberServices: [] } }, defaultClient)
+    await expect(
+      service.execute({
+        clientId: defaultClient.id,
+        barberId: barberUser.id,
+        serviceId: 'svc-none',
+        unitId: 'unit-1',
+        date: new Date('2024-01-01T09:00:00'),
+      }),
+    ).rejects.toThrow('The barber does not have this item linked')
+  })
+
+  it('applies discount when value provided', async () => {
+    const svc = makeService('svc-disc', 100)
+    serviceRepo.services.push({ ...svc, defaultTime: 30 })
+    const dh = await dayHourRepo.create({ weekDay: 1, startHour: '09:00', endHour: '10:00' })
+    const barberWithService = {
+      ...barberUser,
+      profile: {
+        ...barberProfile,
+        barberServices: [makeBarberServiceRel(barberProfile.id, 'svc-disc')],
+        workHours: [{ id: 'wh-disc', profileId: barberProfile.id, dayHourId: dh.id }],
+      },
+    }
+    barberUserRepo.users.push(barberWithService, defaultClient)
+    const res = await service.execute({
+      clientId: defaultClient.id,
+      barberId: barberUser.id,
+      serviceId: 'svc-disc',
+      unitId: 'unit-1',
+      date: new Date('2024-01-01T09:00:00'),
+      value: 80,
+    })
+    expect(res.appointment.discount).toBe(20)
   })
 
 })
