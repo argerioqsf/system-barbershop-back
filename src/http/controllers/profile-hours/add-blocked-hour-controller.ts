@@ -7,13 +7,17 @@ export const AddBlockedHourController = async (
   reply: FastifyReply,
 ) => {
   const paramsSchema = z.object({ profileId: z.string() })
-  const bodySchema = z.object({ dayHourId: z.string() })
+  const bodySchema = z.object({
+    startHour: z.coerce.date(),
+    endHour: z.coerce.date(),
+  })
   const { profileId } = paramsSchema.parse(request.params)
-  const { dayHourId } = bodySchema.parse(request.body)
+  const { startHour, endHour } = bodySchema.parse(request.body)
   const service = makeAddProfileBlockedHourService()
   const { blocked } = await service.execute(request.user, {
     profileId,
-    dayHourId,
+    startHour,
+    endHour,
   })
   return reply.status(201).send(blocked)
 }

@@ -598,7 +598,6 @@ export const appointment1 = {
   client: {},
   barber: {},
   date: new Date(),
-  hour: '10',
   status: 'SCHEDULED',
   durationService: null,
   discount: 0,
@@ -613,7 +612,6 @@ export const appointment2 = {
   client: {},
   barber: {},
   date: new Date(),
-  hour: '11',
   status: 'SCHEDULED',
   durationService: null,
   discount: 0,
@@ -651,7 +649,6 @@ export function makeAppointment(
     discount?: number
     value?: number
     date?: Date
-    hour?: string
     durationService?: number | null
     status?: string
   } = {},
@@ -663,7 +660,6 @@ export function makeAppointment(
     serviceId: service.id,
     unitId: defaultUnit.id,
     date: options.date ?? new Date(),
-    hour: options.hour ?? '09:00',
     status: (options.status as any) ?? 'SCHEDULED',
     durationService: options.durationService ?? null,
     observation: null,

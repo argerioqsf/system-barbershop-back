@@ -74,7 +74,7 @@ describe('Get user service', () => {
     ]
     repo.users.push({ ...user, profile })
     const srv = makeService('srv-1', 100)
-    const app = makeAppointment('ap-1', srv, { date: new Date('2024-01-01'), hour: '09:00', durationService: 60 })
+    const app = makeAppointment('ap-1', srv, { date: new Date('2024-01-01T09:00:00'), durationService: 60 })
     appointmentRepo.appointments.push({ ...app, barberId: user.id, barber: user })
     const resSlots = await service.execute({ id: user.id })
     expect(resSlots.user?.availableSlots.map((s) => s.id)).toEqual([dh2.id])

@@ -58,8 +58,7 @@ describe('Create appointment service', () => {
       barberId: barberUser.id,
       serviceId: 'service-11',
       unitId: 'unit-1',
-      date: new Date('2024-01-01'),
-      hour: '10:00',
+      date: new Date('2024-01-01T10:00:00'),
     })
     expect(repo.appointments).toHaveLength(1)
     expect(res.appointment.clientId).toBe(defaultClient.id)
@@ -93,8 +92,7 @@ describe('Create appointment service', () => {
       barberId: barberUser.id,
       serviceId: 'service-22',
       unitId: 'unit-1',
-      date: new Date('2024-01-02'),
-      hour: '12:00',
+      date: new Date('2024-01-02T12:00:00'),
     })
     expect(res.appointment.durationService).toBe(50)
   })
@@ -122,8 +120,7 @@ describe('Create appointment service', () => {
       barberId: barberUser.id,
       serviceId: 'service-33',
       unitId: 'unit-1',
-      date: new Date('2024-01-03'),
-      hour: '08:00',
+      date: new Date('2024-01-03T08:00:00'),
     })
 
     await expect(
@@ -132,8 +129,7 @@ describe('Create appointment service', () => {
         barberId: barberUser.id,
         serviceId: 'service-33',
         unitId: 'unit-1',
-        date: new Date('2024-01-03'),
-        hour: '08:30',
+        date: new Date('2024-01-03T08:30:00'),
       }),
     ).rejects.toThrow('Barber not available')
   })
@@ -153,7 +149,12 @@ describe('Create appointment service', () => {
         barberServices: [makeBarberServiceRel(barberProfile.id, 'service-44')],
         workHours: [{ id: 'wh2', profileId: barberProfile.id, dayHourId: dh1.id }],
         blockedHours: [
-          { id: 'bh1', profileId: barberProfile.id, dayHourId: dh1.id },
+          {
+            id: 'bh1',
+            profileId: barberProfile.id,
+            startHour: new Date('2024-01-04T09:00:00'),
+            endHour: new Date('2024-01-04T10:00:00'),
+          },
         ],
       },
     }
@@ -165,8 +166,7 @@ describe('Create appointment service', () => {
         barberId: barberUser.id,
         serviceId: 'service-44',
         unitId: 'unit-1',
-        date: new Date('2024-01-04'),
-        hour: '09:00',
+        date: new Date('2024-01-04T09:00:00'),
       }),
     ).rejects.toThrow('Barber not available')
   })
@@ -194,8 +194,7 @@ describe('Create appointment service', () => {
         barberId: barberUser.id,
         serviceId: "service-55",
         unitId: "unit-1",
-        date: new Date("2024-01-05"),
-        hour: "08:30",
+        date: new Date("2024-01-05T08:30:00"),
       }),
     ).rejects.toThrow("Barber not available")
   })

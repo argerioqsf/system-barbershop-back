@@ -19,7 +19,6 @@ interface CreateAppointmentRequest {
   serviceId: string
   unitId: string
   date: Date
-  hour: string
   observation?: string
   discount?: number
   value?: number
@@ -65,7 +64,6 @@ export class CreateAppointmentService {
     const available = await isAppointmentAvailable(
       barber as BarberWithHours,
       data.date,
-      data.hour,
       duration,
       this.repository,
       this.dayHourRepository,
@@ -83,7 +81,6 @@ export class CreateAppointmentService {
       service: { connect: { id: data.serviceId } },
       unit: { connect: { id: data.unitId } },
       date: data.date,
-      hour: data.hour,
       status: 'SCHEDULED',
       durationService,
       observation: data.observation,

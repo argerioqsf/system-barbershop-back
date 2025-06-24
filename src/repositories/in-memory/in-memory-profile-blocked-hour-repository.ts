@@ -13,7 +13,8 @@ export class InMemoryProfileBlockedHourRepository
     const item: ProfileBlockedHour = {
       id: randomUUID(),
       profileId: data.profileId,
-      dayHourId: data.dayHourId,
+      startHour: data.startHour as Date,
+      endHour: data.endHour as Date,
     }
     this.items.push(item)
     return item

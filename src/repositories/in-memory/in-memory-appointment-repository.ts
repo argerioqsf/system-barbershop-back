@@ -21,7 +21,6 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
       serviceId: (data.service as { connect: { id: string } }).connect.id,
       unitId: (data.unit as { connect: { id: string } }).connect.id,
       date: data.date as Date,
-      hour: data.hour as string,
       status: data.status,
       durationService: data.durationService ?? null,
       observation: data.observation ?? null,

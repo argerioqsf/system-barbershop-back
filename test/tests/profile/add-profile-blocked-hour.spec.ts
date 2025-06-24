@@ -29,7 +29,11 @@ describe('Add profile blocked hour', () => {
     createDayHour = new CreateDayHourService(dayHourRepo)
     addUnitHour = new AddUnitDayHourService(unitRelRepo)
     addWorkHour = new AddProfileWorkHourService(workRepo)
-    addBlocked = new AddProfileBlockedHourService(blockedRepo, workRepo)
+    addBlocked = new AddProfileBlockedHourService(
+      blockedRepo,
+      workRepo,
+      dayHourRepo,
+    )
   })
 
   it('blocks hour when in work hours', async () => {
@@ -59,9 +63,10 @@ describe('Add profile blocked hour', () => {
     })
     const res = await addBlocked.execute(tokenBlock, {
       profileId: 'prof-1',
-      dayHourId: dayHour.id,
+      startHour: new Date('2024-01-01T08:00:00'),
+      endHour: new Date('2024-01-01T12:00:00'),
     })
-    expect(res.blocked.dayHourId).toBe(dayHour.id)
+    expect(res.blocked.startHour.getHours()).toBe(8)
     expect(blockedRepo.items).toHaveLength(1)
   })
 
@@ -79,7 +84,11 @@ describe('Add profile blocked hour', () => {
       permissions: [PermissionName.MANAGE_SELF_BLOCKED_HOURS],
     }
     await expect(
-      addBlocked.execute(token, { profileId: 'prof-1', dayHourId: dayHour.id }),
+      addBlocked.execute(token, {
+        profileId: 'prof-1',
+        startHour: new Date('2024-01-02T09:00:00'),
+        endHour: new Date('2024-01-02T12:00:00'),
+      }),
     ).rejects.toThrow()
   })
 
@@ -110,13 +119,15 @@ describe('Add profile blocked hour', () => {
     })
     await addBlocked.execute(tokenBlock, {
       profileId: 'prof-2',
-      dayHourId: dayHour.id,
+      startHour: new Date('2024-01-03T10:00:00'),
+      endHour: new Date('2024-01-03T12:00:00'),
     })
 
     await expect(
       addBlocked.execute(tokenBlock, {
         profileId: 'prof-2',
-        dayHourId: dayHour.id,
+        startHour: new Date('2024-01-03T10:00:00'),
+        endHour: new Date('2024-01-03T12:00:00'),
       }),
     ).rejects.toThrow()
   })

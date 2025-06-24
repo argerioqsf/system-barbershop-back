@@ -179,7 +179,6 @@ model Appointment {
   serviceId String
   unitId    String
   date      DateTime
-  hour      String
   status    AppointmentStatus @default(SCHEDULED)
   durationService Int?
   observation String?
@@ -456,10 +455,10 @@ model ProfileWorkHour {
 model ProfileBlockedHour {
   id        String   @id @default(uuid())
   profileId String
-  dayHourId String
+  startHour DateTime
+  endHour   DateTime
 
   profile Profile @relation(fields: [profileId], references: [id])
-  dayHour DayHour @relation(fields: [dayHourId], references: [id])
 
   @@map("profile_blocked_hours")
 }

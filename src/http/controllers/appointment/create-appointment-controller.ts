@@ -13,7 +13,6 @@ export const CreateAppointmentController = async (
     serviceId: z.string(),
     date: z.coerce.date(),
     unitId: z.string().optional(),
-    hour: z.string(),
     value: z.number(),
   })
 
@@ -26,7 +25,6 @@ export const CreateAppointmentController = async (
     barberId: data.barberId,
     serviceId: data.serviceId,
     date: data.date,
-    hour: data.hour,
     value: data.value,
     unitId,
   })

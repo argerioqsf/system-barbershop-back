@@ -73,7 +73,7 @@ describe('List users service', () => {
     ], blockedHours: [] }
     repo.users = [{ ...u1, profile }, u2]
     const srv = makeService('srv-1', 100)
-    const app = makeAppointment('ap-1', srv, { date: new Date('2024-01-01'), hour: '09:00', durationService: 60 })
+    const app = makeAppointment('ap-1', srv, { date: new Date('2024-01-01T09:00:00'), durationService: 60 })
     appointmentRepo.appointments.push({ ...app, barberId: u1.id, barber: u1 })
     const res = await service.execute({
       sub: '1',
