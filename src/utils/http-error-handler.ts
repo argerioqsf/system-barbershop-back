@@ -12,7 +12,7 @@ import { CashRegisterNotOpenedError } from '@/services/@errors/cash-register/cas
 import { CashRegisterAlreadyOpenError } from '@/services/@errors/cash-register/cash-register-already-open-error'
 import { CouponNotFoundError } from '@/services/@errors/coupon/coupon-not-found-error'
 import { InsufficientStockError } from '@/services/@errors/product/insufficient-stock-error'
-import { ItemNeedsServiceOrProductError } from '@/services/@errors/sale/item-needs-service-or-product-error'
+import { ItemNeedsServiceOrProductOrAppointmentError } from '@/services/@errors/sale/item-needs-service-or-product-error'
 import { NegativeValuesNotAllowedError } from '@/services/@errors/transaction/negative-values-not-allowed-error'
 import { InsufficientBalanceError } from '@/services/@errors/transaction/insufficient-balance-error'
 import { WithdrawalGreaterThanUnitBalanceError } from '@/services/@errors/transaction/withdrawal-greater-than-unit-balance-error'
@@ -26,6 +26,7 @@ import { BarberProfileNotFoundError } from '@/services/@errors/profile/barber-pr
 import { OwnerNotFoundError } from '@/services/@errors/organization/owner-not-found-error'
 import { UnitNotFromOrganizationError } from '@/services/users/set-user-unit'
 import { FastifyReply } from 'fastify'
+import { ItemPriceGreaterError } from '@/services/@errors/sale/Item-price-greater-error'
 
 export function mapErrorToStatus(error: Error): number {
   if (
@@ -39,7 +40,8 @@ export function mapErrorToStatus(error: Error): number {
     error instanceof InsufficientBalanceError ||
     error instanceof WithdrawalGreaterThanUnitBalanceError ||
     error instanceof InsufficientStockError ||
-    error instanceof ItemNeedsServiceOrProductError
+    error instanceof ItemNeedsServiceOrProductOrAppointmentError ||
+    error instanceof ItemPriceGreaterError
   ) {
     return 400
   }

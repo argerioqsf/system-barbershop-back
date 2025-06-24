@@ -5,6 +5,13 @@ import {
   PaymentStatus,
   CommissionCalcType,
   PermissionName,
+  PermissionCategory,
+  Profile,
+  Permission,
+  ProfileWorkHour,
+  ProfileBlockedHour,
+  BarberService,
+  Role,
 } from '@prisma/client'
 import { CreateSaleService } from '../../../src/services/sale/create-sale'
 import { CreateTransactionService } from '../../../src/services/transaction/create-transaction'
@@ -106,7 +113,13 @@ describe('Create sale service', () => {
   let ctx: ReturnType<typeof setup>
   beforeEach(() => {
     ctx = setup()
-    const profile = {
+    const profile: Profile & {
+      permissions: Permission[]
+      workHours: ProfileWorkHour[]
+      blockedHours: ProfileBlockedHour[]
+      barberServices: BarberService[]
+      role: Role
+    } = {
       id: 'profile-user',
       phone: '',
       cpf: '',
@@ -118,8 +131,17 @@ describe('Create sale service', () => {
       totalBalance: 0,
       userId: defaultUser.id,
       createdAt: new Date(),
-      permissions: [{ id: 'perm-sale', name: PermissionName.CREATE_SALE } as any],
-      role: { id: 'role-1', name: 'ADMIN', unitId: 'unit-1' } as any,
+      permissions: [
+        {
+          id: 'perm-sale',
+          name: PermissionName.CREATE_SALE,
+          category: PermissionCategory.SALE,
+        },
+      ],
+      role: { id: 'role-1', name: 'ADMIN', unitId: 'unit-1' },
+      workHours: [],
+      blockedHours: [],
+      barberServices: [],
     }
     ctx.barberRepo.users.push(
       { ...defaultUser, profile },
@@ -645,7 +667,9 @@ describe('Create sale service', () => {
       ctx.createSale.execute({
         userId: defaultUser.id,
         method: PaymentMethod.CASH,
-        items: [{ productId: product.id, quantity: 1, barberId: barberUser.id }],
+        items: [
+          { productId: product.id, quantity: 1, barberId: barberUser.id },
+        ],
         clientId: defaultClient.id,
       }),
     ).rejects.toThrow('Permission denied')
@@ -662,7 +686,13 @@ describe('Create sale service', () => {
       ...barberUser,
       profile: {
         ...barberProfile,
-        permissions: [{ id: 'perm', name: PermissionName.SELL_PRODUCT }],
+        permissions: [
+          {
+            id: 'perm',
+            name: PermissionName.SELL_PRODUCT,
+            category: PermissionCategory.PRODUCT,
+          },
+        ],
       },
     }
 
@@ -699,13 +729,12 @@ describe('Create sale service', () => {
     const res = await ctx.createSale.execute({
       userId: defaultUser.id,
       method: PaymentMethod.CASH,
-      items: [],
+      items: [{ appointmentId: appointment.id, quantity: 1 }],
       clientId: defaultClient.id,
-      appointmentId: appointment.id,
     })
 
     expect(res.sale.items).toHaveLength(1)
-    expect(res.sale.items[0].serviceId).toBe(service.id)
+    expect(res.sale.items[0].appointmentId).toBe(appointment.id)
     expect(res.sale.total).toBe(40)
   })
 
@@ -730,9 +759,8 @@ describe('Create sale service', () => {
     await ctx.createSale.execute({
       userId: defaultUser.id,
       method: PaymentMethod.CASH,
-      items: [],
+      items: [{ appointmentId: appointment.id, quantity: 1 }],
       clientId: defaultClient.id,
-      appointmentId: appointment.id,
     })
 
     await expect(
@@ -760,15 +788,14 @@ describe('Create sale service', () => {
       unit: { connect: { id: 'unit-1' } },
       date: new Date('2024-03-01'),
       hour: '08:00',
-      discount: 20,
+      value: 60,
     })
 
     const res = await ctx.createSale.execute({
       userId: defaultUser.id,
       method: PaymentMethod.CASH,
-      items: [],
+      items: [{ appointmentId: appointment.id, quantity: 1 }],
       clientId: defaultClient.id,
-      appointmentId: appointment.id,
     })
 
     expect(res.sale.total).toBe(60)
@@ -789,17 +816,17 @@ describe('Create sale service', () => {
       unit: { connect: { id: 'unit-1' } },
       date: new Date('2024-04-01'),
       hour: '12:00',
+      value: 40,
     })
 
     const res = await ctx.createSale.execute({
       userId: defaultUser.id,
       method: PaymentMethod.CASH,
-      items: [],
+      items: [{ appointmentId: appointment.id, quantity: 1 }],
       clientId: defaultClient.id,
-      appointmentId: appointment.id,
     })
 
-    expect(res.sale.total).toBe(70)
+    expect(res.sale.total).toBe(40)
     expect(res.sale.items[0].appointmentId).toBe(appointment.id)
   })
 })

@@ -7,6 +7,7 @@ import {
   Role,
   Unit,
   User,
+  BarberService,
 } from '@prisma/client'
 
 export interface BarberUsersRepository {
@@ -42,6 +43,7 @@ export interface BarberUsersRepository {
               permissions: Permission[]
               workHours: ProfileWorkHour[]
               blockedHours: ProfileBlockedHour[]
+              barberServices: BarberService[]
             })
           | null
         unit: Unit | null

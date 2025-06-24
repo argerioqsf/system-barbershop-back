@@ -22,7 +22,7 @@ import { CouponNotFromUserUnitError } from '../@errors/coupon/coupon-not-from-us
 import { UnitRepository } from '@/repositories/unit-repository'
 import { distributeProfits } from './utils/profit-distribution'
 import { calculateBarberCommission } from './utils/barber-commission'
-import { ItemNeedsServiceOrProductError } from '../@errors/sale/item-needs-service-or-product-error'
+import { ItemNeedsServiceOrProductOrAppointmentError } from '../@errors/sale/item-needs-service-or-product-error'
 import { ServiceNotFoundError } from '../@errors/service/service-not-found-error'
 import { ProductNotFoundError } from '../@errors/product/product-not-found-error'
 import { InsufficientStockError } from '../@errors/product/insufficient-stock-error'
@@ -47,6 +47,7 @@ import {
 } from '@/repositories/appointment-repository'
 import { AppointmentAlreadyLinkedError } from '../@errors/appointment/appointment-already-linked-error'
 import { AppointmentNotFoundError } from '../@errors/appointment/appointment-not-found-error'
+import { ItemPriceGreaterError } from '../@errors/sale/Item-price-greater-error'
 
 export class CreateSaleService {
   constructor(
@@ -70,8 +71,13 @@ export class CreateSaleService {
     userUnitId: string,
     productsToUpdate: { id: string; quantity: number }[],
   ): Promise<TempItems> {
-    if ((item.serviceId ? 1 : 0) + (item.productId ? 1 : 0) !== 1) {
-      throw new ItemNeedsServiceOrProductError()
+    if (
+      (item.serviceId ? 1 : 0) +
+        (item.productId ? 1 : 0) +
+        (item.appointmentId ? 1 : 0) !==
+      1
+    ) {
+      throw new ItemNeedsServiceOrProductOrAppointmentError()
     }
 
     let basePrice = 0
@@ -82,6 +88,7 @@ export class CreateSaleService {
     let service: Service | null = null
     let product: Product | null = null
     let appointment: DetailedAppointment | null = null
+    let barberId: string | undefined = item.barberId
 
     if (item.serviceId) {
       service = await this.serviceRepository.findById(item.serviceId)
@@ -105,12 +112,14 @@ export class CreateSaleService {
       appointment = await this.appointmentRepository.findById(
         item.appointmentId,
       )
+      if (appointment?.saleItem) throw new AppointmentAlreadyLinkedError()
       if (!appointment) throw new AppointmentNotFoundError()
       if (appointment.unitId !== userUnitId) {
         throw new ServiceNotFromUserUnitError()
       }
       basePrice = appointment.value ?? appointment.service.price
       dataItem.appointment = { connect: { id: item.appointmentId } }
+      barberId = barberId ?? appointment.barberId
     }
 
     const price = basePrice
@@ -121,8 +130,8 @@ export class CreateSaleService {
     let barberCommission: number | undefined
     let relation: BarberService | BarberProduct | null | undefined = null
 
-    if (item.barberId) {
-      const barber = await this.barberUserRepository.findById(item.barberId)
+    if (barberId) {
+      const barber = await this.barberUserRepository.findById(barberId)
       if (!barber) throw new BarberNotFoundError()
       if (!barber.profile) throw new ProfileNotFoundError()
       if (barber && barber.unitId !== userUnitId) {
@@ -138,9 +147,7 @@ export class CreateSaleService {
           barber.profile.id,
           service.id,
         )
-      }
-
-      if (product) {
+      } else if (product) {
         await assertPermission(
           [PermissionName.SELL_PRODUCT],
           barber.profile.permissions?.map((p) => p.name) ?? [],
@@ -149,9 +156,20 @@ export class CreateSaleService {
           barber.profile.id,
           product.id,
         )
+      } else if (appointment) {
+        await assertPermission(
+          [PermissionName.SELL_APPOINTMENT],
+          barber.profile.permissions?.map((p) => p.name) ?? [],
+        )
+        relation = await this.barberServiceRepository.findByProfileService(
+          barber.profile.id,
+          appointment.serviceId,
+        )
       }
 
-      const selectedItem = service ?? product
+      const selectedItem =
+        service ?? product ?? (appointment ? appointment?.service : null)
+
       barberCommission = calculateBarberCommission(
         selectedItem,
         barber?.profile,
@@ -176,7 +194,7 @@ export class CreateSaleService {
       porcentagemBarbeiro: barberCommission,
       data: {
         ...dataItem,
-        barber: item.barberId ? { connect: { id: item.barberId } } : undefined,
+        barber: barberId ? { connect: { id: barberId } } : undefined,
         coupon: resultLogicSalesCoupons.couponRel,
       },
     }
@@ -198,6 +216,8 @@ export class CreateSaleService {
         discount = basePrice - price
         discountType = DiscountType.VALUE
         ownDiscount = true
+      } else {
+        throw new ItemPriceGreaterError()
       }
     } else if (item.couponCode) {
       const coupon = await this.couponRepository.findByCode(item.couponCode)
@@ -236,8 +256,6 @@ export class CreateSaleService {
     const affectedTotal = items
       .filter((i) => !i.ownDiscount)
       .reduce((acc, i) => acc + i.price, 0)
-
-      appointment: temp.data.appointment,
     const coupon = await this.couponRepository.findByCode(couponCode)
     if (!coupon) throw new CouponNotFoundError()
     if (coupon.unitId !== userUnitId) {
@@ -276,6 +294,7 @@ export class CreateSaleService {
       price: temp.price,
       discount: temp.discount,
       discountType: temp.discountType,
+      appointment: temp.data.appointment,
       porcentagemBarbeiro: temp.porcentagemBarbeiro ?? null,
     }))
   }

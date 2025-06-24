@@ -16,6 +16,9 @@ import {
   BarberService,
   CommissionCalcType,
   PermissionName,
+  DayHour,
+  ProfileWorkHour,
+  ProfileBlockedHour,
 } from '@prisma/client'
 
 export const defaultUser = {
@@ -43,6 +46,7 @@ export const defaulSale: Sale = {
   total: 20,
   method: 'CASH',
   paymentStatus: 'PAID',
+  observation: '',
 }
 
 export const defaultClient = {
@@ -59,8 +63,16 @@ export const defaultClient = {
   profile: null,
 }
 
-const p1 = makePermission('p1', 'SELL_SERVICE')
-export const barberProfile: Profile & { permissions: Permission[] } = {
+const p1 = makePermission('p1', PermissionName.SELL_SERVICE)
+const p2 = makePermission('p1', PermissionName.SELL_APPOINTMENT)
+const r1 = makeRole()
+export const barberProfile: Profile & {
+  permissions: Permission[]
+  workHours: ProfileWorkHour[]
+  blockedHours: ProfileBlockedHour[]
+  barberServices: BarberService[]
+  role: Role
+} = {
   id: 'profile-barber',
   phone: '',
   cpf: '',
@@ -72,7 +84,11 @@ export const barberProfile: Profile & { permissions: Permission[] } = {
   totalBalance: 0,
   userId: 'barber-1',
   createdAt: new Date(),
-  permissions: [p1],
+  permissions: [p1, p2],
+  workHours: [],
+  blockedHours: [],
+  barberServices: [],
+  role: r1,
 }
 
 export const barberUser = {
@@ -84,6 +100,8 @@ export const barberUser = {
   organizationId: 'org-1',
   unitId: 'unit-1',
   createdAt: new Date(),
+  versionToken: 1,
+  versionTokenInvalidate: 0,
   profile: barberProfile,
 }
 
@@ -143,6 +161,7 @@ export function makeProduct(id: string, price = 50, quantity = 5): Product {
     cost: 0,
     price,
     unitId: 'unit-1',
+    commissionPercentage: 0,
   }
 }
 
@@ -180,6 +199,7 @@ export const defaultUnit: Unit = {
   organizationId: 'org-1',
   totalBalance: 0,
   allowsLoan: false,
+  slotDuration: 30,
 }
 
 export const defaultProfile: Profile & { permissions: Permission[] } = {
@@ -201,7 +221,12 @@ export function makeProfile(
   id: string,
   userId: string,
   balance = 0,
-): Profile & { user: Omit<User, 'password'>; permissions: Permission[] } {
+): Profile & {
+  user: Omit<User, 'password'>
+  permissions: Permission[]
+  workHours: DayHour[]
+  blockedHours: DayHour[]
+} {
   return {
     id,
     phone: '',
@@ -248,7 +273,15 @@ export function makeUnit(
   slug = 'unit',
   organizationId = 'org-1',
 ): Unit {
-  return { id, name, slug, organizationId, totalBalance: 0, allowsLoan: false }
+  return {
+    id,
+    name,
+    slug,
+    organizationId,
+    totalBalance: 0,
+    allowsLoan: false,
+    slotDuration: 30,
+  }
 }
 
 export function makeSale(
@@ -491,7 +524,12 @@ export function makeServiceWithCommission(
 export function makeAppointment(
   id: string,
   service: Service,
-  options: { discount?: number; value?: number; date?: Date; hour?: string } = {},
+  options: {
+    discount?: number
+    value?: number
+    date?: Date
+    hour?: string
+  } = {},
 ): any {
   return {
     id,

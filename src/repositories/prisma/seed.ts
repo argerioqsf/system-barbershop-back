@@ -47,6 +47,10 @@ async function main() {
     { name: PermissionName.LIST_USER_UNIT, category: PermissionCategory.USER },
     { name: PermissionName.LIST_USER_ORG, category: PermissionCategory.USER },
     {
+      name: PermissionName.SELL_APPOINTMENT,
+      category: PermissionCategory.APPOINTMENT,
+    },
+    {
       name: PermissionName.UPDATE_USER_ADMIN,
       category: PermissionCategory.USER,
     },
