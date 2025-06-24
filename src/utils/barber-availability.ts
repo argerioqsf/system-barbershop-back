@@ -31,7 +31,8 @@ export async function listAvailableSlots(
   const workHours = await dayHourRepo.findMany({ id: { in: workIds } })
   const blocked = new Set(
     barber.profile.blockedHours.map(
-      (b) => `${timeToMinutes(b.startHour)}-${timeToMinutes(b.endHour)}-${b.startHour.getDay()}`,
+      (b) =>
+        `${timeToMinutes(b.startHour)}-${timeToMinutes(b.endHour)}-${b.startHour.getDay()}`,
     ),
   )
   const availableHours = workHours.filter(
@@ -78,7 +79,9 @@ export async function isAppointmentAvailable(
   if (workIds.length === 0) return false
   const workHours = await dayHourRepo.findMany({ id: { in: workIds }, weekDay })
   const blockedHours = barber.profile.blockedHours.filter(
-    (b) => b.startHour.getDay() === weekDay && b.startHour.toDateString() === startTime.toDateString(),
+    (b) =>
+      b.startHour.getDay() === weekDay &&
+      b.startHour.toDateString() === startTime.toDateString(),
   )
   const blockedIntervals = blockedHours.map((b) => ({
     start: timeToMinutes(b.startHour),
@@ -89,8 +92,11 @@ export async function isAppointmentAvailable(
       start: timeToMinutes(dh.startHour),
       end: timeToMinutes(dh.endHour),
     }))
-    .filter((range) =>
-      !blockedIntervals.some((b) => intervalsOverlap(range.start, range.end, b.start, b.end)),
+    .filter(
+      (range) =>
+        !blockedIntervals.some((b) =>
+          intervalsOverlap(range.start, range.end, b.start, b.end),
+        ),
     )
   if (available.length === 0) return false
   const ranges = mergeIntervals(available)
