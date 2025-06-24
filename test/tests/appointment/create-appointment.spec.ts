@@ -170,4 +170,30 @@ describe('Create appointment service', () => {
       }),
     ).rejects.toThrow('Barber not available')
   })
+  it('fails when outside working hours', async () => {
+    const dh = await dayHourRepo.create({ weekDay: 5, startHour: "09:00", endHour: "10:00" })
+    const serviceAppointment = makeService("service-55", 100)
+    serviceRepo.services.push({ ...serviceAppointment, defaultTime: 30 })
+    const barberWithService = {
+      ...barberUser,
+      profile: {
+        ...barberProfile,
+        barberServices: [makeBarberServiceRel(barberProfile.id, "service-55")],
+        workHours: [{ id: "wh-out", profileId: barberProfile.id, dayHourId: dh.id }],
+        blockedHours: [],
+      },
+    }
+    barberUserRepo.users.push(barberWithService, defaultClient)
+    await expect(
+      service.execute({
+        clientId: defaultClient.id,
+        barberId: barberUser.id,
+        serviceId: "service-55",
+        unitId: "unit-1",
+        date: new Date("2024-01-05"),
+        hour: "08:30",
+      }),
+    ).rejects.toThrow("Barber not available")
+  })
+
 })

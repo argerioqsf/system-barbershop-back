@@ -7,6 +7,7 @@ import {
 } from '../../helpers/fake-repositories'
 import { makeUser } from '../../factories/make-user.factory'
 import { makeProfile } from '../../factories/make-profile.factory'
+import { makeService, makeAppointment } from "../../helpers/default-values"
 import {
   BarberService,
   Permission,
@@ -52,6 +53,23 @@ describe('Get user service', () => {
     expect(res.user?.profile?.workHours).toBeDefined()
     expect(res.user?.profile?.blockedHours).toBeDefined()
     expect(res.user?.availableSlots).toEqual([])
+  })
+
+  it('computes available slots', async () => {
+    const user = makeUser()
+    const profile = { ...makeProfile({ userId: user.id }), workHours: [], blockedHours: [], barberServices: [] }
+    const dh1 = await dayHourRepo.create({ weekDay: 1, startHour: '09:00', endHour: '10:00' })
+    const dh2 = await dayHourRepo.create({ weekDay: 1, startHour: '10:00', endHour: '11:00' })
+    profile.workHours = [
+      { id: 'wh1', profileId: profile.id, dayHourId: dh1.id },
+      { id: 'wh2', profileId: profile.id, dayHourId: dh2.id },
+    ]
+    repo.users.push({ ...user, profile })
+    const srv = makeService('srv-1', 100)
+    const app = makeAppointment('ap-1', srv, { date: new Date('2024-01-01'), hour: '09:00', durationService: 60 })
+    appointmentRepo.appointments.push({ ...app, barberId: user.id, barber: user })
+    const resSlots = await service.execute({ id: user.id })
+    expect(resSlots.user?.availableSlots.map((s) => s.id)).toEqual([dh2.id])
   })
 
   it('returns null when not found', async () => {
