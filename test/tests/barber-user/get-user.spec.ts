@@ -82,6 +82,15 @@ describe('Get user service', () => {
     ])
   })
 
+  it('returns user without profile', async () => {
+    const user = makeUser()
+    repo.users.push({ ...user, profile: null })
+    const res = await service.execute({ id: user.id })
+    expect(res.user?.id).toBe(user.id)
+    expect(res.user?.profile).toBeNull()
+    expect(res.user?.availableSlots).toEqual([])
+  })
+
   it('returns null when not found', async () => {
     const res = await service.execute({ id: 'no' })
     expect(res.user).toBeNull()

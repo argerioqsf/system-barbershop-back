@@ -39,7 +39,10 @@ export async function listAvailableSlots(
   for (const b of barber.profile.blockedHours) {
     const day = b.startHour.getDay()
     const list = blockedMap.get(day) ?? []
-    list.push({ start: timeToMinutes(b.startHour), end: timeToMinutes(b.endHour) })
+    list.push({
+      start: timeToMinutes(b.startHour),
+      end: timeToMinutes(b.endHour),
+    })
     blockedMap.set(day, list)
   }
 
@@ -57,7 +60,9 @@ export async function listAvailableSlots(
 
   const result: DayHour[] = []
   for (const dh of workHours) {
-    const base = [{ start: timeToMinutes(dh.startHour), end: timeToMinutes(dh.endHour) }]
+    const base = [
+      { start: timeToMinutes(dh.startHour), end: timeToMinutes(dh.endHour) },
+    ]
     const blocked = blockedMap.get(dh.weekDay) ?? []
     const apps = appMap.get(dh.weekDay) ?? []
     let ranges = subtractIntervals(base, blocked)

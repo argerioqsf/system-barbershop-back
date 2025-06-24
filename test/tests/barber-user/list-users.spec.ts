@@ -86,6 +86,17 @@ describe('List users service', () => {
       expect.objectContaining({ startHour: '10:00', endHour: '11:00' }),
     ])
   })
+
+  it('returns empty list when no users', async () => {
+    repo.users = []
+    const res = await service.execute({
+      sub: '1',
+      role: 'ADMIN',
+      unitId: 'unit-1',
+      organizationId: 'org-1',
+    })
+    expect(res.users).toHaveLength(0)
+  })
   it('throws if user not found', async () => {
     await expect(
       service.execute({
