@@ -423,7 +423,6 @@ model DayHour {
   endHour     String
   unitDays    UnitDayHour[]
   workHours   ProfileWorkHour[]
-  blockedHours ProfileBlockedHour[]
 
   @@map("day_hours")
 }

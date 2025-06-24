@@ -19,6 +19,13 @@ export class InMemoryDayHourRepository implements DayHourRepository {
   async findMany(where: Prisma.DayHourWhereInput = {}): Promise<DayHour[]> {
     return this.items.filter((dh) => {
       if (where.weekDay && dh.weekDay !== where.weekDay) return false
+      if (where.id) {
+        if (typeof where.id === 'object' && 'in' in where.id) {
+          if (!where.id.in?.includes(dh.id)) return false
+        } else if (where.id !== dh.id) {
+          return false
+        }
+      }
       return true
     })
   }

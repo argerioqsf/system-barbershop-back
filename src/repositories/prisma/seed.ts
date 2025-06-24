@@ -403,7 +403,11 @@ async function main() {
       ],
     })
     await prisma.profileBlockedHour.create({
-      data: { profileId: barber.profile.id, dayHourId: dayHour2.id },
+      data: {
+        profileId: barber.profile.id,
+        startHour: new Date(new Date().setHours(9, 0, 0, 0)),
+        endHour: new Date(new Date().setHours(10, 0, 0, 0)),
+      },
     })
   }
 
