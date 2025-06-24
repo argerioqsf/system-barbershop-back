@@ -3,6 +3,14 @@ import { GetUserService } from '../../../src/services/barber-user/get-user'
 import { InMemoryBarberUsersRepository } from '../../helpers/fake-repositories'
 import { makeUser } from '../../factories/make-user.factory'
 import { makeProfile } from '../../factories/make-profile.factory'
+import {
+  BarberService,
+  Permission,
+  Profile,
+  ProfileBlockedHour,
+  ProfileWorkHour,
+  Role,
+} from '@prisma/client'
 
 describe('Get user service', () => {
   let repo: InMemoryBarberUsersRepository
@@ -15,8 +23,21 @@ describe('Get user service', () => {
 
   it('returns user by id', async () => {
     const user = makeUser()
-    const profile = { ...makeProfile({ userId: user.id }), workHours: [], blockedHours: [] }
-    repo.users.push({ ...user, profile } as any)
+    const profile: Profile & {
+      role: Role
+      permissions: Permission[]
+      workHours: ProfileWorkHour[]
+      blockedHours: ProfileBlockedHour[]
+      barberServices: BarberService[]
+    } = {
+      ...makeProfile({ userId: user.id }),
+      workHours: [],
+      blockedHours: [],
+    }
+    repo.users.push({
+      ...user,
+      profile,
+    })
 
     const res = await service.execute({ id: user.id })
     expect(res.user?.id).toBe(user.id)

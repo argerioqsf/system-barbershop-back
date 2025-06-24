@@ -1,9 +1,10 @@
-import { Appointment, Prisma, Service, User } from '@prisma/client'
+import { Appointment, Prisma, SaleItem, Service, User } from '@prisma/client'
 
 export type DetailedAppointment = Appointment & {
   service: Service
   client: User
   barber: User
+  saleItem?: SaleItem
 }
 
 export interface AppointmentRepository {

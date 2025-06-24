@@ -48,11 +48,28 @@ export class SetSaleStatusService {
       if (!session) throw new CashRegisterClosedError()
 
       for (const item of sale.items) {
-        if (!item.barberId) continue
-        const barber = await this.barberUserRepository.findById(item.barberId)
+        let barberId = item.barberId
+        if (item.appointment) {
+          barberId = item.appointment.barberId
+        }
+        if (!barberId) continue
+        const barber = await this.barberUserRepository.findById(barberId)
         if (!barber?.profile) throw new ProfileNotFoundError()
+
         let commission: number | undefined
-        if (item.serviceId && item.service) {
+
+        if (item.appointmentId && item.appointment) {
+          const relation =
+            await this.barberServiceRepository.findByProfileService(
+              barber.profile.id,
+              item.appointment.serviceId,
+            )
+          commission = calculateBarberCommission(
+            item.appointment.service,
+            barber.profile,
+            relation,
+          )
+        } else if (item.serviceId && item.service) {
           const relation =
             await this.barberServiceRepository.findByProfileService(
               barber.profile.id,
@@ -75,6 +92,7 @@ export class SetSaleStatusService {
             relation,
           )
         }
+
         if (commission !== undefined) {
           item.porcentagemBarbeiro = commission
         }

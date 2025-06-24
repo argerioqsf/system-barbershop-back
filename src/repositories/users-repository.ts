@@ -1,9 +1,26 @@
-import { Permission, Prisma, Profile, Role, User } from '@prisma/client'
+import {
+  BarberService,
+  Permission,
+  Prisma,
+  Profile,
+  ProfileBlockedHour,
+  ProfileWorkHour,
+  Role,
+  User,
+} from '@prisma/client'
 
 export interface UsersRepository {
   findById(id: string): Promise<
     | (Omit<User, 'password'> & {
-        profile: (Profile & { role: Role; permissions: Permission[] }) | null
+        profile:
+          | (Profile & {
+              role: Role
+              permissions: Permission[]
+              workHours: ProfileWorkHour[]
+              blockedHours: ProfileBlockedHour[]
+              barberServices: BarberService[]
+            })
+          | null
       })
     | null
   >

@@ -15,7 +15,10 @@ describe('Update product service', () => {
   })
 
   it('updates product data', async () => {
-    const res = await service.execute({ id: 'p1', data: { name: 'New', quantity: { decrement: 1 } } })
+    const res = await service.execute({
+      id: 'p1',
+      data: { name: 'New', quantity: { decrement: 1 } },
+    })
     expect(res.product.name).toBe('New')
     expect(repo.products[0].quantity).toBe(4)
   })

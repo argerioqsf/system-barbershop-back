@@ -16,19 +16,34 @@ describe('List organizations service', () => {
   })
 
   it('lists all for admin', async () => {
-    const res = await service.execute({ sub: '1', role: 'ADMIN', unitId: 'unit-1', organizationId: 'org-1' } as any)
+    const res = await service.execute({
+      sub: '1',
+      role: 'ADMIN',
+      unitId: 'unit-1',
+      organizationId: 'org-1',
+    })
     expect(res.organizations).toHaveLength(2)
   })
 
   it('returns organization of user for others', async () => {
-    const res = await service.execute({ sub: '1', role: 'BARBER', unitId: 'unit-1', organizationId: 'org-1' } as any)
+    const res = await service.execute({
+      sub: '1',
+      role: 'BARBER',
+      unitId: 'unit-1',
+      organizationId: 'org-1',
+    })
     expect(res.organizations).toHaveLength(1)
     expect(res.organizations[0].id).toBe('org-1')
   })
 
   it('throws if user not found', async () => {
     await expect(
-      service.execute({ sub: '', role: 'ADMIN', unitId: 'unit-1', organizationId: 'org-1' } as any),
+      service.execute({
+        sub: '',
+        role: 'ADMIN',
+        unitId: 'unit-1',
+        organizationId: 'org-1',
+      }),
     ).rejects.toThrow('User not found')
   })
 })

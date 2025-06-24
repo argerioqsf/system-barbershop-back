@@ -7,7 +7,12 @@ import {
   InMemoryRoleRepository,
 } from '../../helpers/fake-repositories'
 import { defaultUnit, baseRegisterUserData } from '../../helpers/default-values'
-import { PermissionName, Role } from '@prisma/client'
+import {
+  PermissionCategory,
+  PermissionName,
+  Role,
+  RoleName,
+} from '@prisma/client'
 
 describe('Register user service', () => {
   let repo: InMemoryBarberUsersRepository
@@ -127,7 +132,7 @@ describe('Register user service', () => {
           organizationId: defaultUnit.organizationId,
           unitId: defaultUnit.id,
           permissions: [],
-        } as any,
+        },
         {
           ...baseRegisterUserData,
           unitId: defaultUnit.id,
@@ -138,13 +143,13 @@ describe('Register user service', () => {
   })
 
   it('requires permission to create barber', async () => {
-    const barberRole = {
+    const barberRole: Role = {
       id: 'barber',
-      name: 'BARBER',
+      name: RoleName.ADMIN,
       unitId: defaultUnit.id,
-    } as any
+    }
     roleRepo = new InMemoryRoleRepository([
-      { id: 'role-1', name: 'MANAGER', unitId: defaultUnit.id } as any,
+      { id: 'role-1', name: 'MANAGER', unitId: defaultUnit.id },
       barberRole,
     ])
     service = new RegisterUserService(repo, unitRepo, permRepo, roleRepo)
@@ -156,7 +161,7 @@ describe('Register user service', () => {
           organizationId: defaultUnit.organizationId,
           unitId: defaultUnit.id,
           permissions: [],
-        } as any,
+        },
         {
           ...baseRegisterUserData,
           unitId: defaultUnit.id,
@@ -167,13 +172,13 @@ describe('Register user service', () => {
   })
 
   it('requires permission to create attendant', async () => {
-    const attendantRole = {
+    const attendantRole: Role = {
       id: 'att',
-      name: 'ATTENDANT',
+      name: RoleName.ATTENDANT,
       unitId: defaultUnit.id,
-    } as any
+    }
     roleRepo = new InMemoryRoleRepository([
-      { id: 'role-1', name: 'MANAGER', unitId: defaultUnit.id } as any,
+      { id: 'role-1', name: 'MANAGER', unitId: defaultUnit.id },
       attendantRole,
     ])
     service = new RegisterUserService(repo, unitRepo, permRepo, roleRepo)
@@ -185,7 +190,7 @@ describe('Register user service', () => {
           organizationId: defaultUnit.organizationId,
           unitId: defaultUnit.id,
           permissions: [],
-        } as any,
+        },
         {
           ...baseRegisterUserData,
           unitId: defaultUnit.id,
@@ -196,13 +201,13 @@ describe('Register user service', () => {
   })
 
   it('requires permission to create owner', async () => {
-    const ownerRole = {
+    const ownerRole: Role = {
       id: 'owner',
-      name: 'OWNER',
+      name: RoleName.OWNER,
       unitId: defaultUnit.id,
-    } as any
+    }
     roleRepo = new InMemoryRoleRepository([
-      { id: 'role-1', name: 'MANAGER', unitId: defaultUnit.id } as any,
+      { id: 'role-1', name: 'MANAGER', unitId: defaultUnit.id },
       ownerRole,
     ])
     service = new RegisterUserService(repo, unitRepo, permRepo, roleRepo)
@@ -214,7 +219,7 @@ describe('Register user service', () => {
           organizationId: defaultUnit.organizationId,
           unitId: defaultUnit.id,
           permissions: [],
-        } as any,
+        },
         {
           ...baseRegisterUserData,
           unitId: defaultUnit.id,
@@ -225,23 +230,23 @@ describe('Register user service', () => {
   })
 
   it('allows admin with permission to create client', async () => {
-    const clientRole = {
+    const clientRole: Role = {
       id: 'client',
-      name: 'CLIENT',
+      name: RoleName.CLIENT,
       unitId: defaultUnit.id,
-    } as any
+    }
     roleRepo = new InMemoryRoleRepository([
-      { id: 'role-1', name: 'ADMIN', unitId: defaultUnit.id } as any,
+      { id: 'role-1', name: 'ADMIN', unitId: defaultUnit.id },
       clientRole,
     ])
     permRepo = new InMemoryPermissionRepository([
       {
         id: 'perm-client',
         name: PermissionName.CREATE_USER_CLIENT,
-        unitId: defaultUnit.id,
-      } as any,
+        category: PermissionCategory.USER,
+      },
     ])
-    ;(permRepo.permissions[0] as any).roles = [clientRole]
+    permRepo.permissions[0].roles = [clientRole]
     service = new RegisterUserService(repo, unitRepo, permRepo, roleRepo)
     const res = await service.execute(
       {
@@ -250,7 +255,7 @@ describe('Register user service', () => {
         organizationId: defaultUnit.organizationId,
         unitId: defaultUnit.id,
         permissions: [PermissionName.CREATE_USER_CLIENT],
-      } as any,
+      },
       {
         ...baseRegisterUserData,
         unitId: defaultUnit.id,

@@ -1,6 +1,15 @@
 import { prisma } from '@/lib/prisma'
 import { pagination } from '@/utils/constants/pagination'
-import { Permission, Prisma, Profile, Role, User } from '@prisma/client'
+import {
+  BarberService,
+  Permission,
+  Prisma,
+  Profile,
+  ProfileBlockedHour,
+  ProfileWorkHour,
+  Role,
+  User,
+} from '@prisma/client'
 import { UsersRepository } from '../users-repository'
 
 export class PrismaUsersRepository implements UsersRepository {
@@ -75,13 +84,31 @@ export class PrismaUsersRepository implements UsersRepository {
 
   async findById(id: string): Promise<
     | (Omit<User, 'password'> & {
-        profile: (Profile & { role: Role; permissions: Permission[] }) | null
+        profile:
+          | (Profile & {
+              role: Role
+              permissions: Permission[]
+              workHours: ProfileWorkHour[]
+              blockedHours: ProfileBlockedHour[]
+              barberServices: BarberService[]
+            })
+          | null
       })
     | null
   > {
     const user = await prisma.user.findUnique({
       where: { id },
-      include: { profile: { include: { role: true, permissions: true } } },
+      include: {
+        profile: {
+          include: {
+            role: true,
+            permissions: true,
+            workHours: true,
+            blockedHours: true,
+            barberServices: true,
+          },
+        },
+      },
     })
     if (!user) return null
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

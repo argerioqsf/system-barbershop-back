@@ -16,7 +16,10 @@ describe('Update coupon service', () => {
   })
 
   it('updates coupon data', async () => {
-    const res = await service.execute({ id: 'c1', data: { quantity: { decrement: 2 } } })
+    const res = await service.execute({
+      id: 'c1',
+      data: { quantity: { decrement: 2 } },
+    })
     expect(res.coupon.quantity).toBe(3)
   })
 })

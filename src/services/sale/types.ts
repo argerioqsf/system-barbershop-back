@@ -20,6 +20,7 @@ export interface DistributeProfitsDeps {
 export interface CreateSaleItem {
   serviceId?: string
   productId?: string
+  appointmentId?: string
   quantity: number
   barberId?: string
   couponCode?: string
@@ -49,6 +50,7 @@ export type DataItem = {
   quantity: number
   service?: { connect: { id?: string } }
   product?: { connect: { id?: string } }
+  appointment?: { connect: { id: string } }
 }
 
 export type TempItems = {
@@ -71,8 +73,15 @@ export type SaleItemTemp = Omit<
     service?: { connect: { id?: string } }
     product?: { connect: { id?: string } }
     barber?: { connect: { id: string } }
+    appointment?: { connect: { id: string } }
   },
-  'id' | 'saleId' | 'serviceId' | 'productId' | 'barberId' | 'couponId'
+  | 'id'
+  | 'saleId'
+  | 'serviceId'
+  | 'productId'
+  | 'barberId'
+  | 'couponId'
+  | 'appointmentId'
 >
 
 export interface GetSaleRequest {

@@ -8,6 +8,7 @@ import {
   Role,
   Unit,
   User,
+  BarberService,
 } from '@prisma/client'
 import { BarberUsersRepository } from '../barber-users-repository'
 
@@ -134,6 +135,7 @@ export class PrismaBarberUsersRepository implements BarberUsersRepository {
               permissions: Permission[]
               workHours: ProfileWorkHour[]
               blockedHours: ProfileBlockedHour[]
+              barberServices: BarberService[]
             })
           | null
         unit: Unit | null
@@ -149,6 +151,7 @@ export class PrismaBarberUsersRepository implements BarberUsersRepository {
             permissions: true,
             workHours: true,
             blockedHours: true,
+            barberServices: true,
           },
         },
         unit: true,

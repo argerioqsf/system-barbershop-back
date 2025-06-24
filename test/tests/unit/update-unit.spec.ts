@@ -15,7 +15,11 @@ describe('Update unit service', () => {
   })
 
   it('updates unit data', async () => {
-    const result = await service.execute({ id: 'unit-1', name: 'New', allowsLoan: true })
+    const result = await service.execute({
+      id: 'unit-1',
+      name: 'New',
+      allowsLoan: true,
+    })
     expect(result.unit.name).toBe('New')
     expect(result.unit.allowsLoan).toBe(true)
     expect(repo.units[0].name).toBe('New')

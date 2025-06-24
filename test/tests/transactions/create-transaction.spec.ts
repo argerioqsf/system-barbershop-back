@@ -20,7 +20,7 @@ function setup() {
   )
 
   const user = { ...defaultUser }
-  barberRepo.users.push(user as any)
+  barberRepo.users.push(user)
 
   cashRepo.session = {
     id: 'session-1',
@@ -32,6 +32,7 @@ function setup() {
     transactions: [],
     sales: [],
     finalAmount: null,
+    user: defaultUser,
   }
 
   return { transactionRepo, barberRepo, cashRepo, service, user }
@@ -94,7 +95,7 @@ describe('Create transaction service', () => {
 
   it('creates transaction for affected user', async () => {
     const other = { ...defaultUser, id: 'user-2', unitId: ctx.user.unitId }
-    ctx.barberRepo.users.push(other as any)
+    ctx.barberRepo.users.push(other)
 
     const { transaction } = await ctx.service.execute({
       userId: ctx.user.id,

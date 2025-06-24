@@ -9,26 +9,49 @@ import {
   FakeUnitRepository,
   FakeOrganizationRepository,
 } from '../../helpers/fake-repositories'
-import { defaultUser, defaultProfile, defaultUnit, defaultOrganization, makeProfile, makeUser } from '../../helpers/default-values'
+import {
+  defaultUser,
+  defaultProfile,
+  defaultUnit,
+  defaultOrganization,
+  makeProfile,
+  makeUser,
+} from '../../helpers/default-values'
 
 let transactionRepo: FakeTransactionRepository
 let barberRepo: FakeBarberUsersRepository
 let cashRepo: FakeCashRegisterRepository
 
-vi.mock('../../../src/services/@factories/transaction/make-create-transaction', () => ({
-  makeCreateTransaction: () => new CreateTransactionService(transactionRepo, barberRepo, cashRepo),
-}))
+vi.mock(
+  '../../../src/services/@factories/transaction/make-create-transaction',
+  () => ({
+    makeCreateTransaction: () =>
+      new CreateTransactionService(transactionRepo, barberRepo, cashRepo),
+  }),
+)
 
-function setup(options?: { userBalance?: number; unitBalance?: number; allowsLoan?: boolean }) {
+function setup(options?: {
+  userBalance?: number
+  unitBalance?: number
+  allowsLoan?: boolean
+}) {
   transactionRepo = new FakeTransactionRepository()
   barberRepo = new FakeBarberUsersRepository()
   cashRepo = new FakeCashRegisterRepository()
   const profileRepo = new FakeProfilesRepository()
-  const unit = { ...defaultUnit, totalBalance: options?.unitBalance ?? 0, allowsLoan: options?.allowsLoan ?? defaultUnit.allowsLoan }
+  const unit = {
+    ...defaultUnit,
+    totalBalance: options?.unitBalance ?? 0,
+    allowsLoan: options?.allowsLoan ?? defaultUnit.allowsLoan,
+  }
   const unitRepo = new FakeUnitRepository(unit)
   const organizationRepo = new FakeOrganizationRepository(defaultOrganization)
 
-  const profile = { ...defaultProfile, totalBalance: options?.userBalance ?? 0, user: { ...defaultUser } }
+  const profile = {
+    ...defaultProfile,
+    totalBalance: options?.userBalance ?? 0,
+    user: { ...defaultUser },
+  }
   profileRepo.profiles.push(profile)
   const user = { ...defaultUser, profile, unit }
   barberRepo.users.push(user)
@@ -43,6 +66,7 @@ function setup(options?: { userBalance?: number; unitBalance?: number; allowsLoa
     transactions: [],
     sales: [],
     finalAmount: null,
+    user: defaultUser,
   }
 
   const service = new WithdrawalBalanceTransactionService(
@@ -80,14 +104,22 @@ describe('Withdrawal balance transaction service', () => {
 
   it('withdraws when user balance is positive', async () => {
     ctx = setup({ userBalance: 50 })
-    await ctx.service.execute({ userId: ctx.user.id, description: '', amount: 20 })
+    await ctx.service.execute({
+      userId: ctx.user.id,
+      description: '',
+      amount: 20,
+    })
     expect(ctx.profileRepo.profiles[0].totalBalance).toBe(30)
     expect(ctx.transactionRepo.transactions).toHaveLength(1)
   })
 
   it('withdraws with loan when balance insufficient and unit allows', async () => {
     ctx = setup({ userBalance: 10, unitBalance: 100, allowsLoan: true })
-    await ctx.service.execute({ userId: ctx.user.id, description: '', amount: 30 })
+    await ctx.service.execute({
+      userId: ctx.user.id,
+      description: '',
+      amount: 30,
+    })
     expect(ctx.profileRepo.profiles[0].totalBalance).toBe(-20)
     expect(ctx.unitRepo.unit.totalBalance).toBe(80)
     expect(ctx.transactionRepo.transactions).toHaveLength(2)

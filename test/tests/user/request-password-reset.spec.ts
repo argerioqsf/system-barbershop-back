@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, vi, Mock } from 'vitest'
 import { RequestPasswordResetService } from '../../../src/services/users/request-password-reset'
 import { InMemoryUserRepository } from '../../../src/repositories/in-memory/in-memory-users-repository'
 import { FakePasswordResetTokenRepository } from '../../helpers/fake-repositories'
@@ -18,7 +18,7 @@ describe('Request password reset service', () => {
     userRepo = new InMemoryUserRepository()
     tokenRepo = new FakePasswordResetTokenRepository()
     service = new RequestPasswordResetService(userRepo, tokenRepo)
-    ;(sendPasswordResetEmail as any).mockClear()
+    ;(sendPasswordResetEmail as Mock).mockClear()
   })
 
   it('throws when user is not found', async () => {

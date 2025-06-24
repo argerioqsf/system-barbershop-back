@@ -10,13 +10,17 @@ import {
   PaymentMethod,
   PaymentStatus,
   TransactionType,
-  Sale,
   Permission,
   Role,
   BarberService,
   CommissionCalcType,
   PermissionName,
+  ProfileWorkHour,
+  ProfileBlockedHour,
+  RoleName,
 } from '@prisma/client'
+import { TransactionFull } from '../../src/repositories/prisma/prisma-transaction-repository'
+import { DetailedSale } from '../../src/repositories/sale-repository'
 
 export const defaultUser = {
   id: 'user-1',
@@ -30,9 +34,10 @@ export const defaultUser = {
   versionTokenInvalidate: null,
   createdAt: new Date(),
   profile: null,
+  unit: null,
 }
 
-export const defaulSale: Sale = {
+export const defaultSale: DetailedSale = {
   id: 'user-1',
   unitId: 'unit-1',
   createdAt: new Date(),
@@ -43,6 +48,51 @@ export const defaulSale: Sale = {
   total: 20,
   method: 'CASH',
   paymentStatus: 'PAID',
+  observation: '',
+  user: {
+    ...defaultUser,
+    id: 'user-1',
+    name: 'Cliente Teste',
+    email: 'cliente@exemplo.com',
+    profile: {
+      id: 'profile-1',
+      phone: '11999999999',
+      cpf: '00000000000',
+      genre: 'M',
+      birthday: '2000-01-01',
+      pix: '00000000000',
+      roleId: 'role-1',
+      commissionPercentage: 0,
+      totalBalance: 0,
+      userId: 'user-1',
+      createdAt: new Date(),
+    },
+  },
+  client: defaultUser,
+  session: null,
+  items: [
+    {
+      id: 'i1',
+      saleId: 'sale-1',
+      serviceId: null,
+      productId: null,
+      quantity: 1,
+      barberId: 'user-barber',
+      couponId: null,
+      price: 100,
+      discount: null,
+      discountType: null,
+      porcentagemBarbeiro: 0,
+      service: null,
+      product: null,
+      barber: defaultUser,
+      coupon: null,
+      appointmentId: 'ap-1',
+      appointment: null,
+    },
+  ],
+  coupon: null,
+  transactions: [],
 }
 
 export const defaultClient = {
@@ -59,8 +109,16 @@ export const defaultClient = {
   profile: null,
 }
 
-const p1 = makePermission('p1', 'SELL_SERVICE')
-export const barberProfile: Profile & { permissions: Permission[] } = {
+const p1 = makePermission('p1', PermissionName.SELL_SERVICE)
+const p2 = makePermission('p1', PermissionName.SELL_APPOINTMENT)
+const r1 = makeRole()
+export const barberProfile: Profile & {
+  permissions: Permission[]
+  workHours: ProfileWorkHour[]
+  blockedHours: ProfileBlockedHour[]
+  barberServices: BarberService[]
+  role: Role
+} = {
   id: 'profile-barber',
   phone: '',
   cpf: '',
@@ -72,7 +130,11 @@ export const barberProfile: Profile & { permissions: Permission[] } = {
   totalBalance: 0,
   userId: 'barber-1',
   createdAt: new Date(),
-  permissions: [p1],
+  permissions: [p1, p2],
+  workHours: [],
+  blockedHours: [],
+  barberServices: [],
+  role: r1,
 }
 
 export const barberUser = {
@@ -84,6 +146,8 @@ export const barberUser = {
   organizationId: 'org-1',
   unitId: 'unit-1',
   createdAt: new Date(),
+  versionToken: 1,
+  versionTokenInvalidate: 0,
   profile: barberProfile,
 }
 
@@ -123,7 +187,7 @@ export function makeBarberProductRel(
   productId: string,
   type: CommissionCalcType = CommissionCalcType.PERCENTAGE_OF_USER,
   commission?: number,
-): any {
+) {
   return {
     id: `rel-prod-${profileId}-${productId}`,
     profileId,
@@ -143,6 +207,7 @@ export function makeProduct(id: string, price = 50, quantity = 5): Product {
     cost: 0,
     price,
     unitId: 'unit-1',
+    commissionPercentage: 0,
   }
 }
 
@@ -180,9 +245,16 @@ export const defaultUnit: Unit = {
   organizationId: 'org-1',
   totalBalance: 0,
   allowsLoan: false,
+  slotDuration: 30,
 }
 
-export const defaultProfile: Profile & { permissions: Permission[] } = {
+export const defaultProfile: Profile & {
+  role: Role
+  permissions: Permission[]
+  workHours: ProfileWorkHour[]
+  blockedHours: ProfileBlockedHour[]
+  barberServices: BarberService[]
+} = {
   id: 'profile-user',
   phone: '',
   cpf: '',
@@ -195,13 +267,28 @@ export const defaultProfile: Profile & { permissions: Permission[] } = {
   userId: defaultUser.id,
   createdAt: new Date(),
   permissions: [p1],
+  workHours: [],
+  blockedHours: [],
+  barberServices: [],
+  role: {
+    id: 'rl-1',
+    name: RoleName.ADMIN,
+    unitId: 'unit1',
+  },
 }
 
 export function makeProfile(
   id: string,
   userId: string,
   balance = 0,
-): Profile & { user: Omit<User, 'password'>; permissions: Permission[] } {
+): Profile & {
+  user: Omit<User, 'password'>
+  role: Role
+  permissions: Permission[]
+  workHours: ProfileWorkHour[]
+  blockedHours: ProfileBlockedHour[]
+  barberServices: BarberService[]
+} {
   return {
     id,
     phone: '',
@@ -218,14 +305,35 @@ export function makeProfile(
     permissions: [],
     workHours: [],
     blockedHours: [],
+    barberServices: [],
+    role: {
+      id: 'rl-1',
+      name: RoleName.ADMIN,
+      unitId: 'unit-1',
+    },
   }
 }
 
 export function makeUser(
   id: string,
-  profile: Profile,
+  profile: Profile & {
+    role: Role
+    permissions: Permission[]
+    workHours: ProfileWorkHour[]
+    blockedHours: ProfileBlockedHour[]
+    barberServices: BarberService[]
+  },
   unit: Unit,
-): User & { profile: Profile; unit: Unit } {
+): User & {
+  profile: Profile & {
+    role: Role
+    permissions: Permission[]
+    workHours: ProfileWorkHour[]
+    blockedHours: ProfileBlockedHour[]
+    barberServices: BarberService[]
+  }
+  unit: Unit
+} {
   return { ...defaultUser, id, profile, unit }
 }
 export function makeOrganization(
@@ -248,7 +356,15 @@ export function makeUnit(
   slug = 'unit',
   organizationId = 'org-1',
 ): Unit {
-  return { id, name, slug, organizationId, totalBalance: 0, allowsLoan: false }
+  return {
+    id,
+    name,
+    slug,
+    organizationId,
+    totalBalance: 0,
+    allowsLoan: false,
+    slotDuration: 30,
+  }
 }
 
 export function makeSale(
@@ -257,27 +373,19 @@ export function makeSale(
   organizationId = 'org-1',
   status: PaymentStatus = PaymentStatus.PENDING,
   total = 100,
-): any {
+): DetailedSale & { unit: Unit } {
   return {
-    id,
-    userId: 'u1',
-    clientId: 'c1',
-    unitId,
-    total,
-    method: 'CASH' as PaymentMethod,
-    paymentStatus: status,
-    createdAt: new Date(),
+    ...defaultSale,
     items: [],
-    user: {},
-    client: {},
-    coupon: null,
-    session: null,
-    transactions: [],
-    unit: { organizationId },
-  } as any
+    id,
+    unitId,
+    paymentStatus: status,
+    total,
+    unit: { ...defaultUnit, organizationId },
+  }
 }
 
-export function makeSaleWithBarber(): any {
+export function makeSaleWithBarber(): DetailedSale {
   return {
     id: 'sale-1',
     userId: 'cashier',
@@ -287,6 +395,9 @@ export function makeSaleWithBarber(): any {
     method: 'CASH' as PaymentMethod,
     paymentStatus: PaymentStatus.PENDING,
     createdAt: new Date(),
+    observation: null,
+    couponId: null,
+    sessionId: null,
     items: [
       {
         id: 'i1',
@@ -304,6 +415,8 @@ export function makeSaleWithBarber(): any {
         product: null,
         barber: { ...barberUser, profile: barberProfile },
         coupon: null,
+        appointmentId: null,
+        appointment: null,
       },
     ],
     user: { ...defaultUser },
@@ -311,27 +424,30 @@ export function makeSaleWithBarber(): any {
     coupon: null,
     session: null,
     transactions: [],
-  } as any
-}
-
-export function makeBalanceSale(barberId: string = barberUser.id): any {
-  return {
-    items: [
-      {
-        barberId,
-        price: 100,
-        porcentagemBarbeiro: 50,
-        productId: null,
-        service: { name: 'Cut' },
-        quantity: 1,
-        coupon: null,
-      },
-    ],
-    coupon: null,
   }
 }
 
-export function makeTransaction(over: any = {}): any {
+export function makeBalanceSale(
+  barberId: string = barberUser.id,
+): TransactionFull['sale'] {
+  return {
+    ...defaultSale,
+    items: [
+      {
+        ...defaultSale.items[0],
+        barberId,
+      },
+    ],
+    coupon: null,
+    user: defaultUser,
+  }
+}
+
+export function makeTransaction(
+  over: TransactionFull & {
+    organizationId?: string
+  },
+): TransactionFull & { unit: { organizationId: string } } {
   return {
     id: over.id ?? 't1',
     userId: over.userId ?? 'u1',
@@ -346,10 +462,21 @@ export function makeTransaction(over: any = {}): any {
     createdAt: new Date(),
     unit: { organizationId: over.organizationId ?? 'org-1' },
     sale: over.sale ?? null,
+    saleId: 'sl-1',
   }
 }
 
-export const namedUser = {
+export const namedUser: User & {
+  profile:
+    | (Profile & {
+        permissions: Permission[]
+        role: Role
+        workHours: ProfileWorkHour[]
+        blockedHours: ProfileBlockedHour[]
+        barberServices: BarberService[]
+      })
+    | null
+} = {
   id: 'user-1',
   name: 'John',
   email: 'john@example.com',
@@ -359,15 +486,17 @@ export const namedUser = {
   unitId: 'unit-1',
   createdAt: new Date(),
   profile: null,
+  versionToken: 1,
+  versionTokenInvalidate: 0,
 }
 
-export const sessionUser = { sub: 'u1', unitId: 'unit-1' } as any
+export const sessionUser = { sub: 'u1', unitId: 'unit-1' }
 
 export function makeCashSession(
   id: string,
   unitId = 'unit-1',
   organizationId = 'org-1',
-): any {
+) {
   return {
     id,
     openedById: 'u1',
@@ -380,7 +509,7 @@ export function makeCashSession(
     sales: [],
     transactions: [],
     unit: { organizationId },
-  } as any
+  }
 }
 
 export const baseRegisterUserData = {
@@ -395,21 +524,43 @@ export const baseRegisterUserData = {
   roleId: 'role-1',
 }
 
-export const listUser1 = {
+export const listUser1: User & {
+  unit?: Unit
+  profile: Profile & {
+    user: Omit<User, 'password'>
+    role: Role
+    permissions: Permission[]
+    workHours: ProfileWorkHour[]
+    blockedHours: ProfileBlockedHour[]
+    barberServices: BarberService[]
+  }
+} = {
+  ...defaultUser,
   id: 'u1',
   email: 'a@a.com',
   profile: makeProfile('p-u1', 'u1'),
-  unit: { id: 'unit-1', organizationId: 'org-1' },
+  unit: { ...defaultUnit, id: 'unit-1', organizationId: 'org-1' },
   organizationId: 'org-1',
-} as any
+}
 
-export const listUser2 = {
+export const listUser2: User & {
+  unit?: Unit
+  profile: Profile & {
+    user: Omit<User, 'password'>
+    role: Role
+    permissions: Permission[]
+    workHours: ProfileWorkHour[]
+    blockedHours: ProfileBlockedHour[]
+    barberServices: BarberService[]
+  }
+} = {
+  ...defaultUser,
   id: 'u2',
   email: 'b@b.com',
   profile: makeProfile('p-u2', 'u2'),
-  unit: { id: 'unit-2', organizationId: 'org-2' },
+  unit: { ...defaultUnit, id: 'unit-2', organizationId: 'org-2' },
   organizationId: 'org-2',
-} as any
+}
 
 export const session1 = {
   id: 's1',
@@ -419,11 +570,11 @@ export const session1 = {
   closedAt: null,
   initialAmount: 0,
   finalAmount: null,
-  user: {},
   sales: [],
   transactions: [],
   unit: { organizationId: 'org-1' },
-} as any
+  user: defaultUser,
+}
 
 export const session2 = {
   id: 's2',
@@ -433,11 +584,11 @@ export const session2 = {
   closedAt: null,
   initialAmount: 0,
   finalAmount: null,
-  user: {},
   sales: [],
   transactions: [],
   unit: { organizationId: 'org-2' },
-} as any
+  user: defaultUser,
+}
 
 export const appointment1 = {
   id: 'a1',
@@ -447,8 +598,10 @@ export const appointment1 = {
   barber: {},
   date: new Date(),
   hour: '10',
+  discount: 0,
+  value: null,
   unit: { organizationId: 'org-1' },
-} as any
+}
 
 export const appointment2 = {
   id: 'a2',
@@ -458,8 +611,10 @@ export const appointment2 = {
   barber: {},
   date: new Date(),
   hour: '11',
+  discount: 0,
+  value: null,
   unit: { organizationId: 'org-2' },
-} as any
+}
 
 export function makeRole(id = 'role-1', unitId = 'unit-1'): Role {
   return { id, name: 'ADMIN', unitId }
@@ -473,5 +628,41 @@ export function makePermission(
     id,
     name: name ?? PermissionName.LIST_APPOINTMENTS_UNIT,
     category: 'UNIT',
+  }
+}
+
+export function makeServiceWithCommission(
+  id: string,
+  price: number,
+  commissionPercentage: number,
+): Service {
+  return { ...makeService(id, price), commissionPercentage }
+}
+
+export function makeAppointment(
+  id: string,
+  service: Service,
+  options: {
+    discount?: number
+    value?: number
+    date?: Date
+    hour?: string
+  } = {},
+) {
+  return {
+    id,
+    clientId: defaultClient.id,
+    barberId: barberUser.id,
+    serviceId: service.id,
+    unitId: defaultUnit.id,
+    date: options.date ?? new Date(),
+    hour: options.hour ?? '09:00',
+    observation: null,
+    discount: options.discount ?? 0,
+    value: options.value ?? null,
+    service,
+    client: defaultClient,
+    barber: barberUser,
+    unit: { organizationId: defaultOrganization.id },
   }
 }

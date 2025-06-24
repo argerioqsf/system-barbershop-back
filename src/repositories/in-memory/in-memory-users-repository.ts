@@ -1,15 +1,40 @@
-import { Permission, Prisma, Profile, Role, User } from '@prisma/client'
+import {
+  BarberService,
+  Permission,
+  Prisma,
+  Profile,
+  ProfileBlockedHour,
+  ProfileWorkHour,
+  Role,
+  User,
+} from '@prisma/client'
 import { UserNotFoundError } from '@/services/@errors/user/user-not-found-error'
 import { UsersRepository } from '../users-repository'
 
 export class InMemoryUserRepository implements UsersRepository {
   public items: (User & {
-    profile: (Profile & { role: Role; permissions: Permission[] }) | null
+    profile:
+      | (Profile & {
+          role: Role
+          permissions: Permission[]
+          workHours: ProfileWorkHour[]
+          blockedHours: ProfileBlockedHour[]
+          barberServices: BarberService[]
+        })
+      | null
   })[] = []
 
   async findById(id: string): Promise<
     | (Omit<User, 'password'> & {
-        profile: (Profile & { role: Role; permissions: Permission[] }) | null
+        profile:
+          | (Profile & {
+              role: Role
+              permissions: Permission[]
+              workHours: ProfileWorkHour[]
+              blockedHours: ProfileBlockedHour[]
+              barberServices: BarberService[]
+            })
+          | null
       })
     | null
   > {
@@ -24,10 +49,10 @@ export class InMemoryUserRepository implements UsersRepository {
     return {
       ...rest,
       profile: profile
-        ? ({
+        ? {
             ...profile,
             permissions: profile.permissions ?? [],
-          } as Profile & { role: Role; permissions: Permission[] })
+          }
         : null,
     }
   }

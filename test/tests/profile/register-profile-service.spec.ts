@@ -6,6 +6,7 @@ import {
   InMemoryPermissionRepository,
 } from '../../helpers/fake-repositories'
 import { UserNotFoundError } from '../../../src/services/@errors/user/user-not-found-error'
+import { PermissionCategory, PermissionName } from '@prisma/client'
 
 describe('Create profile service', () => {
   let userRepo: InMemoryUserRepository
@@ -65,8 +66,12 @@ describe('Create profile service', () => {
       organization: { connect: { id: 'org-1' } },
       unit: { connect: { id: 'unit-1' } },
     })
-    permRepo.permissions.push({ id: 'p1', name: 'n', unitId: 'unit-1' } as any)
-    ;(permRepo.permissions[0] as any).roles = [{ id: 'role-1' }]
+    permRepo.permissions.push({
+      id: 'p1',
+      name: PermissionName.CREATE_USER_ADMIN,
+      category: PermissionCategory.USER,
+    })
+    permRepo.permissions[0].roles = [{ id: 'role-1' }]
     await expect(
       service.execute({
         phone: '1',
