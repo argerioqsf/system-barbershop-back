@@ -49,7 +49,10 @@ export class CreateAppointmentService {
       (serviceB) => serviceB.serviceId === service.id,
     )
 
-    if (seviceLinkBarber) throw new BarberDoesNotHaveThisServiceError()
+    if (!seviceLinkBarber) throw new BarberDoesNotHaveThisServiceError()
+
+    const durationService =
+      seviceLinkBarber?.time ?? service.defaultTime ?? null
 
     if (typeof data.value === 'number') {
       const diff = service.price - data.value
@@ -63,6 +66,8 @@ export class CreateAppointmentService {
       unit: { connect: { id: data.unitId } },
       date: data.date,
       hour: data.hour,
+      status: 'SCHEDULED',
+      durationService,
       observation: data.observation,
       discount,
       value,

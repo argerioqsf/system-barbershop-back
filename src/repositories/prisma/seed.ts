@@ -339,6 +339,7 @@ async function main() {
     data: {
       profile: { connect: { id: barber?.profile?.id } },
       service: { connect: { id: haircut.id } },
+      time: 30,
     },
   })
 
@@ -406,6 +407,8 @@ async function main() {
       unitId: mainUnit.id,
       date: new Date(),
       hour: '10:00',
+      status: 'SCHEDULED',
+      durationService: 30,
       discount: 0,
     },
   })

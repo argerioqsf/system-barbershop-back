@@ -9,6 +9,8 @@ import {
   barberUser,
   defaultClient,
   makeService,
+  makeBarberServiceRel,
+  barberProfile,
 } from '../../helpers/default-values'
 
 describe('Create appointment service', () => {
@@ -26,8 +28,15 @@ describe('Create appointment service', () => {
 
   it('creates appointment', async () => {
     const serviceAppointment = makeService('service-11', 100)
-    serviceRepo.services.push(serviceAppointment)
-    barberUserRepo.users.push({ ...barberUser }, defaultClient)
+    serviceRepo.services.push({ ...serviceAppointment, defaultTime: 40 })
+    const barberWithRel = {
+      ...barberUser,
+      profile: {
+        ...barberProfile,
+        barberServices: [makeBarberServiceRel(barberProfile.id, 'service-11')],
+      },
+    }
+    barberUserRepo.users.push(barberWithRel, defaultClient)
     const res = await service.execute({
       clientId: defaultClient.id,
       barberId: barberUser.id,
@@ -39,5 +48,30 @@ describe('Create appointment service', () => {
     expect(repo.appointments).toHaveLength(1)
     expect(res.appointment.clientId).toBe(defaultClient.id)
     expect(res.appointment.barberId).toBe(barberUser.id)
+    expect(res.appointment.durationService).toBe(40)
+  })
+
+  it('uses barber time when set', async () => {
+    const serviceAppointment = makeService('service-22', 100)
+    serviceRepo.services.push({ ...serviceAppointment, defaultTime: 30 })
+    const barberWithService = {
+      ...barberUser,
+      profile: {
+        ...barberProfile,
+        barberServices: [
+          makeBarberServiceRel(barberProfile.id, 'service-22', undefined, undefined, 50),
+        ],
+      },
+    }
+    barberUserRepo.users.push(barberWithService, defaultClient)
+    const res = await service.execute({
+      clientId: defaultClient.id,
+      barberId: barberUser.id,
+      serviceId: 'service-22',
+      unitId: 'unit-1',
+      date: new Date('2024-01-02'),
+      hour: '12:00',
+    })
+    expect(res.appointment.durationService).toBe(50)
   })
 })

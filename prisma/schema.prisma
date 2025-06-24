@@ -91,6 +91,15 @@ enum CommissionCalcType {
   PERCENTAGE_OF_USER_ITEM
 }
 
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  CANCELED
+  IN_ATTENDANCE
+  CONCLUDED
+  NO_SHOW
+}
+
 model Role {
   id          String       @id @default(uuid())
   name        RoleName
@@ -171,6 +180,8 @@ model Appointment {
   unitId    String
   date      DateTime
   hour      String
+  status    AppointmentStatus @default(SCHEDULED)
+  durationService Int?
   observation String?
   discount   Float?    @default(0)
   value      Float?

@@ -52,6 +52,8 @@ export class InMemorySaleRepository implements SaleRepository {
             unitId: '',
             date: new Date(),
             hour: '',
+            status: 'SCHEDULED',
+            durationService: null,
             observation: null,
             discount: 0,
             value: null,
