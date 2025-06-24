@@ -82,7 +82,9 @@ describe('List users service', () => {
       organizationId: 'org-1',
     })
     const u = res.users.find((x) => x.id === 'u1')
-    expect(u?.availableSlots.map((s) => s.id)).toEqual([dh2.id])
+    expect(u?.availableSlots).toEqual([
+      expect.objectContaining({ startHour: '10:00', endHour: '11:00' }),
+    ])
   })
   it('throws if user not found', async () => {
     await expect(

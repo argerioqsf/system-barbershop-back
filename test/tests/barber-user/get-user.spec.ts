@@ -77,7 +77,9 @@ describe('Get user service', () => {
     const app = makeAppointment('ap-1', srv, { date: new Date('2024-01-01T09:00:00'), durationService: 60 })
     appointmentRepo.appointments.push({ ...app, barberId: user.id, barber: user })
     const resSlots = await service.execute({ id: user.id })
-    expect(resSlots.user?.availableSlots.map((s) => s.id)).toEqual([dh2.id])
+    expect(resSlots.user?.availableSlots).toEqual([
+      expect.objectContaining({ startHour: '10:00', endHour: '11:00' }),
+    ])
   })
 
   it('returns null when not found', async () => {

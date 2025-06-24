@@ -8,7 +8,12 @@ import {
   User,
   DayHour,
 } from '@prisma/client'
-import { timeToMinutes, intervalsOverlap, mergeIntervals } from './time'
+import {
+  timeToMinutes,
+  mergeIntervals,
+  subtractIntervals,
+  minutesToTime,
+} from './time'
 
 export type BarberWithHours = User & {
   profile:
@@ -29,41 +34,45 @@ export async function listAvailableSlots(
   const workIds = barber.profile.workHours.map((w) => w.dayHourId)
   if (workIds.length === 0) return []
   const workHours = await dayHourRepo.findMany({ id: { in: workIds } })
-  const blocked = new Set(
-    barber.profile.blockedHours.map(
-      (b) =>
-        `${timeToMinutes(b.startHour)}-${timeToMinutes(b.endHour)}-${b.startHour.getDay()}`,
-    ),
-  )
-  const availableHours = workHours.filter(
-    (dh) =>
-      !blocked.has(
-        `${timeToMinutes(dh.startHour)}-${timeToMinutes(dh.endHour)}-${dh.weekDay}`,
-      ),
-  )
-  const slots = availableHours.map((dh) => ({
-    id: dh.id,
-    weekDay: dh.weekDay,
-    start: timeToMinutes(dh.startHour),
-    end: timeToMinutes(dh.endHour),
-    dh,
-  }))
-  if (slots.length === 0) return []
+
+  const blockedMap = new Map<number, { start: number; end: number }[]>()
+  for (const b of barber.profile.blockedHours) {
+    const day = b.startHour.getDay()
+    const list = blockedMap.get(day) ?? []
+    list.push({ start: timeToMinutes(b.startHour), end: timeToMinutes(b.endHour) })
+    blockedMap.set(day, list)
+  }
+
   const appointments = await appointmentRepo.findMany({ barberId: barber.id })
-  const taken = new Set<string>()
+  const appMap = new Map<number, { start: number; end: number }[]>()
   for (const app of appointments) {
+    const day = app.date.getDay()
     const start = timeToMinutes(app.date)
     const dur = app.durationService ?? app.service.defaultTime ?? 0
     const end = start + dur
-    const wDay = app.date.getDay()
-    for (const slot of slots) {
-      if (slot.weekDay !== wDay) continue
-      if (intervalsOverlap(start, end, slot.start, slot.end)) {
-        taken.add(slot.id)
-      }
+    const list = appMap.get(day) ?? []
+    list.push({ start, end })
+    appMap.set(day, list)
+  }
+
+  const result: DayHour[] = []
+  for (const dh of workHours) {
+    const base = [{ start: timeToMinutes(dh.startHour), end: timeToMinutes(dh.endHour) }]
+    const blocked = blockedMap.get(dh.weekDay) ?? []
+    const apps = appMap.get(dh.weekDay) ?? []
+    let ranges = subtractIntervals(base, blocked)
+    ranges = subtractIntervals(ranges, apps)
+    for (const [index, r] of ranges.entries()) {
+      if (r.end <= r.start) continue
+      result.push({
+        id: `${dh.id}-${index}`,
+        weekDay: dh.weekDay,
+        startHour: minutesToTime(r.start),
+        endHour: minutesToTime(r.end),
+      } as DayHour)
     }
   }
-  return slots.filter((s) => !taken.has(s.id)).map((s) => s.dh)
+  return result
 }
 
 export async function isAppointmentAvailable(
@@ -87,29 +96,25 @@ export async function isAppointmentAvailable(
     start: timeToMinutes(b.startHour),
     end: timeToMinutes(b.endHour),
   }))
-  const available = workHours
-    .map((dh) => ({
-      start: timeToMinutes(dh.startHour),
-      end: timeToMinutes(dh.endHour),
+  const workRanges = workHours.map((dh) => ({
+    start: timeToMinutes(dh.startHour),
+    end: timeToMinutes(dh.endHour),
+  }))
+  let ranges = subtractIntervals(workRanges, blockedIntervals)
+  const existing = (await appointmentRepo.findMany({ barberId: barber.id }))
+    .filter((a) => a.date.toDateString() === startTime.toDateString())
+    .map((a) => ({
+      start: timeToMinutes(a.date),
+      end:
+        timeToMinutes(a.date) +
+        (a.durationService ?? a.service.defaultTime ?? 0),
     }))
-    .filter(
-      (range) =>
-        !blockedIntervals.some((b) =>
-          intervalsOverlap(range.start, range.end, b.start, b.end),
-        ),
-    )
-  if (available.length === 0) return false
-  const ranges = mergeIntervals(available)
+  ranges = subtractIntervals(ranges, existing)
+  ranges = mergeIntervals(ranges)
+  if (ranges.length === 0) return false
   const start = timeToMinutes(startTime)
   const end = start + duration
   const fits = ranges.some((r) => start >= r.start && end <= r.end)
   if (!fits) return false
-  const existing = await appointmentRepo.findMany({ barberId: barber.id })
-  for (const app of existing) {
-    const aStart = timeToMinutes(app.date)
-    const dur = app.durationService ?? app.service.defaultTime ?? 0
-    const aEnd = aStart + dur
-    if (intervalsOverlap(start, end, aStart, aEnd)) return false
-  }
   return true
 }
