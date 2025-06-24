@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { SalesReportService } from '../../../src/services/report/sales-report'
 import { FakeSaleRepository } from '../../helpers/fake-repositories'
-import { makeSale } from '../../helpers/default-values'
+import { defaultUser, makeSale } from '../../helpers/default-values'
 import { PaymentStatus } from '@prisma/client'
 
 describe('Sales report service', () => {
@@ -18,11 +18,15 @@ describe('Sales report service', () => {
       {
         ...makeSale('s1', 'unit-1', 'org-1', PaymentStatus.PAID, 100),
         createdAt: new Date('2023-01-01'),
-      } as any,
+        sessionId: null,
+        couponId: null,
+        observation: null,
+        user: defaultUser,
+      },
       {
         ...makeSale('s2', 'unit-1', 'org-1', PaymentStatus.PAID, 150),
         createdAt: new Date('2023-01-03'),
-      } as any,
+      },
     )
 
     const res = await service.execute({

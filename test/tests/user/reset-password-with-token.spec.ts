@@ -5,12 +5,13 @@ import { FakePasswordResetTokenRepository } from '../../helpers/fake-repositorie
 import { ResourceNotFoundError } from '../../../src/services/@errors/common/resource-not-found-error'
 import { UserNotFoundError } from '../../../src/services/@errors/user/user-not-found-error'
 import { compare } from 'bcryptjs'
+import { User } from '@prisma/client'
 
 describe('Reset password with token service', () => {
   let userRepo: InMemoryUserRepository
   let tokenRepo: FakePasswordResetTokenRepository
   let service: ResetPasswordWithTokenService
-  let user: any
+  let user: User
 
   beforeEach(async () => {
     userRepo = new InMemoryUserRepository()
@@ -37,6 +38,7 @@ describe('Reset password with token service', () => {
       token: 'abc',
       userId: user.id,
       expiresAt: new Date(Date.now() - 1000),
+      createdAt: new Date(),
     })
 
     await expect(
@@ -51,6 +53,7 @@ describe('Reset password with token service', () => {
       token: 'abc',
       userId: 'other',
       expiresAt: new Date(Date.now() + 1000 * 60),
+      createdAt: new Date(),
     })
 
     await expect(
@@ -64,6 +67,7 @@ describe('Reset password with token service', () => {
       token: 'abc',
       userId: user.id,
       expiresAt: new Date(Date.now() + 1000 * 60),
+      createdAt: new Date(),
     })
 
     await service.execute({ token: 'abc', password: 'newpass' })

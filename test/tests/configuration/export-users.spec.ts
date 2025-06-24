@@ -8,7 +8,9 @@ describe('Export users service', () => {
   let service: ExportUsersService
 
   beforeEach(() => {
-    repo = new FakeBarberUsersRepository([{ ...defaultUser, profile: null, unit: null }])
+    repo = new FakeBarberUsersRepository([
+      { ...defaultUser, profile: null, unit: null },
+    ])
     service = new ExportUsersService(repo)
   })
 

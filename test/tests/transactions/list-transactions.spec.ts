@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { ListTransactionsService } from '../../../src/services/transaction/list-transactions'
 import { FakeTransactionRepository } from '../../helpers/fake-repositories'
-import { makeTransaction } from '../../helpers/default-values'
+import { defaultSale, makeTransaction } from '../../helpers/default-values'
 
 describe('List transactions service', () => {
   let repo: FakeTransactionRepository
@@ -10,10 +10,40 @@ describe('List transactions service', () => {
   beforeEach(() => {
     repo = new FakeTransactionRepository()
     repo.transactions.push(
-      makeTransaction({ id: 't1', unitId: 'unit-1', organizationId: 'org-1' }),
+      makeTransaction({
+        id: 't1',
+        unitId: 'unit-1',
+        organizationId: 'org-1',
+        sale: defaultSale,
+        userId: '',
+        affectedUserId: null,
+        cashRegisterSessionId: null,
+        type: 'ADDITION',
+        description: '',
+        amount: 0,
+        isLoan: false,
+        receiptUrl: null,
+        createdAt: new Date(),
+        saleId: null,
+      }),
     )
     repo.transactions.push(
-      makeTransaction({ id: 't2', unitId: 'unit-2', organizationId: 'org-2' }),
+      makeTransaction({
+        id: 't2',
+        unitId: 'unit-2',
+        organizationId: 'org-2',
+        sale: defaultSale,
+        userId: '',
+        affectedUserId: null,
+        cashRegisterSessionId: null,
+        type: 'ADDITION',
+        description: '',
+        amount: 0,
+        isLoan: false,
+        receiptUrl: null,
+        createdAt: new Date(),
+        saleId: null,
+      }),
     )
     service = new ListTransactionsService(repo)
   })
@@ -24,7 +54,7 @@ describe('List transactions service', () => {
       role: 'ADMIN',
       unitId: 'unit-1',
       organizationId: 'org-1',
-    } as any)
+    })
     expect(res.transactions).toHaveLength(2)
   })
 
@@ -34,7 +64,7 @@ describe('List transactions service', () => {
       role: 'OWNER',
       unitId: 'unit-1',
       organizationId: 'org-1',
-    } as any)
+    })
     expect(res.transactions).toHaveLength(1)
     expect(res.transactions[0].id).toBe('t1')
   })
@@ -45,7 +75,7 @@ describe('List transactions service', () => {
       role: 'BARBER',
       unitId: 'unit-2',
       organizationId: 'org-2',
-    } as any)
+    })
     expect(res.transactions).toHaveLength(1)
     expect(res.transactions[0].id).toBe('t2')
   })
@@ -57,7 +87,7 @@ describe('List transactions service', () => {
         role: 'ADMIN',
         unitId: 'unit-1',
         organizationId: 'org-1',
-      } as any),
+      }),
     ).rejects.toThrow('User not found')
   })
 })

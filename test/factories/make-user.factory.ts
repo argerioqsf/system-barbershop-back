@@ -12,5 +12,10 @@ export function makeUser(overwrite?: Overwrite) {
     email: faker.internet.email(),
     password: overwrite?.password ?? faker.internet.password(),
     active: false,
+    organizationId: '',
+    unitId: '',
+    versionToken: 0,
+    versionTokenInvalidate: null,
+    createdAt: new Date(),
   }
 }

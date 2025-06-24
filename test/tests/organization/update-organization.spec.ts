@@ -8,7 +8,9 @@ describe('Update organization service', () => {
   let service: UpdateOrganizationService
 
   beforeEach(() => {
-    repo = new FakeOrganizationRepository({ ...defaultOrganization }, [{ ...defaultOrganization }])
+    repo = new FakeOrganizationRepository({ ...defaultOrganization }, [
+      { ...defaultOrganization },
+    ])
     service = new UpdateOrganizationService(repo)
   })
 

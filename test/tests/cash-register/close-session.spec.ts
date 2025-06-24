@@ -2,8 +2,10 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { CloseSessionService } from '../../../src/services/cash-register/close-session'
 import { InMemoryCashRegisterRepository } from '../../helpers/fake-repositories'
 import { TransactionType } from '@prisma/client'
+import { defaultUser } from '../../helpers/default-values'
+import { CompleteCashSession } from '../../../src/repositories/cash-register-repository'
 
-function makeSession() {
+function makeSession(): CompleteCashSession {
   return {
     id: 's1',
     openedById: 'u1',
@@ -12,7 +14,7 @@ function makeSession() {
     closedAt: null,
     initialAmount: 0,
     finalAmount: null,
-    user: {} as any,
+    user: defaultUser,
     sales: [],
     transactions: [
       {
@@ -25,6 +27,9 @@ function makeSession() {
         description: '',
         amount: 100,
         createdAt: new Date(),
+        isLoan: true,
+        receiptUrl: null,
+        saleId: null,
       },
       {
         id: 't2',
@@ -36,9 +41,12 @@ function makeSession() {
         description: '',
         amount: 40,
         createdAt: new Date(),
+        isLoan: true,
+        receiptUrl: null,
+        saleId: null,
       },
     ],
-  } as any
+  }
 }
 
 describe('Close session service', () => {

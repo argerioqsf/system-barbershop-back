@@ -4,8 +4,15 @@ import { FakeCouponRepository } from '../../helpers/fake-repositories'
 import { makeCoupon } from '../../helpers/default-values'
 import { DiscountType } from '@prisma/client'
 
-const c1 = { ...makeCoupon('c1', 'C1', 10, DiscountType.VALUE), organizationId: 'org-1' } as any
-const c2 = { ...makeCoupon('c2', 'C2', 20, DiscountType.VALUE), unitId: 'unit-2', organizationId: 'org-2' } as any
+const c1 = {
+  ...makeCoupon('c1', 'C1', 10, DiscountType.VALUE),
+  organizationId: 'org-1',
+}
+const c2 = {
+  ...makeCoupon('c2', 'C2', 20, DiscountType.VALUE),
+  unitId: 'unit-2',
+  organizationId: 'org-2',
+}
 
 describe('List coupons service', () => {
   let repo: FakeCouponRepository
@@ -17,25 +24,45 @@ describe('List coupons service', () => {
   })
 
   it('lists all for admin', async () => {
-    const res = await service.execute({ sub: '1', role: 'ADMIN', unitId: 'unit-1', organizationId: 'org-1' } as any)
+    const res = await service.execute({
+      sub: '1',
+      role: 'ADMIN',
+      unitId: 'unit-1',
+      organizationId: 'org-1',
+    })
     expect(res.coupons).toHaveLength(2)
   })
 
   it('filters by organization for owner', async () => {
-    const res = await service.execute({ sub: '1', role: 'OWNER', unitId: 'unit-1', organizationId: 'org-1' } as any)
+    const res = await service.execute({
+      sub: '1',
+      role: 'OWNER',
+      unitId: 'unit-1',
+      organizationId: 'org-1',
+    })
     expect(res.coupons).toHaveLength(1)
     expect(res.coupons[0].id).toBe('c1')
   })
 
   it('filters by unit for others', async () => {
-    const res = await service.execute({ sub: '1', role: 'BARBER', unitId: 'unit-2', organizationId: 'org-2' } as any)
+    const res = await service.execute({
+      sub: '1',
+      role: 'BARBER',
+      unitId: 'unit-2',
+      organizationId: 'org-2',
+    })
     expect(res.coupons).toHaveLength(1)
     expect(res.coupons[0].id).toBe('c2')
   })
 
   it('throws if user not found', async () => {
     await expect(
-      service.execute({ sub: '', role: 'ADMIN', unitId: 'unit-1', organizationId: 'org-1' } as any),
+      service.execute({
+        sub: '',
+        role: 'ADMIN',
+        unitId: 'unit-1',
+        organizationId: 'org-1',
+      }),
     ).rejects.toThrow('User not found')
   })
 })

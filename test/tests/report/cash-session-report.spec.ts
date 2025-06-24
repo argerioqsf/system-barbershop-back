@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { CashSessionReportService } from '../../../src/services/report/cash-session-report'
 import { FakeCashRegisterRepository } from '../../helpers/fake-repositories'
-import { TransactionType } from '@prisma/client'
+import { PaymentMethod, PaymentStatus, TransactionType } from '@prisma/client'
 
 describe('Cash session report service', () => {
   let repo: FakeCashRegisterRepository
@@ -32,6 +32,9 @@ describe('Cash session report service', () => {
           description: '',
           amount: 100,
           createdAt: new Date(),
+          isLoan: true,
+          receiptUrl: null,
+          saleId: null,
         },
         {
           id: 't2',
@@ -43,6 +46,9 @@ describe('Cash session report service', () => {
           description: '',
           amount: 40,
           createdAt: new Date(),
+          isLoan: true,
+          receiptUrl: null,
+          saleId: null,
         },
       ],
       sales: [
@@ -52,9 +58,13 @@ describe('Cash session report service', () => {
           clientId: 'c1',
           unitId: 'unit-1',
           total: 150,
-          method: 'CASH',
-          paymentStatus: 'PAID',
+          method: PaymentMethod.CASH,
+          paymentStatus: PaymentStatus.PAID,
           createdAt: new Date(),
+          coupon: null,
+          sessionId: 'ss-1',
+          couponId: 'cp-1',
+          observation: 'Pagamento no balcão' as string | null,
           items: [
             {
               id: 'i1',
@@ -68,20 +78,61 @@ describe('Cash session report service', () => {
               discount: null,
               discountType: null,
               porcentagemBarbeiro: null,
-              service: { name: 'Cut', price: 100 },
-              product: null,
-              barber: null,
-              coupon: null,
+              service: {
+                name: 'Cut',
+                price: 100,
+                id: '',
+                description: null,
+                imageUrl: null,
+                cost: 0,
+                category: null,
+                defaultTime: null,
+                commissionPercentage: null,
+                unitId: '',
+              },
+              appointmentId: null,
             },
           ],
-          user: { id: 'u1', profile: { commissionPercentage: 50 } },
-          client: {},
-          coupon: null,
-          session: null,
-          transaction: null,
+          user: {
+            id: 'u1',
+            name: 'user',
+            active: true,
+            createdAt: new Date(),
+            email: 'email',
+            organizationId: 'org-1',
+            password: '123456',
+            unitId: 'unit-1',
+            versionToken: 1,
+            versionTokenInvalidate: 0,
+            profile: {
+              commissionPercentage: 50,
+              id: '',
+              phone: '',
+              cpf: '',
+              genre: '',
+              birthday: '',
+              pix: '',
+              roleId: '',
+              totalBalance: 0,
+              userId: '',
+              createdAt: new Date(),
+            },
+          },
         },
       ],
-    } as any
+      user: {
+        id: 'u1',
+        name: 'user',
+        active: true,
+        createdAt: new Date(),
+        email: 'email',
+        organizationId: 'org-1',
+        password: '123456',
+        unitId: 'unit-1',
+        versionToken: 1,
+        versionTokenInvalidate: 0,
+      },
+    }
 
     const res = await service.execute({ sessionId: 's1' })
     expect(res.totalIn).toBe(100)

@@ -6,6 +6,7 @@ import {
 } from '../../helpers/fake-repositories'
 import { makeRole, makeProfile } from '../../helpers/default-values'
 import { GetUserProfileFromUserIdService } from '../../../src/services/profile/get-profile-from-userId-service'
+import { PermissionCategory } from '@prisma/client'
 
 const profileRepo = new FakeProfilesRepository()
 
@@ -28,7 +29,13 @@ describe('List roles service', () => {
     repo = new InMemoryRoleRepository([r1, r2])
     service = new ListRolesService(repo)
     const profile = makeProfile('prof-1', '1')
-    ;(profile as any).permissions = [{ id: 'perm', name: 'LIST_ROLES_UNIT' }]
+    profile.permissions = [
+      {
+        id: 'perm',
+        name: 'LIST_ROLES_UNIT',
+        category: PermissionCategory.ROLE,
+      },
+    ]
     profileRepo.profiles = [profile]
   })
 
@@ -39,7 +46,7 @@ describe('List roles service', () => {
       unitId: 'unit-1',
       organizationId: 'org-1',
       permissions: ['LIST_ROLES_UNIT'],
-    } as any)
+    })
     expect(res.roles).toHaveLength(1)
     expect(res.roles[0].id).toBe('r1')
   })

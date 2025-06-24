@@ -18,7 +18,7 @@ describe('List users service', () => {
       role: 'ADMIN',
       unitId: 'unit-1',
       organizationId: 'org-1',
-    } as any)
+    })
     expect(res.users).toHaveLength(2)
     expect(res.users[0].profile?.workHours).toBeDefined()
     expect(res.users[0].profile?.blockedHours).toBeDefined()
@@ -30,7 +30,7 @@ describe('List users service', () => {
       role: 'OWNER',
       unitId: 'unit-1',
       organizationId: 'org-1',
-    } as any)
+    })
     expect(res.users).toHaveLength(1)
     expect(res.users[0].id).toBe('u1')
   })
@@ -41,7 +41,7 @@ describe('List users service', () => {
       role: 'BARBER',
       unitId: 'unit-2',
       organizationId: 'org-2',
-    } as any)
+    })
     expect(res.users).toHaveLength(1)
     expect(res.users[0].id).toBe('u2')
   })
@@ -53,7 +53,7 @@ describe('List users service', () => {
         role: 'ADMIN',
         unitId: 'u1',
         organizationId: 'o1',
-      } as any),
+      }),
     ).rejects.toThrow('User not found')
   })
 })

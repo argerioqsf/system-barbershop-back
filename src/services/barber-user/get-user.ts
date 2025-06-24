@@ -1,12 +1,32 @@
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
-import { Profile, User } from '@prisma/client'
+import {
+  BarberService,
+  Permission,
+  Profile,
+  ProfileBlockedHour,
+  ProfileWorkHour,
+  Role,
+  User,
+} from '@prisma/client'
 
 interface GetUserRequest {
   id: string
 }
 
 interface GetUserResponse {
-  user: (User & { profile: Profile | null }) | null
+  user:
+    | (User & {
+        profile:
+          | (Profile & {
+              role: Role
+              permissions: Permission[]
+              workHours: ProfileWorkHour[]
+              blockedHours: ProfileBlockedHour[]
+              barberServices: BarberService[]
+            })
+          | null
+      })
+    | null
 }
 
 export class GetUserService {

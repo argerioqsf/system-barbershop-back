@@ -19,7 +19,7 @@ describe('List sessions service', () => {
       role: 'ADMIN',
       unitId: 'unit-1',
       organizationId: 'org-1',
-    } as any)
+    })
     expect(res.sessions).toHaveLength(2)
   })
 
@@ -29,7 +29,7 @@ describe('List sessions service', () => {
       role: 'OWNER',
       unitId: 'unit-1',
       organizationId: 'org-1',
-    } as any)
+    })
     expect(res.sessions).toHaveLength(1)
     expect(res.sessions[0].id).toBe('s1')
   })
@@ -40,14 +40,19 @@ describe('List sessions service', () => {
       role: 'BARBER',
       unitId: 'unit-2',
       organizationId: 'org-2',
-    } as any)
+    })
     expect(res.sessions).toHaveLength(1)
     expect(res.sessions[0].id).toBe('s2')
   })
 
   it('throws if user not found', async () => {
     await expect(
-      service.execute({ sub: '', role: 'ADMIN', unitId: 'u1', organizationId: 'o1' } as any),
+      service.execute({
+        sub: '',
+        role: 'ADMIN',
+        unitId: 'u1',
+        organizationId: 'o1',
+      }),
     ).rejects.toThrow('User not found')
   })
 })

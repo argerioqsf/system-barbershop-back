@@ -18,10 +18,8 @@ import {
   defaultUser,
   defaultOrganization,
   defaultUnit,
-  defaultClient,
   makeSaleWithBarber,
   makeSale,
-  makeService,
   makeBarberServiceRel,
   makeProduct,
   makeBarberProductRel,
@@ -75,9 +73,9 @@ describe('Set sale status service', () => {
         id: 'cashier',
         organizationId: defaultOrganization.id,
         unitId: defaultUnit.id,
-        unit: { organizationId: defaultOrganization.id },
+        unit: { ...defaultUnit, organizationId: defaultOrganization.id },
       },
-      barberUser as any,
+      barberUser,
     )
 
     cashRepo.session = {
@@ -90,6 +88,7 @@ describe('Set sale status service', () => {
       transactions: [],
       sales: [],
       finalAmount: null,
+      user: defaultUser,
     }
 
     service = new SetSaleStatusService(
@@ -146,6 +145,8 @@ describe('Set sale status service', () => {
       product: null,
       barber: { ...barberUser, profile: barberProfile },
       coupon: null,
+      appointmentId: null,
+      appointment: null,
     })
     saleRepo.sales.push(sale)
     barberServiceRepo.items.push(
@@ -186,6 +187,8 @@ describe('Set sale status service', () => {
       product,
       barber: { ...barberUser, profile: barberProfile },
       coupon: null,
+      appointmentId: null,
+      appointment: null,
     })
     saleRepo.sales.push(sale)
     barberProductRepo.items.push(

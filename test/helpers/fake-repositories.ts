@@ -1,5 +1,5 @@
 import { InMemoryCashRegisterRepository as BaseCashRegisterRepository } from '../../src/repositories/in-memory/in-memory-cash-register-repository'
-import type { CashRegisterSession, Transaction, Sale } from '@prisma/client'
+import type { Transaction, Sale } from '@prisma/client'
 import type { CompleteCashSession } from '../../src/repositories/cash-register-repository'
 import { InMemoryProfilesRepository } from '../../src/repositories/in-memory/in-memory-profiles-repository'
 import { Profile, User } from '@prisma/client'
@@ -53,12 +53,18 @@ export class FakeProfilesRepository extends InMemoryProfilesRepository {
 
 export class FakeCashRegisterRepository extends BaseCashRegisterRepository {
   private _session:
-    | (CompleteCashSession & { transactions: Transaction[]; sales: Sale[] })
+    | (CompleteCashSession & {
+        transactions: Transaction[]
+        sales: Sale[]
+      })
     | null = null
 
   constructor(
     session?:
-      | (CashRegisterSession & { transactions: Transaction[]; sales: Sale[] })
+      | (CompleteCashSession & {
+          transactions: Transaction[]
+          sales: Sale[]
+        })
       | null,
   ) {
     super()
@@ -68,18 +74,24 @@ export class FakeCashRegisterRepository extends BaseCashRegisterRepository {
   }
 
   get session():
-    | (CompleteCashSession & { transactions: Transaction[]; sales: Sale[] })
+    | (CompleteCashSession & {
+        transactions: Transaction[]
+        sales: Sale[]
+      })
     | null {
     return this._session
   }
 
   set session(
     value:
-      | (CashRegisterSession & { transactions: Transaction[]; sales: Sale[] })
+      | (CompleteCashSession & {
+          transactions: Transaction[]
+          sales: Sale[]
+        })
       | null,
   ) {
-    this._session = value as any
-    this.sessions = value ? [value as any] : []
+    this._session = value
+    this.sessions = value ? [value] : []
   }
 }
 export { InMemoryUnitRepository as FakeUnitRepository } from '../../src/repositories/in-memory/in-memory-unit-repository'

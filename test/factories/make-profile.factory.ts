@@ -1,19 +1,26 @@
 import { faker } from '@faker-js/faker'
+import {
+  BarberService,
+  Permission,
+  Profile,
+  ProfileBlockedHour,
+  ProfileWorkHour,
+  Role,
+  RoleName,
+} from '@prisma/client'
 import crypto from 'node:crypto'
 
 type Overwrite = {
   userId?: string
 }
 
-export function makeProfile(overwrite?: Overwrite) {
-  enum Role {
-    administrator,
-    consultant,
-    indicator,
-    coordinator,
-    financial,
-  }
-
+export function makeProfile(overwrite?: Overwrite): Profile & {
+  role: Role
+  permissions: Permission[]
+  workHours: ProfileWorkHour[]
+  blockedHours: ProfileBlockedHour[]
+  barberServices: BarberService[]
+} {
   return {
     id: crypto.randomUUID(),
     userId: overwrite?.userId ?? crypto.randomUUID(),
@@ -22,6 +29,18 @@ export function makeProfile(overwrite?: Overwrite) {
     genre: faker.person.gender(),
     birthday: faker.string.numeric(8),
     pix: faker.string.alphanumeric(36),
-    role: Role.administrator,
+    role: {
+      id: crypto.randomUUID(),
+      name: RoleName.ADMIN,
+      unitId: 'unit-1',
+    },
+    roleId: 'rl-1',
+    commissionPercentage: 0,
+    totalBalance: 0,
+    createdAt: new Date(),
+    permissions: [],
+    workHours: [],
+    blockedHours: [],
+    barberServices: [],
   }
 }

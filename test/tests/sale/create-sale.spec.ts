@@ -521,6 +521,7 @@ describe('Create sale service', () => {
       transactions: [],
       sales: [],
       finalAmount: null,
+      user: defaultUser,
     }
     ctx.profilesRepo.profiles.push({ ...barberProfile, user: barberUser })
 

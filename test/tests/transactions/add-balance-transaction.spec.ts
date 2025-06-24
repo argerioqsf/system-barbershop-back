@@ -9,26 +9,49 @@ import {
   FakeUnitRepository,
   FakeOrganizationRepository,
 } from '../../helpers/fake-repositories'
-import { defaultUser, defaultProfile, defaultUnit, defaultOrganization, makeProfile, makeUser } from '../../helpers/default-values'
+import {
+  defaultUser,
+  defaultProfile,
+  defaultUnit,
+  defaultOrganization,
+  makeProfile,
+  makeUser,
+} from '../../helpers/default-values'
 
 let transactionRepo: FakeTransactionRepository
 let barberRepo: FakeBarberUsersRepository
 let cashRepo: FakeCashRegisterRepository
 
-vi.mock('../../../src/services/@factories/transaction/make-create-transaction', () => ({
-  makeCreateTransaction: () => new CreateTransactionService(transactionRepo, barberRepo, cashRepo),
-}))
+vi.mock(
+  '../../../src/services/@factories/transaction/make-create-transaction',
+  () => ({
+    makeCreateTransaction: () =>
+      new CreateTransactionService(transactionRepo, barberRepo, cashRepo),
+  }),
+)
 
-function setup(options?: { userBalance?: number; unitBalance?: number; allowsLoan?: boolean }) {
+function setup(options?: {
+  userBalance?: number
+  unitBalance?: number
+  allowsLoan?: boolean
+}) {
   transactionRepo = new FakeTransactionRepository()
   barberRepo = new FakeBarberUsersRepository()
   cashRepo = new FakeCashRegisterRepository()
   const profileRepo = new FakeProfilesRepository()
-  const unit = { ...defaultUnit, totalBalance: options?.unitBalance ?? 0, allowsLoan: options?.allowsLoan ?? defaultUnit.allowsLoan }
+  const unit = {
+    ...defaultUnit,
+    totalBalance: options?.unitBalance ?? 0,
+    allowsLoan: options?.allowsLoan ?? defaultUnit.allowsLoan,
+  }
   const unitRepo = new FakeUnitRepository(unit)
   const organizationRepo = new FakeOrganizationRepository(defaultOrganization)
 
-  const profile = { ...defaultProfile, totalBalance: options?.userBalance ?? 0, user: { ...defaultUser } }
+  const profile = {
+    ...defaultProfile,
+    totalBalance: options?.userBalance ?? 0,
+    user: { ...defaultUser },
+  }
   profileRepo.profiles.push(profile)
   const user = { ...defaultUser, profile, unit }
   barberRepo.users.push(user)
@@ -43,6 +66,7 @@ function setup(options?: { userBalance?: number; unitBalance?: number; allowsLoa
     transactions: [],
     sales: [],
     finalAmount: null,
+    user: defaultUser,
   }
 
   const service = new AddBalanceTransactionService(
@@ -66,7 +90,11 @@ describe('Add balance transaction service', () => {
 
   it('throws when passing negative value', async () => {
     await expect(
-      ctx.service.execute({ userId: ctx.user.id, description: '', amount: -10 }),
+      ctx.service.execute({
+        userId: ctx.user.id,
+        description: '',
+        amount: -10,
+      }),
     ).rejects.toThrow('Negative values ​​cannot be passed on withdrawals')
   })
 
@@ -97,7 +125,11 @@ describe('Add balance transaction service', () => {
   })
 
   it('adds value without affected user increases unit', async () => {
-    await ctx.service.execute({ userId: ctx.user.id, description: '', amount: 40 })
+    await ctx.service.execute({
+      userId: ctx.user.id,
+      description: '',
+      amount: 40,
+    })
     expect(ctx.unitRepo.unit.totalBalance).toBe(40)
     expect(ctx.transactionRepo.transactions).toHaveLength(1)
   })

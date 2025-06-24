@@ -6,6 +6,7 @@ import {
 } from '../../helpers/fake-repositories'
 import { makeSale, makeProfile } from '../../helpers/default-values'
 import { GetUserProfileFromUserIdService } from '../../../src/services/profile/get-profile-from-userId-service'
+import { PermissionCategory, PermissionName } from '@prisma/client'
 
 const profileRepo = new FakeProfilesRepository()
 
@@ -29,7 +30,13 @@ describe('List sales service', () => {
     repo.sales.push(s1, s2)
     service = new ListSalesService(repo)
     const profile = makeProfile('prof-1', '1')
-    ;(profile as any).permissions = [{ id: 'perm', name: 'LIST_SALES' }]
+    profile.permissions = [
+      {
+        id: 'perm',
+        name: PermissionName.LIST_SALES_UNIT,
+        category: PermissionCategory.SALE,
+      },
+    ]
     profileRepo.profiles = [profile]
   })
 
@@ -39,7 +46,7 @@ describe('List sales service', () => {
       permissions: ['LIST_SALES_UNIT'],
       unitId: 'unit-1',
       organizationId: 'org-1',
-    } as any)
+    })
     expect(res.sales).toHaveLength(1)
   })
 
@@ -49,7 +56,7 @@ describe('List sales service', () => {
       permissions: ['LIST_SALES_UNIT'],
       unitId: 'unit-1',
       organizationId: 'org-1',
-    } as any)
+    })
     expect(res.sales).toHaveLength(1)
     expect(res.sales[0].id).toBe('s1')
   })
@@ -60,7 +67,7 @@ describe('List sales service', () => {
       permissions: ['LIST_SALES_UNIT'],
       unitId: 'unit-2',
       organizationId: 'org-2',
-    } as any)
+    })
     expect(res.sales).toHaveLength(1)
     expect(res.sales[0].id).toBe('s2')
   })
@@ -72,7 +79,7 @@ describe('List sales service', () => {
         role: 'ADMIN',
         unitId: 'unit-1',
         organizationId: 'org-1',
-      } as any),
+      }),
     ).rejects.toThrow('User not found')
   })
 })

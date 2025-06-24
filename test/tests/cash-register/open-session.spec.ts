@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { OpenSessionService } from '../../../src/services/cash-register/open-session'
-import { InMemoryCashRegisterRepository, FakeTransactionRepository } from '../../helpers/fake-repositories'
+import {
+  InMemoryCashRegisterRepository,
+  FakeTransactionRepository,
+} from '../../helpers/fake-repositories'
 import { sessionUser } from '../../helpers/default-values'
 
 describe('Open session service', () => {
@@ -35,7 +38,8 @@ describe('Open session service', () => {
   })
 
   it('throws when user not found', async () => {
-    // @ts-expect-error testing
-    await expect(service.execute({ user: undefined, initialAmount: 0 })).rejects.toThrow('User not found')
+    await expect(
+      service.execute({ user: undefined, initialAmount: 0 }),
+    ).rejects.toThrow('User not found')
   })
 })

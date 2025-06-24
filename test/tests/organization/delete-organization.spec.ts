@@ -8,7 +8,9 @@ describe('Delete organization service', () => {
   let service: DeleteOrganizationService
 
   beforeEach(() => {
-    repo = new FakeOrganizationRepository({ ...defaultOrganization }, [{ ...defaultOrganization }])
+    repo = new FakeOrganizationRepository({ ...defaultOrganization }, [
+      { ...defaultOrganization },
+    ])
     service = new DeleteOrganizationService(repo)
   })
 

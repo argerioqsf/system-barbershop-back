@@ -2,10 +2,22 @@ import { UserToken } from '@/http/controllers/authenticate-controller'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { assertUser } from '@/utils/assert-user'
 import { getScope, buildUnitWhere } from '@/utils/permissions'
-import { Profile, User } from '@prisma/client'
+import {
+  Profile,
+  ProfileBlockedHour,
+  ProfileWorkHour,
+  User,
+} from '@prisma/client'
 
 interface ListUsersResponse {
-  users: (Omit<User, 'password'> & { profile: Profile | null })[]
+  users: (Omit<User, 'password'> & {
+    profile:
+      | (Profile & {
+          workHours: ProfileWorkHour[]
+          blockedHours: ProfileBlockedHour[]
+        })
+      | null
+  })[]
 }
 
 export class ListUsersService {

@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { AddUnitDayHourService } from '../../../src/services/unit/add-unit-day-hour'
 import { FakeUnitDayHourRepository } from '../../helpers/fake-repositories'
 
-
 describe('Add unit day hour service', () => {
   let repo: FakeUnitDayHourRepository
   let service: AddUnitDayHourService
