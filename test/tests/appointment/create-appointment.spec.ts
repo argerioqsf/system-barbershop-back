@@ -39,8 +39,8 @@ describe('Create appointment service', () => {
     serviceRepo.services.push({ ...serviceAppointment, defaultTime: 40 })
     const dh = await dayHourRepo.create({
       weekDay: 1,
-      startHour: '09:00',
-      endHour: '18:00',
+      startHour: new Date('1970-01-01T09:00:00Z'),
+      endHour: new Date('1970-01-01T18:00:00Z'),
     })
     const barberWithRel = {
       ...barberUser,
@@ -72,8 +72,8 @@ describe('Create appointment service', () => {
     serviceRepo.services.push({ ...serviceAppointment, defaultTime: 30 })
     const dh = await dayHourRepo.create({
       weekDay: 2,
-      startHour: '09:00',
-      endHour: '18:00',
+      startHour: new Date('1970-01-01T09:00:00Z'),
+      endHour: new Date('1970-01-01T18:00:00Z'),
     })
     const barberWithService = {
       ...barberUser,
@@ -102,8 +102,8 @@ describe('Create appointment service', () => {
   it('fails when overlapping appointment', async () => {
     const dh1 = await dayHourRepo.create({
       weekDay: 3,
-      startHour: '08:00',
-      endHour: '10:00',
+      startHour: new Date('1970-01-01T08:00:00Z'),
+      endHour: new Date('1970-01-01T10:00:00Z'),
     })
     const serviceAppointment = makeService('service-33', 100)
     serviceRepo.services.push({ ...serviceAppointment, defaultTime: 60 })
@@ -141,8 +141,8 @@ describe('Create appointment service', () => {
   it('fails when time blocked', async () => {
     const dh1 = await dayHourRepo.create({
       weekDay: 4,
-      startHour: '09:00',
-      endHour: '10:00',
+      startHour: new Date('1970-01-01T09:00:00Z'),
+      endHour: new Date('1970-01-01T10:00:00Z'),
     })
     const serviceAppointment = makeService('service-44', 100)
     serviceRepo.services.push({ ...serviceAppointment, defaultTime: 30 })
@@ -171,7 +171,11 @@ describe('Create appointment service', () => {
     ).rejects.toThrow('Barber not available')
   })
   it('fails when outside working hours', async () => {
-    const dh = await dayHourRepo.create({ weekDay: 5, startHour: "09:00", endHour: "10:00" })
+    const dh = await dayHourRepo.create({
+      weekDay: 5,
+      startHour: new Date('1970-01-01T09:00:00Z'),
+      endHour: new Date('1970-01-01T10:00:00Z'),
+    })
     const serviceAppointment = makeService("service-55", 100)
     serviceRepo.services.push({ ...serviceAppointment, defaultTime: 30 })
     const barberWithService = {

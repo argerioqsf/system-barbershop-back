@@ -3,8 +3,8 @@ import { DayHour } from '@prisma/client'
 
 interface CreateDayHourRequest {
   weekDay: number
-  startHour: string
-  endHour: string
+  startHour: Date
+  endHour: Date
 }
 
 interface CreateDayHourResponse {

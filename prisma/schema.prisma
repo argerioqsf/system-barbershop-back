@@ -420,8 +420,8 @@ model Unit {
 model DayHour {
   id          String             @id @default(uuid())
   weekDay     Int
-  startHour   String
-  endHour     String
+  startHour   DateTime
+  endHour     DateTime
   unitDays    UnitDayHour[]
   workHours   ProfileWorkHour[]
   blockedHours ProfileBlockedHour[]

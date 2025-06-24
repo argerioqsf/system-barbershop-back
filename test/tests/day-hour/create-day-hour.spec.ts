@@ -14,8 +14,8 @@ describe('Create day hour service', () => {
   it('creates a day hour', async () => {
     const res = await service.execute({
       weekDay: 1,
-      startHour: '08:00',
-      endHour: '12:00',
+      startHour: new Date('1970-01-01T08:00:00Z'),
+      endHour: new Date('1970-01-01T12:00:00Z'),
     })
 
     expect(repo.items).toHaveLength(1)

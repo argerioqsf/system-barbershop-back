@@ -57,8 +57,16 @@ describe('List users service', () => {
   })
 
   it('computes available slots for user', async () => {
-    const dh1 = await dayHourRepo.create({ weekDay: 1, startHour: '09:00', endHour: '10:00' })
-    const dh2 = await dayHourRepo.create({ weekDay: 1, startHour: '10:00', endHour: '11:00' })
+    const dh1 = await dayHourRepo.create({
+      weekDay: 1,
+      startHour: new Date('1970-01-01T09:00:00Z'),
+      endHour: new Date('1970-01-01T10:00:00Z'),
+    })
+    const dh2 = await dayHourRepo.create({
+      weekDay: 1,
+      startHour: new Date('1970-01-01T10:00:00Z'),
+      endHour: new Date('1970-01-01T11:00:00Z'),
+    })
     const profile = { ...u1.profile, workHours: [
       { id: 'wh1', profileId: u1.profile.id, dayHourId: dh1.id },
       { id: 'wh2', profileId: u1.profile.id, dayHourId: dh2.id },

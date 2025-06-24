@@ -373,11 +373,19 @@ async function main() {
   })
 
   const dayHour1 = await prisma.dayHour.create({
-    data: { weekDay: 1, startHour: '08:00', endHour: '09:00' },
+    data: {
+      weekDay: 1,
+      startHour: new Date('1970-01-01T08:00:00Z'),
+      endHour: new Date('1970-01-01T09:00:00Z'),
+    },
   })
 
   const dayHour2 = await prisma.dayHour.create({
-    data: { weekDay: 1, startHour: '09:00', endHour: '10:00' },
+    data: {
+      weekDay: 1,
+      startHour: new Date('1970-01-01T09:00:00Z'),
+      endHour: new Date('1970-01-01T10:00:00Z'),
+    },
   })
 
   await prisma.unitDayHour.createMany({
