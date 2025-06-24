@@ -170,6 +170,52 @@ describe('Create appointment service', () => {
       }),
     ).rejects.toThrow('Barber not available')
   })
+
+  it('allows scheduling around blocked interval', async () => {
+    const dh = await dayHourRepo.create({
+      weekDay: 1,
+      startHour: '08:00',
+      endHour: '12:00',
+    })
+    const svc = makeService('svc-split', 100)
+    serviceRepo.services.push({ ...svc, defaultTime: 30 })
+    const barberWithService = {
+      ...barberUser,
+      profile: {
+        ...barberProfile,
+        barberServices: [makeBarberServiceRel(barberProfile.id, 'svc-split')],
+        workHours: [{ id: 'wh-split', profileId: barberProfile.id, dayHourId: dh.id }],
+        blockedHours: [
+          {
+            id: 'bh-split',
+            profileId: barberProfile.id,
+            startHour: new Date('2024-01-06T09:00:00'),
+            endHour: new Date('2024-01-06T09:30:00'),
+          },
+        ],
+      },
+    }
+    barberUserRepo.users.push(barberWithService, defaultClient)
+
+    const early = await service.execute({
+      clientId: defaultClient.id,
+      barberId: barberUser.id,
+      serviceId: 'svc-split',
+      unitId: 'unit-1',
+      date: new Date('2024-01-06T08:30:00'),
+    })
+    expect(early.appointment).toBeDefined()
+
+    await expect(
+      service.execute({
+        clientId: defaultClient.id,
+        barberId: barberUser.id,
+        serviceId: 'svc-split',
+        unitId: 'unit-1',
+        date: new Date('2024-01-06T09:15:00'),
+      }),
+    ).rejects.toThrow('Barber not available')
+  })
   it('fails when outside working hours', async () => {
     const dh = await dayHourRepo.create({
       weekDay: 5,
