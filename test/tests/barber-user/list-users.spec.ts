@@ -1,15 +1,23 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { ListUsersService } from '../../../src/services/barber-user/list-users'
-import { InMemoryBarberUsersRepository } from '../../helpers/fake-repositories'
+import {
+  InMemoryBarberUsersRepository,
+  FakeAppointmentRepository,
+  FakeDayHourRepository,
+} from '../../helpers/fake-repositories'
 import { listUser1 as u1, listUser2 as u2 } from '../../helpers/default-values'
 
 describe('List users service', () => {
   let repo: InMemoryBarberUsersRepository
   let service: ListUsersService
+  let appointmentRepo: FakeAppointmentRepository
+  let dayHourRepo: FakeDayHourRepository
 
   beforeEach(() => {
     repo = new InMemoryBarberUsersRepository([u1, u2])
-    service = new ListUsersService(repo)
+    appointmentRepo = new FakeAppointmentRepository()
+    dayHourRepo = new FakeDayHourRepository()
+    service = new ListUsersService(repo, appointmentRepo, dayHourRepo)
   })
 
   it('lists all for admin', async () => {
@@ -22,6 +30,7 @@ describe('List users service', () => {
     expect(res.users).toHaveLength(2)
     expect(res.users[0].profile?.workHours).toBeDefined()
     expect(res.users[0].profile?.blockedHours).toBeDefined()
+    expect(res.users[0].availableSlots).toBeDefined()
   })
 
   it('filters by organization for owner', async () => {

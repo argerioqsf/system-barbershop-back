@@ -85,6 +85,9 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
   ): Promise<DetailedAppointment[]> {
     return this.appointments.filter((a) => {
       if (where.unitId && a.unitId !== where.unitId) return false
+      if (where.barberId && a.barberId !== where.barberId) return false
+      if (where.date && a.date.getTime() !== (where.date as Date).getTime())
+        return false
       if (
         where.unit &&
         'organizationId' in (where.unit as { organizationId: string })

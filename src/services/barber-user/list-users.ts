@@ -1,5 +1,7 @@
 import { UserToken } from '@/http/controllers/authenticate-controller'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
+import { AppointmentRepository } from '@/repositories/appointment-repository'
+import { DayHourRepository } from '@/repositories/day-hour-repository'
 import { assertUser } from '@/utils/assert-user'
 import { getScope, buildUnitWhere } from '@/utils/permissions'
 import {
@@ -8,6 +10,7 @@ import {
   ProfileWorkHour,
   User,
 } from '@prisma/client'
+import { countAvailableSlots } from '@/utils/barber-availability'
 
 interface ListUsersResponse {
   users: (Omit<User, 'password'> & {
@@ -17,17 +20,32 @@ interface ListUsersResponse {
           blockedHours: ProfileBlockedHour[]
         })
       | null
+    availableSlots: number
   })[]
 }
 
 export class ListUsersService {
-  constructor(private repository: BarberUsersRepository) {}
+  constructor(
+    private repository: BarberUsersRepository,
+    private appointmentRepository: AppointmentRepository,
+    private dayHourRepository: DayHourRepository,
+  ) {}
 
   async execute(userToken: UserToken): Promise<ListUsersResponse> {
     assertUser(userToken)
     const scope = getScope(userToken)
     const where = buildUnitWhere(scope)
     const users = await this.repository.findMany(where)
-    return { users }
+    const withSlots = await Promise.all(
+      users.map(async (u) => ({
+        ...u,
+        availableSlots: await countAvailableSlots(
+          u as any,
+          this.appointmentRepository,
+          this.dayHourRepository,
+        ),
+      }))
+    )
+    return { users: withSlots }
   }
 }

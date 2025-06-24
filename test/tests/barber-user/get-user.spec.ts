@@ -1,6 +1,10 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { GetUserService } from '../../../src/services/barber-user/get-user'
-import { InMemoryBarberUsersRepository } from '../../helpers/fake-repositories'
+import {
+  InMemoryBarberUsersRepository,
+  FakeAppointmentRepository,
+  FakeDayHourRepository,
+} from '../../helpers/fake-repositories'
 import { makeUser } from '../../factories/make-user.factory'
 import { makeProfile } from '../../factories/make-profile.factory'
 import {
@@ -15,10 +19,14 @@ import {
 describe('Get user service', () => {
   let repo: InMemoryBarberUsersRepository
   let service: GetUserService
+  let appointmentRepo: FakeAppointmentRepository
+  let dayHourRepo: FakeDayHourRepository
 
   beforeEach(() => {
     repo = new InMemoryBarberUsersRepository()
-    service = new GetUserService(repo)
+    appointmentRepo = new FakeAppointmentRepository()
+    dayHourRepo = new FakeDayHourRepository()
+    service = new GetUserService(repo, appointmentRepo, dayHourRepo)
   })
 
   it('returns user by id', async () => {
@@ -43,6 +51,7 @@ describe('Get user service', () => {
     expect(res.user?.id).toBe(user.id)
     expect(res.user?.profile?.workHours).toBeDefined()
     expect(res.user?.profile?.blockedHours).toBeDefined()
+    expect(res.user?.availableSlots).toBe(0)
   })
 
   it('returns null when not found', async () => {

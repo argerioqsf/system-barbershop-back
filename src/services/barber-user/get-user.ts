@@ -1,4 +1,6 @@
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
+import { AppointmentRepository } from '@/repositories/appointment-repository'
+import { DayHourRepository } from '@/repositories/day-hour-repository'
 import {
   BarberService,
   Permission,
@@ -8,6 +10,7 @@ import {
   Role,
   User,
 } from '@prisma/client'
+import { countAvailableSlots } from '@/utils/barber-availability'
 
 interface GetUserRequest {
   id: string
@@ -25,15 +28,27 @@ interface GetUserResponse {
               barberServices: BarberService[]
             })
           | null
-      })
+      }) & { availableSlots: number }
     | null
 }
 
 export class GetUserService {
-  constructor(private repository: BarberUsersRepository) {}
+  constructor(
+    private repository: BarberUsersRepository,
+    private appointmentRepository: AppointmentRepository,
+    private dayHourRepository: DayHourRepository,
+  ) {}
 
   async execute({ id }: GetUserRequest): Promise<GetUserResponse> {
     const user = await this.repository.findById(id)
-    return { user }
+    if (!user) return { user: null }
+
+    const availableSlots = await countAvailableSlots(
+      user as any,
+      this.appointmentRepository,
+      this.dayHourRepository,
+    )
+
+    return { user: { ...user, availableSlots } }
   }
 }

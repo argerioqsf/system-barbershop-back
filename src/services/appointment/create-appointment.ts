@@ -6,6 +6,9 @@ import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { BarberNotFoundError } from '../@errors/barber/barber-not-found-error'
 import { BarberDoesNotHaveThisServiceError } from '../@errors/barber/barber-does-not-have-this-service'
 import { UserNotFoundError } from '../@errors/user/user-not-found-error'
+import { DayHourRepository } from '@/repositories/day-hour-repository'
+import { isAppointmentAvailable } from '@/utils/barber-availability'
+import { BarberNotAvailableError } from '../@errors/barber/barber-not-available-error'
 
 interface CreateAppointmentRequest {
   clientId: string
@@ -28,6 +31,7 @@ export class CreateAppointmentService {
     private repository: AppointmentRepository,
     private serviceRepository: ServiceRepository,
     private barberUserRepository: BarberUsersRepository,
+    private dayHourRepository: DayHourRepository,
   ) {}
 
   async execute(
@@ -53,6 +57,17 @@ export class CreateAppointmentService {
 
     const durationService =
       seviceLinkBarber?.time ?? service.defaultTime ?? null
+
+    const duration = durationService ?? 0
+    const available = await isAppointmentAvailable(
+      barber as any,
+      data.date,
+      data.hour,
+      duration,
+      this.repository,
+      this.dayHourRepository,
+    )
+    if (!available) throw new BarberNotAvailableError()
 
     if (typeof data.value === 'number') {
       const diff = service.price - data.value
