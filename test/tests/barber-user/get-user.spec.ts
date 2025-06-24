@@ -51,7 +51,7 @@ describe('Get user service', () => {
     expect(res.user?.id).toBe(user.id)
     expect(res.user?.profile?.workHours).toBeDefined()
     expect(res.user?.profile?.blockedHours).toBeDefined()
-    expect(res.user?.availableSlots).toBe(0)
+    expect(res.user?.availableSlots).toEqual([])
   })
 
   it('returns null when not found', async () => {

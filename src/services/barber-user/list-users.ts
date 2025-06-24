@@ -9,9 +9,10 @@ import {
   ProfileBlockedHour,
   ProfileWorkHour,
   User,
+  DayHour,
 } from '@prisma/client'
 import {
-  countAvailableSlots,
+  listAvailableSlots,
   BarberWithHours,
 } from '@/utils/barber-availability'
 
@@ -23,7 +24,7 @@ interface ListUsersResponse {
           blockedHours: ProfileBlockedHour[]
         })
       | null
-    availableSlots: number
+    availableSlots: DayHour[]
   })[]
 }
 
@@ -42,7 +43,7 @@ export class ListUsersService {
     const withSlots = await Promise.all(
       users.map(async (u) => ({
         ...u,
-        availableSlots: await countAvailableSlots(
+        availableSlots: await listAvailableSlots(
           u as BarberWithHours,
           this.appointmentRepository,
           this.dayHourRepository,

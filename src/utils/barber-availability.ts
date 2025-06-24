@@ -6,6 +6,7 @@ import {
   ProfileBlockedHour,
   ProfileWorkHour,
   User,
+  DayHour,
 } from '@prisma/client'
 import { timeToMinutes, intervalsOverlap, mergeIntervals } from './time'
 
@@ -19,14 +20,14 @@ export type BarberWithHours = User & {
     | null
 }
 
-export async function countAvailableSlots(
+export async function listAvailableSlots(
   barber: BarberWithHours,
   appointmentRepo: AppointmentRepository,
   dayHourRepo: DayHourRepository,
-): Promise<number> {
-  if (!barber.profile) return 0
+): Promise<DayHour[]> {
+  if (!barber.profile) return []
   const workIds = barber.profile.workHours.map((w) => w.dayHourId)
-  if (workIds.length === 0) return 0
+  if (workIds.length === 0) return []
   const workHours = await dayHourRepo.findMany({ id: { in: workIds } })
   const blocked = new Set(barber.profile.blockedHours.map((b) => b.dayHourId))
   const availableHours = workHours.filter((dh) => !blocked.has(dh.id))
@@ -35,8 +36,9 @@ export async function countAvailableSlots(
     weekDay: dh.weekDay,
     start: timeToMinutes(dh.startHour),
     end: timeToMinutes(dh.endHour),
+    dh,
   }))
-  if (slots.length === 0) return 0
+  if (slots.length === 0) return []
   const appointments = await appointmentRepo.findMany({ barberId: barber.id })
   const taken = new Set<string>()
   for (const app of appointments) {
@@ -51,7 +53,7 @@ export async function countAvailableSlots(
       }
     }
   }
-  return slots.filter((s) => !taken.has(s.id)).length
+  return slots.filter((s) => !taken.has(s.id)).map((s) => s.dh)
 }
 
 export async function isAppointmentAvailable(

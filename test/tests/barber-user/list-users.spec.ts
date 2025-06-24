@@ -30,7 +30,7 @@ describe('List users service', () => {
     expect(res.users).toHaveLength(2)
     expect(res.users[0].profile?.workHours).toBeDefined()
     expect(res.users[0].profile?.blockedHours).toBeDefined()
-    expect(res.users[0].availableSlots).toBeDefined()
+    expect(Array.isArray(res.users[0].availableSlots)).toBe(true)
   })
 
   it('filters by organization for owner', async () => {
