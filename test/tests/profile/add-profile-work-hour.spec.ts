@@ -36,8 +36,8 @@ describe('Add profile work hour service', () => {
       ],
     }
     profileRepo.profiles.push({
-      ...makeProfile('prof-1', token.sub),
-      user: { id: token.sub, unit: { slotDuration: 30 } } as any,
+      ...makeProfile('p1', token.sub),
+      user: { id: token.sub, unitId: token.unitId, unit: { slotDuration: 30 } } as any,
     })
     await addUnitHour.execute({
       unitId: token.unitId,
@@ -68,8 +68,12 @@ describe('Add profile work hour service', () => {
       ],
     }
     profileRepo.profiles.push({
-      ...makeProfile('prof-2', token.sub),
-      user: { id: token.sub, unit: { slotDuration: 30 } } as any,
+      ...makeProfile('p2', token.sub),
+      user: {
+        id: token.sub,
+        unitId: token.unitId,
+        unit: { slotDuration: 30 },
+      } as any,
     })
     await addUnitHour.execute({
       unitId: token.unitId,
@@ -112,8 +116,12 @@ describe('Add profile work hour service', () => {
       ],
     }
     profileRepo.profiles.push({
-      ...makeProfile('prof-3', token.sub),
-      user: { id: token.sub, unit: { slotDuration: 30 } } as any,
+      ...makeProfile('p3', token.sub),
+      user: {
+        id: token.sub,
+        unitId: token.unitId,
+        unit: { slotDuration: 30 },
+      } as any,
     })
     await addUnitHour.execute({
       unitId: token.unitId,
@@ -150,8 +158,12 @@ describe('Add profile work hour service', () => {
       ],
     }
     profileRepo.profiles.push({
-      ...makeProfile('prof-4', token.sub),
-      user: { id: token.sub, unit: { slotDuration: 30 } } as any,
+      ...makeProfile('p4', token.sub),
+      user: {
+        id: token.sub,
+        unitId: token.unitId,
+        unit: { slotDuration: 30 },
+      } as any,
     })
     await addUnitHour.execute({
       unitId: token.unitId,
