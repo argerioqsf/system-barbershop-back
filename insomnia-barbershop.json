@@ -1318,7 +1318,7 @@
       "parentId": "fld_schedule",
       "name": "Add unit opening hour",
       "method": "POST",
-      "url": "{{ baseURL }}/unit-opening-hours",
+      "url": "{{ baseURL }}/units/{unitId}/opening-hours",
       "body": {
         "mimeType": "application/json",
         "text": "{\n  \"unitId\": \"\",\n  \"weekDay\": 1,\n  \"startHour\": \"08:00\",\n  \"endHour\": \"09:00\"\n}"
@@ -1372,6 +1372,62 @@
           "name": "Content-Type",
           "value": "application/json"
         },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_delete_profile_work_hour",
+      "_type": "request",
+      "parentId": "fld_schedule",
+      "name": "Delete profile work hour",
+      "method": "DELETE",
+      "url": "{{ baseURL }}/profile/{profileId}/work-hours/{id}",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_delete_profile_blocked_hour",
+      "_type": "request",
+      "parentId": "fld_schedule",
+      "name": "Delete profile blocked hour",
+      "method": "DELETE",
+      "url": "{{ baseURL }}/profile/{profileId}/blocked-hours/{id}",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_delete_unit_opening_hour",
+      "_type": "request",
+      "parentId": "fld_schedule",
+      "name": "Delete unit opening hour",
+      "method": "DELETE",
+      "url": "{{ baseURL }}/units/{unitId}/opening-hours/{id}",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_list_unit_opening_hours",
+      "_type": "request",
+      "parentId": "fld_schedule",
+      "name": "List unit opening hours",
+      "method": "GET",
+      "url": "{{ baseURL }}/units/opening-hours",
+      "headers": [
         {
           "name": "Authorization",
           "value": "Bearer {{ token }}"
