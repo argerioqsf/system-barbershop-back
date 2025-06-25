@@ -1,4 +1,5 @@
 import { ProfileWorkHourRepository } from '@/repositories/profile-work-hour-repository'
+import { UnitOpeningHourRepository } from '@/repositories/unit-opening-hour-repository'
 import { ProfileWorkHour, PermissionName } from '@prisma/client'
 
 import { assertPermission } from '@/utils/permissions'
@@ -12,6 +13,7 @@ import {
   timeToMinutes,
 } from '@/utils/time'
 import { TimeIntervalOverlapsError } from '../@errors/profile/time-interval-overlaps-error'
+import { WorkHourOutsideOpeningHoursError } from '../@errors/profile/work-hour-outside-opening-hours-error'
 
 interface AddProfileWorkHourRequest {
   profileId: string
@@ -32,6 +34,7 @@ export class AddProfileWorkHourService {
   constructor(
     private repository: ProfileWorkHourRepository,
     private profileRepository: ProfilesRepository,
+    private openingHourRepository: UnitOpeningHourRepository,
   ) {}
 
   async execute(
@@ -54,6 +57,30 @@ export class AddProfileWorkHourService {
       user.permissions,
     )
 
+    const profile = await this.profileRepository.findById(data.profileId)
+    if (!profile) throw new ProfileNotFoundError()
+
+    const unitHours = await this.openingHourRepository.findManyByUnit(
+      profile.user.unitId,
+    )
+    const openIntervals = unitHours
+      .filter((oh) => oh.weekDay === data.weekDay)
+      .map((oh) => ({
+        start: timeToMinutes(oh.startHour),
+        end: timeToMinutes(oh.endHour),
+      }))
+
+    const workHourAvaiable = {
+      start: timeToMinutes(data.startHour),
+      end: timeToMinutes(data.endHour),
+    }
+
+    const insideOpening = openIntervals.some(
+      (o) => workHourAvaiable.start >= o.start && workHourAvaiable.end <= o.end,
+    )
+
+    if (!insideOpening) throw new WorkHourOutsideOpeningHoursError()
+
     const current = await this.repository.findManyByProfile(
       data.profileId,
       data.weekDay,
@@ -63,11 +90,6 @@ export class AddProfileWorkHourService {
       start: timeToMinutes(dh.startHour),
       end: timeToMinutes(dh.endHour),
     }))
-
-    const workHourAvaiable = {
-      start: timeToMinutes(data.startHour),
-      end: timeToMinutes(data.endHour),
-    }
 
     const verifyOverlay = subtractIntervals([workHourAvaiable], currentMap)
     if (

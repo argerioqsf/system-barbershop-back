@@ -11,7 +11,16 @@ export class PrismaUnitOpeningHourRepository
     return prisma.unitOpeningHour.create({ data })
   }
 
-  async findManyByUnit(unitId: string): Promise<UnitOpeningHour[]> {
-    return prisma.unitOpeningHour.findMany({ where: { unitId } })
+  async findManyByUnit(
+    unitId: string,
+    weekDay?: number,
+  ): Promise<UnitOpeningHour[]> {
+    return prisma.unitOpeningHour.findMany({
+      where: { unitId, ...(weekDay ? { weekDay } : {}) },
+    })
+  }
+
+  async delete(id: string): Promise<void> {
+    await prisma.unitOpeningHour.delete({ where: { id } })
   }
 }

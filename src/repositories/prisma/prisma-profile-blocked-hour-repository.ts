@@ -14,4 +14,8 @@ export class PrismaProfileBlockedHourRepository
   async findManyByProfile(profileId: string): Promise<ProfileBlockedHour[]> {
     return prisma.profileBlockedHour.findMany({ where: { profileId } })
   }
+
+  async delete(id: string): Promise<void> {
+    await prisma.profileBlockedHour.delete({ where: { id } })
+  }
 }

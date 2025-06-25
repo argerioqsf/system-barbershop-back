@@ -8,4 +8,5 @@ export interface ProfileWorkHourRepository {
     profileId: string,
     weekDay?: number,
   ): Promise<ProfileWorkHour[]>
+  delete(id: string): Promise<void>
 }

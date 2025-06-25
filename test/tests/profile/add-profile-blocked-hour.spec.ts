@@ -26,7 +26,7 @@ describe('Add profile blocked hour', () => {
     blockedRepo = new FakeProfileBlockedHourRepository()
     profileRepo = new FakeProfilesRepository()
     addUnitHour = new AddUnitOpeningHourService(unitRelRepo)
-    addWorkHour = new AddProfileWorkHourService(workRepo, profileRepo)
+    addWorkHour = new AddProfileWorkHourService(workRepo, profileRepo, unitRelRepo)
     addBlocked = new AddProfileBlockedHourService(
       blockedRepo,
       workRepo,
@@ -63,7 +63,7 @@ describe('Add profile blocked hour', () => {
     }
     profileRepo.profiles.push({
       ...makeProfile('prof-1', token.sub),
-      user: { id: token.sub, unit: { slotDuration: 30 } } as any,
+      user: { id: token.sub, unitId: token.unitId, unit: { slotDuration: 30 } } as any,
     })
     await addWorkHour.execute(token, {
       profileId: 'prof-1',
@@ -126,7 +126,7 @@ describe('Add profile blocked hour', () => {
     }
     profileRepo.profiles.push({
       ...makeProfile('prof-2', tokenWork.sub),
-      user: { id: tokenWork.sub, unit: { slotDuration: 30 } } as any,
+      user: { id: tokenWork.sub, unitId: tokenWork.unitId, unit: { slotDuration: 30 } } as any,
     })
     await addWorkHour.execute(tokenWork, {
       profileId: 'prof-2',
