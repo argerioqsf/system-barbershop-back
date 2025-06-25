@@ -21,8 +21,14 @@ export class InMemoryUnitOpeningHourRepository
     return item
   }
 
-  async findManyByUnit(unitId: string): Promise<UnitOpeningHour[]> {
-    return this.items.filter((i) => i.unitId === unitId)
+  async findManyByUnit(
+    unitId: string,
+    weekDay?: number,
+  ): Promise<UnitOpeningHour[]> {
+    return this.items.filter(
+      (i) =>
+        i.unitId === unitId && (weekDay === undefined || i.weekDay === weekDay),
+    )
   }
 
   async delete(id: string): Promise<void> {
