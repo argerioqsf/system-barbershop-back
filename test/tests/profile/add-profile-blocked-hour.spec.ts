@@ -1,76 +1,86 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { AddProfileBlockedHourService } from '../../../src/services/profile/add-profile-blocked-hour'
 import { AddProfileWorkHourService } from '../../../src/services/profile/add-profile-work-hour'
-import { CreateDayHourService } from '../../../src/services/day-hour/create-day-hour'
-import { AddUnitDayHourService } from '../../../src/services/unit/add-unit-day-hour'
+import { AddUnitOpeningHourService } from '../../../src/services/unit/add-unit-opening-hour'
 import { PermissionName } from '@prisma/client'
 import {
-  FakeDayHourRepository,
-  FakeUnitDayHourRepository,
+  FakeUnitOpeningHourRepository,
   FakeProfileWorkHourRepository,
   FakeProfileBlockedHourRepository,
+  FakeProfilesRepository,
 } from '../../helpers/fake-repositories'
+import { makeProfile } from '../../helpers/default-values'
 
 describe('Add profile blocked hour', () => {
-  let dayHourRepo: FakeDayHourRepository
-  let unitRelRepo: FakeUnitDayHourRepository
+  let unitRelRepo: FakeUnitOpeningHourRepository
   let workRepo: FakeProfileWorkHourRepository
   let blockedRepo: FakeProfileBlockedHourRepository
-  let createDayHour: CreateDayHourService
-  let addUnitHour: AddUnitDayHourService
+  let addUnitHour: AddUnitOpeningHourService
   let addWorkHour: AddProfileWorkHourService
   let addBlocked: AddProfileBlockedHourService
+  let profileRepo: FakeProfilesRepository
 
   beforeEach(() => {
-    dayHourRepo = new FakeDayHourRepository()
-    unitRelRepo = new FakeUnitDayHourRepository()
+    unitRelRepo = new FakeUnitOpeningHourRepository()
     workRepo = new FakeProfileWorkHourRepository()
     blockedRepo = new FakeProfileBlockedHourRepository()
-    createDayHour = new CreateDayHourService(dayHourRepo)
-    addUnitHour = new AddUnitDayHourService(unitRelRepo)
-    addWorkHour = new AddProfileWorkHourService(workRepo)
-    addBlocked = new AddProfileBlockedHourService(blockedRepo, workRepo)
+    profileRepo = new FakeProfilesRepository()
+    addUnitHour = new AddUnitOpeningHourService(unitRelRepo)
+    addWorkHour = new AddProfileWorkHourService(workRepo, profileRepo)
+    addBlocked = new AddProfileBlockedHourService(
+      blockedRepo,
+      workRepo,
+      profileRepo,
+    )
   })
 
   it('blocks hour when in work hours', async () => {
-    const { dayHour } = await createDayHour.execute({
+    await addUnitHour.execute({
+      unitId: 'unit-1',
       weekDay: 1,
       startHour: '08:00',
       endHour: '12:00',
     })
-    await addUnitHour.execute({ unitId: 'unit-1', dayHourId: dayHour.id })
     const token = {
       sub: 'prof-1',
       unitId: 'unit-1',
       organizationId: 'org-1',
       role: 'BARBER',
-      permissions: [PermissionName.MANAGE_SELF_WORK_HOURS],
+      permissions: [
+        PermissionName.MANAGE_SELF_WORK_HOURS,
+        PermissionName.MENAGE_USERS_WORKING_HOURS,
+      ],
     }
     const tokenBlock = {
       sub: 'prof-1',
       unitId: 'unit-1',
       organizationId: 'org-1',
       role: 'BARBER',
-      permissions: [PermissionName.MANAGE_SELF_BLOCKED_HOURS],
+      permissions: [
+        PermissionName.MANAGE_SELF_BLOCKED_HOURS,
+        PermissionName.MENAGE_USERS_BLOCKED_HOURS,
+      ],
     }
+    profileRepo.profiles.push({
+      ...makeProfile('prof-1', token.sub),
+      user: { id: token.sub, unit: { slotDuration: 30 } } as any,
+    })
     await addWorkHour.execute(token, {
       profileId: 'prof-1',
-      dayHourId: dayHour.id,
+      weekDay: 1,
+      startHour: '08:00',
+      endHour: '12:00',
     })
     const res = await addBlocked.execute(tokenBlock, {
       profileId: 'prof-1',
-      dayHourId: dayHour.id,
+      startHour: new Date('2024-01-01T08:00:00'),
+      endHour: new Date('2024-01-01T12:00:00'),
     })
-    expect(res.blocked.dayHourId).toBe(dayHour.id)
+    expect(res.blocked.startHour.getHours()).toBe(8)
     expect(blockedRepo.items).toHaveLength(1)
   })
 
   it('throws if hour not in work hours', async () => {
-    const { dayHour } = await createDayHour.execute({
-      weekDay: 2,
-      startHour: '09:00',
-      endHour: '12:00',
-    })
     const token = {
       sub: 'prof-1',
       unitId: 'unit-1',
@@ -79,44 +89,62 @@ describe('Add profile blocked hour', () => {
       permissions: [PermissionName.MANAGE_SELF_BLOCKED_HOURS],
     }
     await expect(
-      addBlocked.execute(token, { profileId: 'prof-1', dayHourId: dayHour.id }),
+      addBlocked.execute(token, {
+        profileId: 'prof-1',
+        startHour: new Date('2024-01-02T09:00:00'),
+        endHour: new Date('2024-01-02T12:00:00'),
+      }),
     ).rejects.toThrow()
   })
 
   it('throws when blocking same hour twice', async () => {
-    const { dayHour } = await createDayHour.execute({
+    await addUnitHour.execute({
+      unitId: 'unit-1',
       weekDay: 3,
       startHour: '10:00',
       endHour: '12:00',
     })
-    await addUnitHour.execute({ unitId: 'unit-1', dayHourId: dayHour.id })
     const tokenWork = {
       sub: 'prof-2',
       unitId: 'unit-1',
       organizationId: 'org-1',
       role: 'BARBER',
-      permissions: [PermissionName.MANAGE_SELF_WORK_HOURS],
+      permissions: [
+        PermissionName.MANAGE_SELF_WORK_HOURS,
+        PermissionName.MENAGE_USERS_WORKING_HOURS,
+      ],
     }
     const tokenBlock = {
       sub: 'prof-2',
       unitId: 'unit-1',
       organizationId: 'org-1',
       role: 'BARBER',
-      permissions: [PermissionName.MANAGE_SELF_BLOCKED_HOURS],
+      permissions: [
+        PermissionName.MANAGE_SELF_BLOCKED_HOURS,
+        PermissionName.MENAGE_USERS_BLOCKED_HOURS,
+      ],
     }
+    profileRepo.profiles.push({
+      ...makeProfile('prof-2', tokenWork.sub),
+      user: { id: tokenWork.sub, unit: { slotDuration: 30 } } as any,
+    })
     await addWorkHour.execute(tokenWork, {
       profileId: 'prof-2',
-      dayHourId: dayHour.id,
+      weekDay: 3,
+      startHour: '10:00',
+      endHour: '12:00',
     })
     await addBlocked.execute(tokenBlock, {
       profileId: 'prof-2',
-      dayHourId: dayHour.id,
+      startHour: new Date('2024-01-03T10:00:00'),
+      endHour: new Date('2024-01-03T12:00:00'),
     })
 
     await expect(
       addBlocked.execute(tokenBlock, {
         profileId: 'prof-2',
-        dayHourId: dayHour.id,
+        startHour: new Date('2024-01-03T10:00:00'),
+        endHour: new Date('2024-01-03T12:00:00'),
       }),
     ).rejects.toThrow()
   })

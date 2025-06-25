@@ -171,12 +171,13 @@ export function makeBarberServiceRel(
   serviceId: string,
   type: CommissionCalcType = CommissionCalcType.PERCENTAGE_OF_ITEM,
   commission?: number,
+  time?: number | null,
 ): BarberService {
   return {
     id: `rel-${profileId}-${serviceId}`,
     profileId,
     serviceId,
-    time: null,
+    time: time ?? null,
     commissionPercentage: commission ?? null,
     commissionType: type,
   }
@@ -597,7 +598,8 @@ export const appointment1 = {
   client: {},
   barber: {},
   date: new Date(),
-  hour: '10',
+  status: 'SCHEDULED',
+  durationService: null,
   discount: 0,
   value: null,
   unit: { organizationId: 'org-1' },
@@ -610,7 +612,8 @@ export const appointment2 = {
   client: {},
   barber: {},
   date: new Date(),
-  hour: '11',
+  status: 'SCHEDULED',
+  durationService: null,
   discount: 0,
   value: null,
   unit: { organizationId: 'org-2' },
@@ -646,7 +649,8 @@ export function makeAppointment(
     discount?: number
     value?: number
     date?: Date
-    hour?: string
+    durationService?: number | null
+    status?: string
   } = {},
 ) {
   return {
@@ -656,7 +660,8 @@ export function makeAppointment(
     serviceId: service.id,
     unitId: defaultUnit.id,
     date: options.date ?? new Date(),
-    hour: options.hour ?? '09:00',
+    status: (options.status as any) ?? 'SCHEDULED',
+    durationService: options.durationService ?? null,
     observation: null,
     discount: options.discount ?? 0,
     value: options.value ?? null,

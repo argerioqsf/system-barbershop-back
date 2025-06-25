@@ -1,14 +1,19 @@
-import { Appointment, Prisma } from '@prisma/client'
+import { Appointment, Prisma, AppointmentStatus } from '@prisma/client'
 import {
   AppointmentRepository,
   DetailedAppointment,
 } from '../appointment-repository'
 import { randomUUID } from 'crypto'
 
+type CreateInput = Prisma.AppointmentCreateInput & {
+  status: AppointmentStatus
+  durationService?: number | null
+}
+
 export class InMemoryAppointmentRepository implements AppointmentRepository {
   public appointments: DetailedAppointment[] = []
 
-  async create(data: Prisma.AppointmentCreateInput): Promise<Appointment> {
+  async create(data: CreateInput): Promise<Appointment> {
     const appointment: Appointment = {
       id: randomUUID(),
       clientId: (data.client as { connect: { id: string } }).connect.id,
@@ -16,7 +21,8 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
       serviceId: (data.service as { connect: { id: string } }).connect.id,
       unitId: (data.unit as { connect: { id: string } }).connect.id,
       date: data.date as Date,
-      hour: data.hour as string,
+      status: data.status,
+      durationService: data.durationService ?? null,
       observation: data.observation ?? null,
       discount: data.discount ?? 0,
       value: data.value ?? null,
@@ -83,6 +89,9 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
   ): Promise<DetailedAppointment[]> {
     return this.appointments.filter((a) => {
       if (where.unitId && a.unitId !== where.unitId) return false
+      if (where.barberId && a.barberId !== where.barberId) return false
+      if (where.date && a.date.getTime() !== (where.date as Date).getTime())
+        return false
       if (
         where.unit &&
         'organizationId' in (where.unit as { organizationId: string })

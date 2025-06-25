@@ -1,4 +1,5 @@
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
+import { AppointmentRepository } from '@/repositories/appointment-repository'
 import {
   BarberService,
   Permission,
@@ -8,6 +9,11 @@ import {
   Role,
   User,
 } from '@prisma/client'
+import {
+  listAvailableSlots,
+  BarberWithHours,
+} from '@/utils/barber-availability'
+import { IntervalsFormatted } from '@/utils/time'
 
 interface GetUserRequest {
   id: string
@@ -15,7 +21,7 @@ interface GetUserRequest {
 
 interface GetUserResponse {
   user:
-    | (User & {
+    | ((User & {
         profile:
           | (Profile & {
               role: Role
@@ -25,15 +31,25 @@ interface GetUserResponse {
               barberServices: BarberService[]
             })
           | null
-      })
+      }) & { availableSlots: IntervalsFormatted[] })
     | null
 }
 
 export class GetUserService {
-  constructor(private repository: BarberUsersRepository) {}
+  constructor(
+    private repository: BarberUsersRepository,
+    private appointmentRepository: AppointmentRepository,
+  ) {}
 
   async execute({ id }: GetUserRequest): Promise<GetUserResponse> {
     const user = await this.repository.findById(id)
-    return { user }
+    if (!user) return { user: null }
+
+    const availableSlots = await listAvailableSlots(
+      user as BarberWithHours,
+      this.appointmentRepository,
+    )
+
+    return { user: { ...user, availableSlots } }
   }
 }

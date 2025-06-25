@@ -6,6 +6,11 @@ import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { BarberNotFoundError } from '../@errors/barber/barber-not-found-error'
 import { BarberDoesNotHaveThisServiceError } from '../@errors/barber/barber-does-not-have-this-service'
 import { UserNotFoundError } from '../@errors/user/user-not-found-error'
+import {
+  isAppointmentAvailable,
+  BarberWithHours,
+} from '@/utils/barber-availability'
+import { BarberNotAvailableError } from '../@errors/barber/barber-not-available-error'
 
 interface CreateAppointmentRequest {
   clientId: string
@@ -13,7 +18,6 @@ interface CreateAppointmentRequest {
   serviceId: string
   unitId: string
   date: Date
-  hour: string
   observation?: string
   discount?: number
   value?: number
@@ -34,10 +38,11 @@ export class CreateAppointmentService {
     data: CreateAppointmentRequest,
   ): Promise<CreateAppointmentResponse> {
     let discount = 0
-    const value = data.value
+    let value = data.value
 
     const service = await this.serviceRepository.findById(data.serviceId)
     if (!service) throw new ServiceNotFoundError()
+    value = value ?? service.price
 
     const barber = await this.barberUserRepository.findById(data.barberId)
     if (!barber) throw new BarberNotFoundError()
@@ -49,7 +54,19 @@ export class CreateAppointmentService {
       (serviceB) => serviceB.serviceId === service.id,
     )
 
-    if (seviceLinkBarber) throw new BarberDoesNotHaveThisServiceError()
+    if (!seviceLinkBarber) throw new BarberDoesNotHaveThisServiceError()
+
+    const durationService =
+      seviceLinkBarber?.time ?? service.defaultTime ?? null
+
+    const duration = durationService ?? 0
+    const available = await isAppointmentAvailable(
+      barber as BarberWithHours,
+      data.date,
+      duration,
+      this.repository,
+    )
+    if (!available) throw new BarberNotAvailableError()
 
     if (typeof data.value === 'number') {
       const diff = service.price - data.value
@@ -62,7 +79,8 @@ export class CreateAppointmentService {
       service: { connect: { id: data.serviceId } },
       unit: { connect: { id: data.unitId } },
       date: data.date,
-      hour: data.hour,
+      status: 'SCHEDULED',
+      durationService,
       observation: data.observation,
       discount,
       value,

@@ -9,6 +9,8 @@ import {
   barberUser,
   defaultClient,
   makeService,
+  makeBarberServiceRel,
+  barberProfile,
 } from '../../helpers/default-values'
 
 describe('Create appointment service', () => {
@@ -21,23 +23,318 @@ describe('Create appointment service', () => {
     repo = new FakeAppointmentRepository()
     serviceRepo = new FakeServiceRepository()
     barberUserRepo = new FakeBarberUsersRepository()
-    service = new CreateAppointmentService(repo, serviceRepo, barberUserRepo)
+    service = new CreateAppointmentService(
+      repo,
+      serviceRepo,
+      barberUserRepo,
+    )
   })
 
   it('creates appointment', async () => {
     const serviceAppointment = makeService('service-11', 100)
-    serviceRepo.services.push(serviceAppointment)
-    barberUserRepo.users.push({ ...barberUser }, defaultClient)
+    serviceRepo.services.push({ ...serviceAppointment, defaultTime: 40 })
+    const workHour = {
+      id: 'wh-cre-1',
+      profileId: barberProfile.id,
+      weekDay: 1,
+      startHour: '09:00',
+      endHour: '18:00',
+    }
+    const barberWithRel = {
+      ...barberUser,
+      profile: {
+        ...barberProfile,
+        barberServices: [makeBarberServiceRel(barberProfile.id, 'service-11')],
+        workHours: [workHour],
+      },
+    }
+    barberUserRepo.users.push(barberWithRel, defaultClient)
     const res = await service.execute({
       clientId: defaultClient.id,
       barberId: barberUser.id,
       serviceId: 'service-11',
       unitId: 'unit-1',
-      date: new Date('2024-01-01'),
-      hour: '10:00',
+      date: new Date('2024-01-01T10:00:00'),
     })
     expect(repo.appointments).toHaveLength(1)
     expect(res.appointment.clientId).toBe(defaultClient.id)
     expect(res.appointment.barberId).toBe(barberUser.id)
+    expect(res.appointment.durationService).toBe(40)
   })
+
+  it('uses barber time when set', async () => {
+    const serviceAppointment = makeService('service-22', 100)
+    serviceRepo.services.push({ ...serviceAppointment, defaultTime: 30 })
+    const workHour2 = {
+      id: 'wh-cre-2',
+      profileId: barberProfile.id,
+      weekDay: 2,
+      startHour: '09:00',
+      endHour: '18:00',
+    }
+    const barberWithService = {
+      ...barberUser,
+      profile: {
+        ...barberProfile,
+        barberServices: [
+          makeBarberServiceRel(barberProfile.id, 'service-22', undefined, undefined, 50),
+        ],
+        workHours: [workHour2],
+      },
+    }
+    barberUserRepo.users.push(barberWithService, defaultClient)
+    const res = await service.execute({
+      clientId: defaultClient.id,
+      barberId: barberUser.id,
+      serviceId: 'service-22',
+      unitId: 'unit-1',
+      date: new Date('2024-01-02T12:00:00'),
+    })
+    expect(res.appointment.durationService).toBe(50)
+  })
+
+  it('fails when overlapping appointment', async () => {
+    const workHour3 = {
+      id: 'wh1',
+      profileId: barberProfile.id,
+      weekDay: 3,
+      startHour: '08:00',
+      endHour: '10:00',
+    }
+    const serviceAppointment = makeService('service-33', 100)
+    serviceRepo.services.push({ ...serviceAppointment, defaultTime: 60 })
+    const barberWithService = {
+      ...barberUser,
+      profile: {
+        ...barberProfile,
+        barberServices: [makeBarberServiceRel(barberProfile.id, 'service-33')],
+        workHours: [workHour3],
+        blockedHours: [],
+      },
+    }
+    barberUserRepo.users.push(barberWithService, defaultClient)
+    await service.execute({
+      clientId: defaultClient.id,
+      barberId: barberUser.id,
+      serviceId: 'service-33',
+      unitId: 'unit-1',
+      date: new Date('2024-01-03T08:00:00'),
+    })
+
+    await expect(
+      service.execute({
+        clientId: defaultClient.id,
+        barberId: barberUser.id,
+        serviceId: 'service-33',
+        unitId: 'unit-1',
+        date: new Date('2024-01-03T08:30:00'),
+      }),
+    ).rejects.toThrow('Barber not available')
+  })
+
+  it('fails when time blocked', async () => {
+    const workHour4 = {
+      id: 'wh2',
+      profileId: barberProfile.id,
+      weekDay: 4,
+      startHour: '09:00',
+      endHour: '10:00',
+    }
+    const serviceAppointment = makeService('service-44', 100)
+    serviceRepo.services.push({ ...serviceAppointment, defaultTime: 30 })
+    const barberWithService = {
+      ...barberUser,
+      profile: {
+        ...barberProfile,
+        barberServices: [makeBarberServiceRel(barberProfile.id, 'service-44')],
+        workHours: [workHour4],
+        blockedHours: [
+          {
+            id: 'bh1',
+            profileId: barberProfile.id,
+            startHour: new Date('2024-01-04T09:00:00'),
+            endHour: new Date('2024-01-04T10:00:00'),
+          },
+        ],
+      },
+    }
+    barberUserRepo.users.push(barberWithService, defaultClient)
+
+    await expect(
+      service.execute({
+        clientId: defaultClient.id,
+        barberId: barberUser.id,
+        serviceId: 'service-44',
+        unitId: 'unit-1',
+        date: new Date('2024-01-04T09:00:00'),
+      }),
+    ).rejects.toThrow('Barber not available')
+  })
+
+  it('allows scheduling around blocked interval', async () => {
+    const workHourSplit = {
+      id: 'wh-split',
+      profileId: barberProfile.id,
+      weekDay: 6,
+      startHour: '08:00',
+      endHour: '12:00',
+    }
+    const svc = makeService('svc-split', 100)
+    serviceRepo.services.push({ ...svc, defaultTime: 30 })
+    const barberWithService = {
+      ...barberUser,
+      profile: {
+        ...barberProfile,
+        barberServices: [makeBarberServiceRel(barberProfile.id, 'svc-split')],
+        workHours: [workHourSplit],
+        blockedHours: [
+          {
+            id: 'bh-split',
+            profileId: barberProfile.id,
+            startHour: new Date('2024-01-06T09:00:00'),
+            endHour: new Date('2024-01-06T09:30:00'),
+          },
+        ],
+      },
+    }
+    barberUserRepo.users.push(barberWithService, defaultClient)
+
+    const early = await service.execute({
+      clientId: defaultClient.id,
+      barberId: barberUser.id,
+      serviceId: 'svc-split',
+      unitId: 'unit-1',
+      date: new Date('2024-01-06T08:30:00'),
+    })
+    expect(early.appointment).toBeDefined()
+
+    await expect(
+      service.execute({
+        clientId: defaultClient.id,
+        barberId: barberUser.id,
+        serviceId: 'svc-split',
+        unitId: 'unit-1',
+        date: new Date('2024-01-06T09:15:00'),
+      }),
+    ).rejects.toThrow('Barber not available')
+  })
+  it('fails when outside working hours', async () => {
+    const workHourOut = {
+      id: 'wh-out',
+      profileId: barberProfile.id,
+      weekDay: 5,
+      startHour: '09:00',
+      endHour: '10:00',
+    }
+    const serviceAppointment = makeService("service-55", 100)
+    serviceRepo.services.push({ ...serviceAppointment, defaultTime: 30 })
+    const barberWithService = {
+      ...barberUser,
+      profile: {
+        ...barberProfile,
+        barberServices: [makeBarberServiceRel(barberProfile.id, "service-55")],
+        workHours: [workHourOut],
+        blockedHours: [],
+      },
+    }
+    barberUserRepo.users.push(barberWithService, defaultClient)
+    await expect(
+      service.execute({
+        clientId: defaultClient.id,
+        barberId: barberUser.id,
+        serviceId: "service-55",
+        unitId: "unit-1",
+        date: new Date("2024-01-05T08:30:00"),
+      }),
+    ).rejects.toThrow("Barber not available")
+  })
+
+  it('throws when service not found', async () => {
+    barberUserRepo.users.push(barberUser, defaultClient)
+    await expect(
+      service.execute({
+        clientId: defaultClient.id,
+        barberId: barberUser.id,
+        serviceId: 'missing',
+        unitId: 'unit-1',
+        date: new Date('2024-01-01T09:00:00'),
+      }),
+    ).rejects.toThrow('Service not found')
+  })
+
+  it('throws when barber not found', async () => {
+    const svc = makeService('svc-err', 100)
+    serviceRepo.services.push({ ...svc, defaultTime: 30 })
+    barberUserRepo.users.push(defaultClient)
+    await expect(
+      service.execute({
+        clientId: defaultClient.id,
+        barberId: 'no',
+        serviceId: 'svc-err',
+        unitId: 'unit-1',
+        date: new Date('2024-01-01T09:00:00'),
+      }),
+    ).rejects.toThrow('Barber not found')
+  })
+
+  it('throws when client not found', async () => {
+    const svc = makeService('svc-err2', 100)
+    serviceRepo.services.push({ ...svc, defaultTime: 30 })
+    barberUserRepo.users.push(barberUser)
+    await expect(
+      service.execute({
+        clientId: 'no',
+        barberId: barberUser.id,
+        serviceId: 'svc-err2',
+        unitId: 'unit-1',
+        date: new Date('2024-01-01T09:00:00'),
+      }),
+    ).rejects.toThrow('User not found')
+  })
+
+  it('throws when barber lacks service', async () => {
+    const svc = makeService('svc-none', 100)
+    serviceRepo.services.push({ ...svc, defaultTime: 30 })
+    barberUserRepo.users.push({ ...barberUser, profile: { ...barberProfile, barberServices: [] } }, defaultClient)
+    await expect(
+      service.execute({
+        clientId: defaultClient.id,
+        barberId: barberUser.id,
+        serviceId: 'svc-none',
+        unitId: 'unit-1',
+        date: new Date('2024-01-01T09:00:00'),
+      }),
+    ).rejects.toThrow('The barber does not have this item linked')
+  })
+
+  it('applies discount when value provided', async () => {
+    const svc = makeService('svc-disc', 100)
+    serviceRepo.services.push({ ...svc, defaultTime: 30 })
+    const workHourDisc = {
+      id: 'wh-disc',
+      profileId: barberProfile.id,
+      weekDay: 1,
+      startHour: '09:00',
+      endHour: '10:00',
+    }
+    const barberWithService = {
+      ...barberUser,
+      profile: {
+        ...barberProfile,
+        barberServices: [makeBarberServiceRel(barberProfile.id, 'svc-disc')],
+        workHours: [workHourDisc],
+      },
+    }
+    barberUserRepo.users.push(barberWithService, defaultClient)
+    const res = await service.execute({
+      clientId: defaultClient.id,
+      barberId: barberUser.id,
+      serviceId: 'svc-disc',
+      unitId: 'unit-1',
+      date: new Date('2024-01-01T09:00:00'),
+      value: 80,
+    })
+    expect(res.appointment.discount).toBe(20)
+  })
+
 })

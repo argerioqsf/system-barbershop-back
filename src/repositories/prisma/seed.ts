@@ -92,6 +92,18 @@ async function main() {
       category: PermissionCategory.USER,
     },
     {
+      name: PermissionName.MENAGE_USERS_WORKING_HOURS,
+      category: PermissionCategory.USER,
+    },
+    {
+      name: PermissionName.MANAGE_SELF_BLOCKED_HOURS,
+      category: PermissionCategory.USER,
+    },
+    {
+      name: PermissionName.MENAGE_USERS_BLOCKED_HOURS,
+      category: PermissionCategory.USER,
+    },
+    {
       name: PermissionName.CREATE_USER_MANAGER,
       category: PermissionCategory.USER,
     },
@@ -339,6 +351,7 @@ async function main() {
     data: {
       profile: { connect: { id: barber?.profile?.id } },
       service: { connect: { id: haircut.id } },
+      time: 30,
     },
   })
 
@@ -371,30 +384,46 @@ async function main() {
     },
   })
 
-  const dayHour1 = await prisma.dayHour.create({
-    data: { weekDay: 1, startHour: '08:00', endHour: '09:00' },
-  })
-
-  const dayHour2 = await prisma.dayHour.create({
-    data: { weekDay: 1, startHour: '09:00', endHour: '10:00' },
-  })
-
-  await prisma.unitDayHour.createMany({
+  await prisma.unitOpeningHour.createMany({
     data: [
-      { unitId: mainUnit.id, dayHourId: dayHour1.id },
-      { unitId: mainUnit.id, dayHourId: dayHour2.id },
+      {
+        unitId: mainUnit.id,
+        weekDay: 1,
+        startHour: '08:00',
+        endHour: '09:00',
+      },
+      {
+        unitId: mainUnit.id,
+        weekDay: 1,
+        startHour: '09:00',
+        endHour: '10:00',
+      },
     ],
   })
 
   if (barber.profile) {
     await prisma.profileWorkHour.createMany({
       data: [
-        { profileId: barber.profile.id, dayHourId: dayHour1.id },
-        { profileId: barber.profile.id, dayHourId: dayHour2.id },
+        {
+          profileId: barber.profile.id,
+          weekDay: 1,
+          startHour: '08:00',
+          endHour: '09:00',
+        },
+        {
+          profileId: barber.profile.id,
+          weekDay: 1,
+          startHour: '09:00',
+          endHour: '10:00',
+        },
       ],
     })
     await prisma.profileBlockedHour.create({
-      data: { profileId: barber.profile.id, dayHourId: dayHour2.id },
+      data: {
+        profileId: barber.profile.id,
+        startHour: new Date(new Date().setHours(9, 0, 0, 0)),
+        endHour: new Date(new Date().setHours(10, 0, 0, 0)),
+      },
     })
   }
 
@@ -404,8 +433,9 @@ async function main() {
       barberId: barber.id,
       serviceId: haircut.id,
       unitId: mainUnit.id,
-      date: new Date(),
-      hour: '10:00',
+      date: new Date(new Date().setHours(10, 0, 0, 0)),
+      status: 'SCHEDULED',
+      durationService: 30,
       discount: 0,
     },
   })
@@ -558,8 +588,6 @@ async function main() {
     sale,
     pendingSale,
     itemCoupon,
-    dayHour1,
-    dayHour2,
     manager,
     owner2,
     serviceBarber,

@@ -721,8 +721,7 @@ describe('Create sale service', () => {
       barber: { connect: { id: barberUser.id } },
       service: { connect: { id: service.id } },
       unit: { connect: { id: 'unit-1' } },
-      date: new Date('2024-01-01'),
-      hour: '09:00',
+      date: new Date('2024-01-01T09:00:00'),
       discount: 10,
       value: 40,
     })
@@ -751,8 +750,7 @@ describe('Create sale service', () => {
       barber: { connect: { id: barberUser.id } },
       service: { connect: { id: service.id } },
       unit: { connect: { id: 'unit-1' } },
-      date: new Date('2024-01-02'),
-      hour: '10:00',
+      date: new Date('2024-01-02T10:00:00'),
       value: 50,
       discount: 10,
     })
@@ -787,8 +785,7 @@ describe('Create sale service', () => {
       barber: { connect: { id: barberUser.id } },
       service: { connect: { id: service.id } },
       unit: { connect: { id: 'unit-1' } },
-      date: new Date('2024-03-01'),
-      hour: '08:00',
+      date: new Date('2024-03-01T08:00:00'),
       value: 60,
     })
 
@@ -815,8 +812,7 @@ describe('Create sale service', () => {
       barber: { connect: { id: barberUser.id } },
       service: { connect: { id: service.id } },
       unit: { connect: { id: 'unit-1' } },
-      date: new Date('2024-04-01'),
-      hour: '12:00',
+      date: new Date('2024-04-01T12:00:00'),
       value: 40,
     })
 

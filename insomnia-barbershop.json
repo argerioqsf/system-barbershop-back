@@ -116,9 +116,9 @@
         },
         {
           "name": "Authorization",
-      "value": "Bearer {{ token }}"
-      }
-    ]
+          "value": "Bearer {{ token }}"
+        }
+      ]
     },
     {
       "_id": "fld_profile",
@@ -134,7 +134,10 @@
       "method": "GET",
       "url": "{{ baseURL }}/profile",
       "headers": [
-        { "name": "Authorization", "value": "Bearer {{ token }}" }
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -149,8 +152,14 @@
         "text": "{\n  \"phone\": \"\",\n  \"cpf\": \"\",\n  \"genre\": \"M\",\n  \"birthday\": \"1990-01-01\",\n  \"pix\": \"\"\n}"
       },
       "headers": [
-        { "name": "Content-Type", "value": "application/json" },
-        { "name": "Authorization", "value": "Bearer {{ token }}" }
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -165,8 +174,14 @@
         "text": "{\n  \"phone\": \"\"\n}"
       },
       "headers": [
-        { "name": "Content-Type", "value": "application/json" },
-        { "name": "Authorization", "value": "Bearer {{ token }}" }
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -181,8 +196,14 @@
         "text": "{\n  \"phone\": \"\"\n}"
       },
       "headers": [
-        { "name": "Content-Type", "value": "application/json" },
-        { "name": "Authorization", "value": "Bearer {{ token }}" }
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -383,7 +404,10 @@
       "method": "GET",
       "url": "{{ baseURL }}/product-sellers",
       "headers": [
-        { "name": "Authorization", "value": "Bearer {{ token }}" }
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -401,7 +425,7 @@
       "url": "{{ baseURL }}/create/appointment",
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"clientId\": \"\",\n  \"barberId\": \"\",\n  \"serviceId\": \"\",\n  \"date\": \"2025-01-01T10:00:00Z\",\n  \"hour\": \"10:00\"\n}"
+        "text": "{\n  \"clientId\": \"\",\n  \"barberId\": \"\",\n  \"serviceId\": \"\",\n  \"date\": \"2025-01-01T10:00:00Z\",\n  \"value\": 0,\n  \"unitId\": \"\"\n}"
       },
       "headers": [
         {
@@ -421,6 +445,20 @@
       "name": "List appointments",
       "method": "GET",
       "url": "{{ baseURL }}/appointments",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_list_available_barbers",
+      "_type": "request",
+      "parentId": "fld_appointments",
+      "name": "List available barbers",
+      "method": "GET",
+      "url": "{{ baseURL }}/appointment-barbers",
       "headers": [
         {
           "name": "Authorization",
@@ -482,8 +520,14 @@
         "text": "{\n  \"name\": \"New Name\",\n  \"phone\": \"999999999\",\n  \"unitId\": \"\",\n  \"roleId\": \"\",\n  \"commissionPercentage\": 0\n}"
       },
       "headers": [
-        { "name": "Content-Type", "value": "application/json" },
-        { "name": "Authorization", "value": "Bearer {{ token }}" }
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -494,7 +538,10 @@
       "method": "GET",
       "url": "{{ baseURL }}/barber/users/{id}",
       "headers": [
-        { "name": "Authorization", "value": "Bearer {{ token }}" }
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -505,7 +552,10 @@
       "method": "DELETE",
       "url": "{{ baseURL }}/barber/users/{id}",
       "headers": [
-        { "name": "Authorization", "value": "Bearer {{ token }}" }
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -558,7 +608,10 @@
       "method": "GET",
       "url": "{{ baseURL }}/coupons/{id}",
       "headers": [
-        { "name": "Authorization", "value": "Bearer {{ token }}" }
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -569,7 +622,10 @@
       "method": "DELETE",
       "url": "{{ baseURL }}/coupons/{id}",
       "headers": [
-        { "name": "Authorization", "value": "Bearer {{ token }}" }
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -686,7 +742,10 @@
       "method": "GET",
       "url": "{{ baseURL }}/sales/{id}",
       "headers": [
-        { "name": "Authorization", "value": "Bearer {{ token }}" }
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -727,10 +786,23 @@
       "body": {
         "mimeType": "multipart/form-data",
         "params": [
-          { "name": "description", "value": "" },
-          { "name": "amount", "value": "0" },
-          { "name": "affectedUserId", "value": "" },
-          { "name": "receipt", "value": "", "type": "file" }
+          {
+            "name": "description",
+            "value": ""
+          },
+          {
+            "name": "amount",
+            "value": "0"
+          },
+          {
+            "name": "affectedUserId",
+            "value": ""
+          },
+          {
+            "name": "receipt",
+            "value": "",
+            "type": "file"
+          }
         ]
       },
       "headers": [
@@ -750,10 +822,23 @@
       "body": {
         "mimeType": "multipart/form-data",
         "params": [
-          { "name": "description", "value": "" },
-          { "name": "amount", "value": "0" },
-          { "name": "affectedUserId", "value": "" },
-          { "name": "receipt", "value": "", "type": "file" }
+          {
+            "name": "description",
+            "value": ""
+          },
+          {
+            "name": "amount",
+            "value": "0"
+          },
+          {
+            "name": "affectedUserId",
+            "value": ""
+          },
+          {
+            "name": "receipt",
+            "value": "",
+            "type": "file"
+          }
         ]
       },
       "headers": [
@@ -1073,7 +1158,10 @@
       "method": "GET",
       "url": "{{ baseURL }}/reports/user/{{ userId }}/products",
       "headers": [
-        { "name": "Authorization", "value": "Bearer {{ token }}" }
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -1089,8 +1177,7 @@
           "value": "Bearer {{ token }}"
         }
       ]
-    }
-,
+    },
     {
       "_id": "fld_permissions",
       "_type": "request_group",
@@ -1106,11 +1193,17 @@
       "url": "{{ baseURL }}/permissions",
       "body": {
         "mimeType": "application/json",
-      "text": "{\n  \"name\": \"\"\n}"
+        "text": "{\n  \"name\": \"\"\n}"
       },
       "headers": [
-        { "name": "Content-Type", "value": "application/json" },
-        { "name": "Authorization", "value": "Bearer {{ token }}" }
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -1121,7 +1214,10 @@
       "method": "GET",
       "url": "{{ baseURL }}/permissions",
       "headers": [
-        { "name": "Authorization", "value": "Bearer {{ token }}" }
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -1136,8 +1232,14 @@
         "text": "{\\n  \\\"name\\\": \\\"\\\",\\n  \\\"category\\\": \\\"ACCESS\\\"\\n}"
       },
       "headers": [
-        { "name": "Content-Type", "value": "application/json" },
-        { "name": "Authorization", "value": "Bearer {{ token }}" }
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -1158,8 +1260,14 @@
         "text": "{\n  \"name\": \"\",\n  \"permissionIds\": []\n}"
       },
       "headers": [
-        { "name": "Content-Type", "value": "application/json" },
-        { "name": "Authorization", "value": "Bearer {{ token }}" }
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -1170,7 +1278,10 @@
       "method": "GET",
       "url": "{{ baseURL }}/roles",
       "headers": [
-        { "name": "Authorization", "value": "Bearer {{ token }}" }
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -1185,8 +1296,14 @@
         "text": "{\\n  \\\"name\\\": \\\"ADMIN\\\",\\n  \\\"permissionIds\\\": []\\n}"
       },
       "headers": [
-        { "name": "Content-Type", "value": "application/json" },
-        { "name": "Authorization", "value": "Bearer {{ token }}" }
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -1196,35 +1313,25 @@
       "name": "Schedule"
     },
     {
-      "_id": "req_create_day_hour",
-      "_type": "request",
-      "parentId": "fld_schedule",
-      "name": "Create day hour",
-      "method": "POST",
-      "url": "{{ baseURL }}/day-hours",
-      "body": {
-        "mimeType": "application/json",
-        "text": "{\n  \"weekDay\": 1,\n  \"startHour\": \"08:00\",\n  \"endHour\": \"09:00\"\n}"
-      },
-      "headers": [
-        { "name": "Content-Type", "value": "application/json" },
-        { "name": "Authorization", "value": "Bearer {{ token }}" }
-      ]
-    },
-    {
       "_id": "req_add_unit_day_hour",
       "_type": "request",
       "parentId": "fld_schedule",
-      "name": "Add unit day hour",
+      "name": "Add unit opening hour",
       "method": "POST",
-      "url": "{{ baseURL }}/unit-day-hours",
+      "url": "{{ baseURL }}/unit-opening-hours",
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"unitId\": \"\",\n  \"dayHourId\": \"\"\n}"
+        "text": "{\n  \"unitId\": \"\",\n  \"weekDay\": 1,\n  \"startHour\": \"08:00\",\n  \"endHour\": \"09:00\"\n}"
       },
       "headers": [
-        { "name": "Content-Type", "value": "application/json" },
-        { "name": "Authorization", "value": "Bearer {{ token }}" }
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -1233,14 +1340,20 @@
       "parentId": "fld_schedule",
       "name": "Add profile work hour",
       "method": "POST",
-      "url": "{{ baseURL }}/profile/work-hours",
+      "url": "{{ baseURL }}/profile/{profileId}/work-hours",
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"profileId\": \"\",\n  \"dayHourId\": \"\"\n}"
+        "text": "{\n  \"weekDay\": 1,\n  \"startHour\": \"08:00\",\n  \"endHour\": \"09:00\"\n}"
       },
       "headers": [
-        { "name": "Content-Type", "value": "application/json" },
-        { "name": "Authorization", "value": "Bearer {{ token }}" }
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -1249,16 +1362,21 @@
       "parentId": "fld_schedule",
       "name": "Add profile blocked hour",
       "method": "POST",
-      "url": "{{ baseURL }}/profile/blocked-hours",
+      "url": "{{ baseURL }}/profile/{profileId}/blocked-hours",
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"profileId\": \"\",\n  \"dayHourId\": \"\"\n}"
+        "text": "{\n  \"startHour\": \"2025-01-01T10:00:00Z\",\n  \"endHour\": \"2025-01-01T11:00:00Z\"\n}"
       },
       "headers": [
-        { "name": "Content-Type", "value": "application/json" },
-        { "name": "Authorization", "value": "Bearer {{ token }}" }
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
       ]
     }
-
   ]
 }
