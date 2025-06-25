@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { ListUsersService } from '../../../src/services/barber-user/list-users'
 import {
   InMemoryBarberUsersRepository,
@@ -54,6 +54,8 @@ describe('List users service', () => {
   })
 
   it('computes available slots for user', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2024-01-01T00:00:00Z'))
     const profile = {
       ...u1.profile,
       workHours: [
@@ -86,8 +88,9 @@ describe('List users service', () => {
     })
     const u = res.users.find((x) => x.id === 'u1')
     expect(u?.availableSlots).toEqual([
-      expect.objectContaining({ startHour: '10:00', endHour: '11:00' }),
+      expect.objectContaining({ start: '10:00', end: '11:00' }),
     ])
+    vi.useRealTimers()
   })
 
   it('returns empty list when no users', async () => {

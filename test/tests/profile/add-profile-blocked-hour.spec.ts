@@ -7,7 +7,9 @@ import {
   FakeUnitOpeningHourRepository,
   FakeProfileWorkHourRepository,
   FakeProfileBlockedHourRepository,
+  FakeProfilesRepository,
 } from '../../helpers/fake-repositories'
+import { makeProfile } from '../../helpers/default-values'
 
 describe('Add profile blocked hour', () => {
   let unitRelRepo: FakeUnitOpeningHourRepository
@@ -16,16 +18,19 @@ describe('Add profile blocked hour', () => {
   let addUnitHour: AddUnitOpeningHourService
   let addWorkHour: AddProfileWorkHourService
   let addBlocked: AddProfileBlockedHourService
+  let profileRepo: FakeProfilesRepository
 
   beforeEach(() => {
     unitRelRepo = new FakeUnitOpeningHourRepository()
     workRepo = new FakeProfileWorkHourRepository()
     blockedRepo = new FakeProfileBlockedHourRepository()
+    profileRepo = new FakeProfilesRepository()
     addUnitHour = new AddUnitOpeningHourService(unitRelRepo)
-    addWorkHour = new AddProfileWorkHourService(workRepo)
+    addWorkHour = new AddProfileWorkHourService(workRepo, profileRepo)
     addBlocked = new AddProfileBlockedHourService(
       blockedRepo,
       workRepo,
+      profileRepo,
     )
   })
 
@@ -41,15 +46,25 @@ describe('Add profile blocked hour', () => {
       unitId: 'unit-1',
       organizationId: 'org-1',
       role: 'BARBER',
-      permissions: [PermissionName.MANAGE_SELF_WORK_HOURS],
+      permissions: [
+        PermissionName.MANAGE_SELF_WORK_HOURS,
+        PermissionName.MENAGE_USERS_WORKING_HOURS,
+      ],
     }
     const tokenBlock = {
       sub: 'prof-1',
       unitId: 'unit-1',
       organizationId: 'org-1',
       role: 'BARBER',
-      permissions: [PermissionName.MANAGE_SELF_BLOCKED_HOURS],
+      permissions: [
+        PermissionName.MANAGE_SELF_BLOCKED_HOURS,
+        PermissionName.MENAGE_USERS_BLOCKED_HOURS,
+      ],
     }
+    profileRepo.profiles.push({
+      ...makeProfile('prof-1', token.sub),
+      user: { id: token.sub, unit: { slotDuration: 30 } } as any,
+    })
     await addWorkHour.execute(token, {
       profileId: 'prof-1',
       weekDay: 1,
@@ -94,15 +109,25 @@ describe('Add profile blocked hour', () => {
       unitId: 'unit-1',
       organizationId: 'org-1',
       role: 'BARBER',
-      permissions: [PermissionName.MANAGE_SELF_WORK_HOURS],
+      permissions: [
+        PermissionName.MANAGE_SELF_WORK_HOURS,
+        PermissionName.MENAGE_USERS_WORKING_HOURS,
+      ],
     }
     const tokenBlock = {
       sub: 'prof-2',
       unitId: 'unit-1',
       organizationId: 'org-1',
       role: 'BARBER',
-      permissions: [PermissionName.MANAGE_SELF_BLOCKED_HOURS],
+      permissions: [
+        PermissionName.MANAGE_SELF_BLOCKED_HOURS,
+        PermissionName.MENAGE_USERS_BLOCKED_HOURS,
+      ],
     }
+    profileRepo.profiles.push({
+      ...makeProfile('prof-2', tokenWork.sub),
+      user: { id: tokenWork.sub, unit: { slotDuration: 30 } } as any,
+    })
     await addWorkHour.execute(tokenWork, {
       profileId: 'prof-2',
       weekDay: 3,

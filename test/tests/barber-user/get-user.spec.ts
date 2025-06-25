@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { GetUserService } from '../../../src/services/barber-user/get-user'
 import {
   InMemoryBarberUsersRepository,
@@ -53,6 +53,8 @@ describe('Get user service', () => {
   })
 
   it('computes available slots', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2024-01-01T00:00:00Z'))
     const user = makeUser()
     const profile = {
       ...makeProfile({ userId: user.id }),
@@ -89,8 +91,9 @@ describe('Get user service', () => {
     })
     const resSlots = await service.execute({ id: user.id })
     expect(resSlots.user?.availableSlots).toEqual([
-      expect.objectContaining({ startHour: '10:00', endHour: '11:00' }),
+      expect.objectContaining({ start: '10:00', end: '11:00' }),
     ])
+    vi.useRealTimers()
   })
 
   it('returns user without profile', async () => {
