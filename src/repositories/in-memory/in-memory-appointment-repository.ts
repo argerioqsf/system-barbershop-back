@@ -109,4 +109,16 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
   async findById(id: string): Promise<DetailedAppointment | null> {
     return this.appointments.find((a) => a.id === id) ?? null
   }
+
+  async update(
+    id: string,
+    data: Prisma.AppointmentUpdateInput,
+  ): Promise<Appointment> {
+    const appointment = this.appointments.find((a) => a.id === id)
+    if (!appointment) throw new Error('Appointment not found')
+    if (data.status) {
+      appointment.status = data.status as AppointmentStatus
+    }
+    return appointment
+  }
 }

@@ -34,4 +34,11 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
     })
     return appointment
   }
+
+  async update(
+    id: string,
+    data: Prisma.AppointmentUpdateInput,
+  ): Promise<Appointment> {
+    return prisma.appointment.update({ where: { id }, data })
+  }
 }

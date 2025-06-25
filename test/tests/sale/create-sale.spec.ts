@@ -826,4 +826,58 @@ describe('Create sale service', () => {
     expect(res.sale.total).toBe(40)
     expect(res.sale.items[0].appointmentId).toBe(appointment.id)
   })
+
+  it('fails when appointment status is canceled', async () => {
+    const service = makeService('svc-canceled', 40)
+    ctx.serviceRepo.services.push(service)
+    ctx.barberServiceRepo.items.push(
+      makeBarberServiceRel(barberProfile.id, service.id, 'PERCENTAGE_OF_USER'),
+    )
+    ctx.profilesRepo.profiles.push({ ...barberProfile, user: barberUser })
+    const appointment = await ctx.appointmentRepo.create({
+      client: { connect: { id: defaultClient.id } },
+      barber: { connect: { id: barberUser.id } },
+      service: { connect: { id: service.id } },
+      unit: { connect: { id: 'unit-1' } },
+      date: new Date('2024-05-01T10:00:00'),
+      status: 'CANCELED',
+    })
+
+    await expect(
+      ctx.createSale.execute({
+        userId: defaultUser.id,
+        method: PaymentMethod.CASH,
+        items: [{ appointmentId: appointment.id, quantity: 1 }],
+        clientId: defaultClient.id,
+      }),
+    ).rejects.toThrow('Cannot link sale to appointment with this status')
+  })
+
+  it('concludes appointment when sale is paid', async () => {
+    const service = makeService('svc-pay', 60)
+    ctx.serviceRepo.services.push(service)
+    ctx.barberServiceRepo.items.push(
+      makeBarberServiceRel(barberProfile.id, service.id, 'PERCENTAGE_OF_USER'),
+    )
+    ctx.profilesRepo.profiles.push({ ...barberProfile, user: barberUser })
+    const appointment = await ctx.appointmentRepo.create({
+      client: { connect: { id: defaultClient.id } },
+      barber: { connect: { id: barberUser.id } },
+      service: { connect: { id: service.id } },
+      unit: { connect: { id: 'unit-1' } },
+      date: new Date('2024-06-01T09:00:00'),
+    })
+
+    await ctx.createSale.execute({
+      userId: defaultUser.id,
+      method: PaymentMethod.CASH,
+      items: [{ appointmentId: appointment.id, quantity: 1 }],
+      clientId: defaultClient.id,
+      paymentStatus: PaymentStatus.PAID,
+    })
+
+    expect(
+      ctx.appointmentRepo.appointments.find((a) => a.id === appointment.id)?.status,
+    ).toBe('CONCLUDED')
+  })
 })
