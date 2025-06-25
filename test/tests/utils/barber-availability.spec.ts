@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import {
   listAvailableSlots,
   isAppointmentAvailable,
@@ -16,11 +16,16 @@ describe('barber availability utils', () => {
   let barber: typeof barberUser & { profile: typeof barberProfile }
 
   beforeEach(() => {
+    vi.setSystemTime(new Date('2024-01-01T00:00:00'))
     appointmentRepo = new FakeAppointmentRepository()
     barber = {
       ...barberUser,
       profile: { ...barberProfile, workHours: [], blockedHours: [] },
     }
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   it('returns empty slots when no profile', async () => {
@@ -119,7 +124,13 @@ describe('barber availability utils', () => {
   })
 
   it('returns false when overlapping appointment exists', async () => {
-    const wh2 = { id: 'wh1', profileId: barber.profile.id, weekDay: 1, startHour: '09:00', endHour: '11:00' }
+    const wh2 = {
+      id: 'wh1',
+      profileId: barber.profile.id,
+      weekDay: 1,
+      startHour: '09:00',
+      endHour: '11:00',
+    }
     barber.profile.workHours.push(wh2)
     const svc = makeService('svc1', 100)
     const app = makeAppointment('app1', svc, {
@@ -138,7 +149,13 @@ describe('barber availability utils', () => {
   })
 
   it('returns true when slot is free', async () => {
-    const wh3 = { id: 'wh1', profileId: barber.profile.id, weekDay: 1, startHour: '09:00', endHour: '11:00' }
+    const wh3 = {
+      id: 'wh1',
+      profileId: barber.profile.id,
+      weekDay: 1,
+      startHour: '09:00',
+      endHour: '11:00',
+    }
     barber.profile.workHours.push(wh3)
 
     const result = await isAppointmentAvailable(
