@@ -4,27 +4,18 @@ import {
   FakeProfileWorkHourRepository,
   FakeProfilesRepository,
 } from '../../helpers/fake-repositories'
+import { makeProfile } from '../../helpers/default-values'
 import { PermissionName } from '@prisma/client'
-import { makeProfile } from '../../factories/make-profile.factory'
-import { defaultUser, defaultUnit } from '../../helpers/default-values'
 
 describe('Add profile work hour service', () => {
   let repo: FakeProfileWorkHourRepository
   let service: AddProfileWorkHourService
-  let profilesRepo: FakeProfilesRepository
+  let profileRepo: FakeProfilesRepository
 
   beforeEach(() => {
     repo = new FakeProfileWorkHourRepository()
-    profilesRepo = new FakeProfilesRepository()
-    profilesRepo.profiles = [
-      makeProfile({ userId: 'p1' }),
-      makeProfile({ userId: 'p2' }),
-      makeProfile({ userId: 'p3' }),
-    ].map((p) => ({
-      ...p,
-      user: { ...defaultUser, id: p.userId, unit: defaultUnit },
-    }))
-    service = new AddProfileWorkHourService(repo, profilesRepo)
+    profileRepo = new FakeProfilesRepository()
+    service = new AddProfileWorkHourService(repo, profileRepo)
   })
 
   it('adds work hour for profile', async () => {

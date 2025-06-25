@@ -9,14 +9,12 @@ import {
   FakeProfileBlockedHourRepository,
   FakeProfilesRepository,
 } from '../../helpers/fake-repositories'
-import { makeProfile } from '../../factories/make-profile.factory'
-import { defaultUser, defaultUnit } from '../../helpers/default-values'
+import { makeProfile } from '../../helpers/default-values'
 
 describe('Add profile blocked hour', () => {
   let unitRelRepo: FakeUnitOpeningHourRepository
   let workRepo: FakeProfileWorkHourRepository
   let blockedRepo: FakeProfileBlockedHourRepository
-  let profilesRepo: FakeProfilesRepository
   let addUnitHour: AddUnitOpeningHourService
   let addWorkHour: AddProfileWorkHourService
   let addBlocked: AddProfileBlockedHourService
@@ -26,20 +24,13 @@ describe('Add profile blocked hour', () => {
     unitRelRepo = new FakeUnitOpeningHourRepository()
     workRepo = new FakeProfileWorkHourRepository()
     blockedRepo = new FakeProfileBlockedHourRepository()
-    profilesRepo = new FakeProfilesRepository()
-    profilesRepo.profiles = [
-      makeProfile({ userId: 'prof-1' }),
-      makeProfile({ userId: 'prof-2' }),
-    ].map((p) => ({
-      ...p,
-      user: { ...defaultUser, id: p.userId, unit: defaultUnit },
-    }))
+    profileRepo = new FakeProfilesRepository()
     addUnitHour = new AddUnitOpeningHourService(unitRelRepo)
-    addWorkHour = new AddProfileWorkHourService(workRepo, profilesRepo)
+    addWorkHour = new AddProfileWorkHourService(workRepo, profileRepo)
     addBlocked = new AddProfileBlockedHourService(
       blockedRepo,
       workRepo,
-      profilesRepo,
+      profileRepo,
     )
   })
 
@@ -95,10 +86,7 @@ describe('Add profile blocked hour', () => {
       unitId: 'unit-1',
       organizationId: 'org-1',
       role: 'BARBER',
-      permissions: [
-        PermissionName.MANAGE_SELF_BLOCKED_HOURS,
-        PermissionName.MENAGE_USERS_BLOCKED_HOURS,
-      ],
+      permissions: [PermissionName.MANAGE_SELF_BLOCKED_HOURS],
     }
     await expect(
       addBlocked.execute(token, {

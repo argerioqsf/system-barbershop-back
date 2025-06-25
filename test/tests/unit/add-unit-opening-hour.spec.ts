@@ -24,18 +24,8 @@ describe('Add unit opening hour service', () => {
   })
 
   it('lists relations by unit', async () => {
-    await service.execute({
-      unitId: 'unit-2',
-      weekDay: 1,
-      startHour: '08:00',
-      endHour: '10:00',
-    })
-    await service.execute({
-      unitId: 'unit-2',
-      weekDay: 2,
-      startHour: '09:00',
-      endHour: '12:00',
-    })
+    await service.execute({ unitId: 'unit-2', weekDay: 1, startHour: '08:00', endHour: '10:00' })
+    await service.execute({ unitId: 'unit-2', weekDay: 2, startHour: '09:00', endHour: '12:00' })
 
     const items = await repo.findManyByUnit('unit-2')
     expect(items).toHaveLength(2)
