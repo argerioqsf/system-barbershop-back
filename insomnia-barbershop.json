@@ -1313,37 +1313,15 @@
       "name": "Schedule"
     },
     {
-      "_id": "req_create_day_hour",
-      "_type": "request",
-      "parentId": "fld_schedule",
-      "name": "Create day hour",
-      "method": "POST",
-      "url": "{{ baseURL }}/day-hours",
-      "body": {
-        "mimeType": "application/json",
-        "text": "{\n  \"weekDay\": 1,\n  \"startHour\": \"08:00\",\n  \"endHour\": \"09:00\"\n}"
-      },
-      "headers": [
-        {
-          "name": "Content-Type",
-          "value": "application/json"
-        },
-        {
-          "name": "Authorization",
-          "value": "Bearer {{ token }}"
-        }
-      ]
-    },
-    {
       "_id": "req_add_unit_day_hour",
       "_type": "request",
       "parentId": "fld_schedule",
-      "name": "Add unit day hour",
+      "name": "Add unit opening hour",
       "method": "POST",
-      "url": "{{ baseURL }}/unit-day-hours",
+      "url": "{{ baseURL }}/unit-opening-hours",
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"unitId\": \"\",\n  \"dayHourId\": \"\"\n}"
+        "text": "{\n  \"unitId\": \"\",\n  \"weekDay\": 1,\n  \"startHour\": \"08:00\",\n  \"endHour\": \"09:00\"\n}"
       },
       "headers": [
         {
@@ -1365,7 +1343,7 @@
       "url": "{{ baseURL }}/profile/{profileId}/work-hours",
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"dayHourId\": \"\"\n}"
+        "text": "{\n  \"weekDay\": 1,\n  \"startHour\": \"08:00\",\n  \"endHour\": \"09:00\"\n}"
       },
       "headers": [
         {

@@ -92,6 +92,18 @@ async function main() {
       category: PermissionCategory.USER,
     },
     {
+      name: PermissionName.MENAGE_USERS_WORKING_HOURS,
+      category: PermissionCategory.USER,
+    },
+    {
+      name: PermissionName.MANAGE_SELF_BLOCKED_HOURS,
+      category: PermissionCategory.USER,
+    },
+    {
+      name: PermissionName.MENAGE_USERS_BLOCKED_HOURS,
+      category: PermissionCategory.USER,
+    },
+    {
       name: PermissionName.CREATE_USER_MANAGER,
       category: PermissionCategory.USER,
     },
@@ -372,34 +384,38 @@ async function main() {
     },
   })
 
-  const dayHour1 = await prisma.dayHour.create({
-    data: {
-      weekDay: 1,
-      startHour: '08:00',
-      endHour: '09:00',
-    },
-  })
-
-  const dayHour2 = await prisma.dayHour.create({
-    data: {
-      weekDay: 1,
-      startHour: '09:00',
-      endHour: '10:00',
-    },
-  })
-
-  await prisma.unitDayHour.createMany({
+  await prisma.unitOpeningHour.createMany({
     data: [
-      { unitId: mainUnit.id, dayHourId: dayHour1.id },
-      { unitId: mainUnit.id, dayHourId: dayHour2.id },
+      {
+        unitId: mainUnit.id,
+        weekDay: 1,
+        startHour: '08:00',
+        endHour: '09:00',
+      },
+      {
+        unitId: mainUnit.id,
+        weekDay: 1,
+        startHour: '09:00',
+        endHour: '10:00',
+      },
     ],
   })
 
   if (barber.profile) {
     await prisma.profileWorkHour.createMany({
       data: [
-        { profileId: barber.profile.id, dayHourId: dayHour1.id },
-        { profileId: barber.profile.id, dayHourId: dayHour2.id },
+        {
+          profileId: barber.profile.id,
+          weekDay: 1,
+          startHour: '08:00',
+          endHour: '09:00',
+        },
+        {
+          profileId: barber.profile.id,
+          weekDay: 1,
+          startHour: '09:00',
+          endHour: '10:00',
+        },
       ],
     })
     await prisma.profileBlockedHour.create({
@@ -572,8 +588,6 @@ async function main() {
     sale,
     pendingSale,
     itemCoupon,
-    dayHour1,
-    dayHour2,
     manager,
     owner2,
     serviceBarber,

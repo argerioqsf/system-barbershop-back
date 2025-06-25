@@ -48,6 +48,8 @@ enum PermissionName {
   LIST_ROLES_ALL
   MANAGE_SELF_BLOCKED_HOURS
   MANAGE_SELF_WORK_HOURS
+  MENAGE_USERS_WORKING_HOURS
+  MENAGE_USERS_BLOCKED_HOURS
 }
 
 enum PermissionCategory {
@@ -408,7 +410,7 @@ model Unit {
   sessions       CashRegisterSession[]
   users          User[]
   roles          Role[]
-  dayHours       UnitDayHour[]
+  openingHours       UnitOpeningHour[]
 
   organization Organization @relation(fields: [organizationId], references: [id])
   Coupon       Coupon[]
@@ -416,38 +418,28 @@ model Unit {
   @@map("units")
 }
 
-model DayHour {
-  id          String             @id @default(uuid())
-  weekDay     Int
-  startHour   String
-  endHour     String
-  unitDays    UnitDayHour[]
-  workHours   ProfileWorkHour[]
 
-  @@map("day_hours")
-}
-
-model UnitDayHour {
+model UnitOpeningHour {
   id        String   @id @default(uuid())
   unitId    String
-  dayHourId String
+  weekDay   Int
+  startHour String
+  endHour   String
 
-  unit    Unit    @relation(fields: [unitId], references: [id])
-  dayHour DayHour @relation(fields: [dayHourId], references: [id])
+  unit Unit @relation(fields: [unitId], references: [id])
 
-  @@unique([unitId, dayHourId])
-  @@map("unit_day_hours")
+  @@map("unit_opening_hours")
 }
 
 model ProfileWorkHour {
   id        String   @id @default(uuid())
   profileId String
-  dayHourId String
+  weekDay   Int
+  startHour String
+  endHour   String
 
   profile Profile @relation(fields: [profileId], references: [id])
-  dayHour DayHour @relation(fields: [dayHourId], references: [id])
 
-  @@unique([profileId, dayHourId])
   @@map("profile_work_hours")
 }
 

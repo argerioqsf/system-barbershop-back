@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { Prisma, Profile, User } from '@prisma/client'
+import { Prisma, Profile, Unit, User } from '@prisma/client'
 import { ProfilesRepository } from '../profiles-repository'
 
 export class PrismaProfilesRepository implements ProfilesRepository {
@@ -39,7 +39,7 @@ export class PrismaProfilesRepository implements ProfilesRepository {
 
   async findByUserId(id: string): Promise<
     | (Profile & {
-        user: Omit<User, 'password'>
+        user: Omit<User, 'password'> & { unit: Unit }
         permissions: { id: string; name: string }[]
       })
     | null
@@ -56,17 +56,15 @@ export class PrismaProfilesRepository implements ProfilesRepository {
             organizationId: true,
             unitId: true,
             createdAt: true,
+            unit: true,
+            versionToken: true,
+            versionTokenInvalidate: true,
           },
         },
         permissions: { select: { id: true, name: true } },
       },
     })
-    return profile as unknown as
-      | (Profile & {
-          user: Omit<User, 'password'>
-          permissions: { id: string; name: string }[]
-        })
-      | null
+    return profile
   }
 
   async create(

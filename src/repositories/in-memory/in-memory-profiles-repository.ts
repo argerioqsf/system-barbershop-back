@@ -1,11 +1,11 @@
-import { Prisma, Profile, User } from '@prisma/client'
+import { Prisma, Profile, Unit, User } from '@prisma/client'
 import { ProfileNotFoundError } from '@/services/@errors/profile/profile-not-found-error'
 import crypto from 'node:crypto'
 import { ProfilesRepository } from '../profiles-repository'
 
 export class InMemoryProfilesRepository implements ProfilesRepository {
   public items: (Profile & {
-    user: Omit<User, 'password'>
+    user: Omit<User, 'password'> & { unit: Unit }
     permissions: { id: string; name: string }[]
   })[] = []
 
@@ -27,7 +27,7 @@ export class InMemoryProfilesRepository implements ProfilesRepository {
       createdAt: new Date(),
       permissions: permissionIds?.map((id) => ({ id, name: id })) ?? [],
     }
-    const user: Omit<User, 'password'> = {
+    const user: Omit<User, 'password'> & { unit: Unit } = {
       id: data.userId,
       name: '',
       email: '',
@@ -37,6 +37,15 @@ export class InMemoryProfilesRepository implements ProfilesRepository {
       versionToken: 1,
       versionTokenInvalidate: null,
       createdAt: new Date(),
+      unit: {
+        allowsLoan: true,
+        id: 'unit-1',
+        name: '',
+        organizationId: '',
+        slotDuration: 30,
+        slug: '',
+        totalBalance: 0,
+      },
     }
     this.items.push({ ...profile, user })
     return profile
@@ -55,7 +64,7 @@ export class InMemoryProfilesRepository implements ProfilesRepository {
 
   async findByUserId(id: string): Promise<
     | (Profile & {
-        user: Omit<User, 'password'>
+        user: Omit<User, 'password'> & { unit: Unit }
         permissions: { id: string; name: string }[]
       })
     | null

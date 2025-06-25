@@ -1,9 +1,8 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { ListUsersService } from '../../../src/services/barber-user/list-users'
 import {
   InMemoryBarberUsersRepository,
   FakeAppointmentRepository,
-  FakeDayHourRepository,
 } from '../../helpers/fake-repositories'
 import { listUser1 as u1, listUser2 as u2 } from '../../helpers/default-values'
 import { makeService, makeAppointment } from '../../helpers/default-values'
@@ -12,13 +11,11 @@ describe('List users service', () => {
   let repo: InMemoryBarberUsersRepository
   let service: ListUsersService
   let appointmentRepo: FakeAppointmentRepository
-  let dayHourRepo: FakeDayHourRepository
 
   beforeEach(() => {
     repo = new InMemoryBarberUsersRepository([u1, u2])
     appointmentRepo = new FakeAppointmentRepository()
-    dayHourRepo = new FakeDayHourRepository()
-    service = new ListUsersService(repo, appointmentRepo, dayHourRepo)
+    service = new ListUsersService(repo, appointmentRepo)
   })
 
   it('lists all for admin', async () => {
@@ -57,20 +54,28 @@ describe('List users service', () => {
   })
 
   it('computes available slots for user', async () => {
-    const dh1 = await dayHourRepo.create({
-      weekDay: 1,
-      startHour: '09:00',
-      endHour: '10:00',
-    })
-    const dh2 = await dayHourRepo.create({
-      weekDay: 1,
-      startHour: '10:00',
-      endHour: '11:00',
-    })
-    const profile = { ...u1.profile, workHours: [
-      { id: 'wh1', profileId: u1.profile.id, dayHourId: dh1.id },
-      { id: 'wh2', profileId: u1.profile.id, dayHourId: dh2.id },
-    ], blockedHours: [] }
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2024-01-01T00:00:00Z'))
+    const profile = {
+      ...u1.profile,
+      workHours: [
+        {
+          id: 'wh1',
+          profileId: u1.profile.id,
+          weekDay: 1,
+          startHour: '09:00',
+          endHour: '10:00',
+        },
+        {
+          id: 'wh2',
+          profileId: u1.profile.id,
+          weekDay: 1,
+          startHour: '10:00',
+          endHour: '11:00',
+        },
+      ],
+      blockedHours: [],
+    }
     repo.users = [{ ...u1, profile }, u2]
     const srv = makeService('srv-1', 100)
     const app = makeAppointment('ap-1', srv, { date: new Date('2024-01-01T09:00:00'), durationService: 60 })
@@ -83,8 +88,9 @@ describe('List users service', () => {
     })
     const u = res.users.find((x) => x.id === 'u1')
     expect(u?.availableSlots).toEqual([
-      expect.objectContaining({ startHour: '10:00', endHour: '11:00' }),
+      expect.objectContaining({ start: '10:00', end: '11:00' }),
     ])
+    vi.useRealTimers()
   })
 
   it('returns empty list when no users', async () => {

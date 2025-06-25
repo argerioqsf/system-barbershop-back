@@ -6,7 +6,6 @@ import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { BarberNotFoundError } from '../@errors/barber/barber-not-found-error'
 import { BarberDoesNotHaveThisServiceError } from '../@errors/barber/barber-does-not-have-this-service'
 import { UserNotFoundError } from '../@errors/user/user-not-found-error'
-import { DayHourRepository } from '@/repositories/day-hour-repository'
 import {
   isAppointmentAvailable,
   BarberWithHours,
@@ -33,17 +32,17 @@ export class CreateAppointmentService {
     private repository: AppointmentRepository,
     private serviceRepository: ServiceRepository,
     private barberUserRepository: BarberUsersRepository,
-    private dayHourRepository: DayHourRepository,
   ) {}
 
   async execute(
     data: CreateAppointmentRequest,
   ): Promise<CreateAppointmentResponse> {
     let discount = 0
-    const value = data.value
+    let value = data.value
 
     const service = await this.serviceRepository.findById(data.serviceId)
     if (!service) throw new ServiceNotFoundError()
+    value = value ?? service.price
 
     const barber = await this.barberUserRepository.findById(data.barberId)
     if (!barber) throw new BarberNotFoundError()
@@ -66,7 +65,6 @@ export class CreateAppointmentService {
       data.date,
       duration,
       this.repository,
-      this.dayHourRepository,
     )
     if (!available) throw new BarberNotAvailableError()
 

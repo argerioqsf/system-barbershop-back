@@ -6,6 +6,18 @@ export function timeToMinutes(time: string | Date): number {
   return h * 60 + m
 }
 
+export interface Intervals {
+  start: number
+  end: number
+  weekDay?: number
+}
+
+export interface IntervalsFormatted {
+  start: string
+  end: string
+  weekDay?: number
+}
+
 export function intervalsOverlap(
   aStart: number,
   aEnd: number,
@@ -15,11 +27,29 @@ export function intervalsOverlap(
   return aStart < bEnd && bStart < aEnd
 }
 
+function splitIntervalsByMax(
+  intervals: Intervals[],
+  intervalMax: number,
+): Intervals[] {
+  const result: Intervals[] = []
+  for (const int of intervals) {
+    let currentStart = int.start
+    while (currentStart < int.end) {
+      const currentEnd = Math.min(currentStart + intervalMax, int.end)
+      result.push({ start: currentStart, end: currentEnd })
+      currentStart = currentEnd
+    }
+  }
+  return result
+}
+
 export function mergeIntervals(
-  intervals: { start: number; end: number }[],
-): { start: number; end: number }[] {
+  intervals: Intervals[],
+  intervalMax?: number,
+): Intervals[] {
   const sorted = intervals.sort((a, b) => a.start - b.start)
-  const merged: { start: number; end: number }[] = []
+  const merged: Intervals[] = []
+
   for (const int of sorted) {
     const last = merged[merged.length - 1]
     if (!last || int.start > last.end) {
@@ -28,16 +58,17 @@ export function mergeIntervals(
       last.end = int.end
     }
   }
-  return merged
+
+  return intervalMax ? splitIntervalsByMax(merged, intervalMax) : merged
 }
 
 export function subtractIntervals(
-  ranges: { start: number; end: number }[],
-  blocks: { start: number; end: number }[],
-): { start: number; end: number }[] {
+  ranges: Intervals[],
+  blocks: Intervals[],
+): Intervals[] {
   let result = [...ranges]
   for (const b of blocks) {
-    const partial: { start: number; end: number }[] = []
+    const partial: Intervals[] = []
     for (const r of result) {
       if (!intervalsOverlap(r.start, r.end, b.start, b.end)) {
         partial.push(r)

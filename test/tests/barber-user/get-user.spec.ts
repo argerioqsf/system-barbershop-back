@@ -1,13 +1,12 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { GetUserService } from '../../../src/services/barber-user/get-user'
 import {
   InMemoryBarberUsersRepository,
   FakeAppointmentRepository,
-  FakeDayHourRepository,
 } from '../../helpers/fake-repositories'
 import { makeUser } from '../../factories/make-user.factory'
 import { makeProfile } from '../../factories/make-profile.factory'
-import { makeService, makeAppointment } from "../../helpers/default-values"
+import { makeService, makeAppointment } from '../../helpers/default-values'
 import {
   BarberService,
   Permission,
@@ -21,13 +20,11 @@ describe('Get user service', () => {
   let repo: InMemoryBarberUsersRepository
   let service: GetUserService
   let appointmentRepo: FakeAppointmentRepository
-  let dayHourRepo: FakeDayHourRepository
 
   beforeEach(() => {
     repo = new InMemoryBarberUsersRepository()
     appointmentRepo = new FakeAppointmentRepository()
-    dayHourRepo = new FakeDayHourRepository()
-    service = new GetUserService(repo, appointmentRepo, dayHourRepo)
+    service = new GetUserService(repo, appointmentRepo)
   })
 
   it('returns user by id', async () => {
@@ -56,30 +53,47 @@ describe('Get user service', () => {
   })
 
   it('computes available slots', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2024-01-01T00:00:00Z'))
     const user = makeUser()
-    const profile = { ...makeProfile({ userId: user.id }), workHours: [], blockedHours: [], barberServices: [] }
-    const dh1 = await dayHourRepo.create({
-      weekDay: 1,
-      startHour: '09:00',
-      endHour: '10:00',
-    })
-    const dh2 = await dayHourRepo.create({
-      weekDay: 1,
-      startHour: '10:00',
-      endHour: '11:00',
-    })
+    const profile = {
+      ...makeProfile({ userId: user.id }),
+      workHours: [],
+      blockedHours: [],
+      barberServices: [],
+    }
     profile.workHours = [
-      { id: 'wh1', profileId: profile.id, dayHourId: dh1.id },
-      { id: 'wh2', profileId: profile.id, dayHourId: dh2.id },
+      {
+        id: 'wh1',
+        profileId: profile.id,
+        weekDay: 1,
+        startHour: '09:00',
+        endHour: '10:00',
+      },
+      {
+        id: 'wh2',
+        profileId: profile.id,
+        weekDay: 1,
+        startHour: '10:00',
+        endHour: '11:00',
+      },
     ]
     repo.users.push({ ...user, profile })
     const srv = makeService('srv-1', 100)
-    const app = makeAppointment('ap-1', srv, { date: new Date('2024-01-01T09:00:00'), durationService: 60 })
-    appointmentRepo.appointments.push({ ...app, barberId: user.id, barber: user })
+    const app = makeAppointment('ap-1', srv, {
+      date: new Date('2024-01-01T09:00:00'),
+      durationService: 60,
+    })
+    appointmentRepo.appointments.push({
+      ...app,
+      barberId: user.id,
+      barber: user,
+    })
     const resSlots = await service.execute({ id: user.id })
     expect(resSlots.user?.availableSlots).toEqual([
-      expect.objectContaining({ startHour: '10:00', endHour: '11:00' }),
+      expect.objectContaining({ start: '10:00', end: '11:00' }),
     ])
+    vi.useRealTimers()
   })
 
   it('returns user without profile', async () => {

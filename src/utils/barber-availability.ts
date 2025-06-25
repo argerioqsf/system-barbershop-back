@@ -1,18 +1,18 @@
 import { AppointmentRepository } from '@/repositories/appointment-repository'
-import { DayHourRepository } from '@/repositories/day-hour-repository'
 import {
   BarberService,
   Profile,
   ProfileBlockedHour,
   ProfileWorkHour,
   User,
-  DayHour,
 } from '@prisma/client'
 import {
   timeToMinutes,
   mergeIntervals,
   subtractIntervals,
   minutesToTime,
+  Intervals,
+  IntervalsFormatted,
 } from './time'
 
 export type BarberWithHours = User & {
@@ -25,19 +25,49 @@ export type BarberWithHours = User & {
     | null
 }
 
+export interface AvailableSlot {
+  id: string
+  weekDay: number
+  startHour: string
+  endHour: string
+}
+
 export async function listAvailableSlots(
   barber: BarberWithHours,
   appointmentRepo: AppointmentRepository,
-  dayHourRepo: DayHourRepository,
-): Promise<DayHour[]> {
+  referenceDate: Date = new Date(), // Data base da semana
+  dayFilter?: number, // Se passado, verifica apenas um dia específico (0 = domingo, ..., 6 = sábado)
+): Promise<IntervalsFormatted[]> {
   if (!barber.profile) return []
-  const workIds = barber.profile.workHours.map((w) => w.dayHourId)
-  if (workIds.length === 0) return []
-  const workHours = await dayHourRepo.findMany({ id: { in: workIds } })
+  const workHours = barber.profile.workHours
+  if (workHours.length === 0) return []
 
-  const blockedMap = new Map<number, { start: number; end: number }[]>()
+  // Define início e fim da semana de referência
+  const startOfWeek = new Date(referenceDate)
+  startOfWeek.setUTCHours(0, 0, 0, 0)
+  startOfWeek.setUTCDate(startOfWeek.getUTCDate() - startOfWeek.getUTCDay()) // domingo
+
+  const endOfWeek = new Date(startOfWeek)
+  endOfWeek.setUTCDate(endOfWeek.getUTCDate() + 7) // sábado 23:59:59
+
+  const isSameDay = (date: Date) =>
+    date.getUTCFullYear() === referenceDate.getUTCFullYear() &&
+    date.getUTCMonth() === referenceDate.getUTCMonth() &&
+    date.getUTCDate() === referenceDate.getUTCDate()
+
+  const isInCurrentWeek = (date: Date) =>
+    date >= startOfWeek && date < endOfWeek
+
+  const shouldIncludeDate = (date: Date) =>
+    dayFilter !== undefined
+      ? date.getUTCDay() === dayFilter && isSameDay(date)
+      : isInCurrentWeek(date)
+
+  // Map de bloqueios
+  const blockedMap = new Map<number, Intervals[]>()
   for (const b of barber.profile.blockedHours) {
-    const day = b.startHour.getDay()
+    if (!shouldIncludeDate(b.startHour)) continue
+    const day = b.startHour.getUTCDay()
     const list = blockedMap.get(day) ?? []
     list.push({
       start: timeToMinutes(b.startHour),
@@ -46,10 +76,12 @@ export async function listAvailableSlots(
     blockedMap.set(day, list)
   }
 
+  // Agendamentos
   const appointments = await appointmentRepo.findMany({ barberId: barber.id })
-  const appMap = new Map<number, { start: number; end: number }[]>()
+  const appMap = new Map<number, Intervals[]>()
   for (const app of appointments) {
-    const day = app.date.getDay()
+    if (!shouldIncludeDate(app.date)) continue
+    const day = app.date.getUTCDay()
     const start = timeToMinutes(app.date)
     const dur = app.durationService ?? app.service.defaultTime ?? 0
     const end = start + dur
@@ -58,15 +90,19 @@ export async function listAvailableSlots(
     appMap.set(day, list)
   }
 
-  const result: DayHour[] = []
+  const result: AvailableSlot[] = []
   for (const dh of workHours) {
+    if (dayFilter !== undefined && dh.weekDay !== dayFilter) continue
+
     const base = [
       { start: timeToMinutes(dh.startHour), end: timeToMinutes(dh.endHour) },
     ]
     const blocked = blockedMap.get(dh.weekDay) ?? []
     const apps = appMap.get(dh.weekDay) ?? []
+
     let ranges = subtractIntervals(base, blocked)
     ranges = subtractIntervals(ranges, apps)
+
     for (const [index, r] of ranges.entries()) {
       if (r.end <= r.start) continue
       result.push({
@@ -74,10 +110,25 @@ export async function listAvailableSlots(
         weekDay: dh.weekDay,
         startHour: minutesToTime(r.start),
         endHour: minutesToTime(r.end),
-      } as DayHour)
+      })
     }
   }
-  return result
+
+  const ordenado = result
+    .map((rst) => ({
+      start: timeToMinutes(rst.startHour),
+      end: timeToMinutes(rst.endHour),
+      weekDay: rst.weekDay,
+    }))
+    .sort((a, b) => a.start - b.start)
+    .sort((a, b) => a.weekDay - b.weekDay)
+    .map((rst) => ({
+      start: minutesToTime(rst.start),
+      end: minutesToTime(rst.end),
+      weekDay: rst.weekDay,
+    }))
+
+  return ordenado
 }
 
 export async function isAppointmentAvailable(
@@ -85,13 +136,13 @@ export async function isAppointmentAvailable(
   startTime: Date,
   duration: number,
   appointmentRepo: AppointmentRepository,
-  dayHourRepo: DayHourRepository,
 ): Promise<boolean> {
   if (!barber.profile) return false
   const weekDay = startTime.getDay()
-  const workIds = barber.profile.workHours.map((w) => w.dayHourId)
-  if (workIds.length === 0) return false
-  const workHours = await dayHourRepo.findMany({ id: { in: workIds }, weekDay })
+  const workHours = barber.profile.workHours.filter(
+    (w) => w.weekDay === weekDay,
+  )
+  if (workHours.length === 0) return false
   const blockedHours = barber.profile.blockedHours.filter(
     (b) =>
       b.startHour.getDay() === weekDay &&

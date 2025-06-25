@@ -1,4 +1,4 @@
-import { Prisma, Profile, User } from '@prisma/client'
+import { Prisma, Profile, Unit, User } from '@prisma/client'
 
 export interface ProfilesRepository {
   findById(
@@ -10,7 +10,7 @@ export interface ProfilesRepository {
   ): Promise<Profile>
   findByUserId(userId: string): Promise<
     | (Profile & {
-        user: Omit<User, 'password'>
+        user: Omit<User, 'password'> & { unit: Unit }
         permissions: { id: string; name: string }[]
       })
     | null

@@ -7,13 +7,19 @@ export const AddWorkHourController = async (
   reply: FastifyReply,
 ) => {
   const paramsSchema = z.object({ profileId: z.string() })
-  const bodySchema = z.object({ dayHourId: z.string() })
-  const { profileId } = paramsSchema.parse(request.params)
-  const { dayHourId } = bodySchema.parse(request.body)
-  const service = makeAddProfileWorkHourService()
-  const { workHour } = await service.execute(request.user, {
-    profileId,
-    dayHourId,
+  const bodySchema = z.object({
+    weekDay: z.number().min(0).max(6),
+    startHour: z.string(),
+    endHour: z.string(),
   })
-  return reply.status(201).send(workHour)
+  const { profileId } = paramsSchema.parse(request.params)
+  const { weekDay, startHour, endHour } = bodySchema.parse(request.body)
+  const service = makeAddProfileWorkHourService()
+  const { workHour, workingHours } = await service.execute(request.user, {
+    profileId,
+    weekDay,
+    startHour,
+    endHour,
+  })
+  return reply.status(201).send({ workHour, workingHours })
 }

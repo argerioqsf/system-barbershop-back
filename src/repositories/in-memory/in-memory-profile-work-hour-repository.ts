@@ -13,13 +13,22 @@ export class InMemoryProfileWorkHourRepository
     const item: ProfileWorkHour = {
       id: randomUUID(),
       profileId: data.profileId,
-      dayHourId: data.dayHourId,
+      weekDay: data.weekDay,
+      startHour: data.startHour,
+      endHour: data.endHour,
     }
     this.items.push(item)
     return item
   }
 
-  async findManyByProfile(profileId: string): Promise<ProfileWorkHour[]> {
-    return this.items.filter((i) => i.profileId === profileId)
+  async findManyByProfile(
+    profileId: string,
+    weekDay?: number,
+  ): Promise<ProfileWorkHour[]> {
+    return this.items.filter(
+      (i) =>
+        i.profileId === profileId &&
+        (weekDay === undefined || i.weekDay === weekDay),
+    )
   }
 }

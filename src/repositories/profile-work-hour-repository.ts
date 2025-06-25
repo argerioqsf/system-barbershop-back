@@ -4,5 +4,8 @@ export interface ProfileWorkHourRepository {
   create(
     data: Prisma.ProfileWorkHourUncheckedCreateInput,
   ): Promise<ProfileWorkHour>
-  findManyByProfile(profileId: string): Promise<ProfileWorkHour[]>
+  findManyByProfile(
+    profileId: string,
+    weekDay?: number,
+  ): Promise<ProfileWorkHour[]>
 }

@@ -4,7 +4,6 @@ import {
   FakeAppointmentRepository,
   FakeBarberUsersRepository,
   FakeServiceRepository,
-  FakeDayHourRepository,
 } from '../../helpers/fake-repositories'
 import {
   barberUser,
@@ -19,37 +18,34 @@ describe('Create appointment service', () => {
   let service: CreateAppointmentService
   let serviceRepo: FakeServiceRepository
   let barberUserRepo: FakeBarberUsersRepository
-  let dayHourRepo: FakeDayHourRepository
 
   beforeEach(() => {
     repo = new FakeAppointmentRepository()
     serviceRepo = new FakeServiceRepository()
     barberUserRepo = new FakeBarberUsersRepository()
-    dayHourRepo = new FakeDayHourRepository()
     service = new CreateAppointmentService(
       repo,
       serviceRepo,
       barberUserRepo,
-      dayHourRepo,
     )
   })
 
   it('creates appointment', async () => {
     const serviceAppointment = makeService('service-11', 100)
     serviceRepo.services.push({ ...serviceAppointment, defaultTime: 40 })
-    const dh = await dayHourRepo.create({
+    const workHour = {
+      id: 'wh-cre-1',
+      profileId: barberProfile.id,
       weekDay: 1,
       startHour: '09:00',
       endHour: '18:00',
-    })
+    }
     const barberWithRel = {
       ...barberUser,
       profile: {
         ...barberProfile,
         barberServices: [makeBarberServiceRel(barberProfile.id, 'service-11')],
-        workHours: [
-          { id: 'wh-cre-1', profileId: barberProfile.id, dayHourId: dh.id },
-        ],
+        workHours: [workHour],
       },
     }
     barberUserRepo.users.push(barberWithRel, defaultClient)
@@ -69,11 +65,13 @@ describe('Create appointment service', () => {
   it('uses barber time when set', async () => {
     const serviceAppointment = makeService('service-22', 100)
     serviceRepo.services.push({ ...serviceAppointment, defaultTime: 30 })
-    const dh = await dayHourRepo.create({
+    const workHour2 = {
+      id: 'wh-cre-2',
+      profileId: barberProfile.id,
       weekDay: 2,
       startHour: '09:00',
       endHour: '18:00',
-    })
+    }
     const barberWithService = {
       ...barberUser,
       profile: {
@@ -81,9 +79,7 @@ describe('Create appointment service', () => {
         barberServices: [
           makeBarberServiceRel(barberProfile.id, 'service-22', undefined, undefined, 50),
         ],
-        workHours: [
-          { id: 'wh-cre-2', profileId: barberProfile.id, dayHourId: dh.id },
-        ],
+        workHours: [workHour2],
       },
     }
     barberUserRepo.users.push(barberWithService, defaultClient)
@@ -98,11 +94,13 @@ describe('Create appointment service', () => {
   })
 
   it('fails when overlapping appointment', async () => {
-    const dh1 = await dayHourRepo.create({
+    const workHour3 = {
+      id: 'wh1',
+      profileId: barberProfile.id,
       weekDay: 3,
       startHour: '08:00',
       endHour: '10:00',
-    })
+    }
     const serviceAppointment = makeService('service-33', 100)
     serviceRepo.services.push({ ...serviceAppointment, defaultTime: 60 })
     const barberWithService = {
@@ -110,7 +108,7 @@ describe('Create appointment service', () => {
       profile: {
         ...barberProfile,
         barberServices: [makeBarberServiceRel(barberProfile.id, 'service-33')],
-        workHours: [{ id: 'wh1', profileId: barberProfile.id, dayHourId: dh1.id }],
+        workHours: [workHour3],
         blockedHours: [],
       },
     }
@@ -135,11 +133,13 @@ describe('Create appointment service', () => {
   })
 
   it('fails when time blocked', async () => {
-    const dh1 = await dayHourRepo.create({
+    const workHour4 = {
+      id: 'wh2',
+      profileId: barberProfile.id,
       weekDay: 4,
       startHour: '09:00',
       endHour: '10:00',
-    })
+    }
     const serviceAppointment = makeService('service-44', 100)
     serviceRepo.services.push({ ...serviceAppointment, defaultTime: 30 })
     const barberWithService = {
@@ -147,7 +147,7 @@ describe('Create appointment service', () => {
       profile: {
         ...barberProfile,
         barberServices: [makeBarberServiceRel(barberProfile.id, 'service-44')],
-        workHours: [{ id: 'wh2', profileId: barberProfile.id, dayHourId: dh1.id }],
+        workHours: [workHour4],
         blockedHours: [
           {
             id: 'bh1',
@@ -172,11 +172,13 @@ describe('Create appointment service', () => {
   })
 
   it('allows scheduling around blocked interval', async () => {
-    const dh = await dayHourRepo.create({
+    const workHourSplit = {
+      id: 'wh-split',
+      profileId: barberProfile.id,
       weekDay: 6,
       startHour: '08:00',
       endHour: '12:00',
-    })
+    }
     const svc = makeService('svc-split', 100)
     serviceRepo.services.push({ ...svc, defaultTime: 30 })
     const barberWithService = {
@@ -184,7 +186,7 @@ describe('Create appointment service', () => {
       profile: {
         ...barberProfile,
         barberServices: [makeBarberServiceRel(barberProfile.id, 'svc-split')],
-        workHours: [{ id: 'wh-split', profileId: barberProfile.id, dayHourId: dh.id }],
+        workHours: [workHourSplit],
         blockedHours: [
           {
             id: 'bh-split',
@@ -217,11 +219,13 @@ describe('Create appointment service', () => {
     ).rejects.toThrow('Barber not available')
   })
   it('fails when outside working hours', async () => {
-    const dh = await dayHourRepo.create({
+    const workHourOut = {
+      id: 'wh-out',
+      profileId: barberProfile.id,
       weekDay: 5,
       startHour: '09:00',
       endHour: '10:00',
-    })
+    }
     const serviceAppointment = makeService("service-55", 100)
     serviceRepo.services.push({ ...serviceAppointment, defaultTime: 30 })
     const barberWithService = {
@@ -229,7 +233,7 @@ describe('Create appointment service', () => {
       profile: {
         ...barberProfile,
         barberServices: [makeBarberServiceRel(barberProfile.id, "service-55")],
-        workHours: [{ id: "wh-out", profileId: barberProfile.id, dayHourId: dh.id }],
+        workHours: [workHourOut],
         blockedHours: [],
       },
     }
@@ -306,13 +310,19 @@ describe('Create appointment service', () => {
   it('applies discount when value provided', async () => {
     const svc = makeService('svc-disc', 100)
     serviceRepo.services.push({ ...svc, defaultTime: 30 })
-    const dh = await dayHourRepo.create({ weekDay: 1, startHour: '09:00', endHour: '10:00' })
+    const workHourDisc = {
+      id: 'wh-disc',
+      profileId: barberProfile.id,
+      weekDay: 1,
+      startHour: '09:00',
+      endHour: '10:00',
+    }
     const barberWithService = {
       ...barberUser,
       profile: {
         ...barberProfile,
         barberServices: [makeBarberServiceRel(barberProfile.id, 'svc-disc')],
-        workHours: [{ id: 'wh-disc', profileId: barberProfile.id, dayHourId: dh.id }],
+        workHours: [workHourDisc],
       },
     }
     barberUserRepo.users.push(barberWithService, defaultClient)

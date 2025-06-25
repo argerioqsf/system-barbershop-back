@@ -1,6 +1,5 @@
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { AppointmentRepository } from '@/repositories/appointment-repository'
-import { DayHourRepository } from '@/repositories/day-hour-repository'
 import {
   BarberService,
   Permission,
@@ -9,12 +8,12 @@ import {
   ProfileWorkHour,
   Role,
   User,
-  DayHour,
 } from '@prisma/client'
 import {
   listAvailableSlots,
   BarberWithHours,
 } from '@/utils/barber-availability'
+import { IntervalsFormatted } from '@/utils/time'
 
 interface GetUserRequest {
   id: string
@@ -32,7 +31,7 @@ interface GetUserResponse {
               barberServices: BarberService[]
             })
           | null
-      }) & { availableSlots: DayHour[] })
+      }) & { availableSlots: IntervalsFormatted[] })
     | null
 }
 
@@ -40,7 +39,6 @@ export class GetUserService {
   constructor(
     private repository: BarberUsersRepository,
     private appointmentRepository: AppointmentRepository,
-    private dayHourRepository: DayHourRepository,
   ) {}
 
   async execute({ id }: GetUserRequest): Promise<GetUserResponse> {
@@ -50,7 +48,6 @@ export class GetUserService {
     const availableSlots = await listAvailableSlots(
       user as BarberWithHours,
       this.appointmentRepository,
-      this.dayHourRepository,
     )
 
     return { user: { ...user, availableSlots } }
