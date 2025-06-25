@@ -24,4 +24,8 @@ export class InMemoryUnitOpeningHourRepository
   async findManyByUnit(unitId: string): Promise<UnitOpeningHour[]> {
     return this.items.filter((i) => i.unitId === unitId)
   }
+
+  async delete(id: string): Promise<void> {
+    this.items = this.items.filter((i) => i.id !== id)
+  }
 }

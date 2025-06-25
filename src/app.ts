@@ -26,6 +26,7 @@ import { authRoute } from './http/controllers/auth/route'
 import { organizationRoute } from './http/controllers/organization/route'
 import { unitRoute } from './http/controllers/unit/route'
 import { sessionRoute } from './http/controllers/session/route'
+import { unitOpeningHourRoute } from './http/controllers/unit-opening-hour/route'
 
 export const app = fastify()
 
@@ -145,6 +146,7 @@ app.register(permissionRoute)
 app.register(roleRoute)
 app.register(organizationRoute)
 app.register(unitRoute)
+app.register(unitOpeningHourRoute)
 app.register(saleRoute)
 app.register(reportRoute)
 app.register(configRoute)

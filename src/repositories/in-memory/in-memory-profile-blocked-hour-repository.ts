@@ -23,4 +23,8 @@ export class InMemoryProfileBlockedHourRepository
   async findManyByProfile(profileId: string): Promise<ProfileBlockedHour[]> {
     return this.items.filter((i) => i.profileId === profileId)
   }
+
+  async delete(id: string): Promise<void> {
+    this.items = this.items.filter((i) => i.id !== id)
+  }
 }

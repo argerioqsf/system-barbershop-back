@@ -5,4 +5,5 @@ export interface UnitOpeningHourRepository {
     data: Prisma.UnitOpeningHourUncheckedCreateInput,
   ): Promise<UnitOpeningHour>
   findManyByUnit(unitId: string): Promise<UnitOpeningHour[]>
+  delete(id: string): Promise<void>
 }

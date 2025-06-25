@@ -31,4 +31,8 @@ export class InMemoryProfileWorkHourRepository
         (weekDay === undefined || i.weekDay === weekDay),
     )
   }
+
+  async delete(id: string): Promise<void> {
+    this.items = this.items.filter((i) => i.id !== id)
+  }
 }

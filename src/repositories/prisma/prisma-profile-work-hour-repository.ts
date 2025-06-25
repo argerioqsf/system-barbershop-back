@@ -19,4 +19,8 @@ export class PrismaProfileWorkHourRepository
       where: { profileId, ...(weekDay ? { weekDay } : {}) },
     })
   }
+
+  async delete(id: string): Promise<void> {
+    await prisma.profileWorkHour.delete({ where: { id } })
+  }
 }

@@ -5,4 +5,5 @@ export interface ProfileBlockedHourRepository {
     data: Prisma.ProfileBlockedHourUncheckedCreateInput,
   ): Promise<ProfileBlockedHour>
   findManyByProfile(profileId: string): Promise<ProfileBlockedHour[]>
+  delete(id: string): Promise<void>
 }

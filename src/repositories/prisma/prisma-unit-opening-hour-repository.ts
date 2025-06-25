@@ -14,4 +14,8 @@ export class PrismaUnitOpeningHourRepository
   async findManyByUnit(unitId: string): Promise<UnitOpeningHour[]> {
     return prisma.unitOpeningHour.findMany({ where: { unitId } })
   }
+
+  async delete(id: string): Promise<void> {
+    await prisma.unitOpeningHour.delete({ where: { id } })
+  }
 }
