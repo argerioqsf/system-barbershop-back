@@ -26,7 +26,7 @@ describe('Add profile blocked hour', () => {
     blockedRepo = new FakeProfileBlockedHourRepository()
     profileRepo = new FakeProfilesRepository()
     addUnitHour = new AddUnitOpeningHourService(unitRelRepo)
-    addWorkHour = new AddProfileWorkHourService(workRepo, profileRepo)
+    addWorkHour = new AddProfileWorkHourService(workRepo, profileRepo, unitRelRepo)
     addBlocked = new AddProfileBlockedHourService(
       blockedRepo,
       workRepo,
