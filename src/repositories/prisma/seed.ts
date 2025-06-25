@@ -92,6 +92,18 @@ async function main() {
       category: PermissionCategory.USER,
     },
     {
+      name: PermissionName.MENAGE_USERS_WORKING_HOURS,
+      category: PermissionCategory.USER,
+    },
+    {
+      name: PermissionName.MANAGE_SELF_BLOCKED_HOURS,
+      category: PermissionCategory.USER,
+    },
+    {
+      name: PermissionName.MENAGE_USERS_BLOCKED_HOURS,
+      category: PermissionCategory.USER,
+    },
+    {
       name: PermissionName.CREATE_USER_MANAGER,
       category: PermissionCategory.USER,
     },

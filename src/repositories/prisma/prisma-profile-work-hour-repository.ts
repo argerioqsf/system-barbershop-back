@@ -11,7 +11,12 @@ export class PrismaProfileWorkHourRepository
     return prisma.profileWorkHour.create({ data })
   }
 
-  async findManyByProfile(profileId: string): Promise<ProfileWorkHour[]> {
-    return prisma.profileWorkHour.findMany({ where: { profileId } })
+  async findManyByProfile(
+    profileId: string,
+    weekDay?: number,
+  ): Promise<ProfileWorkHour[]> {
+    return prisma.profileWorkHour.findMany({
+      where: { profileId, ...(weekDay ? { weekDay } : {}) },
+    })
   }
 }

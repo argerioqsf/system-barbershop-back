@@ -12,8 +12,8 @@ import {
 import {
   listAvailableSlots,
   BarberWithHours,
-  AvailableSlot,
 } from '@/utils/barber-availability'
+import { IntervalsFormatted } from '@/utils/time'
 
 interface ListUsersResponse {
   users: (Omit<User, 'password'> & {
@@ -23,7 +23,7 @@ interface ListUsersResponse {
           blockedHours: ProfileBlockedHour[]
         })
       | null
-    availableSlots: AvailableSlot[]
+    availableSlots: IntervalsFormatted[]
   })[]
 }
 

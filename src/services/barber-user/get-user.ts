@@ -12,8 +12,8 @@ import {
 import {
   listAvailableSlots,
   BarberWithHours,
-  AvailableSlot,
 } from '@/utils/barber-availability'
+import { IntervalsFormatted } from '@/utils/time'
 
 interface GetUserRequest {
   id: string
@@ -31,7 +31,7 @@ interface GetUserResponse {
               barberServices: BarberService[]
             })
           | null
-      }) & { availableSlots: AvailableSlot[] })
+      }) & { availableSlots: IntervalsFormatted[] })
     | null
 }
 

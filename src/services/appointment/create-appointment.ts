@@ -38,10 +38,11 @@ export class CreateAppointmentService {
     data: CreateAppointmentRequest,
   ): Promise<CreateAppointmentResponse> {
     let discount = 0
-    const value = data.value
+    let value = data.value
 
     const service = await this.serviceRepository.findById(data.serviceId)
     if (!service) throw new ServiceNotFoundError()
+    value = value ?? service.price
 
     const barber = await this.barberUserRepository.findById(data.barberId)
     if (!barber) throw new BarberNotFoundError()
