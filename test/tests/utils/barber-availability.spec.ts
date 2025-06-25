@@ -32,7 +32,11 @@ describe('barber availability utils', () => {
   })
 
   it('returns empty slots when no work hours', async () => {
-    const res = await listAvailableSlots(barber as any, appointmentRepo)
+    const res = await listAvailableSlots(
+      barber as any,
+      appointmentRepo,
+      new Date('2024-01-01T00:00:00Z'),
+    )
     expect(res).toEqual([])
   })
 
@@ -58,10 +62,14 @@ describe('barber availability utils', () => {
     })
     appointmentRepo.appointments.push({ ...app, barberId: barber.id, barber })
 
-    const res = await listAvailableSlots(barber as any, appointmentRepo)
+    const res = await listAvailableSlots(
+      barber as any,
+      appointmentRepo,
+      new Date('2024-01-01T00:00:00Z'),
+    )
     expect(res).toEqual([
-      expect.objectContaining({ startHour: '09:00', endHour: '09:30' }),
-      expect.objectContaining({ startHour: '10:30', endHour: '11:00' }),
+      expect.objectContaining({ start: '09:00', end: '09:30' }),
+      expect.objectContaining({ start: '10:30', end: '11:00' }),
     ])
   })
 
