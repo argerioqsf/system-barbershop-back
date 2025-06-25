@@ -21,7 +21,12 @@ export class InMemoryProfileWorkHourRepository
     return item
   }
 
-  async findManyByProfile(profileId: string): Promise<ProfileWorkHour[]> {
-    return this.items.filter((i) => i.profileId === profileId)
+  async findManyByProfile(
+    profileId: string,
+    weekDay?: number,
+  ): Promise<ProfileWorkHour[]> {
+    return this.items.filter(
+      (i) => i.profileId === profileId && (weekDay === undefined || i.weekDay === weekDay),
+    )
   }
 }

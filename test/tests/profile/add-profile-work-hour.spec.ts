@@ -1,15 +1,30 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { AddProfileWorkHourService } from '../../../src/services/profile/add-profile-work-hour'
-import { FakeProfileWorkHourRepository } from '../../helpers/fake-repositories'
+import {
+  FakeProfileWorkHourRepository,
+  FakeProfilesRepository,
+} from '../../helpers/fake-repositories'
 import { PermissionName } from '@prisma/client'
+import { makeProfile } from '../../factories/make-profile.factory'
+import { defaultUser, defaultUnit } from '../../helpers/default-values'
 
 describe('Add profile work hour service', () => {
   let repo: FakeProfileWorkHourRepository
   let service: AddProfileWorkHourService
+  let profilesRepo: FakeProfilesRepository
 
   beforeEach(() => {
     repo = new FakeProfileWorkHourRepository()
-    service = new AddProfileWorkHourService(repo)
+    profilesRepo = new FakeProfilesRepository()
+    profilesRepo.profiles = [
+      makeProfile({ userId: 'p1' }),
+      makeProfile({ userId: 'p2' }),
+      makeProfile({ userId: 'p3' }),
+    ].map((p) => ({
+      ...p,
+      user: { ...defaultUser, id: p.userId, unit: defaultUnit },
+    }))
+    service = new AddProfileWorkHourService(repo, profilesRepo)
   })
 
   it('adds work hour for profile', async () => {
@@ -18,7 +33,10 @@ describe('Add profile work hour service', () => {
       unitId: 'unit-1',
       organizationId: 'org-1',
       role: 'BARBER',
-      permissions: [PermissionName.MANAGE_SELF_WORK_HOURS],
+      permissions: [
+        PermissionName.MANAGE_SELF_WORK_HOURS,
+        PermissionName.MENAGE_USERS_WORKING_HOURS,
+      ],
     }
     const res = await service.execute(token, {
       profileId: 'p1',
@@ -37,7 +55,10 @@ describe('Add profile work hour service', () => {
       unitId: 'unit-1',
       organizationId: 'org-1',
       role: 'BARBER',
-      permissions: [PermissionName.MANAGE_SELF_WORK_HOURS],
+      permissions: [
+        PermissionName.MANAGE_SELF_WORK_HOURS,
+        PermissionName.MENAGE_USERS_WORKING_HOURS,
+      ],
     }
     await service.execute(token, {
       profileId: 'p2',
@@ -62,7 +83,10 @@ describe('Add profile work hour service', () => {
       unitId: 'unit-1',
       organizationId: 'org-1',
       role: 'BARBER',
-      permissions: [PermissionName.MANAGE_SELF_WORK_HOURS],
+      permissions: [
+        PermissionName.MANAGE_SELF_WORK_HOURS,
+        PermissionName.MENAGE_USERS_WORKING_HOURS,
+      ],
     }
     await service.execute(token, {
       profileId: 'p3',

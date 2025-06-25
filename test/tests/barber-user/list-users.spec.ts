@@ -1,11 +1,15 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { ListUsersService } from '../../../src/services/barber-user/list-users'
 import {
   InMemoryBarberUsersRepository,
   FakeAppointmentRepository,
 } from '../../helpers/fake-repositories'
-import { listUser1 as u1, listUser2 as u2 } from '../../helpers/default-values'
-import { makeService, makeAppointment } from '../../helpers/default-values'
+import {
+  listUser1 as u1,
+  listUser2 as u2,
+  makeService,
+  makeAppointment,
+} from '../../helpers/default-values'
 
 describe('List users service', () => {
   let repo: InMemoryBarberUsersRepository
@@ -13,9 +17,14 @@ describe('List users service', () => {
   let appointmentRepo: FakeAppointmentRepository
 
   beforeEach(() => {
+    vi.setSystemTime(new Date('2024-01-01T00:00:00'))
     repo = new InMemoryBarberUsersRepository([u1, u2])
     appointmentRepo = new FakeAppointmentRepository()
     service = new ListUsersService(repo, appointmentRepo)
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   it('lists all for admin', async () => {
@@ -76,7 +85,10 @@ describe('List users service', () => {
     }
     repo.users = [{ ...u1, profile }, u2]
     const srv = makeService('srv-1', 100)
-    const app = makeAppointment('ap-1', srv, { date: new Date('2024-01-01T09:00:00'), durationService: 60 })
+    const app = makeAppointment('ap-1', srv, {
+      date: new Date('2024-01-01T09:00:00'),
+      durationService: 60,
+    })
     appointmentRepo.appointments.push({ ...app, barberId: u1.id, barber: u1 })
     const res = await service.execute({
       sub: '1',
@@ -86,7 +98,7 @@ describe('List users service', () => {
     })
     const u = res.users.find((x) => x.id === 'u1')
     expect(u?.availableSlots).toEqual([
-      expect.objectContaining({ startHour: '10:00', endHour: '11:00' }),
+      expect.objectContaining({ start: '10:00', end: '11:00' }),
     ])
   })
 

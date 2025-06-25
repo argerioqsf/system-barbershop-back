@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { GetUserService } from '../../../src/services/barber-user/get-user'
 import {
   InMemoryBarberUsersRepository,
@@ -22,9 +22,14 @@ describe('Get user service', () => {
   let appointmentRepo: FakeAppointmentRepository
 
   beforeEach(() => {
+    vi.setSystemTime(new Date('2024-01-01T00:00:00'))
     repo = new InMemoryBarberUsersRepository()
     appointmentRepo = new FakeAppointmentRepository()
     service = new GetUserService(repo, appointmentRepo)
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   it('returns user by id', async () => {
@@ -89,7 +94,7 @@ describe('Get user service', () => {
     })
     const resSlots = await service.execute({ id: user.id })
     expect(resSlots.user?.availableSlots).toEqual([
-      expect.objectContaining({ startHour: '10:00', endHour: '11:00' }),
+      expect.objectContaining({ start: '10:00', end: '11:00' }),
     ])
   })
 

@@ -23,11 +23,7 @@ describe('Create appointment service', () => {
     repo = new FakeAppointmentRepository()
     serviceRepo = new FakeServiceRepository()
     barberUserRepo = new FakeBarberUsersRepository()
-    service = new CreateAppointmentService(
-      repo,
-      serviceRepo,
-      barberUserRepo,
-    )
+    service = new CreateAppointmentService(repo, serviceRepo, barberUserRepo)
   })
 
   it('creates appointment', async () => {
@@ -77,7 +73,13 @@ describe('Create appointment service', () => {
       profile: {
         ...barberProfile,
         barberServices: [
-          makeBarberServiceRel(barberProfile.id, 'service-22', undefined, undefined, 50),
+          makeBarberServiceRel(
+            barberProfile.id,
+            'service-22',
+            undefined,
+            undefined,
+            50,
+          ),
         ],
         workHours: [workHour2],
       },
@@ -226,13 +228,13 @@ describe('Create appointment service', () => {
       startHour: '09:00',
       endHour: '10:00',
     }
-    const serviceAppointment = makeService("service-55", 100)
+    const serviceAppointment = makeService('service-55', 100)
     serviceRepo.services.push({ ...serviceAppointment, defaultTime: 30 })
     const barberWithService = {
       ...barberUser,
       profile: {
         ...barberProfile,
-        barberServices: [makeBarberServiceRel(barberProfile.id, "service-55")],
+        barberServices: [makeBarberServiceRel(barberProfile.id, 'service-55')],
         workHours: [workHourOut],
         blockedHours: [],
       },
@@ -242,11 +244,11 @@ describe('Create appointment service', () => {
       service.execute({
         clientId: defaultClient.id,
         barberId: barberUser.id,
-        serviceId: "service-55",
-        unitId: "unit-1",
-        date: new Date("2024-01-05T08:30:00"),
+        serviceId: 'service-55',
+        unitId: 'unit-1',
+        date: new Date('2024-01-05T08:30:00'),
       }),
-    ).rejects.toThrow("Barber not available")
+    ).rejects.toThrow('Barber not available')
   })
 
   it('throws when service not found', async () => {
@@ -295,7 +297,10 @@ describe('Create appointment service', () => {
   it('throws when barber lacks service', async () => {
     const svc = makeService('svc-none', 100)
     serviceRepo.services.push({ ...svc, defaultTime: 30 })
-    barberUserRepo.users.push({ ...barberUser, profile: { ...barberProfile, barberServices: [] } }, defaultClient)
+    barberUserRepo.users.push(
+      { ...barberUser, profile: { ...barberProfile, barberServices: [] } },
+      defaultClient,
+    )
     await expect(
       service.execute({
         clientId: defaultClient.id,
@@ -336,5 +341,4 @@ describe('Create appointment service', () => {
     })
     expect(res.appointment.discount).toBe(20)
   })
-
 })
