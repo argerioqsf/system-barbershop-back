@@ -115,10 +115,7 @@ export class CreateSaleService {
       )
       if (appointment?.saleItem) throw new AppointmentAlreadyLinkedError()
       if (!appointment) throw new AppointmentNotFoundError()
-      if (
-        appointment.status === 'CANCELED' ||
-        appointment.status === 'NO_SHOW'
-      )
+      if (appointment.status === 'CANCELED' || appointment.status === 'NO_SHOW')
         throw new InvalidAppointmentStatusError()
       if (appointment.unitId !== userUnitId) {
         throw new ServiceNotFromUserUnitError()
