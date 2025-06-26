@@ -10,9 +10,8 @@ import {
   CashRegisterSession,
   Transaction,
   DiscountType,
-  Appointment,
 } from '@prisma/client'
-import { DetailedAppointment } from './appointment-repository'
+import { DetailedAppointment, Appointment } from './appointment-repository'
 
 export type DetailedSaleItem = SaleItem & {
   service: Service | null

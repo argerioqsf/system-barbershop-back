@@ -1,7 +1,10 @@
-import { Appointment, Prisma, AppointmentStatus } from '@prisma/client'
+import { Prisma, AppointmentStatus } from '@prisma/client'
 import {
   AppointmentRepository,
   DetailedAppointment,
+  Appointment,
+  AppointmentCreateInput,
+  AppointmentUpdateInput,
 } from '../appointment-repository'
 import { randomUUID } from 'crypto'
 
@@ -14,7 +17,7 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
   public appointments: DetailedAppointment[] = []
 
   async create(
-    data: Prisma.AppointmentCreateInput,
+    data: AppointmentCreateInput,
     serviceIds: string[] = [],
   ): Promise<Appointment> {
     const typed = data as Partial<CreateInput>
@@ -33,8 +36,8 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
       status: typed.status as AppointmentStatus,
       durationService: typed.durationService ?? null,
       observation: data.observation ?? null,
-      discount: data.discount ?? 0,
-      value: data.value ?? null,
+      discount: (data as any).discount ?? 0,
+      value: (data as any).value ?? null,
     }
     this.appointments.push({
       ...appointment,
@@ -119,10 +122,7 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
     return this.appointments.find((a) => a.id === id) ?? null
   }
 
-  async update(
-    id: string,
-    data: Prisma.AppointmentUpdateInput,
-  ): Promise<Appointment> {
+  async update(id: string, data: AppointmentUpdateInput): Promise<Appointment> {
     const appointment = this.appointments.find((a) => a.id === id)
     if (!appointment) throw new Error('Appointment not found')
     if (data.status) {
@@ -131,11 +131,11 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
     if (data.observation !== undefined) {
       appointment.observation = data.observation as string | null
     }
-    if (data.value !== undefined) {
-      appointment.value = data.value as number | null
+    if ((data as any).value !== undefined) {
+      appointment.value = (data as any).value as number | null
     }
-    if (data.discount !== undefined) {
-      appointment.discount = data.discount as number | null
+    if ((data as any).discount !== undefined) {
+      appointment.discount = (data as any).discount as number | null
     }
     return appointment
   }

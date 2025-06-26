@@ -1,24 +1,28 @@
 import { prisma } from '@/lib/prisma'
-import { Appointment, Prisma } from '@prisma/client'
+import { Prisma } from '@prisma/client'
 import {
   AppointmentRepository,
   DetailedAppointment,
+  Appointment,
+  AppointmentCreateInput,
+  AppointmentUpdateInput,
 } from '../appointment-repository'
 
 export class PrismaAppointmentRepository implements AppointmentRepository {
   async create(
-    data: Prisma.AppointmentCreateInput,
+    data: AppointmentCreateInput,
     serviceIds: string[],
   ): Promise<Appointment> {
+    const { discount, value, ...dbData } = data as any
     const appointment = await prisma.appointment.create({
       data: {
-        ...data,
+        ...dbData,
         services: {
           create: serviceIds.map((id) => ({ service: { connect: { id } } })),
         },
       },
     })
-    return appointment
+    return { ...appointment, discount: discount ?? 0, value: value ?? null }
   }
 
   async findManyByUnit(unitId: string): Promise<DetailedAppointment[]> {
@@ -69,10 +73,12 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
     } as DetailedAppointment
   }
 
-  async update(
-    id: string,
-    data: Prisma.AppointmentUpdateInput,
-  ): Promise<Appointment> {
-    return prisma.appointment.update({ where: { id }, data })
+  async update(id: string, data: AppointmentUpdateInput): Promise<Appointment> {
+    const { discount, value, ...dbData } = data as any
+    const appointment = await prisma.appointment.update({
+      where: { id },
+      data: dbData,
+    })
+    return { ...appointment, discount: discount ?? null, value: value ?? null }
   }
 }

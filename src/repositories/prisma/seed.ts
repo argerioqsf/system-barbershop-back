@@ -435,7 +435,6 @@ async function main() {
       date: new Date(new Date().setHours(10, 0, 0, 0)),
       status: 'SCHEDULED',
       durationService: 30,
-      discount: 0,
       services: { create: [{ serviceId: haircut.id }] },
     },
   })

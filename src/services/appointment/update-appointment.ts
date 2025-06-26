@@ -1,9 +1,12 @@
-import { AppointmentRepository } from '@/repositories/appointment-repository'
-import { Appointment, Prisma } from '@prisma/client'
+import {
+  AppointmentRepository,
+  Appointment,
+  AppointmentUpdateInput,
+} from '@/repositories/appointment-repository'
 
 interface UpdateAppointmentRequest {
   id: string
-  data: Prisma.AppointmentUpdateInput
+  data: AppointmentUpdateInput
 }
 
 interface UpdateAppointmentResponse {

@@ -4,7 +4,7 @@ import { SaleRepository, DetailedSale } from '../sale-repository'
 
 export class PrismaSaleRepository implements SaleRepository {
   async create(data: Prisma.SaleCreateInput): Promise<DetailedSale> {
-    return prisma.sale.create({
+    const sale = await prisma.sale.create({
       data,
       include: {
         items: {
@@ -25,10 +25,11 @@ export class PrismaSaleRepository implements SaleRepository {
         transactions: true,
       },
     })
+    return sale as unknown as DetailedSale
   }
 
   async findMany(where: Prisma.SaleWhereInput = {}): Promise<DetailedSale[]> {
-    return prisma.sale.findMany({
+    const sales = await prisma.sale.findMany({
       where,
       include: {
         items: {
@@ -49,10 +50,11 @@ export class PrismaSaleRepository implements SaleRepository {
         transactions: true,
       },
     })
+    return sales as unknown as DetailedSale[]
   }
 
   async findById(id: string): Promise<DetailedSale | null> {
-    return prisma.sale.findUnique({
+    const sale = await prisma.sale.findUnique({
       where: { id },
       include: {
         items: {
@@ -73,13 +75,14 @@ export class PrismaSaleRepository implements SaleRepository {
         transactions: true,
       },
     })
+    return sale as unknown as DetailedSale | null
   }
 
   async update(
     id: string,
     data: Prisma.SaleUpdateInput,
   ): Promise<DetailedSale> {
-    return prisma.sale.update({
+    const sale = await prisma.sale.update({
       where: { id },
       data,
       include: {
@@ -101,10 +104,11 @@ export class PrismaSaleRepository implements SaleRepository {
         transactions: true,
       },
     })
+    return sale as unknown as DetailedSale
   }
 
   async findManyByDateRange(start: Date, end: Date): Promise<DetailedSale[]> {
-    return prisma.sale.findMany({
+    const sales = await prisma.sale.findMany({
       where: { createdAt: { gte: start, lte: end } },
       include: {
         items: {
@@ -125,10 +129,11 @@ export class PrismaSaleRepository implements SaleRepository {
         transactions: true,
       },
     })
+    return sales as unknown as DetailedSale[]
   }
 
   async findManyByUser(userId: string): Promise<DetailedSale[]> {
-    return prisma.sale.findMany({
+    const sales = await prisma.sale.findMany({
       where: { userId },
       include: {
         items: {
@@ -149,10 +154,11 @@ export class PrismaSaleRepository implements SaleRepository {
         transactions: true,
       },
     })
+    return sales as unknown as DetailedSale[]
   }
 
   async findManyByBarber(barberId: string): Promise<DetailedSale[]> {
-    return prisma.sale.findMany({
+    const sales = await prisma.sale.findMany({
       where: { items: { some: { barberId } } },
       include: {
         items: {
@@ -173,10 +179,11 @@ export class PrismaSaleRepository implements SaleRepository {
         transactions: true,
       },
     })
+    return sales as unknown as DetailedSale[]
   }
 
   async findManyBySession(sessionId: string): Promise<DetailedSale[]> {
-    return prisma.sale.findMany({
+    const sales = await prisma.sale.findMany({
       where: { sessionId },
       include: {
         items: {
@@ -197,5 +204,6 @@ export class PrismaSaleRepository implements SaleRepository {
         transactions: true,
       },
     })
+    return sales as unknown as DetailedSale[]
   }
 }

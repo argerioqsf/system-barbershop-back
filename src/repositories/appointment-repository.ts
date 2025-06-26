@@ -1,5 +1,5 @@
 import {
-  Appointment,
+  Appointment as PrismaAppointment,
   AppointmentService,
   Prisma,
   SaleItem,
@@ -7,8 +7,23 @@ import {
   User,
 } from '@prisma/client'
 
+export interface Appointment extends PrismaAppointment {
+  value: number | null
+  discount: number | null
+}
+
+export type AppointmentCreateInput = Prisma.AppointmentCreateInput & {
+  value?: number | null
+  discount?: number | null
+}
+
+export type AppointmentUpdateInput = Prisma.AppointmentUpdateInput & {
+  value?: number | null
+  discount?: number | null
+}
+
 export type DetailedAppointment = Appointment & {
-  services: AppointmentService & { service: Service }[]
+  services: Service[]
   client: User
   barber: User
   saleItem?: SaleItem
@@ -16,11 +31,11 @@ export type DetailedAppointment = Appointment & {
 
 export interface AppointmentRepository {
   create(
-    data: Prisma.AppointmentCreateInput,
+    data: AppointmentCreateInput,
     serviceIds: string[],
   ): Promise<Appointment>
   findManyByUnit(unitId: string): Promise<DetailedAppointment[]>
   findMany(where?: Prisma.AppointmentWhereInput): Promise<DetailedAppointment[]>
   findById(id: string): Promise<DetailedAppointment | null>
-  update(id: string, data: Prisma.AppointmentUpdateInput): Promise<Appointment>
+  update(id: string, data: AppointmentUpdateInput): Promise<Appointment>
 }
