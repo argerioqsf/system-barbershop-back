@@ -1,11 +1,11 @@
 import { AppointmentRepository } from '@/repositories/appointment-repository'
-import { ServiceRepository } from '@/repositories/service-repository'
 import {
   Appointment,
   PaymentMethod,
   PaymentStatus,
   Service,
 } from '@prisma/client'
+import { ServiceRepository } from '@/repositories/service-repository'
 import { SaleRepository } from '@/repositories/sale-repository'
 import { ServiceNotFoundError } from '../@errors/service/service-not-found-error'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
@@ -28,7 +28,6 @@ interface CreateAppointmentRequest {
   userId: string
   date: Date
   observation?: string
-  discount?: number
 }
 
 interface CreateAppointmentResponse {

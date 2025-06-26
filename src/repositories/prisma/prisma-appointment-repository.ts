@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { Appointment, Prisma } from '@prisma/client'
+import { Prisma, Appointment } from '@prisma/client'
 import {
   AppointmentRepository,
   DetailedAppointment,
@@ -27,13 +27,10 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
       include: {
         services: { include: { service: true } },
         client: true,
-        barber: true,
+        barber: { include: { profile: true } },
       },
     })
-    return appointments.map((a) => ({
-      ...a,
-      services: a.services.map((s) => s.service),
-    })) as DetailedAppointment[]
+    return appointments
   }
 
   async findMany(
@@ -44,13 +41,10 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
       include: {
         services: { include: { service: true } },
         client: true,
-        barber: true,
+        barber: { include: { profile: true } },
       },
     })
-    return appointments.map((a) => ({
-      ...a,
-      services: a.services.map((s) => s.service),
-    })) as DetailedAppointment[]
+    return appointments
   }
 
   async findById(id: string): Promise<DetailedAppointment | null> {
@@ -59,14 +53,11 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
       include: {
         services: { include: { service: true } },
         client: true,
-        barber: true,
+        barber: { include: { profile: true } },
+        saleItem: true,
       },
     })
-    if (!appointment) return null
-    return {
-      ...appointment,
-      services: appointment.services.map((s) => s.service),
-    } as DetailedAppointment
+    return appointment
   }
 
   async update(

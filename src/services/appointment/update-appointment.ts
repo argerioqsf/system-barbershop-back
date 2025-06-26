@@ -1,5 +1,5 @@
 import { AppointmentRepository } from '@/repositories/appointment-repository'
-import { Appointment, Prisma } from '@prisma/client'
+import { Prisma, Appointment } from '@prisma/client'
 
 interface UpdateAppointmentRequest {
   id: string

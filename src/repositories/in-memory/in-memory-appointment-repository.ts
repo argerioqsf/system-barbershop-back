@@ -1,4 +1,4 @@
-import { Appointment, Prisma, AppointmentStatus } from '@prisma/client'
+import { Prisma, AppointmentStatus, Appointment } from '@prisma/client'
 import {
   AppointmentRepository,
   DetailedAppointment,
@@ -19,7 +19,7 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
   ): Promise<Appointment> {
     const typed = data as Partial<CreateInput>
     if (serviceIds.length === 0 && 'service' in data) {
-      const srv = (data as any).service as { connect: { id: string } }
+      const srv = data.service as { connect: { id: string } }
       if (srv?.connect?.id) {
         serviceIds = [srv.connect.id]
       }
@@ -33,24 +33,26 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
       status: typed.status as AppointmentStatus,
       durationService: typed.durationService ?? null,
       observation: data.observation ?? null,
-      discount: data.discount ?? 0,
-      value: data.value ?? null,
     }
     this.appointments.push({
       ...appointment,
-      discount: appointment.discount,
-      value: appointment.value,
+      saleItem: null,
       services: serviceIds.map((sid) => ({
         id: sid,
-        name: '',
-        description: null,
-        imageUrl: null,
-        cost: 0,
-        price: 0,
-        category: null,
-        defaultTime: null,
-        commissionPercentage: null,
-        unitId: appointment.unitId,
+        appointmentId: appointment.id,
+        serviceId: sid,
+        service: {
+          id: sid,
+          name: '',
+          description: null,
+          imageUrl: null,
+          cost: 0,
+          price: 0,
+          category: null,
+          defaultTime: null,
+          commissionPercentage: null,
+          unitId: appointment.unitId,
+        },
       })),
       client: {
         id: appointment.clientId,
@@ -75,6 +77,23 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
         versionToken: 1,
         versionTokenInvalidate: null,
         createdAt: new Date(),
+        profile: {
+          id: 'profile-' + appointment.barberId,
+          phone: '',
+          cpf: '',
+          genre: '',
+          birthday: '',
+          pix: '',
+          roleId: '',
+          commissionPercentage: 0,
+          totalBalance: 0,
+          userId: appointment.barberId,
+          createdAt: new Date(),
+          barberServices: [],
+          barberProducts: [],
+          workHours: [],
+          blockedHours: [],
+        },
       },
       unit: {
         id: appointment.unitId,
@@ -131,11 +150,10 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
     if (data.observation !== undefined) {
       appointment.observation = data.observation as string | null
     }
-    if (data.value !== undefined) {
-      appointment.value = data.value as number | null
-    }
-    if (data.discount !== undefined) {
-      appointment.discount = data.discount as number | null
+    if (data.saleItem && 'connect' in data.saleItem) {
+      const sid = (data.saleItem as { connect: { id: string } }).connect.id
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      appointment.saleItem = { id: sid } as any
     }
     return appointment
   }

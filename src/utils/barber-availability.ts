@@ -85,7 +85,10 @@ export async function listAvailableSlots(
     const start = timeToMinutes(app.date)
     const dur =
       app.durationService ??
-      app.services.reduce((acc, s) => acc + (s.defaultTime ?? 0), 0)
+      app.services.reduce((acc, s) => {
+        const svc = s.service ?? s
+        return acc + (svc.defaultTime ?? 0)
+      }, 0)
     const end = start + dur
     const list = appMap.get(day) ?? []
     list.push({ start, end })
@@ -166,7 +169,10 @@ export async function isAppointmentAvailable(
       end:
         timeToMinutes(a.date) +
         (a.durationService ??
-          a.services.reduce((acc, s) => acc + (s.defaultTime ?? 0), 0)),
+          a.services.reduce((acc, s) => {
+            const svc = s.service ?? s
+            return acc + (svc.defaultTime ?? 0)
+          }, 0)),
     }))
   ranges = subtractIntervals(ranges, existing)
   ranges = mergeIntervals(ranges)
