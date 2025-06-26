@@ -36,6 +36,7 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
     }
     this.appointments.push({
       ...appointment,
+      saleItem: null,
       services: serviceIds.map((sid) => ({
         id: sid,
         appointmentId: appointment.id,
@@ -148,6 +149,10 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
     }
     if (data.observation !== undefined) {
       appointment.observation = data.observation as string | null
+    }
+    if (data.saleItem && 'connect' in data.saleItem) {
+      const sid = (data.saleItem as { connect: { id: string } }).connect.id
+      appointment.saleItem = { id: sid } as any
     }
     return appointment
   }
