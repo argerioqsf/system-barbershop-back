@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { CreateAppointmentService } from '../../../src/services/appointment/create-appointment'
 import {
   FakeAppointmentRepository,
@@ -23,6 +23,8 @@ describe('Create appointment service', () => {
   let saleRepo: FakeSaleRepository
 
   beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2023-12-31T00:00:00Z'))
     repo = new FakeAppointmentRepository()
     serviceRepo = new FakeServiceRepository()
     barberUserRepo = new FakeBarberUsersRepository()
@@ -33,6 +35,10 @@ describe('Create appointment service', () => {
       barberUserRepo,
       saleRepo,
     )
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   it('creates appointment', async () => {
@@ -387,6 +393,35 @@ describe('Create appointment service', () => {
     expect(saleRepo.sales).toHaveLength(1)
     expect(saleRepo.sales[0].paymentStatus).toBe('PENDING')
     expect(saleRepo.sales[0].items[0].appointmentId).toBe(appointment.id)
+  })
+
+  it('fails when scheduling in the past', async () => {
+    const svc = makeService('svc-past', 60)
+    serviceRepo.services.push({ ...svc, defaultTime: 30 })
+    const wh = {
+      id: 'wh-past',
+      profileId: barberProfile.id,
+      weekDay: 1,
+      startHour: '09:00',
+      endHour: '18:00',
+    }
+    barberUserRepo.users.push({
+      ...barberUser,
+      profile: { ...barberProfile, workHours: [wh], barberServices: [makeBarberServiceRel(barberProfile.id, 'svc-past')] },
+    }, defaultClient)
+
+    vi.setSystemTime(new Date('2024-02-01T00:00:00Z'))
+
+    await expect(
+      service.execute({
+        clientId: defaultClient.id,
+        barberId: barberUser.id,
+        serviceId: 'svc-past',
+        unitId: 'unit-1',
+        userId: defaultUser.id,
+        date: new Date('2024-01-01T10:00:00'),
+      }),
+    ).rejects.toThrow('Cannot schedule appointment in the past')
   })
 
 })

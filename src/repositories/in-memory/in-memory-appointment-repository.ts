@@ -119,6 +119,15 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
     if (data.status) {
       appointment.status = data.status as AppointmentStatus
     }
+    if (data.observation !== undefined) {
+      appointment.observation = data.observation as string | null
+    }
+    if (data.value !== undefined) {
+      appointment.value = data.value as number | null
+    }
+    if (data.discount !== undefined) {
+      appointment.discount = data.discount as number | null
+    }
     return appointment
   }
 }

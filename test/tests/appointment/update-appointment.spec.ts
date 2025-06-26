@@ -24,4 +24,18 @@ describe('Update appointment service', () => {
     expect(res.appointment.status).toBe('CANCELED')
     expect(repo.appointments[0].status).toBe('CANCELED')
   })
+
+  it('updates observation, value and discount', async () => {
+    const res = await service.execute({
+      id: 'appt-up-1',
+      data: { observation: 'new', value: 50, discount: 5 },
+    })
+    expect(res.appointment.observation).toBe('new')
+    expect(res.appointment.value).toBe(50)
+    expect(res.appointment.discount).toBe(5)
+    const saved = repo.appointments[0]
+    expect(saved.observation).toBe('new')
+    expect(saved.value).toBe(50)
+    expect(saved.discount).toBe(5)
+  })
 })

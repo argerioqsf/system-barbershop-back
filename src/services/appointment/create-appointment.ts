@@ -12,6 +12,7 @@ import {
   BarberWithHours,
 } from '@/utils/barber-availability'
 import { BarberNotAvailableError } from '../@errors/barber/barber-not-available-error'
+import { AppointmentDateInPastError } from '../@errors/appointment/appointment-date-in-past-error'
 import { BarberNotFromUserUnitError } from '../@errors/barber/barber-not-from-user-unit-error'
 
 interface CreateAppointmentRequest {
@@ -64,6 +65,10 @@ export class CreateAppointmentService {
 
     const durationService =
       seviceLinkBarber?.time ?? service.defaultTime ?? null
+
+    if (data.date < new Date()) {
+      throw new AppointmentDateInPastError()
+    }
 
     const duration = durationService ?? 0
     const available = await isAppointmentAvailable(
