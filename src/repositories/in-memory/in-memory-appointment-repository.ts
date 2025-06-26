@@ -152,6 +152,7 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
     }
     if (data.saleItem && 'connect' in data.saleItem) {
       const sid = (data.saleItem as { connect: { id: string } }).connect.id
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       appointment.saleItem = { id: sid } as any
     }
     return appointment
