@@ -24,4 +24,16 @@ describe('Update sale service', () => {
     expect(res.sale.method).toBe(PaymentMethod.PIX)
     expect(repo.sales[0].method).toBe(PaymentMethod.PIX)
   })
+
+  it('updates observation and payment status', async () => {
+    const res = await service.execute({
+      id: 'sale-up-1',
+      data: { observation: 'note', paymentStatus: 'PAID' },
+    })
+    expect(res.sale.observation).toBe('note')
+    expect(res.sale.paymentStatus).toBe('PAID')
+    const saved = repo.sales[0]
+    expect(saved.observation).toBe('note')
+    expect(saved.paymentStatus).toBe('PAID')
+  })
 })
