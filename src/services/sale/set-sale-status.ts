@@ -1,11 +1,24 @@
-import { SaleRepository } from '@/repositories/sale-repository'
+import {
+  DetailedSaleItem,
+  SaleRepository,
+} from '@/repositories/sale-repository'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { CashRegisterRepository } from '@/repositories/cash-register-repository'
 import { TransactionRepository } from '@/repositories/transaction-repository'
 import { OrganizationRepository } from '@/repositories/organization-repository'
 import { ProfilesRepository } from '@/repositories/profiles-repository'
 import { UnitRepository } from '@/repositories/unit-repository'
-import { PaymentStatus } from '@prisma/client'
+import {
+  BarberService,
+  PaymentStatus,
+  Permission,
+  Profile,
+  ProfileBlockedHour,
+  ProfileWorkHour,
+  Role,
+  Unit,
+  User,
+} from '@prisma/client'
 import { SaleNotFoundError } from '@/services/@errors/sale/sale-not-found-error'
 import { CashRegisterClosedError } from '@/services/@errors/cash-register/cash-register-closed-error'
 import { distributeProfits } from './utils/profit-distribution'
@@ -16,6 +29,20 @@ import { BarberServiceRepository } from '@/repositories/barber-service-repositor
 import { BarberProductRepository } from '@/repositories/barber-product-repository'
 import { AppointmentRepository } from '@/repositories/appointment-repository'
 
+type FullUser =
+  | (User & {
+      profile:
+        | (Profile & {
+            role: Role
+            permissions: Permission[]
+            workHours: ProfileWorkHour[]
+            blockedHours: ProfileBlockedHour[]
+            barberServices: BarberService[]
+          })
+        | null
+      unit: Unit | null
+    })
+  | null
 export class SetSaleStatusService {
   constructor(
     private saleRepository: SaleRepository,
@@ -29,6 +56,48 @@ export class SetSaleStatusService {
     private profileRepository: ProfilesRepository,
     private unitRepository: UnitRepository,
   ) {}
+
+  private async verifyCommissionUser(
+    item: DetailedSaleItem,
+    barber: FullUser,
+  ): Promise<number | undefined> {
+    let commission: number | undefined
+    if (!barber?.profile) throw new ProfileNotFoundError()
+    if (item.appointmentId && item.appointment) {
+      const first = (item.appointment as any).services?.[0]
+      const svcId = item.serviceId ?? first?.service?.id
+      if (svcId) {
+        const relation =
+          await this.barberServiceRepository.findByProfileService(
+            barber.profile.id,
+            svcId,
+          )
+        const svc = item.service ?? first?.service
+        commission = calculateBarberCommission(svc!, barber.profile, relation)
+      }
+    } else if (item.serviceId && item.service) {
+      const relation = await this.barberServiceRepository.findByProfileService(
+        barber.profile.id,
+        item.serviceId,
+      )
+      commission = calculateBarberCommission(
+        item.service,
+        barber.profile,
+        relation,
+      )
+    } else if (item.productId && item.product) {
+      const relation = await this.barberProductRepository.findByProfileProduct(
+        barber.profile.id,
+        item.productId,
+      )
+      commission = calculateBarberCommission(
+        item.product,
+        barber.profile,
+        relation,
+      )
+    }
+    return commission
+  }
 
   async execute({
     saleId,
@@ -58,48 +127,10 @@ export class SetSaleStatusService {
         const barber = await this.barberUserRepository.findById(barberId)
         if (!barber?.profile) throw new ProfileNotFoundError()
 
-        let commission: number | undefined
-
-        if (item.appointmentId && item.appointment) {
-          const first = (item.appointment as any).services?.[0]
-          const svcId = item.serviceId ?? first?.service?.id
-          if (svcId) {
-            const relation =
-              await this.barberServiceRepository.findByProfileService(
-                barber.profile.id,
-                svcId,
-              )
-            const svc =
-              item.service ?? first?.service
-            commission = calculateBarberCommission(
-              svc!,
-              barber.profile,
-              relation,
-            )
-          }
-        } else if (item.serviceId && item.service) {
-          const relation =
-            await this.barberServiceRepository.findByProfileService(
-              barber.profile.id,
-              item.serviceId,
-            )
-          commission = calculateBarberCommission(
-            item.service,
-            barber.profile,
-            relation,
-          )
-        } else if (item.productId && item.product) {
-          const relation =
-            await this.barberProductRepository.findByProfileProduct(
-              barber.profile.id,
-              item.productId,
-            )
-          commission = calculateBarberCommission(
-            item.product,
-            barber.profile,
-            relation,
-          )
-        }
+        const commission: number | undefined = await this.verifyCommissionUser(
+          item,
+          barber,
+        )
 
         if (commission !== undefined) {
           item.porcentagemBarbeiro = commission

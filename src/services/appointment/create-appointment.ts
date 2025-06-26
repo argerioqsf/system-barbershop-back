@@ -29,7 +29,6 @@ interface CreateAppointmentRequest {
   date: Date
   observation?: string
   discount?: number
-  value?: number
 }
 
 interface CreateAppointmentResponse {
@@ -47,7 +46,6 @@ export class CreateAppointmentService {
   async execute(
     data: CreateAppointmentRequest,
   ): Promise<CreateAppointmentResponse> {
-    let discount = 0
     const services = [] as Service[]
     for (const id of data.serviceIds) {
       const svc = await this.serviceRepository.findById(id)
@@ -55,9 +53,8 @@ export class CreateAppointmentService {
       services.push(svc)
     }
 
-    let value = data.value
     const totalPrice = services.reduce((acc, s) => acc + s.price, 0)
-    value = value ?? totalPrice
+    const value = totalPrice
 
     const barber = await this.barberUserRepository.findById(data.barberId)
     if (!barber) throw new BarberNotFoundError()
@@ -88,11 +85,6 @@ export class CreateAppointmentService {
     )
     if (!available) throw new BarberNotAvailableError()
 
-    if (typeof data.value === 'number') {
-      const diff = totalPrice - data.value
-      discount = diff < 0 ? totalPrice : diff
-    }
-
     const appointment = await this.repository.create(
       {
         client: { connect: { id: data.clientId } },
@@ -102,16 +94,14 @@ export class CreateAppointmentService {
         status: 'SCHEDULED',
         durationService: totalDuration,
         observation: data.observation,
-        discount,
-        value,
       },
       data.serviceIds,
     )
 
-    const price = value ?? Math.max(totalPrice - discount, 0)
+    const price = value
 
     await this.saleRepository.create({
-      total: price,
+      total: value,
       method: PaymentMethod.CASH,
       paymentStatus: PaymentStatus.PENDING,
       user: { connect: { id: data.userId } },

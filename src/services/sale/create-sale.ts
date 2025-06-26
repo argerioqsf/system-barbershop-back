@@ -124,7 +124,7 @@ export class CreateSaleService {
         (acc, s) => acc + s.price,
         0,
       )
-      basePrice = appointment.value ?? appointmentTotal
+      basePrice = appointmentTotal
       dataItem.appointment = { connect: { id: item.appointmentId } }
       barberId = barberId ?? appointment.barberId
     }
@@ -330,6 +330,7 @@ export class CreateSaleService {
     clientId,
     couponCode,
     paymentStatus = PaymentStatus.PENDING,
+    // TODO: retirar esse campo
     appointmentId,
     observation,
   }: CreateSaleRequest): Promise<CreateSaleResponse> {
@@ -356,6 +357,7 @@ export class CreateSaleService {
       tempItems.push(temp)
     }
 
+    // TODO: retirar essa logica
     if (appointmentId) {
       const exists = await this.saleRepository.findMany({
         items: { some: { appointmentId } },
@@ -374,9 +376,7 @@ export class CreateSaleService {
           (acc, s) => acc + s.price,
           0,
         )
-        const value =
-          appointment.value ??
-          Math.max(baseTotal - (appointment.discount ?? 0), 0)
+        const value = baseTotal
 
         const appointmentItem: CreateSaleItem = {
           appointmentId: appointment.id,

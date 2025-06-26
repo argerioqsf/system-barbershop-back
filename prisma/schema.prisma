@@ -183,8 +183,6 @@ model Appointment {
   status    AppointmentStatus @default(SCHEDULED)
   durationService Int?
   observation String?
-  discount   Float?    @default(0)
-  value      Float?
   saleItem   SaleItem?
 
   client  User    @relation("ClientAppointments", fields: [clientId], references: [id])
