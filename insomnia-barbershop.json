@@ -467,6 +467,28 @@
       ]
     },
     {
+      "_id": "req_update_appointment",
+      "_type": "request",
+      "parentId": "fld_appointments",
+      "name": "Update appointment",
+      "method": "PATCH",
+      "url": "{{ baseURL }}/appointments/{id}",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\\n  \\\"status\\\": \\\"CANCELED\\\"\\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
       "_id": "fld_barber_users",
       "_type": "request_group",
       "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
@@ -742,6 +764,28 @@
       "method": "GET",
       "url": "{{ baseURL }}/sales/{id}",
       "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_update_sale",
+      "_type": "request",
+      "parentId": "fld_sales",
+      "name": "Update sale",
+      "method": "PATCH",
+      "url": "{{ baseURL }}/sales/{id}",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\\n  \\\"paymentStatus\\\": \\\"PAID\\\"\\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
         {
           "name": "Authorization",
           "value": "Bearer {{ token }}"
