@@ -1,9 +1,8 @@
-import { Prisma, AppointmentStatus } from '@prisma/client'
+import { Prisma, AppointmentStatus, Appointment } from '@prisma/client'
 import {
   AppointmentRepository,
   DetailedAppointment,
 } from '../appointment-repository'
-import { Appointment } from '@prisma/client'
 import { randomUUID } from 'crypto'
 
 type CreateInput = Prisma.AppointmentCreateInput & {
@@ -20,7 +19,7 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
   ): Promise<Appointment> {
     const typed = data as Partial<CreateInput>
     if (serviceIds.length === 0 && 'service' in data) {
-      const srv = (data as any).service as { connect: { id: string } }
+      const srv = data.service as { connect: { id: string } }
       if (srv?.connect?.id) {
         serviceIds = [srv.connect.id]
       }
@@ -39,15 +38,20 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
       ...appointment,
       services: serviceIds.map((sid) => ({
         id: sid,
-        name: '',
-        description: null,
-        imageUrl: null,
-        cost: 0,
-        price: 0,
-        category: null,
-        defaultTime: null,
-        commissionPercentage: null,
-        unitId: appointment.unitId,
+        appointmentId: appointment.id,
+        serviceId: sid,
+        service: {
+          id: sid,
+          name: '',
+          description: null,
+          imageUrl: null,
+          cost: 0,
+          price: 0,
+          category: null,
+          defaultTime: null,
+          commissionPercentage: null,
+          unitId: appointment.unitId,
+        },
       })),
       client: {
         id: appointment.clientId,

@@ -1,7 +1,11 @@
 import { AppointmentRepository } from '@/repositories/appointment-repository'
-import { Appointment } from '@prisma/client'
+import {
+  Appointment,
+  PaymentMethod,
+  PaymentStatus,
+  Service,
+} from '@prisma/client'
 import { ServiceRepository } from '@/repositories/service-repository'
-import { PaymentMethod, PaymentStatus, Service } from '@prisma/client'
 import { SaleRepository } from '@/repositories/sale-repository'
 import { ServiceNotFoundError } from '../@errors/service/service-not-found-error'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'

@@ -66,16 +66,16 @@ export async function distributeProfits(
         (await appointmentRepository.findById(item.appointmentId))
 
       if (appointment) {
-        const services =
-          appointment.services?.map((s) =>
-            'service' in s ? s.service : (s as any),
-          ) ?? []
+        const services = appointment.services?.map((s) => s.service ?? s) ?? []
 
         for (const service of services) {
           const profileId =
             item.barber?.profile?.id ?? appointment.barber.profile?.id
           const relation = profileId
-            ? await barberServiceRepository.findByProfileService(profileId, service.id)
+            ? await barberServiceRepository.findByProfileService(
+                profileId,
+                service.id,
+              )
             : null
           const perc = calculateBarberCommission(
             service,

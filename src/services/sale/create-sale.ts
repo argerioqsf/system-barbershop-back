@@ -121,8 +121,8 @@ export class CreateSaleService {
         throw new ServiceNotFromUserUnitError()
       }
       const appointmentTotal = appointment.services.reduce((acc, s) => {
-        const svc = 'service' in s ? s.service : (s as any)
-        return acc + (svc.price ?? 0)
+        const service = s.service ?? s
+        return acc + (service.price ?? 0)
       }, 0)
       basePrice = appointmentTotal
       dataItem.appointment = { connect: { id: item.appointmentId } }
@@ -324,8 +324,6 @@ export class CreateSaleService {
     clientId,
     couponCode,
     paymentStatus = PaymentStatus.PENDING,
-    // TODO: retirar esse campo
-    appointmentId,
     observation,
   }: CreateSaleRequest): Promise<CreateSaleResponse> {
     const tempItems: TempItems[] = []
@@ -349,42 +347,6 @@ export class CreateSaleService {
         productsToUpdate,
       )
       tempItems.push(temp)
-    }
-
-    // TODO: retirar essa logica
-    if (appointmentId) {
-      const exists = await this.saleRepository.findMany({
-        items: { some: { appointmentId } },
-      })
-      if (exists.length) throw new AppointmentAlreadyLinkedError()
-
-      const appointment =
-        await this.appointmentRepository.findById(appointmentId)
-      if (appointment) {
-        if (
-          appointment.status === 'CANCELED' ||
-          appointment.status === 'NO_SHOW'
-        )
-          throw new InvalidAppointmentStatusError()
-        const baseTotal = appointment.services.reduce((acc, s) => {
-          const svc = 'service' in s ? s.service : (s as any)
-          return acc + (svc.price ?? 0)
-        }, 0)
-        const value = baseTotal
-
-        const appointmentItem: CreateSaleItem = {
-          appointmentId: appointment.id,
-          barberId: appointment.barberId,
-          quantity: 1,
-          price: value,
-        }
-        const temp = await this.buildItemData(
-          appointmentItem,
-          user?.unitId as string,
-          productsToUpdate,
-        )
-        tempItems.push(temp)
-      }
     }
 
     let couponConnect: ConnectRelation | undefined

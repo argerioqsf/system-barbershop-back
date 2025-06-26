@@ -86,7 +86,7 @@ export async function listAvailableSlots(
     const dur =
       app.durationService ??
       app.services.reduce((acc, s) => {
-        const svc = 'service' in s ? s.service : (s as any)
+        const svc = s.service ?? s
         return acc + (svc.defaultTime ?? 0)
       }, 0)
     const end = start + dur
@@ -170,7 +170,7 @@ export async function isAppointmentAvailable(
         timeToMinutes(a.date) +
         (a.durationService ??
           a.services.reduce((acc, s) => {
-            const svc = 'service' in s ? s.service : (s as any)
+            const svc = s.service ?? s
             return acc + (svc.defaultTime ?? 0)
           }, 0)),
     }))

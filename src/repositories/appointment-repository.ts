@@ -1,18 +1,22 @@
 import {
   Appointment,
-  AppointmentService,
   Prisma,
   SaleItem,
-  Service,
   User,
   Profile,
+  AppointmentService,
+  Service,
 } from '@prisma/client'
 
+export type DetailedAppointmentService = AppointmentService & {
+  service: Service
+}
+
 export type DetailedAppointment = Appointment & {
-  services: Service[]
+  services: DetailedAppointmentService[]
   client: User
   barber: User & { profile: Profile | null }
-  saleItem?: SaleItem
+  saleItem?: SaleItem | null
 }
 
 export interface AppointmentRepository {

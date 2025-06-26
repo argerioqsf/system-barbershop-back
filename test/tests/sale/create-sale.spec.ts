@@ -44,6 +44,7 @@ import {
   defaultOrganization,
   defaultUnit,
 } from '../../helpers/default-values'
+import { DetailedAppointment } from '../../../src/repositories/appointment-repository'
 
 let transactionRepo: FakeTransactionRepository
 let barberRepo: FakeBarberUsersRepository
@@ -719,11 +720,24 @@ describe('Create sale service', () => {
     const appointment = await ctx.appointmentRepo.create({
       client: { connect: { id: defaultClient.id } },
       barber: { connect: { id: barberUser.id } },
-      service: { connect: { id: service.id } },
+      services: {
+        create: [
+          {
+            service: { connect: { id: service.id } },
+          },
+        ],
+      },
       unit: { connect: { id: 'unit-1' } },
       date: new Date('2024-01-01T09:00:00'),
     })
-    ctx.appointmentRepo.appointments[0].services = [service]
+    ctx.appointmentRepo.appointments[0].services = [
+      {
+        id: 'ser-app-1',
+        service,
+        appointmentId: appointment.id,
+        serviceId: service.id,
+      },
+    ]
 
     const res = await ctx.createSale.execute({
       userId: defaultUser.id,
@@ -747,27 +761,31 @@ describe('Create sale service', () => {
     const appointment = await ctx.appointmentRepo.create({
       client: { connect: { id: defaultClient.id } },
       barber: { connect: { id: barberUser.id } },
-      service: { connect: { id: service.id } },
+      services: {
+        create: [
+          {
+            service: { connect: { id: service.id } },
+          },
+        ],
+      },
       unit: { connect: { id: 'unit-1' } },
       date: new Date('2024-01-02T10:00:00'),
-      value: 50,
-      discount: 10,
     })
 
-    await ctx.createSale.execute({
+    const { sale } = await ctx.createSale.execute({
       userId: defaultUser.id,
       method: PaymentMethod.CASH,
       items: [{ appointmentId: appointment.id, quantity: 1 }],
       clientId: defaultClient.id,
     })
-
+    ctx.saleRepo.sales.push(sale)
+    console.log('sale: ', sale.items[0].appointmentId)
     await expect(
       ctx.createSale.execute({
         userId: defaultUser.id,
         method: PaymentMethod.CASH,
-        items: [],
+        items: [{ appointmentId: appointment.id, quantity: 1 }],
         clientId: defaultClient.id,
-        appointmentId: appointment.id,
       }),
     ).rejects.toThrow('Appointment already linked')
   })
@@ -782,12 +800,29 @@ describe('Create sale service', () => {
     const appointment = await ctx.appointmentRepo.create({
       client: { connect: { id: defaultClient.id } },
       barber: { connect: { id: barberUser.id } },
-      service: { connect: { id: service.id } },
+      services: {
+        create: [
+          {
+            service: { connect: { id: service.id } },
+          },
+        ],
+      },
       unit: { connect: { id: 'unit-1' } },
       date: new Date('2024-03-01T08:00:00'),
     })
-    const stored1 = ctx.appointmentRepo.appointments.find((a) => a.id === appointment.id)!
-    stored1.services = [service]
+
+    const stored1 = ctx.appointmentRepo.appointments.find(
+      (a) => a.id === appointment.id,
+    ) as DetailedAppointment
+
+    stored1.services = [
+      {
+        id: 'ser-app-1',
+        service,
+        appointmentId: appointment.id,
+        serviceId: service.id,
+      },
+    ]
 
     const res = await ctx.createSale.execute({
       userId: defaultUser.id,
@@ -810,12 +845,28 @@ describe('Create sale service', () => {
     const appointment = await ctx.appointmentRepo.create({
       client: { connect: { id: defaultClient.id } },
       barber: { connect: { id: barberUser.id } },
-      service: { connect: { id: service.id } },
+      services: {
+        create: [
+          {
+            service: { connect: { id: service.id } },
+          },
+        ],
+      },
       unit: { connect: { id: 'unit-1' } },
       date: new Date('2024-04-01T12:00:00'),
     })
-    const stored2 = ctx.appointmentRepo.appointments.find((a) => a.id === appointment.id)!
-    stored2.services = [service]
+    const stored2 = ctx.appointmentRepo.appointments.find(
+      (a) => a.id === appointment.id,
+    ) as DetailedAppointment
+
+    stored2.services = [
+      {
+        id: 'ser-app-1',
+        service,
+        appointmentId: appointment.id,
+        serviceId: service.id,
+      },
+    ]
 
     const res = await ctx.createSale.execute({
       userId: defaultUser.id,
@@ -838,7 +889,13 @@ describe('Create sale service', () => {
     const appointment = await ctx.appointmentRepo.create({
       client: { connect: { id: defaultClient.id } },
       barber: { connect: { id: barberUser.id } },
-      service: { connect: { id: service.id } },
+      services: {
+        create: [
+          {
+            service: { connect: { id: service.id } },
+          },
+        ],
+      },
       unit: { connect: { id: 'unit-1' } },
       date: new Date('2024-05-01T10:00:00'),
       status: 'CANCELED',
@@ -864,7 +921,13 @@ describe('Create sale service', () => {
     const appointment = await ctx.appointmentRepo.create({
       client: { connect: { id: defaultClient.id } },
       barber: { connect: { id: barberUser.id } },
-      service: { connect: { id: service.id } },
+      services: {
+        create: [
+          {
+            service: { connect: { id: service.id } },
+          },
+        ],
+      },
       unit: { connect: { id: 'unit-1' } },
       date: new Date('2024-06-01T09:00:00'),
     })
@@ -891,7 +954,8 @@ describe('Create sale service', () => {
     })
 
     expect(
-      ctx.appointmentRepo.appointments.find((a) => a.id === appointment.id)?.status,
+      ctx.appointmentRepo.appointments.find((a) => a.id === appointment.id)
+        ?.status,
     ).toBe('CONCLUDED')
   })
 })
