@@ -27,6 +27,7 @@ export const CreateAppointmentController = async (
     date: data.date,
     value: data.value,
     unitId,
+    userId: (request.user as UserToken).sub,
   })
 
   return reply.status(201).send(appointment)

@@ -4,10 +4,12 @@ import {
   FakeAppointmentRepository,
   FakeBarberUsersRepository,
   FakeServiceRepository,
+  FakeSaleRepository,
 } from '../../helpers/fake-repositories'
 import {
   barberUser,
   defaultClient,
+  defaultUser,
   makeService,
   makeBarberServiceRel,
   barberProfile,
@@ -18,15 +20,18 @@ describe('Create appointment service', () => {
   let service: CreateAppointmentService
   let serviceRepo: FakeServiceRepository
   let barberUserRepo: FakeBarberUsersRepository
+  let saleRepo: FakeSaleRepository
 
   beforeEach(() => {
     repo = new FakeAppointmentRepository()
     serviceRepo = new FakeServiceRepository()
     barberUserRepo = new FakeBarberUsersRepository()
+    saleRepo = new FakeSaleRepository()
     service = new CreateAppointmentService(
       repo,
       serviceRepo,
       barberUserRepo,
+      saleRepo,
     )
   })
 
@@ -54,6 +59,7 @@ describe('Create appointment service', () => {
       barberId: barberUser.id,
       serviceId: 'service-11',
       unitId: 'unit-1',
+      userId: defaultUser.id,
       date: new Date('2024-01-01T10:00:00'),
     })
     expect(repo.appointments).toHaveLength(1)
@@ -88,6 +94,7 @@ describe('Create appointment service', () => {
       barberId: barberUser.id,
       serviceId: 'service-22',
       unitId: 'unit-1',
+      userId: defaultUser.id,
       date: new Date('2024-01-02T12:00:00'),
     })
     expect(res.appointment.durationService).toBe(50)
@@ -118,6 +125,7 @@ describe('Create appointment service', () => {
       barberId: barberUser.id,
       serviceId: 'service-33',
       unitId: 'unit-1',
+      userId: defaultUser.id,
       date: new Date('2024-01-03T08:00:00'),
     })
 
@@ -127,6 +135,7 @@ describe('Create appointment service', () => {
         barberId: barberUser.id,
         serviceId: 'service-33',
         unitId: 'unit-1',
+        userId: defaultUser.id,
         date: new Date('2024-01-03T08:30:00'),
       }),
     ).rejects.toThrow('Barber not available')
@@ -166,6 +175,7 @@ describe('Create appointment service', () => {
         barberId: barberUser.id,
         serviceId: 'service-44',
         unitId: 'unit-1',
+        userId: defaultUser.id,
         date: new Date('2024-01-04T09:00:00'),
       }),
     ).rejects.toThrow('Barber not available')
@@ -204,6 +214,7 @@ describe('Create appointment service', () => {
       barberId: barberUser.id,
       serviceId: 'svc-split',
       unitId: 'unit-1',
+      userId: defaultUser.id,
       date: new Date('2024-01-06T08:30:00'),
     })
     expect(early.appointment).toBeDefined()
@@ -214,6 +225,7 @@ describe('Create appointment service', () => {
         barberId: barberUser.id,
         serviceId: 'svc-split',
         unitId: 'unit-1',
+        userId: defaultUser.id,
         date: new Date('2024-01-06T09:15:00'),
       }),
     ).rejects.toThrow('Barber not available')
@@ -244,6 +256,7 @@ describe('Create appointment service', () => {
         barberId: barberUser.id,
         serviceId: "service-55",
         unitId: "unit-1",
+        userId: defaultUser.id,
         date: new Date("2024-01-05T08:30:00"),
       }),
     ).rejects.toThrow("Barber not available")
@@ -257,6 +270,7 @@ describe('Create appointment service', () => {
         barberId: barberUser.id,
         serviceId: 'missing',
         unitId: 'unit-1',
+        userId: defaultUser.id,
         date: new Date('2024-01-01T09:00:00'),
       }),
     ).rejects.toThrow('Service not found')
@@ -272,6 +286,7 @@ describe('Create appointment service', () => {
         barberId: 'no',
         serviceId: 'svc-err',
         unitId: 'unit-1',
+        userId: defaultUser.id,
         date: new Date('2024-01-01T09:00:00'),
       }),
     ).rejects.toThrow('Barber not found')
@@ -287,6 +302,7 @@ describe('Create appointment service', () => {
         barberId: barberUser.id,
         serviceId: 'svc-err2',
         unitId: 'unit-1',
+        userId: defaultUser.id,
         date: new Date('2024-01-01T09:00:00'),
       }),
     ).rejects.toThrow('User not found')
@@ -302,6 +318,7 @@ describe('Create appointment service', () => {
         barberId: barberUser.id,
         serviceId: 'svc-none',
         unitId: 'unit-1',
+        userId: defaultUser.id,
         date: new Date('2024-01-01T09:00:00'),
       }),
     ).rejects.toThrow('The barber does not have this item linked')
@@ -331,10 +348,45 @@ describe('Create appointment service', () => {
       barberId: barberUser.id,
       serviceId: 'svc-disc',
       unitId: 'unit-1',
+      userId: defaultUser.id,
       date: new Date('2024-01-01T09:00:00'),
       value: 80,
     })
     expect(res.appointment.discount).toBe(20)
+  })
+
+  it('creates sale with pending status', async () => {
+    const svc = makeService('svc-sale', 70)
+    serviceRepo.services.push({ ...svc, defaultTime: 30 })
+    const wh = {
+      id: 'wh-sale',
+      profileId: barberProfile.id,
+      weekDay: 4,
+      startHour: '09:00',
+      endHour: '18:00',
+    }
+    const barberWithService = {
+      ...barberUser,
+      profile: {
+        ...barberProfile,
+        barberServices: [makeBarberServiceRel(barberProfile.id, 'svc-sale')],
+        workHours: [wh],
+      },
+    }
+    barberUserRepo.users.push(barberWithService, defaultClient)
+
+    const { appointment } = await service.execute({
+      clientId: defaultClient.id,
+      barberId: barberUser.id,
+      serviceId: 'svc-sale',
+      unitId: 'unit-1',
+      userId: defaultUser.id,
+      date: new Date('2024-02-01T10:00:00'),
+    })
+
+    expect(saleRepo.sales).toHaveLength(1)
+    expect(saleRepo.sales[0].paymentStatus).toBe('PENDING')
+    expect(saleRepo.sales[0].items[0].appointmentId).toBe(appointment.id)
   })
 
 })

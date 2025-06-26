@@ -868,6 +868,19 @@ describe('Create sale service', () => {
       date: new Date('2024-06-01T09:00:00'),
     })
 
+    ctx.cashRepo.session = {
+      id: 'session-pay',
+      openedById: defaultUser.id,
+      unitId: 'unit-1',
+      openedAt: new Date(),
+      closedAt: null,
+      initialAmount: 0,
+      transactions: [],
+      sales: [],
+      finalAmount: null,
+      user: defaultUser,
+    }
+
     await ctx.createSale.execute({
       userId: defaultUser.id,
       method: PaymentMethod.CASH,
