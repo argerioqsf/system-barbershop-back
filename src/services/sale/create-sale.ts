@@ -48,6 +48,7 @@ import {
 import { AppointmentAlreadyLinkedError } from '../@errors/appointment/appointment-already-linked-error'
 import { AppointmentNotFoundError } from '../@errors/appointment/appointment-not-found-error'
 import { ItemPriceGreaterError } from '../@errors/sale/Item-price-greater-error'
+import { InvalidAppointmentStatusError } from '../@errors/appointment/invalid-appointment-status-error'
 
 export class CreateSaleService {
   constructor(
@@ -114,6 +115,8 @@ export class CreateSaleService {
       )
       if (appointment?.saleItem) throw new AppointmentAlreadyLinkedError()
       if (!appointment) throw new AppointmentNotFoundError()
+      if (appointment.status === 'CANCELED' || appointment.status === 'NO_SHOW')
+        throw new InvalidAppointmentStatusError()
       if (appointment.unitId !== userUnitId) {
         throw new ServiceNotFromUserUnitError()
       }
@@ -355,6 +358,11 @@ export class CreateSaleService {
       const appointment =
         await this.appointmentRepository.findById(appointmentId)
       if (appointment) {
+        if (
+          appointment.status === 'CANCELED' ||
+          appointment.status === 'NO_SHOW'
+        )
+          throw new InvalidAppointmentStatusError()
         const serviceInfo = await this.serviceRepository.findById(
           appointment.serviceId,
         )
@@ -408,6 +416,13 @@ export class CreateSaleService {
     })
 
     if (paymentStatus === PaymentStatus.PAID) {
+      for (const item of sale.items) {
+        if (item.appointmentId) {
+          await this.appointmentRepository.update(item.appointmentId, {
+            status: 'CONCLUDED',
+          })
+        }
+      }
       const { transactions } = await distributeProfits(
         sale,
         user?.organizationId as string,

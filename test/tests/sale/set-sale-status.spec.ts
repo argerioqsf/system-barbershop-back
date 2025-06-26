@@ -11,6 +11,7 @@ import {
   FakeOrganizationRepository,
   FakeProfilesRepository,
   FakeUnitRepository,
+  FakeAppointmentRepository,
 } from '../../helpers/fake-repositories'
 import {
   barberProfile,
@@ -33,6 +34,7 @@ let barberRepo: FakeBarberUsersRepository
 let cashRepo: FakeCashRegisterRepository
 let barberServiceRepo: FakeBarberServiceRelRepository
 let barberProductRepo: FakeBarberProductRepository
+let appointmentRepo: FakeAppointmentRepository
 
 vi.mock(
   '../../../src/services/@factories/transaction/make-create-transaction',
@@ -54,6 +56,7 @@ describe('Set sale status service', () => {
     barberRepo = new FakeBarberUsersRepository()
     barberServiceRepo = new FakeBarberServiceRelRepository()
     barberProductRepo = new FakeBarberProductRepository()
+    appointmentRepo = new FakeAppointmentRepository()
     cashRepo = new FakeCashRegisterRepository()
     transactionRepo = new FakeTransactionRepository()
     orgRepo = new FakeOrganizationRepository({ ...defaultOrganization })
@@ -96,6 +99,7 @@ describe('Set sale status service', () => {
       barberRepo,
       barberServiceRepo,
       barberProductRepo,
+      appointmentRepo,
       cashRepo,
       transactionRepo,
       orgRepo,
@@ -215,6 +219,7 @@ describe('Set sale status service', () => {
       discount: 20,
       value: 80,
     })
+    appointmentRepo.appointments.push(appointment)
     const sale = makeSale('sale-4')
     sale.items.push({
       id: 'ia1',
@@ -261,6 +266,7 @@ describe('Set sale status service', () => {
     const appointment = makeAppointment('appt-2', serviceDef, {
       value: 90,
     })
+    appointmentRepo.appointments.push(appointment)
     const sale = makeSale('sale-5')
     sale.items.push({
       id: 'ia2',
@@ -298,5 +304,45 @@ describe('Set sale status service', () => {
     })
 
     expect(res.sale.items[0].porcentagemBarbeiro).toBe(40)
+  })
+
+  it('concludes appointment when paying sale', async () => {
+    const serviceDef = makeServiceWithCommission('svc-appt3', 70, 20)
+    const appointment = makeAppointment('appt-3', serviceDef)
+    appointmentRepo.appointments.push(appointment)
+    const sale = makeSale('sale-6')
+    sale.items.push({
+      id: 'ia3',
+      saleId: sale.id,
+      serviceId: serviceDef.id,
+      productId: null,
+      appointmentId: appointment.id,
+      quantity: 1,
+      barberId: barberUser.id,
+      couponId: null,
+      price: 70,
+      discount: null,
+      discountType: null,
+      porcentagemBarbeiro: null,
+      service: serviceDef,
+      product: null,
+      barber: { ...barberUser, profile: barberProfile },
+      appointment,
+      coupon: null,
+    })
+    saleRepo.sales.push(sale)
+    barberServiceRepo.items.push(
+      makeBarberServiceRel(barberProfile.id, serviceDef.id, 'PERCENTAGE_OF_ITEM')
+    )
+
+    await service.execute({
+      saleId: 'sale-6',
+      userId: 'cashier',
+      paymentStatus: PaymentStatus.PAID,
+    })
+
+    expect(
+      appointmentRepo.appointments.find((a) => a.id === appointment.id)?.status,
+    ).toBe('CONCLUDED')
   })
 })

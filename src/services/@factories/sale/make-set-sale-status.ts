@@ -7,6 +7,7 @@ import { PrismaProfilesRepository } from '@/repositories/prisma/prisma-profile-r
 import { PrismaUnitRepository } from '@/repositories/prisma/prisma-unit-repository'
 import { PrismaBarberServiceRepository } from '@/repositories/prisma/prisma-barber-service-repository'
 import { PrismaBarberProductRepository } from '@/repositories/prisma/prisma-barber-product-repository'
+import { PrismaAppointmentRepository } from '@/repositories/prisma/prisma-appointment-repository'
 import { SetSaleStatusService } from '@/services/sale/set-sale-status'
 
 export function makeSetSaleStatus() {
@@ -19,11 +20,13 @@ export function makeSetSaleStatus() {
   const unitRepository = new PrismaUnitRepository()
   const barberServiceRepository = new PrismaBarberServiceRepository()
   const barberProductRepository = new PrismaBarberProductRepository()
+  const appointmentRepository = new PrismaAppointmentRepository()
   return new SetSaleStatusService(
     saleRepository,
     barberUserRepository,
     barberServiceRepository,
     barberProductRepository,
+    appointmentRepository,
     cashRegisterRepository,
     transactionRepository,
     organizationRepository,

@@ -226,6 +226,12 @@ export class InMemorySaleRepository implements SaleRepository {
   ): Promise<DetailedSale> {
     const sale = this.sales.find((s) => s.id === id)
     if (!sale) throw new Error('Sale not found')
+    if (data.method) {
+      sale.method = data.method as PaymentMethod
+    }
+    if (data.observation !== undefined) {
+      sale.observation = data.observation as string | null
+    }
     if (data.paymentStatus) {
       sale.paymentStatus = data.paymentStatus as PaymentStatus
     }

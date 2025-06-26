@@ -14,6 +14,7 @@ import { SetSaleStatusRequest, SetSaleStatusResponse } from './types'
 import { ProfileNotFoundError } from '../@errors/profile/profile-not-found-error'
 import { BarberServiceRepository } from '@/repositories/barber-service-repository'
 import { BarberProductRepository } from '@/repositories/barber-product-repository'
+import { AppointmentRepository } from '@/repositories/appointment-repository'
 
 export class SetSaleStatusService {
   constructor(
@@ -21,6 +22,7 @@ export class SetSaleStatusService {
     private barberUserRepository: BarberUsersRepository,
     private barberServiceRepository: BarberServiceRepository,
     private barberProductRepository: BarberProductRepository,
+    private appointmentRepository: AppointmentRepository,
     private cashRegisterRepository: CashRegisterRepository,
     private transactionRepository: TransactionRepository,
     private organizationRepository: OrganizationRepository,
@@ -102,6 +104,14 @@ export class SetSaleStatusService {
         paymentStatus,
         session: { connect: { id: session.id } },
       })
+
+      for (const item of updatedSale.items) {
+        if (item.appointmentId) {
+          await this.appointmentRepository.update(item.appointmentId, {
+            status: 'CONCLUDED',
+          })
+        }
+      }
 
       const { transactions } = await distributeProfits(
         updatedSale,
