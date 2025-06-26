@@ -15,6 +15,8 @@ export interface DistributeProfitsDeps {
   profileRepository: ProfilesRepository
   unitRepository: UnitRepository
   transactionRepository: TransactionRepository
+  appointmentRepository: import('@/repositories/appointment-repository').AppointmentRepository
+  barberServiceRepository: import('@/repositories/barber-service-repository').BarberServiceRepository
 }
 
 export interface CreateSaleItem {

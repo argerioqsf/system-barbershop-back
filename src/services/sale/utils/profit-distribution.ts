@@ -8,6 +8,9 @@ import { BarberProfileNotFoundError } from '@/services/@errors/profile/barber-pr
 import { IncrementBalanceProfileService } from '@/services/profile/increment-balance'
 import { IncrementBalanceUnitService } from '@/services/unit/increment-balance'
 import { Transaction } from '@prisma/client'
+import { AppointmentRepository } from '@/repositories/appointment-repository'
+import { BarberServiceRepository } from '@/repositories/barber-service-repository'
+import { calculateBarberCommission } from './barber-commission'
 
 export async function distributeProfits(
   sale: DetailedSale,
@@ -18,8 +21,12 @@ export async function distributeProfits(
     profileRepository,
     unitRepository,
     transactionRepository,
+    appointmentRepository,
+    barberServiceRepository,
   }: DistributeProfitsDeps & {
     transactionRepository: import('@/repositories/transaction-repository').TransactionRepository
+    appointmentRepository: AppointmentRepository
+    barberServiceRepository: BarberServiceRepository
   },
 ): Promise<{ transactions: Transaction[] }> {
   const org = await organizationRepository.findById(organizationId)
@@ -43,17 +50,47 @@ export async function distributeProfits(
 
   for (const item of sale.items) {
     const value = item.price ?? 0
+
     if (item.product && !item.barberId) {
       ownerShare += value
-    } else if (item.barberId) {
-      const perc = item.porcentagemBarbeiro ?? 0
-      const valueBarber = (value * perc) / 100
-      barberTotals[item.barberId] =
-        (barberTotals[item.barberId] || 0) + valueBarber
-      ownerShare += value - valueBarber
-    } else {
-      ownerShare += value
+      continue
     }
+
+    if (!item.barberId) {
+      ownerShare += value
+      continue
+    }
+
+    if (item.appointmentId) {
+      const appointment =
+        item.appointment ??
+        (await appointmentRepository.findById(item.appointmentId))
+
+      if (appointment) {
+        const services = (appointment as any).services?.map((s: any) => s.service ?? s) ?? []
+        const totalBase = services.reduce((acc: number, s: any) => acc + s.price, 0)
+        for (const svc of services) {
+          const relation = await barberServiceRepository.findByProfileService(
+            item.barber?.profile?.id ?? appointment.barberId,
+            svc.id,
+          )
+          const perc =
+            calculateBarberCommission(svc, item.barber?.profile, relation) ?? 0
+          const portion = totalBase > 0 ? (svc.price / totalBase) * value : 0
+          const valueBarber = (portion * perc) / 100
+          barberTotals[item.barberId] =
+            (barberTotals[item.barberId] || 0) + valueBarber
+          ownerShare += portion - valueBarber
+        }
+        continue
+      }
+    }
+
+    const perc = item.porcentagemBarbeiro ?? 0
+    const valueBarber = (value * perc) / 100
+    barberTotals[item.barberId] =
+      (barberTotals[item.barberId] || 0) + valueBarber
+    ownerShare += value - valueBarber
   }
 
   for (const [barberId, amount] of Object.entries(barberTotals)) {

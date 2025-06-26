@@ -159,6 +159,8 @@ export class SetSaleStatusService {
           profileRepository: this.profileRepository,
           unitRepository: this.unitRepository,
           transactionRepository: this.transactionRepository,
+          appointmentRepository: this.appointmentRepository,
+          barberServiceRepository: this.barberServiceRepository,
         },
       )
 

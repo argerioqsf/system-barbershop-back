@@ -136,6 +136,7 @@ export class CreateSaleService {
     const ownDiscount = false
     let barberCommission: number | undefined
     let relation: BarberService | BarberProduct | null | undefined = null
+    let selectedItem: Service | Product | null = null
 
     if (barberId) {
       const barber = await this.barberUserRepository.findById(barberId)
@@ -154,6 +155,7 @@ export class CreateSaleService {
           barber.profile.id,
           service.id,
         )
+        selectedItem = service
       } else if (product) {
         await assertPermission(
           [PermissionName.SELL_PRODUCT],
@@ -163,28 +165,20 @@ export class CreateSaleService {
           barber.profile.id,
           product.id,
         )
+        selectedItem = product
       } else if (appointment) {
         await assertPermission(
           [PermissionName.SELL_APPOINTMENT],
           barber.profile.permissions?.map((p) => p.name) ?? [],
         )
-        const firstService = appointment.services[0]
-        if (firstService) {
-          relation = await this.barberServiceRepository.findByProfileService(
-            barber.profile.id,
-            firstService.id,
-          )
-        }
       }
-
-      const selectedItem =
-        service ?? product ?? (appointment ? appointment?.services[0] : null)
-
-      barberCommission = calculateBarberCommission(
-        selectedItem,
-        barber?.profile,
-        relation,
-      )
+      if (selectedItem) {
+        barberCommission = calculateBarberCommission(
+          selectedItem,
+          barber?.profile,
+          relation,
+        )
+      }
     }
 
     const resultLogicSalesCoupons = await this.applyCouponToSale(
@@ -438,6 +432,8 @@ export class CreateSaleService {
           profileRepository: this.profileRepository,
           unitRepository: this.unitRepository,
           transactionRepository: this.transactionRepository,
+          appointmentRepository: this.appointmentRepository,
+          barberServiceRepository: this.barberServiceRepository,
         },
       )
       sale.transactions = [...transactions]
