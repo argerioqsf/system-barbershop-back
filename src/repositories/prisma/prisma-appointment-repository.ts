@@ -3,26 +3,23 @@ import { Prisma } from '@prisma/client'
 import {
   AppointmentRepository,
   DetailedAppointment,
-  Appointment,
-  AppointmentCreateInput,
-  AppointmentUpdateInput,
 } from '../appointment-repository'
+import { Appointment } from '@prisma/client'
 
 export class PrismaAppointmentRepository implements AppointmentRepository {
   async create(
-    data: AppointmentCreateInput,
+    data: Prisma.AppointmentCreateInput,
     serviceIds: string[],
   ): Promise<Appointment> {
-    const { discount, value, ...dbData } = data as any
     const appointment = await prisma.appointment.create({
       data: {
-        ...dbData,
+        ...data,
         services: {
           create: serviceIds.map((id) => ({ service: { connect: { id } } })),
         },
       },
     })
-    return { ...appointment, discount: discount ?? 0, value: value ?? null }
+    return appointment
   }
 
   async findManyByUnit(unitId: string): Promise<DetailedAppointment[]> {
@@ -31,7 +28,7 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
       include: {
         services: { include: { service: true } },
         client: true,
-        barber: true,
+        barber: { include: { profile: true } },
       },
     })
     return appointments.map((a) => ({
@@ -48,7 +45,7 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
       include: {
         services: { include: { service: true } },
         client: true,
-        barber: true,
+        barber: { include: { profile: true } },
       },
     })
     return appointments.map((a) => ({
@@ -63,7 +60,7 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
       include: {
         services: { include: { service: true } },
         client: true,
-        barber: true,
+        barber: { include: { profile: true } },
       },
     })
     if (!appointment) return null
@@ -73,12 +70,10 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
     } as DetailedAppointment
   }
 
-  async update(id: string, data: AppointmentUpdateInput): Promise<Appointment> {
-    const { discount, value, ...dbData } = data as any
-    const appointment = await prisma.appointment.update({
-      where: { id },
-      data: dbData,
-    })
-    return { ...appointment, discount: discount ?? null, value: value ?? null }
+  async update(
+    id: string,
+    data: Prisma.AppointmentUpdateInput,
+  ): Promise<Appointment> {
+    return prisma.appointment.update({ where: { id }, data })
   }
 }

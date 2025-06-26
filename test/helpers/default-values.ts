@@ -646,8 +646,6 @@ export function makeAppointment(
   id: string,
   service: Service,
   options: {
-    discount?: number
-    value?: number
     date?: Date
     durationService?: number | null
     status?: string
@@ -662,8 +660,6 @@ export function makeAppointment(
     status: (options.status as any) ?? 'SCHEDULED',
     durationService: options.durationService ?? null,
     observation: null,
-    discount: options.discount ?? 0,
-    value: options.value ?? null,
     services: [service],
     client: defaultClient,
     barber: barberUser,

@@ -16,7 +16,8 @@
     "paths": {
       "@/*": ["./src/*"]
     } /* Specify a set of entries that re-map imports to additional lookup locations. */,
-    "baseUrl": "./" /* Specify the base directory to resolve non-relative module names. */
+    "baseUrl": "./" /* Specify the base directory to resolve non-relative module names. */,
+    "typeRoots": ["./src/@types", "./node_modules/@types"]
     /* Projects */
     // "incremental": true,                              /* Save .tsbuildinfo files to allow for incremental compilation of projects. */
     // "composite": true,                                /* Enable constraints that allow a TypeScript project to be used with project references. */

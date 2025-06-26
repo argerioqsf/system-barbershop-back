@@ -722,9 +722,8 @@ describe('Create sale service', () => {
       service: { connect: { id: service.id } },
       unit: { connect: { id: 'unit-1' } },
       date: new Date('2024-01-01T09:00:00'),
-      discount: 10,
-      value: 40,
     })
+    ctx.appointmentRepo.appointments[0].services = [service]
 
     const res = await ctx.createSale.execute({
       userId: defaultUser.id,
@@ -735,7 +734,7 @@ describe('Create sale service', () => {
 
     expect(res.sale.items).toHaveLength(1)
     expect(res.sale.items[0].appointmentId).toBe(appointment.id)
-    expect(res.sale.total).toBe(40)
+    expect(res.sale.total).toBe(50)
   })
 
   it('fails if appointment already linked', async () => {
@@ -786,8 +785,9 @@ describe('Create sale service', () => {
       service: { connect: { id: service.id } },
       unit: { connect: { id: 'unit-1' } },
       date: new Date('2024-03-01T08:00:00'),
-      value: 60,
     })
+    const stored1 = ctx.appointmentRepo.appointments.find((a) => a.id === appointment.id)!
+    stored1.services = [service]
 
     const res = await ctx.createSale.execute({
       userId: defaultUser.id,
@@ -796,7 +796,7 @@ describe('Create sale service', () => {
       clientId: defaultClient.id,
     })
 
-    expect(res.sale.total).toBe(60)
+    expect(res.sale.total).toBe(80)
     expect(res.sale.items[0].appointmentId).toBe(appointment.id)
   })
 
@@ -813,8 +813,9 @@ describe('Create sale service', () => {
       service: { connect: { id: service.id } },
       unit: { connect: { id: 'unit-1' } },
       date: new Date('2024-04-01T12:00:00'),
-      value: 40,
     })
+    const stored2 = ctx.appointmentRepo.appointments.find((a) => a.id === appointment.id)!
+    stored2.services = [service]
 
     const res = await ctx.createSale.execute({
       userId: defaultUser.id,
@@ -823,7 +824,7 @@ describe('Create sale service', () => {
       clientId: defaultClient.id,
     })
 
-    expect(res.sale.total).toBe(40)
+    expect(res.sale.total).toBe(70)
     expect(res.sale.items[0].appointmentId).toBe(appointment.id)
   })
 

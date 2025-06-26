@@ -2,10 +2,8 @@ import { Prisma, AppointmentStatus } from '@prisma/client'
 import {
   AppointmentRepository,
   DetailedAppointment,
-  Appointment,
-  AppointmentCreateInput,
-  AppointmentUpdateInput,
 } from '../appointment-repository'
+import { Appointment } from '@prisma/client'
 import { randomUUID } from 'crypto'
 
 type CreateInput = Prisma.AppointmentCreateInput & {
@@ -17,7 +15,7 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
   public appointments: DetailedAppointment[] = []
 
   async create(
-    data: AppointmentCreateInput,
+    data: Prisma.AppointmentCreateInput,
     serviceIds: string[] = [],
   ): Promise<Appointment> {
     const typed = data as Partial<CreateInput>
@@ -36,13 +34,9 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
       status: typed.status as AppointmentStatus,
       durationService: typed.durationService ?? null,
       observation: data.observation ?? null,
-      discount: (data as any).discount ?? 0,
-      value: (data as any).value ?? null,
     }
     this.appointments.push({
       ...appointment,
-      discount: appointment.discount,
-      value: appointment.value,
       services: serviceIds.map((sid) => ({
         id: sid,
         name: '',
@@ -78,6 +72,23 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
         versionToken: 1,
         versionTokenInvalidate: null,
         createdAt: new Date(),
+        profile: {
+          id: 'profile-' + appointment.barberId,
+          phone: '',
+          cpf: '',
+          genre: '',
+          birthday: '',
+          pix: '',
+          roleId: '',
+          commissionPercentage: 0,
+          totalBalance: 0,
+          userId: appointment.barberId,
+          createdAt: new Date(),
+          barberServices: [],
+          barberProducts: [],
+          workHours: [],
+          blockedHours: [],
+        },
       },
       unit: {
         id: appointment.unitId,
@@ -122,7 +133,10 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
     return this.appointments.find((a) => a.id === id) ?? null
   }
 
-  async update(id: string, data: AppointmentUpdateInput): Promise<Appointment> {
+  async update(
+    id: string,
+    data: Prisma.AppointmentUpdateInput,
+  ): Promise<Appointment> {
     const appointment = this.appointments.find((a) => a.id === id)
     if (!appointment) throw new Error('Appointment not found')
     if (data.status) {
@@ -130,12 +144,6 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
     }
     if (data.observation !== undefined) {
       appointment.observation = data.observation as string | null
-    }
-    if ((data as any).value !== undefined) {
-      appointment.value = (data as any).value as number | null
-    }
-    if ((data as any).discount !== undefined) {
-      appointment.discount = (data as any).discount as number | null
     }
     return appointment
   }

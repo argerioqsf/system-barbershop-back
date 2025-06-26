@@ -8,7 +8,10 @@ import { BarberProfileNotFoundError } from '@/services/@errors/profile/barber-pr
 import { IncrementBalanceProfileService } from '@/services/profile/increment-balance'
 import { IncrementBalanceUnitService } from '@/services/unit/increment-balance'
 import { Transaction } from '@prisma/client'
-import { AppointmentRepository } from '@/repositories/appointment-repository'
+import {
+  AppointmentRepository,
+  DetailedAppointment,
+} from '@/repositories/appointment-repository'
 import { BarberServiceRepository } from '@/repositories/barber-service-repository'
 import { calculateBarberCommission } from './barber-commission'
 import { AppointmentNotFoundError } from '@/services/@errors/appointment/appointment-not-found-error'
@@ -59,7 +62,7 @@ export async function distributeProfits(
 
     if (item.appointmentId) {
       const appointment =
-        item.appointment ??
+        (item.appointment as DetailedAppointment | undefined) ??
         (await appointmentRepository.findById(item.appointmentId))
 
       if (appointment) {
@@ -72,10 +75,7 @@ export async function distributeProfits(
           const profileId =
             item.barber?.profile?.id ?? appointment.barber.profile?.id
           const relation = profileId
-            ? await barberServiceRepository.findByProfileService(
-                profileId,
-                service.id,
-              )
+            ? await barberServiceRepository.findByProfileService(profileId, service.id)
             : null
           const perc = calculateBarberCommission(
             service,

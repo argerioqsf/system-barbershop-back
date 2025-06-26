@@ -1,8 +1,5 @@
-import {
-  AppointmentRepository,
-  Appointment,
-  AppointmentCreateInput,
-} from '@/repositories/appointment-repository'
+import { AppointmentRepository } from '@/repositories/appointment-repository'
+import { Appointment } from '@prisma/client'
 import { ServiceRepository } from '@/repositories/service-repository'
 import { PaymentMethod, PaymentStatus, Service } from '@prisma/client'
 import { SaleRepository } from '@/repositories/sale-repository'
@@ -27,8 +24,6 @@ interface CreateAppointmentRequest {
   userId: string
   date: Date
   observation?: string
-  discount?: number
-  value?: number
 }
 
 interface CreateAppointmentResponse {
@@ -54,11 +49,7 @@ export class CreateAppointmentService {
     }
 
     const totalPrice = services.reduce((acc, s) => acc + s.price, 0)
-    const value = data.value ?? totalPrice
-    let discount = data.discount ?? 0
-    if (typeof data.value === 'number') {
-      discount = Math.max(totalPrice - data.value, 0)
-    }
+    const value = totalPrice
 
     const barber = await this.barberUserRepository.findById(data.barberId)
     if (!barber) throw new BarberNotFoundError()
@@ -98,8 +89,6 @@ export class CreateAppointmentService {
         status: 'SCHEDULED',
         durationService: totalDuration,
         observation: data.observation,
-        discount,
-        value,
       },
       data.serviceIds,
     )

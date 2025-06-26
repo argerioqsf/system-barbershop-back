@@ -120,12 +120,10 @@ export class CreateSaleService {
       if (appointment.unitId !== userUnitId) {
         throw new ServiceNotFromUserUnitError()
       }
-      const appointmentTotal =
-        appointment.value ??
-        appointment.services.reduce((acc, s) => {
-          const svc = 'service' in s ? s.service : (s as any)
-          return acc + (svc.price ?? 0)
-        }, 0)
+      const appointmentTotal = appointment.services.reduce((acc, s) => {
+        const svc = 'service' in s ? s.service : (s as any)
+        return acc + (svc.price ?? 0)
+      }, 0)
       basePrice = appointmentTotal
       dataItem.appointment = { connect: { id: item.appointmentId } }
       barberId = barberId ?? appointment.barberId
@@ -368,12 +366,10 @@ export class CreateSaleService {
           appointment.status === 'NO_SHOW'
         )
           throw new InvalidAppointmentStatusError()
-        const baseTotal =
-          appointment.value ??
-          appointment.services.reduce((acc, s) => {
-            const svc = 'service' in s ? s.service : (s as any)
-            return acc + (svc.price ?? 0)
-          }, 0)
+        const baseTotal = appointment.services.reduce((acc, s) => {
+          const svc = 'service' in s ? s.service : (s as any)
+          return acc + (svc.price ?? 0)
+        }, 0)
         const value = baseTotal
 
         const appointmentItem: CreateSaleItem = {
