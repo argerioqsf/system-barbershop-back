@@ -256,7 +256,7 @@ describe('Set sale status service', () => {
       paymentStatus: PaymentStatus.PAID,
     })
 
-    expect(res.sale.items[0].porcentagemBarbeiro).toBe(50)
+    expect(res.sale.items[0].porcentagemBarbeiro).toBeNull()
     expect(profileRepo.profiles[0].totalBalance).toBeCloseTo(40)
     expect(unitRepo.unit.totalBalance).toBeCloseTo(40)
   })
@@ -303,7 +303,7 @@ describe('Set sale status service', () => {
       paymentStatus: PaymentStatus.PAID,
     })
 
-    expect(res.sale.items[0].porcentagemBarbeiro).toBe(40)
+    expect(res.sale.items[0].porcentagemBarbeiro).toBeNull()
   })
 
   it('concludes appointment when paying sale', async () => {
