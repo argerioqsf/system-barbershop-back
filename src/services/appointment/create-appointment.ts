@@ -11,6 +11,7 @@ import {
   BarberWithHours,
 } from '@/utils/barber-availability'
 import { BarberNotAvailableError } from '../@errors/barber/barber-not-available-error'
+import { BarberNotFromUserUnitError } from '../@errors/barber/barber-not-from-user-unit-error'
 
 interface CreateAppointmentRequest {
   clientId: string
@@ -42,10 +43,12 @@ export class CreateAppointmentService {
 
     const service = await this.serviceRepository.findById(data.serviceId)
     if (!service) throw new ServiceNotFoundError()
+
     value = value ?? service.price
 
     const barber = await this.barberUserRepository.findById(data.barberId)
     if (!barber) throw new BarberNotFoundError()
+    if (barber.unitId !== data.unitId) throw new BarberNotFromUserUnitError()
 
     const client = await this.barberUserRepository.findById(data.clientId)
     if (!client) throw new UserNotFoundError()
