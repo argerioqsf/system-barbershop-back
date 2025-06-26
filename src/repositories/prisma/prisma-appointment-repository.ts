@@ -6,15 +6,29 @@ import {
 } from '../appointment-repository'
 
 export class PrismaAppointmentRepository implements AppointmentRepository {
-  async create(data: Prisma.AppointmentCreateInput): Promise<Appointment> {
-    const appointment = await prisma.appointment.create({ data })
+  async create(
+    data: Prisma.AppointmentCreateInput,
+    serviceIds: string[],
+  ): Promise<Appointment> {
+    const appointment = await prisma.appointment.create({
+      data: {
+        ...data,
+        services: {
+          create: serviceIds.map((id) => ({ service: { connect: { id } } })),
+        },
+      },
+    })
     return appointment
   }
 
   async findManyByUnit(unitId: string): Promise<DetailedAppointment[]> {
     return prisma.appointment.findMany({
       where: { unitId },
-      include: { service: true, client: true, barber: true },
+      include: {
+        services: { include: { service: true } },
+        client: true,
+        barber: true,
+      },
     })
   }
 
@@ -23,14 +37,22 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
   ): Promise<DetailedAppointment[]> {
     return prisma.appointment.findMany({
       where,
-      include: { service: true, client: true, barber: true },
+      include: {
+        services: { include: { service: true } },
+        client: true,
+        barber: true,
+      },
     })
   }
 
   async findById(id: string): Promise<DetailedAppointment | null> {
     const appointment = await prisma.appointment.findUnique({
       where: { id },
-      include: { service: true, client: true, barber: true },
+      include: {
+        services: { include: { service: true } },
+        client: true,
+        barber: true,
+      },
     })
     return appointment
   }

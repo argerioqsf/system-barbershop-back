@@ -61,16 +61,22 @@ export class SetSaleStatusService {
         let commission: number | undefined
 
         if (item.appointmentId && item.appointment) {
-          const relation =
-            await this.barberServiceRepository.findByProfileService(
-              barber.profile.id,
-              item.appointment.serviceId,
+          const svcId = item.serviceId ?? item.appointment.services[0]?.id
+          if (svcId) {
+            const relation =
+              await this.barberServiceRepository.findByProfileService(
+                barber.profile.id,
+                svcId,
+              )
+            const svc =
+              item.service ??
+              item.appointment.services.find((s) => s.id === svcId)
+            commission = calculateBarberCommission(
+              svc!,
+              barber.profile,
+              relation,
             )
-          commission = calculateBarberCommission(
-            item.appointment.service,
-            barber.profile,
-            relation,
-          )
+          }
         } else if (item.serviceId && item.service) {
           const relation =
             await this.barberServiceRepository.findByProfileService(

@@ -429,14 +429,14 @@ async function main() {
 
   const appointment = await prisma.appointment.create({
     data: {
-      clientId: client.id,
-      barberId: barber.id,
-      serviceId: haircut.id,
-      unitId: mainUnit.id,
+      client: { connect: { id: client.id } },
+      barber: { connect: { id: barber.id } },
+      unit: { connect: { id: mainUnit.id } },
       date: new Date(new Date().setHours(10, 0, 0, 0)),
       status: 'SCHEDULED',
       durationService: 30,
       discount: 0,
+      services: { create: [{ serviceId: haircut.id }] },
     },
   })
 

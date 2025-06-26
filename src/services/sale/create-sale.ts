@@ -120,7 +120,11 @@ export class CreateSaleService {
       if (appointment.unitId !== userUnitId) {
         throw new ServiceNotFromUserUnitError()
       }
-      basePrice = appointment.value ?? appointment.service.price
+      const appointmentTotal = appointment.services.reduce(
+        (acc, s) => acc + s.price,
+        0,
+      )
+      basePrice = appointment.value ?? appointmentTotal
       dataItem.appointment = { connect: { id: item.appointmentId } }
       barberId = barberId ?? appointment.barberId
     }
@@ -164,14 +168,17 @@ export class CreateSaleService {
           [PermissionName.SELL_APPOINTMENT],
           barber.profile.permissions?.map((p) => p.name) ?? [],
         )
-        relation = await this.barberServiceRepository.findByProfileService(
-          barber.profile.id,
-          appointment.serviceId,
-        )
+        const firstService = appointment.services[0]
+        if (firstService) {
+          relation = await this.barberServiceRepository.findByProfileService(
+            barber.profile.id,
+            firstService.id,
+          )
+        }
       }
 
       const selectedItem =
-        service ?? product ?? (appointment ? appointment?.service : null)
+        service ?? product ?? (appointment ? appointment?.services[0] : null)
 
       barberCommission = calculateBarberCommission(
         selectedItem,
@@ -363,27 +370,28 @@ export class CreateSaleService {
           appointment.status === 'NO_SHOW'
         )
           throw new InvalidAppointmentStatusError()
-        const serviceInfo = await this.serviceRepository.findById(
-          appointment.serviceId,
+        const baseTotal = appointment.services.reduce(
+          (acc, s) => acc + s.price,
+          0,
         )
-        if (!serviceInfo) throw new ServiceNotFoundError()
-
-        const base = serviceInfo.price
         const value =
-          appointment.value ?? Math.max(base - (appointment.discount ?? 0), 0)
-        const appointmentItem: CreateSaleItem = {
-          serviceId: appointment.serviceId,
-          quantity: 1,
-          barberId: appointment.barberId,
-          appointmentId: appointment.id,
-          price: value,
+          appointment.value ??
+          Math.max(baseTotal - (appointment.discount ?? 0), 0)
+        for (const svc of appointment.services) {
+          const appointmentItem: CreateSaleItem = {
+            serviceId: svc.id,
+            quantity: 1,
+            barberId: appointment.barberId,
+            appointmentId: appointment.id,
+            price: svc.price,
+          }
+          const temp = await this.buildItemData(
+            appointmentItem,
+            user?.unitId as string,
+            productsToUpdate,
+          )
+          tempItems.push(temp)
         }
-        const temp = await this.buildItemData(
-          appointmentItem,
-          user?.unitId as string,
-          productsToUpdate,
-        )
-        tempItems.push(temp)
       }
     }
 

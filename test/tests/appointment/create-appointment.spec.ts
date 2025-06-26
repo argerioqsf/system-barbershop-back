@@ -63,7 +63,7 @@ describe('Create appointment service', () => {
     const res = await service.execute({
       clientId: defaultClient.id,
       barberId: barberUser.id,
-      serviceId: 'service-11',
+      serviceIds: ['service-11'],
       unitId: 'unit-1',
       userId: defaultUser.id,
       date: new Date('2024-01-01T10:00:00'),
@@ -98,7 +98,7 @@ describe('Create appointment service', () => {
     const res = await service.execute({
       clientId: defaultClient.id,
       barberId: barberUser.id,
-      serviceId: 'service-22',
+      serviceIds: ['service-22'],
       unitId: 'unit-1',
       userId: defaultUser.id,
       date: new Date('2024-01-02T12:00:00'),
@@ -129,7 +129,7 @@ describe('Create appointment service', () => {
     await service.execute({
       clientId: defaultClient.id,
       barberId: barberUser.id,
-      serviceId: 'service-33',
+      serviceIds: ['service-33'],
       unitId: 'unit-1',
       userId: defaultUser.id,
       date: new Date('2024-01-03T08:00:00'),
@@ -139,7 +139,7 @@ describe('Create appointment service', () => {
       service.execute({
         clientId: defaultClient.id,
         barberId: barberUser.id,
-        serviceId: 'service-33',
+        serviceIds: ['service-33'],
         unitId: 'unit-1',
         userId: defaultUser.id,
         date: new Date('2024-01-03T08:30:00'),
@@ -179,7 +179,7 @@ describe('Create appointment service', () => {
       service.execute({
         clientId: defaultClient.id,
         barberId: barberUser.id,
-        serviceId: 'service-44',
+        serviceIds: ['service-44'],
         unitId: 'unit-1',
         userId: defaultUser.id,
         date: new Date('2024-01-04T09:00:00'),
@@ -218,7 +218,7 @@ describe('Create appointment service', () => {
     const early = await service.execute({
       clientId: defaultClient.id,
       barberId: barberUser.id,
-      serviceId: 'svc-split',
+      serviceIds: ['svc-split'],
       unitId: 'unit-1',
       userId: defaultUser.id,
       date: new Date('2024-01-06T08:30:00'),
@@ -229,7 +229,7 @@ describe('Create appointment service', () => {
       service.execute({
         clientId: defaultClient.id,
         barberId: barberUser.id,
-        serviceId: 'svc-split',
+        serviceIds: ['svc-split'],
         unitId: 'unit-1',
         userId: defaultUser.id,
         date: new Date('2024-01-06T09:15:00'),
@@ -260,10 +260,10 @@ describe('Create appointment service', () => {
       service.execute({
         clientId: defaultClient.id,
         barberId: barberUser.id,
-        serviceId: "service-55",
-        unitId: "unit-1",
+        serviceIds: ['service-55'],
+        unitId: 'unit-1',
         userId: defaultUser.id,
-        date: new Date("2024-01-05T08:30:00"),
+        date: new Date('2024-01-05T08:30:00'),
       }),
     ).rejects.toThrow("Barber not available")
   })
@@ -274,7 +274,7 @@ describe('Create appointment service', () => {
       service.execute({
         clientId: defaultClient.id,
         barberId: barberUser.id,
-        serviceId: 'missing',
+        serviceIds: ['missing'],
         unitId: 'unit-1',
         userId: defaultUser.id,
         date: new Date('2024-01-01T09:00:00'),
@@ -290,7 +290,7 @@ describe('Create appointment service', () => {
       service.execute({
         clientId: defaultClient.id,
         barberId: 'no',
-        serviceId: 'svc-err',
+        serviceIds: ['svc-err'],
         unitId: 'unit-1',
         userId: defaultUser.id,
         date: new Date('2024-01-01T09:00:00'),
@@ -306,7 +306,7 @@ describe('Create appointment service', () => {
       service.execute({
         clientId: 'no',
         barberId: barberUser.id,
-        serviceId: 'svc-err2',
+        serviceIds: ['svc-err2'],
         unitId: 'unit-1',
         userId: defaultUser.id,
         date: new Date('2024-01-01T09:00:00'),
@@ -322,7 +322,7 @@ describe('Create appointment service', () => {
       service.execute({
         clientId: defaultClient.id,
         barberId: barberUser.id,
-        serviceId: 'svc-none',
+        serviceIds: ['svc-none'],
         unitId: 'unit-1',
         userId: defaultUser.id,
         date: new Date('2024-01-01T09:00:00'),
@@ -352,7 +352,7 @@ describe('Create appointment service', () => {
     const res = await service.execute({
       clientId: defaultClient.id,
       barberId: barberUser.id,
-      serviceId: 'svc-disc',
+      serviceIds: ['svc-disc'],
       unitId: 'unit-1',
       userId: defaultUser.id,
       date: new Date('2024-01-01T09:00:00'),
@@ -384,7 +384,7 @@ describe('Create appointment service', () => {
     const { appointment } = await service.execute({
       clientId: defaultClient.id,
       barberId: barberUser.id,
-      serviceId: 'svc-sale',
+      serviceIds: ['svc-sale'],
       unitId: 'unit-1',
       userId: defaultUser.id,
       date: new Date('2024-02-01T10:00:00'),
@@ -416,7 +416,7 @@ describe('Create appointment service', () => {
       service.execute({
         clientId: defaultClient.id,
         barberId: barberUser.id,
-        serviceId: 'svc-past',
+        serviceIds: ['svc-past'],
         unitId: 'unit-1',
         userId: defaultUser.id,
         date: new Date('2024-01-01T10:00:00'),

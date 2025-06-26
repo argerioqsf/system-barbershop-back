@@ -8,6 +8,7 @@ import { randomUUID } from 'crypto'
 type CreateInput = Prisma.AppointmentCreateInput & {
   status: AppointmentStatus
   durationService?: number | null
+  serviceIds: string[]
 }
 
 export class InMemoryAppointmentRepository implements AppointmentRepository {
@@ -18,7 +19,6 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
       id: randomUUID(),
       clientId: (data.client as { connect: { id: string } }).connect.id,
       barberId: (data.barber as { connect: { id: string } }).connect.id,
-      serviceId: (data.service as { connect: { id: string } }).connect.id,
       unitId: (data.unit as { connect: { id: string } }).connect.id,
       date: data.date as Date,
       status: data.status,
@@ -31,8 +31,8 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
       ...appointment,
       discount: appointment.discount,
       value: appointment.value,
-      service: {
-        id: appointment.serviceId,
+      services: data.serviceIds.map((sid) => ({
+        id: sid,
         name: '',
         description: null,
         imageUrl: null,
@@ -42,7 +42,7 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
         defaultTime: null,
         commissionPercentage: null,
         unitId: appointment.unitId,
-      },
+      })),
       client: {
         id: appointment.clientId,
         name: '',

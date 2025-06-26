@@ -425,7 +425,7 @@
       "url": "{{ baseURL }}/create/appointment",
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"clientId\": \"\",\n  \"barberId\": \"\",\n  \"serviceId\": \"\",\n  \"date\": \"2025-01-01T10:00:00Z\",\n  \"value\": 0,\n  \"unitId\": \"\"\n}"
+        "text": "{\n  \"clientId\": \"\",\n  \"barberId\": \"\",\n  \"serviceIds\": [],\n  \"date\": \"2025-01-01T10:00:00Z\",\n  \"value\": 0,\n  \"unitId\": \"\"\n}"
       },
       "headers": [
         {

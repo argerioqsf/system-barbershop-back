@@ -10,7 +10,7 @@ export const CreateAppointmentController = async (
   const bodySchema = z.object({
     clientId: z.string(),
     barberId: z.string(),
-    serviceId: z.string(),
+    serviceIds: z.array(z.string()),
     date: z.coerce.date(),
     unitId: z.string().optional(),
     value: z.number().optional(),
@@ -23,7 +23,7 @@ export const CreateAppointmentController = async (
   const { appointment } = await service.execute({
     clientId: data.clientId,
     barberId: data.barberId,
-    serviceId: data.serviceId,
+    serviceIds: data.serviceIds,
     date: data.date,
     value: data.value,
     unitId,
