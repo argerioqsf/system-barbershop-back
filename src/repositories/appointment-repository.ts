@@ -1,7 +1,14 @@
-import { Appointment, Prisma, SaleItem, Service, User } from '@prisma/client'
+import {
+  Appointment,
+  AppointmentService,
+  Prisma,
+  SaleItem,
+  Service,
+  User,
+} from '@prisma/client'
 
 export type DetailedAppointment = Appointment & {
-  services: Service[]
+  services: AppointmentService & { service: Service }[]
   client: User
   barber: User
   saleItem?: SaleItem

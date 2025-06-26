@@ -13,7 +13,7 @@ export function calculateBarberCommission(
   item: Service | Product | null | undefined,
   profile: Profile | null | undefined,
   relation: BarberService | BarberProduct | null | undefined,
-): number | undefined {
+): number {
   if (!profile) throw new ProfileNotFoundError()
   if (relation) {
     if (item) {

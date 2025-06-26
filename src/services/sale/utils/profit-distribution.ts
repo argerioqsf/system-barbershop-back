@@ -11,6 +11,7 @@ import { Transaction } from '@prisma/client'
 import { AppointmentRepository } from '@/repositories/appointment-repository'
 import { BarberServiceRepository } from '@/repositories/barber-service-repository'
 import { calculateBarberCommission } from './barber-commission'
+import { AppointmentNotFoundError } from '@/services/@errors/appointment/appointment-not-found-error'
 
 export async function distributeProfits(
   sale: DetailedSale,
@@ -51,11 +52,6 @@ export async function distributeProfits(
   for (const item of sale.items) {
     const value = item.price ?? 0
 
-    if (item.product && !item.barberId) {
-      ownerShare += value
-      continue
-    }
-
     if (!item.barberId) {
       ownerShare += value
       continue
@@ -67,22 +63,26 @@ export async function distributeProfits(
         (await appointmentRepository.findById(item.appointmentId))
 
       if (appointment) {
-        const services = (appointment as any).services?.map((s: any) => s.service ?? s) ?? []
-        const totalBase = services.reduce((acc: number, s: any) => acc + s.price, 0)
-        for (const svc of services) {
+        const services = appointment.services?.map((s) => s.service) ?? []
+
+        for (const service of services) {
           const relation = await barberServiceRepository.findByProfileService(
-            item.barber?.profile?.id ?? appointment.barberId,
-            svc.id,
+            item.barberId ?? appointment.barberId,
+            service.id,
           )
-          const perc =
-            calculateBarberCommission(svc, item.barber?.profile, relation) ?? 0
-          const portion = totalBase > 0 ? (svc.price / totalBase) * value : 0
-          const valueBarber = (portion * perc) / 100
+          const perc = calculateBarberCommission(
+            service,
+            item.barber?.profile,
+            relation,
+          )
+          const valueBarber = (service.price * perc) / 100
           barberTotals[item.barberId] =
             (barberTotals[item.barberId] || 0) + valueBarber
-          ownerShare += portion - valueBarber
+          ownerShare += service.price - valueBarber
         }
         continue
+      } else {
+        throw new AppointmentNotFoundError()
       }
     }
 

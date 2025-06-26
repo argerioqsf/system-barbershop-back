@@ -121,7 +121,7 @@ export class CreateSaleService {
         throw new ServiceNotFromUserUnitError()
       }
       const appointmentTotal = appointment.services.reduce(
-        (acc, s) => acc + s.price,
+        (acc, s) => acc + s.service.price,
         0,
       )
       basePrice = appointmentTotal
@@ -367,7 +367,7 @@ export class CreateSaleService {
         )
           throw new InvalidAppointmentStatusError()
         const baseTotal = appointment.services.reduce(
-          (acc, s) => acc + s.price,
+          (acc, s) => acc + s.service.price,
           0,
         )
         const value = baseTotal

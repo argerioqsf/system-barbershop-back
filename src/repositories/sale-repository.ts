@@ -12,13 +12,16 @@ import {
   DiscountType,
   Appointment,
 } from '@prisma/client'
+import { DetailedAppointment } from './appointment-repository'
 
 export type DetailedSaleItem = SaleItem & {
   service: Service | null
   product: Product | null
   barber: (User & { profile: Profile | null }) | null
   coupon: Coupon | null
-  appointment: (Appointment & { service?: Service }) | null
+  appointment:
+    | (Appointment & { services?: DetailedAppointment['services'] })
+    | null
   price: number
   discount: number | null
   discountType: DiscountType | null
