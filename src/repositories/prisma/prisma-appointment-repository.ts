@@ -22,7 +22,7 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
   }
 
   async findManyByUnit(unitId: string): Promise<DetailedAppointment[]> {
-    return prisma.appointment.findMany({
+    const appointments = await prisma.appointment.findMany({
       where: { unitId },
       include: {
         services: { include: { service: true } },
@@ -30,12 +30,16 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
         barber: true,
       },
     })
+    return appointments.map((a) => ({
+      ...a,
+      services: a.services.map((s) => s.service),
+    })) as DetailedAppointment[]
   }
 
   async findMany(
     where: Prisma.AppointmentWhereInput = {},
   ): Promise<DetailedAppointment[]> {
-    return prisma.appointment.findMany({
+    const appointments = await prisma.appointment.findMany({
       where,
       include: {
         services: { include: { service: true } },
@@ -43,6 +47,10 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
         barber: true,
       },
     })
+    return appointments.map((a) => ({
+      ...a,
+      services: a.services.map((s) => s.service),
+    })) as DetailedAppointment[]
   }
 
   async findById(id: string): Promise<DetailedAppointment | null> {
@@ -54,7 +62,11 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
         barber: true,
       },
     })
-    return appointment
+    if (!appointment) return null
+    return {
+      ...appointment,
+      services: appointment.services.map((s) => s.service),
+    } as DetailedAppointment
   }
 
   async update(

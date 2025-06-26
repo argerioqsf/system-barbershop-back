@@ -17,4 +17,3 @@ ALTER TABLE `appointment_services` ADD CONSTRAINT `appointment_services_appointm
 ALTER TABLE `appointment_services` ADD CONSTRAINT `appointment_services_serviceId_fkey` FOREIGN KEY (`serviceId`) REFERENCES `services`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AlterTable
-ALTER TABLE `sale_items` MODIFY `appointmentId` VARCHAR(191) NULL;

@@ -377,21 +377,19 @@ export class CreateSaleService {
         const value =
           appointment.value ??
           Math.max(baseTotal - (appointment.discount ?? 0), 0)
-        for (const svc of appointment.services) {
-          const appointmentItem: CreateSaleItem = {
-            serviceId: svc.id,
-            quantity: 1,
-            barberId: appointment.barberId,
-            appointmentId: appointment.id,
-            price: svc.price,
-          }
-          const temp = await this.buildItemData(
-            appointmentItem,
-            user?.unitId as string,
-            productsToUpdate,
-          )
-          tempItems.push(temp)
+
+        const appointmentItem: CreateSaleItem = {
+          appointmentId: appointment.id,
+          barberId: appointment.barberId,
+          quantity: 1,
+          price: value,
         }
+        const temp = await this.buildItemData(
+          appointmentItem,
+          user?.unitId as string,
+          productsToUpdate,
+        )
+        tempItems.push(temp)
       }
     }
 

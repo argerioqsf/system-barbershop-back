@@ -61,7 +61,8 @@ export class SetSaleStatusService {
         let commission: number | undefined
 
         if (item.appointmentId && item.appointment) {
-          const svcId = item.serviceId ?? item.appointment.services[0]?.id
+          const first = (item.appointment as any).services?.[0]
+          const svcId = item.serviceId ?? first?.service?.id
           if (svcId) {
             const relation =
               await this.barberServiceRepository.findByProfileService(
@@ -69,8 +70,7 @@ export class SetSaleStatusService {
                 svcId,
               )
             const svc =
-              item.service ??
-              item.appointment.services.find((s) => s.id === svcId)
+              item.service ?? first?.service
             commission = calculateBarberCommission(
               svc!,
               barber.profile,

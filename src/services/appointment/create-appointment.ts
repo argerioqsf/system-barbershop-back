@@ -118,13 +118,14 @@ export class CreateAppointmentService {
       client: { connect: { id: data.clientId } },
       unit: { connect: { id: data.unitId } },
       items: {
-        create: data.serviceIds.map((sid) => ({
-          appointment: { connect: { id: appointment.id } },
-          service: { connect: { id: sid } },
-          barber: { connect: { id: data.barberId } },
-          quantity: 1,
-          price: services.find((s) => s.id === sid)?.price ?? 0,
-        })),
+        create: [
+          {
+            appointment: { connect: { id: appointment.id } },
+            barber: { connect: { id: data.barberId } },
+            quantity: 1,
+            price,
+          },
+        ],
       },
     })
     return { appointment }

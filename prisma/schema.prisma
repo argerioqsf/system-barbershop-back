@@ -185,7 +185,7 @@ model Appointment {
   observation String?
   discount   Float?    @default(0)
   value      Float?
-  saleItems  SaleItem[]
+  saleItem   SaleItem?
 
   client  User    @relation("ClientAppointments", fields: [clientId], references: [id])
   barber  User    @relation("BarberAppointments", fields: [barberId], references: [id])
@@ -329,7 +329,7 @@ model SaleItem {
   productId           String?
   quantity            Int           @default(1)
   barberId            String?
-  appointmentId       String?
+  appointmentId       String? @unique
   couponId            String?
   price               Float
   discount            Float?

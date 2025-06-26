@@ -8,21 +8,30 @@ import { randomUUID } from 'crypto'
 type CreateInput = Prisma.AppointmentCreateInput & {
   status: AppointmentStatus
   durationService?: number | null
-  serviceIds: string[]
 }
 
 export class InMemoryAppointmentRepository implements AppointmentRepository {
   public appointments: DetailedAppointment[] = []
 
-  async create(data: CreateInput): Promise<Appointment> {
+  async create(
+    data: Prisma.AppointmentCreateInput,
+    serviceIds: string[] = [],
+  ): Promise<Appointment> {
+    const typed = data as Partial<CreateInput>
+    if (serviceIds.length === 0 && 'service' in data) {
+      const srv = (data as any).service as { connect: { id: string } }
+      if (srv?.connect?.id) {
+        serviceIds = [srv.connect.id]
+      }
+    }
     const appointment: Appointment = {
       id: randomUUID(),
       clientId: (data.client as { connect: { id: string } }).connect.id,
       barberId: (data.barber as { connect: { id: string } }).connect.id,
       unitId: (data.unit as { connect: { id: string } }).connect.id,
       date: data.date as Date,
-      status: data.status,
-      durationService: data.durationService ?? null,
+      status: typed.status as AppointmentStatus,
+      durationService: typed.durationService ?? null,
       observation: data.observation ?? null,
       discount: data.discount ?? 0,
       value: data.value ?? null,
@@ -31,7 +40,7 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
       ...appointment,
       discount: appointment.discount,
       value: appointment.value,
-      services: data.serviceIds.map((sid) => ({
+      services: serviceIds.map((sid) => ({
         id: sid,
         name: '',
         description: null,
