@@ -377,6 +377,14 @@ export class CreateSaleService {
       observation,
     })
 
+    for (const item of sale.items) {
+      if (item.appointmentId) {
+        await this.appointmentRepository.update(item.appointmentId, {
+          saleItem: { connect: { id: item.id } },
+        })
+      }
+    }
+
     if (paymentStatus === PaymentStatus.PAID) {
       for (const item of sale.items) {
         if (item.appointmentId) {
