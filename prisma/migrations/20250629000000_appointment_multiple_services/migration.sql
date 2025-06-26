@@ -1,3 +1,6 @@
+-- DropForeignKey
+ALTER TABLE `appointments` DROP FOREIGN KEY `appointments_serviceId_fkey`;
+
 -- AlterTable
 ALTER TABLE `appointments` DROP COLUMN `serviceId`;
 
@@ -16,4 +19,3 @@ CREATE UNIQUE INDEX `appointment_services_appointmentId_serviceId_key` ON `appoi
 ALTER TABLE `appointment_services` ADD CONSTRAINT `appointment_services_appointmentId_fkey` FOREIGN KEY (`appointmentId`) REFERENCES `appointments`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 ALTER TABLE `appointment_services` ADD CONSTRAINT `appointment_services_serviceId_fkey` FOREIGN KEY (`serviceId`) REFERENCES `services`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
--- AlterTable
