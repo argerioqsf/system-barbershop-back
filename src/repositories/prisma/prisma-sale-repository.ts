@@ -31,6 +31,9 @@ export class PrismaSaleRepository implements SaleRepository {
   async findMany(where: Prisma.SaleWhereInput = {}): Promise<DetailedSale[]> {
     const sales = await prisma.sale.findMany({
       where,
+      orderBy: {
+        createdAt: 'desc',
+      },
       include: {
         items: {
           include: {

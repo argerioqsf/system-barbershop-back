@@ -3,6 +3,7 @@ import {
   Appointment,
   PaymentMethod,
   PaymentStatus,
+  PermissionName,
   Service,
 } from '@prisma/client'
 import { ServiceRepository } from '@/repositories/service-repository'
@@ -19,6 +20,8 @@ import {
 import { BarberNotAvailableError } from '../@errors/barber/barber-not-available-error'
 import { AppointmentDateInPastError } from '../@errors/appointment/appointment-date-in-past-error'
 import { BarberNotFromUserUnitError } from '../@errors/barber/barber-not-from-user-unit-error'
+import { ProfileNotFoundError } from '../@errors/profile/profile-not-found-error'
+import { assertPermission } from '@/utils/permissions'
 
 interface CreateAppointmentRequest {
   clientId: string
@@ -45,7 +48,13 @@ export class CreateAppointmentService {
   async execute(
     data: CreateAppointmentRequest,
   ): Promise<CreateAppointmentResponse> {
-    const services = [] as Service[]
+    const barber = await this.barberUserRepository.findById(data.barberId)
+    if (!barber) throw new BarberNotFoundError()
+    if (!barber.profile) throw new ProfileNotFoundError()
+    if (barber.unitId !== data.unitId) throw new BarberNotFromUserUnitError()
+
+    const services: Service[] = []
+
     for (const id of data.serviceIds) {
       const svc = await this.serviceRepository.findById(id)
       if (!svc) throw new ServiceNotFoundError()
@@ -54,10 +63,6 @@ export class CreateAppointmentService {
 
     const totalPrice = services.reduce((acc, s) => acc + s.price, 0)
     const value = totalPrice
-
-    const barber = await this.barberUserRepository.findById(data.barberId)
-    if (!barber) throw new BarberNotFoundError()
-    if (barber.unitId !== data.unitId) throw new BarberNotFromUserUnitError()
 
     const client = await this.barberUserRepository.findById(data.clientId)
     if (!client) throw new UserNotFoundError()
@@ -84,6 +89,11 @@ export class CreateAppointmentService {
     )
     if (!available) throw new BarberNotAvailableError()
 
+    await assertPermission(
+      [PermissionName.ACCEPT_APPOINTMENT],
+      barber.profile.permissions?.map((p) => p.name) ?? [],
+    )
+
     const appointment = await this.repository.create(
       {
         client: { connect: { id: data.clientId } },
@@ -94,7 +104,7 @@ export class CreateAppointmentService {
         durationService: totalDuration,
         observation: data.observation,
       },
-      data.serviceIds,
+      services,
     )
 
     const price = value

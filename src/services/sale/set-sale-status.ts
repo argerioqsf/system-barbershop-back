@@ -28,6 +28,8 @@ import { ProfileNotFoundError } from '../@errors/profile/profile-not-found-error
 import { BarberServiceRepository } from '@/repositories/barber-service-repository'
 import { BarberProductRepository } from '@/repositories/barber-product-repository'
 import { AppointmentRepository } from '@/repositories/appointment-repository'
+import { AppointmentServiceRepository } from '@/repositories/appointment-service-repository'
+import { SaleItemRepository } from '@/repositories/sale-item-repository'
 
 type FullUser =
   | (User & {
@@ -55,6 +57,8 @@ export class SetSaleStatusService {
     private organizationRepository: OrganizationRepository,
     private profileRepository: ProfilesRepository,
     private unitRepository: UnitRepository,
+    private appointmentServiceRepository: AppointmentServiceRepository,
+    private saleItemRepository: SaleItemRepository,
   ) {}
 
   private async verifyCommissionUser(
@@ -151,6 +155,9 @@ export class SetSaleStatusService {
           transactionRepository: this.transactionRepository,
           appointmentRepository: this.appointmentRepository,
           barberServiceRepository: this.barberServiceRepository,
+          barberProductRepository: this.barberProductRepository,
+          appointmentServiceRepository: this.appointmentServiceRepository,
+          saleItemRepository: this.saleItemRepository,
         },
       )
 

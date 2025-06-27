@@ -22,7 +22,7 @@ export type DetailedAppointment = Appointment & {
 export interface AppointmentRepository {
   create(
     data: Prisma.AppointmentCreateInput,
-    serviceIds: string[],
+    services: Service[],
   ): Promise<Appointment>
   findManyByUnit(unitId: string): Promise<DetailedAppointment[]>
   findMany(where?: Prisma.AppointmentWhereInput): Promise<DetailedAppointment[]>

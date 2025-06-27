@@ -7,14 +7,12 @@ import { OrganizationNotFoundError } from '@/services/@errors/organization/organ
 import { BarberProfileNotFoundError } from '@/services/@errors/profile/barber-profile-not-found-error'
 import { IncrementBalanceProfileService } from '@/services/profile/increment-balance'
 import { IncrementBalanceUnitService } from '@/services/unit/increment-balance'
-import { Transaction } from '@prisma/client'
-import {
-  AppointmentRepository,
-  DetailedAppointment,
-} from '@/repositories/appointment-repository'
-import { BarberServiceRepository } from '@/repositories/barber-service-repository'
+import { BarberProduct, BarberService, Transaction } from '@prisma/client'
+import { DetailedAppointment } from '@/repositories/appointment-repository'
 import { calculateBarberCommission } from './barber-commission'
 import { AppointmentNotFoundError } from '@/services/@errors/appointment/appointment-not-found-error'
+import { ProfileNotFoundError } from '@/services/@errors/profile/profile-not-found-error'
+import { ItemNeedsServiceOrProductOrAppointmentError } from '@/services/@errors/sale/item-needs-service-or-product-error'
 
 export async function distributeProfits(
   sale: DetailedSale,
@@ -27,11 +25,10 @@ export async function distributeProfits(
     transactionRepository,
     appointmentRepository,
     barberServiceRepository,
-  }: DistributeProfitsDeps & {
-    transactionRepository: import('@/repositories/transaction-repository').TransactionRepository
-    appointmentRepository: AppointmentRepository
-    barberServiceRepository: BarberServiceRepository
-  },
+    barberProductRepository,
+    appointmentServiceRepository,
+    saleItemRepository,
+  }: DistributeProfitsDeps,
 ): Promise<{ transactions: Transaction[] }> {
   const org = await organizationRepository.findById(organizationId)
   if (!org) throw new OrganizationNotFoundError()
@@ -48,8 +45,12 @@ export async function distributeProfits(
     profileRepository,
     transactionRepository,
   )
-
-  const barberTotals: Record<string, number> = {}
+  type ValuesItemsTotals = {
+    amount: number
+    appointmentServiceId?: string
+    percentage: number
+  }
+  const itemsTotals: Record<string, ValuesItemsTotals> = {}
   let ownerShare = 0
 
   for (const item of sale.items) {
@@ -60,32 +61,42 @@ export async function distributeProfits(
       continue
     }
 
+    const barberProfile = item.barber?.profile
+    if (!barberProfile) throw new ProfileNotFoundError()
+
     if (item.appointmentId) {
       const appointment =
         (item.appointment as DetailedAppointment | undefined) ??
         (await appointmentRepository.findById(item.appointmentId))
 
       if (appointment) {
-        const services = appointment.services?.map((s) => s.service ?? s) ?? []
+        const servicesAppoint = appointment.services ?? []
 
-        for (const service of services) {
+        for (const serviceAppoint of servicesAppoint) {
           const profileId =
             item.barber?.profile?.id ?? appointment.barber.profile?.id
+
           const relation = profileId
             ? await barberServiceRepository.findByProfileService(
                 profileId,
-                service.id,
+                serviceAppoint.service.id,
               )
             : null
+
           const perc = calculateBarberCommission(
-            service,
+            serviceAppoint.service,
             item.barber?.profile,
             relation,
           )
-          const valueBarber = (service.price * perc) / 100
-          barberTotals[item.barberId] =
-            (barberTotals[item.barberId] || 0) + valueBarber
-          ownerShare += service.price - valueBarber
+
+          const valueBarber = (serviceAppoint.service.price * perc) / 100
+          const values: ValuesItemsTotals = {
+            amount: valueBarber,
+            percentage: perc,
+            appointmentServiceId: serviceAppoint.id,
+          }
+          itemsTotals[item.id] = values
+          ownerShare += value - valueBarber
         }
         continue
       } else {
@@ -93,17 +104,46 @@ export async function distributeProfits(
       }
     }
 
-    const perc = item.porcentagemBarbeiro ?? 0
-    const valueBarber = (value * perc) / 100
-    barberTotals[item.barberId] =
-      (barberTotals[item.barberId] || 0) + valueBarber
+    if (!item.serviceId && !item.productId) {
+      throw new ItemNeedsServiceOrProductOrAppointmentError()
+    }
+
+    let relation: BarberService | BarberProduct | null | undefined = null
+
+    if (item.serviceId) {
+      relation = await barberServiceRepository.findByProfileService(
+        barberProfile.id,
+        item.serviceId,
+      )
+    }
+
+    if (item.productId) {
+      relation = await barberProductRepository.findByProfileProduct(
+        barberProfile.id,
+        item.productId,
+      )
+    }
+
+    const percentageBarber = calculateBarberCommission(
+      item.service ?? item.product,
+      item.barber?.profile,
+      relation,
+    )
+
+    const valueBarber = (value * percentageBarber) / 100
+    const values: ValuesItemsTotals = {
+      amount: valueBarber,
+      percentage: percentageBarber,
+    }
+    itemsTotals[item.id] = values
     ownerShare += value - valueBarber
   }
 
-  for (const [barberId, amount] of Object.entries(barberTotals)) {
-    const userBarber = sale.items.find(
-      (item) => item.barber?.id === barberId,
-    )?.barber
+  for (const [
+    saleItemId,
+    { amount, appointmentServiceId, percentage },
+  ] of Object.entries(itemsTotals)) {
+    const userBarber = sale.items.find((item) => item.id === saleItemId)?.barber
     if (!userBarber) throw new BarberNotFoundError()
     if (!userBarber.profile) throw new BarberProfileNotFoundError()
 
@@ -113,7 +153,7 @@ export async function distributeProfits(
       const amountToPay = valueCalculated <= 0 ? amount : -balanceBarber
       const transactionUnit = await incrementUnit.execute(
         sale.unitId,
-        barberId,
+        userBarber.id,
         amountToPay,
         sale.id,
         true,
@@ -121,12 +161,21 @@ export async function distributeProfits(
       transactions.push(transactionUnit.transaction)
     }
     const transactionProfile = await incrementProfile.execute(
-      barberId,
+      userBarber.id,
       amount,
       sale.id,
       userBarber.profile.totalBalance < 0,
     )
     transactions.push(transactionProfile.transaction)
+    if (appointmentServiceId) {
+      await appointmentServiceRepository.update(appointmentServiceId, {
+        commissionPercentage: percentage,
+      })
+    } else {
+      await saleItemRepository.update(saleItemId, {
+        porcentagemBarbeiro: percentage,
+      })
+    }
   }
 
   const transactionUnit = await incrementUnit.execute(

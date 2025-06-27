@@ -8,8 +8,6 @@ import {
   Product,
   Service,
   PermissionName,
-  BarberService,
-  BarberProduct,
 } from '@prisma/client'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { CashRegisterRepository } from '@/repositories/cash-register-repository'
@@ -21,7 +19,6 @@ import { BarberNotFromUserUnitError } from '../@errors/barber/barber-not-from-us
 import { CouponNotFromUserUnitError } from '../@errors/coupon/coupon-not-from-user-unit-error'
 import { UnitRepository } from '@/repositories/unit-repository'
 import { distributeProfits } from './utils/profit-distribution'
-import { calculateBarberCommission } from './utils/barber-commission'
 import { ItemNeedsServiceOrProductOrAppointmentError } from '../@errors/sale/item-needs-service-or-product-error'
 import { ServiceNotFoundError } from '../@errors/service/service-not-found-error'
 import { ProductNotFoundError } from '../@errors/product/product-not-found-error'
@@ -40,7 +37,7 @@ import {
 } from './types'
 import { BarberNotFoundError } from '../@errors/barber/barber-not-found-error'
 import { ProfileNotFoundError } from '../@errors/profile/profile-not-found-error'
-import { assertPermission } from '@/utils/permissions'
+import { assertPermission, hasPermission } from '@/utils/permissions'
 import {
   AppointmentRepository,
   DetailedAppointment,
@@ -49,6 +46,11 @@ import { AppointmentAlreadyLinkedError } from '../@errors/appointment/appointmen
 import { AppointmentNotFoundError } from '../@errors/appointment/appointment-not-found-error'
 import { ItemPriceGreaterError } from '../@errors/sale/Item-price-greater-error'
 import { InvalidAppointmentStatusError } from '../@errors/appointment/invalid-appointment-status-error'
+import { BarberServiceRepository } from '@/repositories/barber-service-repository'
+import { BarberProductRepository } from '@/repositories/barber-product-repository'
+import { AppointmentServiceRepository } from '@/repositories/appointment-service-repository'
+import { SaleItemRepository } from '@/repositories/sale-item-repository'
+import { BarberCannotSellItemError } from '../@errors/barber/barber-cannot-sell-item'
 
 export class CreateSaleService {
   constructor(
@@ -57,17 +59,19 @@ export class CreateSaleService {
     private productRepository: ProductRepository,
     private couponRepository: CouponRepository,
     private barberUserRepository: BarberUsersRepository,
-    private barberServiceRepository: import('@/repositories/barber-service-repository').BarberServiceRepository,
-    private barberProductRepository: import('@/repositories/barber-product-repository').BarberProductRepository,
+    private barberServiceRepository: BarberServiceRepository,
+    private barberProductRepository: BarberProductRepository,
     private cashRegisterRepository: CashRegisterRepository,
     private transactionRepository: TransactionRepository,
     private organizationRepository: OrganizationRepository,
     private profileRepository: ProfilesRepository,
     private unitRepository: UnitRepository,
     private appointmentRepository: AppointmentRepository,
+    private appointmentServiceRepository: AppointmentServiceRepository,
+    private saleItemRepository: SaleItemRepository,
   ) {}
 
-  private async buildItemData(
+  public async buildItemData(
     item: CreateSaleItem,
     userUnitId: string,
     productsToUpdate: { id: string; quantity: number }[],
@@ -121,7 +125,7 @@ export class CreateSaleService {
         throw new ServiceNotFromUserUnitError()
       }
       const appointmentTotal = appointment.services.reduce((acc, s) => {
-        const service = s.service ?? s
+        const service = s.service
         return acc + (service.price ?? 0)
       }, 0)
       basePrice = appointmentTotal
@@ -134,9 +138,6 @@ export class CreateSaleService {
     const discountType: DiscountType | null = null
     let couponRel: { connect: { id: string } } | undefined
     const ownDiscount = false
-    let barberCommission: number | undefined
-    let relation: BarberService | BarberProduct | null | undefined = null
-    let selectedItem: Service | Product | null = null
 
     if (barberId) {
       const barber = await this.barberUserRepository.findById(barberId)
@@ -147,37 +148,32 @@ export class CreateSaleService {
       }
 
       if (service) {
-        await assertPermission(
-          [PermissionName.SELL_SERVICE],
-          barber.profile.permissions?.map((p) => p.name) ?? [],
+        if (
+          !hasPermission(
+            [PermissionName.SELL_SERVICE],
+            barber.profile.permissions?.map((p) => p.name) ?? [],
+          )
         )
-        relation = await this.barberServiceRepository.findByProfileService(
-          barber.profile.id,
-          service.id,
-        )
-        selectedItem = service
+          throw new BarberCannotSellItemError(barber.name, service.name)
       } else if (product) {
-        await assertPermission(
-          [PermissionName.SELL_PRODUCT],
-          barber.profile.permissions?.map((p) => p.name) ?? [],
+        if (
+          !hasPermission(
+            [PermissionName.SELL_PRODUCT],
+            barber.profile.permissions?.map((p) => p.name) ?? [],
+          )
         )
-        relation = await this.barberProductRepository.findByProfileProduct(
-          barber.profile.id,
-          product.id,
-        )
-        selectedItem = product
+          throw new BarberCannotSellItemError(barber.name, product.name)
       } else if (appointment) {
-        await assertPermission(
-          [PermissionName.SELL_APPOINTMENT],
-          barber.profile.permissions?.map((p) => p.name) ?? [],
+        if (
+          !hasPermission(
+            [PermissionName.ACCEPT_APPOINTMENT],
+            barber.profile.permissions?.map((p) => p.name) ?? [],
+          )
         )
-      }
-      if (selectedItem) {
-        barberCommission = calculateBarberCommission(
-          selectedItem,
-          barber?.profile,
-          relation,
-        )
+          throw new BarberCannotSellItemError(
+            barber.name,
+            `Appointment: ${appointment.date}`,
+          )
       }
     }
 
@@ -195,7 +191,6 @@ export class CreateSaleService {
     return {
       ...resultLogicSalesCoupons,
       basePrice,
-      porcentagemBarbeiro: barberCommission,
       data: {
         ...dataItem,
         barber: barberId ? { connect: { id: barberId } } : undefined,
@@ -299,7 +294,6 @@ export class CreateSaleService {
       discount: temp.discount,
       discountType: temp.discountType,
       appointment: temp.data.appointment,
-      porcentagemBarbeiro: temp.porcentagemBarbeiro ?? null,
     }))
   }
 
@@ -386,13 +380,6 @@ export class CreateSaleService {
     }
 
     if (paymentStatus === PaymentStatus.PAID) {
-      for (const item of sale.items) {
-        if (item.appointmentId) {
-          await this.appointmentRepository.update(item.appointmentId, {
-            status: 'CONCLUDED',
-          })
-        }
-      }
       const { transactions } = await distributeProfits(
         sale,
         user?.organizationId as string,
@@ -404,9 +391,21 @@ export class CreateSaleService {
           transactionRepository: this.transactionRepository,
           appointmentRepository: this.appointmentRepository,
           barberServiceRepository: this.barberServiceRepository,
+          barberProductRepository: this.barberProductRepository,
+          appointmentServiceRepository: this.appointmentServiceRepository,
+          saleItemRepository: this.saleItemRepository,
         },
       )
+
       sale.transactions = [...transactions]
+
+      for (const item of sale.items) {
+        if (item.appointmentId) {
+          await this.appointmentRepository.update(item.appointmentId, {
+            status: 'CONCLUDED',
+          })
+        }
+      }
     }
 
     await this.updateProductsStock(productsToUpdate)

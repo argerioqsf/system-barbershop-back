@@ -9,14 +9,22 @@ import { OrganizationRepository } from '@/repositories/organization-repository'
 import { ProfilesRepository } from '@/repositories/profiles-repository'
 import { UnitRepository } from '@/repositories/unit-repository'
 import { TransactionRepository } from '@/repositories/transaction-repository'
+import { AppointmentRepository } from '@/repositories/appointment-repository'
+import { BarberServiceRepository } from '@/repositories/barber-service-repository'
+import { AppointmentServiceRepository } from '@/repositories/appointment-service-repository'
+import { BarberProductRepository } from '@/repositories/barber-product-repository'
+import { SaleItemRepository } from '@/repositories/sale-item-repository'
 
 export interface DistributeProfitsDeps {
   organizationRepository: OrganizationRepository
   profileRepository: ProfilesRepository
   unitRepository: UnitRepository
   transactionRepository: TransactionRepository
-  appointmentRepository: import('@/repositories/appointment-repository').AppointmentRepository
-  barberServiceRepository: import('@/repositories/barber-service-repository').BarberServiceRepository
+  appointmentRepository: AppointmentRepository
+  barberServiceRepository: BarberServiceRepository
+  barberProductRepository: BarberProductRepository
+  appointmentServiceRepository: AppointmentServiceRepository
+  saleItemRepository: SaleItemRepository
 }
 
 export interface CreateSaleItem {
@@ -38,6 +46,13 @@ export interface CreateSaleRequest {
   paymentStatus?: PaymentStatus
   appointmentId?: string
   observation?: string
+}
+
+export interface UpdateSaleRequest {
+  id: string
+  observation?: string
+  method?: PaymentMethod
+  paymentStatus?: PaymentStatus
 }
 
 export interface CreateSaleResponse {
@@ -84,6 +99,7 @@ export type SaleItemTemp = Omit<
   | 'barberId'
   | 'couponId'
   | 'appointmentId'
+  | 'porcentagemBarbeiro'
 >
 
 export interface GetSaleRequest {

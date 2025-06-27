@@ -110,7 +110,8 @@ export const defaultClient = {
 }
 
 const p1 = makePermission('p1', PermissionName.SELL_SERVICE)
-const p2 = makePermission('p1', PermissionName.SELL_APPOINTMENT)
+const p2 = makePermission('p2', PermissionName.SELL_APPOINTMENT)
+const p3 = makePermission('p3', PermissionName.ACCEPT_APPOINTMENT)
 const r1 = makeRole()
 export const barberProfile: Profile & {
   permissions: Permission[]
@@ -130,7 +131,7 @@ export const barberProfile: Profile & {
   totalBalance: 0,
   userId: 'barber-1',
   createdAt: new Date(),
-  permissions: [p1, p2],
+  permissions: [p1, p2, p3],
   workHours: [],
   blockedHours: [],
   barberServices: [],

@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { Prisma, Appointment } from '@prisma/client'
+import { Prisma, Appointment, Service } from '@prisma/client'
 import {
   AppointmentRepository,
   DetailedAppointment,
@@ -8,13 +8,15 @@ import {
 export class PrismaAppointmentRepository implements AppointmentRepository {
   async create(
     data: Prisma.AppointmentCreateInput,
-    serviceIds: string[],
+    services: Service[],
   ): Promise<Appointment> {
     const appointment = await prisma.appointment.create({
       data: {
         ...data,
         services: {
-          create: serviceIds.map((id) => ({ service: { connect: { id } } })),
+          create: services.map((svc) => ({
+            service: { connect: { id: svc.id } },
+          })),
         },
       },
     })

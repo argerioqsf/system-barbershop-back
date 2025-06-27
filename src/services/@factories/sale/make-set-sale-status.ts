@@ -9,6 +9,8 @@ import { PrismaBarberServiceRepository } from '@/repositories/prisma/prisma-barb
 import { PrismaBarberProductRepository } from '@/repositories/prisma/prisma-barber-product-repository'
 import { PrismaAppointmentRepository } from '@/repositories/prisma/prisma-appointment-repository'
 import { SetSaleStatusService } from '@/services/sale/set-sale-status'
+import { PrismaAppointmentServiceRepository } from '@/repositories/prisma/prisma-appointment-service-repository'
+import { PrismaSaleItemRepository } from '@/repositories/prisma/prisma-sale-item-repository'
 
 export function makeSetSaleStatus() {
   const saleRepository = new PrismaSaleRepository()
@@ -21,6 +23,8 @@ export function makeSetSaleStatus() {
   const barberServiceRepository = new PrismaBarberServiceRepository()
   const barberProductRepository = new PrismaBarberProductRepository()
   const appointmentRepository = new PrismaAppointmentRepository()
+  const appointmentServiceRepository = new PrismaAppointmentServiceRepository()
+  const saleItemRepository = new PrismaSaleItemRepository()
   return new SetSaleStatusService(
     saleRepository,
     barberUserRepository,
@@ -32,5 +36,7 @@ export function makeSetSaleStatus() {
     organizationRepository,
     profileRepository,
     unitRepository,
+    appointmentServiceRepository,
+    saleItemRepository,
   )
 }
