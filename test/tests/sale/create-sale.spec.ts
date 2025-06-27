@@ -578,7 +578,7 @@ describe('Create sale service', () => {
     }
     ctx.serviceRepo.services.push(service)
     ctx.barberServiceRepo.items.push(
-      makeBarberServiceRel(barberProfile.id, service.id, 'PERCENTAGE_OF_ITEM'),
+      makeBarberServiceRel(`profile-${barberUser.id}`, service.id, 'PERCENTAGE_OF_ITEM'),
     )
     ctx.profilesRepo.profiles.push({ ...barberProfile, user: barberUser })
 
@@ -599,7 +599,7 @@ describe('Create sale service', () => {
     }
     ctx.serviceRepo.services.push(service)
     ctx.barberServiceRepo.items.push(
-      makeBarberServiceRel(barberProfile.id, service.id, 'PERCENTAGE_OF_USER'),
+      makeBarberServiceRel(`profile-${barberUser.id}`, service.id, 'PERCENTAGE_OF_USER'),
     )
     ctx.profilesRepo.profiles.push({ ...barberProfile, user: barberUser })
 
@@ -623,7 +623,7 @@ describe('Create sale service', () => {
     ctx.serviceRepo.services.push(service)
     ctx.barberServiceRepo.items.push(
       makeBarberServiceRel(
-        barberProfile.id,
+        `profile-${barberUser.id}`,
         service.id,
         'PERCENTAGE_OF_USER_ITEM',
         60,
@@ -659,12 +659,31 @@ describe('Create sale service', () => {
         ],
         clientId: defaultClient.id,
       }),
-    ).rejects.toThrow('Permission denied')
+    ).rejects.toThrow('Barber  cannot sell')
   })
 
   it('requires permission to create sale', async () => {
     const product = makeProduct('p-sale', 50)
     ctx.productRepo.products.push(product)
+    const idx = ctx.barberRepo.users.findIndex((u) => u.id === barberUser.id)
+    ctx.barberRepo.users[idx] = {
+      ...barberUser,
+      profile: {
+        ...barberProfile,
+        permissions: [
+          {
+            id: 'perm',
+            name: PermissionName.SELL_PRODUCT,
+            category: PermissionCategory.PRODUCT,
+          },
+        ],
+      },
+    }
+    const userIdx = ctx.barberRepo.users.findIndex((u) => u.id === defaultUser.id)
+    ctx.barberRepo.users[userIdx] = {
+      ...ctx.barberRepo.users[userIdx],
+      profile: { ...ctx.barberRepo.users[userIdx].profile, permissions: [] },
+    }
     await expect(
       ctx.createSale.execute({
         userId: defaultUser.id,
@@ -681,7 +700,11 @@ describe('Create sale service', () => {
     const product = makeProduct('p-rel2', 50)
     ctx.productRepo.products.push(product)
     ctx.barberProductRepo.items.push(
-      makeBarberProductRel(barberProfile.id, product.id, 'PERCENTAGE_OF_USER'),
+      makeBarberProductRel(
+        `profile-${barberUser.id}`,
+        product.id,
+        'PERCENTAGE_OF_USER',
+      ),
     )
     const idx = ctx.barberRepo.users.findIndex((u) => u.id === barberUser.id)
     ctx.barberRepo.users[idx] = {
@@ -714,7 +737,7 @@ describe('Create sale service', () => {
     const service = makeService('svc-appt', 50)
     ctx.serviceRepo.services.push(service)
     ctx.barberServiceRepo.items.push(
-      makeBarberServiceRel(barberProfile.id, service.id, 'PERCENTAGE_OF_USER'),
+      makeBarberServiceRel(`profile-${barberUser.id}`, service.id, 'PERCENTAGE_OF_USER'),
     )
     ctx.profilesRepo.profiles.push({ ...barberProfile, user: barberUser })
     const appointment = await ctx.appointmentRepo.create({
@@ -755,7 +778,7 @@ describe('Create sale service', () => {
     const service = makeService('svc-appt2', 60)
     ctx.serviceRepo.services.push(service)
     ctx.barberServiceRepo.items.push(
-      makeBarberServiceRel(barberProfile.id, service.id, 'PERCENTAGE_OF_USER'),
+      makeBarberServiceRel(`profile-${barberUser.id}`, service.id, 'PERCENTAGE_OF_USER'),
     )
     ctx.profilesRepo.profiles.push({ ...barberProfile, user: barberUser })
     const appointment = await ctx.appointmentRepo.create({
@@ -794,7 +817,7 @@ describe('Create sale service', () => {
     const service = makeService('svc-appt-disc', 80)
     ctx.serviceRepo.services.push(service)
     ctx.barberServiceRepo.items.push(
-      makeBarberServiceRel(barberProfile.id, service.id, 'PERCENTAGE_OF_USER'),
+      makeBarberServiceRel(`profile-${barberUser.id}`, service.id, 'PERCENTAGE_OF_USER'),
     )
     ctx.profilesRepo.profiles.push({ ...barberProfile, user: barberUser })
     const appointment = await ctx.appointmentRepo.create({
@@ -839,7 +862,11 @@ describe('Create sale service', () => {
     const service = makeService('svc-appt-none', 70)
     ctx.serviceRepo.services.push(service)
     ctx.barberServiceRepo.items.push(
-      makeBarberServiceRel(barberProfile.id, service.id, 'PERCENTAGE_OF_USER'),
+      makeBarberServiceRel(
+        `profile-${barberUser.id}`,
+        service.id,
+        'PERCENTAGE_OF_USER',
+      ),
     )
     ctx.profilesRepo.profiles.push({ ...barberProfile, user: barberUser })
     const appointment = await ctx.appointmentRepo.create({
@@ -883,7 +910,7 @@ describe('Create sale service', () => {
     const service = makeService('svc-canceled', 40)
     ctx.serviceRepo.services.push(service)
     ctx.barberServiceRepo.items.push(
-      makeBarberServiceRel(barberProfile.id, service.id, 'PERCENTAGE_OF_USER'),
+      makeBarberServiceRel(`profile-${barberUser.id}`, service.id, 'PERCENTAGE_OF_USER'),
     )
     ctx.profilesRepo.profiles.push({ ...barberProfile, user: barberUser })
     const appointment = await ctx.appointmentRepo.create({
@@ -915,7 +942,7 @@ describe('Create sale service', () => {
     const service = makeService('svc-pay', 60)
     ctx.serviceRepo.services.push(service)
     ctx.barberServiceRepo.items.push(
-      makeBarberServiceRel(barberProfile.id, service.id, 'PERCENTAGE_OF_USER'),
+      makeBarberServiceRel(`profile-${barberUser.id}`, service.id, 'PERCENTAGE_OF_USER'),
     )
     ctx.profilesRepo.profiles.push({ ...barberProfile, user: barberUser })
     const appointment = await ctx.appointmentRepo.create({

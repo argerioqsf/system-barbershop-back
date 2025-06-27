@@ -12,6 +12,8 @@ import {
   FakeProfilesRepository,
   FakeUnitRepository,
   FakeAppointmentRepository,
+  FakeAppointmentServiceRepository,
+  FakeSaleItemRepository,
 } from '../../helpers/fake-repositories'
 import {
   barberProfile,
@@ -35,6 +37,8 @@ let cashRepo: FakeCashRegisterRepository
 let barberServiceRepo: FakeBarberServiceRelRepository
 let barberProductRepo: FakeBarberProductRepository
 let appointmentRepo: FakeAppointmentRepository
+let appointmentServiceRepo: FakeAppointmentServiceRepository
+let saleItemRepo: FakeSaleItemRepository
 
 vi.mock(
   '../../../src/services/@factories/transaction/make-create-transaction',
@@ -57,6 +61,7 @@ describe('Set sale status service', () => {
     barberServiceRepo = new FakeBarberServiceRelRepository()
     barberProductRepo = new FakeBarberProductRepository()
     appointmentRepo = new FakeAppointmentRepository()
+    appointmentServiceRepo = new FakeAppointmentServiceRepository(appointmentRepo)
     cashRepo = new FakeCashRegisterRepository()
     transactionRepo = new FakeTransactionRepository()
     orgRepo = new FakeOrganizationRepository({ ...defaultOrganization })
@@ -65,6 +70,8 @@ describe('Set sale status service', () => {
     ])
     const unit = { ...defaultUnit }
     unitRepo = new FakeUnitRepository(unit, [unit])
+
+    saleItemRepo = new FakeSaleItemRepository(saleRepo)
 
     const sale = makeSaleWithBarber()
 
@@ -105,6 +112,8 @@ describe('Set sale status service', () => {
       orgRepo,
       profileRepo,
       unitRepo,
+      appointmentServiceRepo,
+      saleItemRepo,
     )
   })
 
@@ -155,7 +164,7 @@ describe('Set sale status service', () => {
     saleRepo.sales.push(sale)
     barberServiceRepo.items.push(
       makeBarberServiceRel(
-        barberProfile.id,
+        `profile-${barberUser.id}`,
         serviceDef.id,
         'PERCENTAGE_OF_ITEM',
       ),
@@ -197,7 +206,7 @@ describe('Set sale status service', () => {
     saleRepo.sales.push(sale)
     barberProductRepo.items.push(
       makeBarberProductRel(
-        barberProfile.id,
+        `profile-${barberUser.id}`,
         product.id,
         'PERCENTAGE_OF_USER_ITEM',
         60,
@@ -243,7 +252,7 @@ describe('Set sale status service', () => {
     saleRepo.sales.push(sale)
     barberServiceRepo.items.push(
       makeBarberServiceRel(
-        barberProfile.id,
+        `profile-${barberUser.id}`,
         serviceDef.id,
         'PERCENTAGE_OF_ITEM',
         50,
@@ -290,7 +299,7 @@ describe('Set sale status service', () => {
     saleRepo.sales.push(sale)
     barberServiceRepo.items.push(
       makeBarberServiceRel(
-        barberProfile.id,
+        `profile-${barberUser.id}`,
         serviceDef.id,
         'PERCENTAGE_OF_USER_ITEM',
         40,
@@ -332,7 +341,11 @@ describe('Set sale status service', () => {
     })
     saleRepo.sales.push(sale)
     barberServiceRepo.items.push(
-      makeBarberServiceRel(barberProfile.id, serviceDef.id, 'PERCENTAGE_OF_ITEM')
+      makeBarberServiceRel(
+        `profile-${barberUser.id}`,
+        serviceDef.id,
+        'PERCENTAGE_OF_ITEM',
+      )
     )
 
     await service.execute({
