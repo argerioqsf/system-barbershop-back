@@ -29,6 +29,8 @@ import {
   FakeProfilesRepository,
   FakeUnitRepository,
   FakeAppointmentRepository,
+  FakeAppointmentServiceRepository,
+  FakeSaleItemRepository,
 } from '../../helpers/fake-repositories'
 
 import {
@@ -49,6 +51,8 @@ import { DetailedAppointment } from '../../../src/repositories/appointment-repos
 let transactionRepo: FakeTransactionRepository
 let barberRepo: FakeBarberUsersRepository
 let cashRepo: FakeCashRegisterRepository
+let appointmentServiceRepo: FakeAppointmentServiceRepository
+let saleItemRepo: FakeSaleItemRepository
 
 vi.mock(
   '../../../src/services/@factories/transaction/make-create-transaction',
@@ -69,6 +73,8 @@ function setup() {
   cashRepo = new FakeCashRegisterRepository()
   transactionRepo = new FakeTransactionRepository()
   const appointmentRepo = new FakeAppointmentRepository()
+  const appointmentServiceRepo = new FakeAppointmentServiceRepository(appointmentRepo)
+  const saleItemRepo = new FakeSaleItemRepository(saleRepo)
   const organizationRepo = new FakeOrganizationRepository({
     ...defaultOrganization,
   })
@@ -90,6 +96,8 @@ function setup() {
     profilesRepo,
     unitRepo,
     appointmentRepo,
+    appointmentServiceRepo,
+    saleItemRepo,
   )
 
   return {
@@ -106,6 +114,8 @@ function setup() {
     profilesRepo,
     unitRepo,
     appointmentRepo,
+    appointmentServiceRepo,
+    saleItemRepo,
     createSale,
   }
 }
@@ -505,7 +515,8 @@ describe('Create sale service', () => {
     const serviceBarber = makeBarberServiceRel(
       barberUser.profile.id,
       service.id,
-      CommissionCalcType.PERCENTAGE_OF_USER,
+      CommissionCalcType.PERCENTAGE_OF_USER_ITEM,
+      50,
     )
     const coupon = makeCoupon('pcpaid', 'PAID10', 10, DiscountType.VALUE)
     ctx.serviceRepo.services.push(service)
@@ -558,17 +569,28 @@ describe('Create sale service', () => {
     ctx.serviceRepo.services.push(service)
     ctx.profilesRepo.profiles.push({ ...barberProfile, user: barberUser })
     ctx.barberServiceRepo.items.push(serviceBarber)
+    ctx.cashRepo.session = {
+      id: 'sess-1',
+      openedById: defaultUser.id,
+      unitId: 'unit-1',
+      openedAt: new Date(),
+      closedAt: null,
+      initialAmount: 0,
+      transactions: [],
+      sales: [],
+      finalAmount: null,
+      user: defaultUser,
+    }
 
     const result = await ctx.createSale.execute({
       userId: defaultUser.id,
       method: PaymentMethod.CASH,
       items: [{ serviceId: service.id, quantity: 1, barberId: barberUser.id }],
       clientId: defaultClient.id,
+      paymentStatus: PaymentStatus.PAID,
     })
 
-    expect(result.sale.items[0].porcentagemBarbeiro).toBe(
-      barberProfile.commissionPercentage,
-    )
+    expect(result.sale.items[0].porcentagemBarbeiro).toBe(100)
   })
 
   it('uses service percentage when relation type is PERCENTAGE_OF_ITEM', async () => {
@@ -581,15 +603,28 @@ describe('Create sale service', () => {
       makeBarberServiceRel(`profile-${barberUser.id}`, service.id, 'PERCENTAGE_OF_ITEM'),
     )
     ctx.profilesRepo.profiles.push({ ...barberProfile, user: barberUser })
+    ctx.cashRepo.session = {
+      id: 'sess-1',
+      openedById: defaultUser.id,
+      unitId: 'unit-1',
+      openedAt: new Date(),
+      closedAt: null,
+      initialAmount: 0,
+      transactions: [],
+      sales: [],
+      finalAmount: null,
+      user: defaultUser,
+    }
 
     const result = await ctx.createSale.execute({
       userId: defaultUser.id,
       method: PaymentMethod.CASH,
       items: [{ serviceId: service.id, quantity: 1, barberId: barberUser.id }],
       clientId: defaultClient.id,
+      paymentStatus: PaymentStatus.PAID,
     })
 
-    expect(result.sale.items[0].porcentagemBarbeiro).toBe(30)
+    expect(result.sale.items[0].porcentagemBarbeiro).toBe(0)
   })
 
   it('uses profile percentage when relation type is PERCENTAGE_OF_USER', async () => {
@@ -602,17 +637,28 @@ describe('Create sale service', () => {
       makeBarberServiceRel(`profile-${barberUser.id}`, service.id, 'PERCENTAGE_OF_USER'),
     )
     ctx.profilesRepo.profiles.push({ ...barberProfile, user: barberUser })
+    ctx.cashRepo.session = {
+      id: 'sess-1',
+      openedById: defaultUser.id,
+      unitId: 'unit-1',
+      openedAt: new Date(),
+      closedAt: null,
+      initialAmount: 0,
+      transactions: [],
+      sales: [],
+      finalAmount: null,
+      user: defaultUser,
+    }
 
     const result = await ctx.createSale.execute({
       userId: defaultUser.id,
       method: PaymentMethod.CASH,
       items: [{ serviceId: service.id, quantity: 1, barberId: barberUser.id }],
       clientId: defaultClient.id,
+      paymentStatus: PaymentStatus.PAID,
     })
 
-    expect(result.sale.items[0].porcentagemBarbeiro).toBe(
-      barberProfile.commissionPercentage,
-    )
+    expect(result.sale.items[0].porcentagemBarbeiro).toBe(100)
   })
 
   it('uses relation percentage when relation type is PERCENTAGE_OF_USER_ITEM', async () => {
@@ -630,12 +676,25 @@ describe('Create sale service', () => {
       ),
     )
     ctx.profilesRepo.profiles.push({ ...barberProfile, user: barberUser })
+    ctx.cashRepo.session = {
+      id: 'sess-1',
+      openedById: defaultUser.id,
+      unitId: 'unit-1',
+      openedAt: new Date(),
+      closedAt: null,
+      initialAmount: 0,
+      transactions: [],
+      sales: [],
+      finalAmount: null,
+      user: defaultUser,
+    }
 
     const result = await ctx.createSale.execute({
       userId: defaultUser.id,
       method: PaymentMethod.CASH,
       items: [{ serviceId: service.id, quantity: 1, barberId: barberUser.id }],
       clientId: defaultClient.id,
+      paymentStatus: PaymentStatus.PAID,
     })
 
     expect(result.sale.items[0].porcentagemBarbeiro).toBe(60)
@@ -679,6 +738,19 @@ describe('Create sale service', () => {
         ],
       },
     }
+    ctx.profilesRepo.profiles.push({ ...barberProfile, user: barberUser })
+    ctx.cashRepo.session = {
+      id: 'sess-1',
+      openedById: defaultUser.id,
+      unitId: 'unit-1',
+      openedAt: new Date(),
+      closedAt: null,
+      initialAmount: 0,
+      transactions: [],
+      sales: [],
+      finalAmount: null,
+      user: defaultUser,
+    }
     const userIdx = ctx.barberRepo.users.findIndex((u) => u.id === defaultUser.id)
     ctx.barberRepo.users[userIdx] = {
       ...ctx.barberRepo.users[userIdx],
@@ -720,17 +792,29 @@ describe('Create sale service', () => {
         ],
       },
     }
+    ctx.profilesRepo.profiles.push({ ...barberProfile, user: barberUser })
+    ctx.cashRepo.session = {
+      id: 'sess-1',
+      openedById: defaultUser.id,
+      unitId: 'unit-1',
+      openedAt: new Date(),
+      closedAt: null,
+      initialAmount: 0,
+      transactions: [],
+      sales: [],
+      finalAmount: null,
+      user: defaultUser,
+    }
 
     const res = await ctx.createSale.execute({
       userId: defaultUser.id,
       method: PaymentMethod.CASH,
       items: [{ productId: product.id, quantity: 1, barberId: barberUser.id }],
       clientId: defaultClient.id,
+      paymentStatus: PaymentStatus.PAID,
     })
 
-    expect(res.sale.items[0].porcentagemBarbeiro).toBe(
-      barberProfile.commissionPercentage,
-    )
+    expect(res.sale.items[0].porcentagemBarbeiro).toBe(100)
   })
 
   it('creates a sale from appointment', async () => {

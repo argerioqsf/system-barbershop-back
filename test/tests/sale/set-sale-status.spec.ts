@@ -74,6 +74,12 @@ describe('Set sale status service', () => {
     saleItemRepo = new FakeSaleItemRepository(saleRepo)
 
     const sale = makeSaleWithBarber()
+    const defaultService = makeServiceWithCommission('svc-default', 100, 0)
+    sale.items[0].serviceId = defaultService.id
+    sale.items[0].service = defaultService
+    barberServiceRepo.items.push(
+      makeBarberServiceRel(barberProfile.id, defaultService.id, 'PERCENTAGE_OF_USER'),
+    )
 
     saleRepo.sales.push(sale)
 
