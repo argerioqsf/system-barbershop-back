@@ -37,7 +37,7 @@ import {
 } from './types'
 import { BarberNotFoundError } from '../@errors/barber/barber-not-found-error'
 import { ProfileNotFoundError } from '../@errors/profile/profile-not-found-error'
-import { assertPermission, hasPermission } from '@/utils/permissions'
+import { assertPermission } from '@/utils/permissions'
 import {
   AppointmentRepository,
   DetailedAppointment,
@@ -50,7 +50,7 @@ import { BarberServiceRepository } from '@/repositories/barber-service-repositor
 import { BarberProductRepository } from '@/repositories/barber-product-repository'
 import { AppointmentServiceRepository } from '@/repositories/appointment-service-repository'
 import { SaleItemRepository } from '@/repositories/sale-item-repository'
-import { BarberCannotSellItemError } from '../@errors/barber/barber-cannot-sell-item'
+import { calculateBarberCommission } from './utils/barber-commission'
 
 export class CreateSaleService {
   constructor(
@@ -94,6 +94,7 @@ export class CreateSaleService {
     let product: Product | null = null
     let appointment: DetailedAppointment | null = null
     let barberId: string | undefined = item.barberId
+    let porcentagemBarbeiro: number | undefined
 
     if (item.serviceId) {
       service = await this.serviceRepository.findById(item.serviceId)
@@ -148,32 +149,44 @@ export class CreateSaleService {
       }
 
       if (service) {
-        if (
-          !hasPermission(
-            [PermissionName.SELL_SERVICE],
-            barber.profile.permissions?.map((p) => p.name) ?? [],
-          )
+        assertPermission(
+          [PermissionName.SELL_SERVICE],
+          barber.profile.permissions?.map((p) => p.name),
         )
-          throw new BarberCannotSellItemError(barber.name, service.name)
       } else if (product) {
-        if (
-          !hasPermission(
-            [PermissionName.SELL_PRODUCT],
-            barber.profile.permissions?.map((p) => p.name) ?? [],
-          )
+        assertPermission(
+          [PermissionName.SELL_PRODUCT],
+          barber.profile.permissions?.map((p) => p.name),
         )
-          throw new BarberCannotSellItemError(barber.name, product.name)
       } else if (appointment) {
-        if (
-          !hasPermission(
-            [PermissionName.ACCEPT_APPOINTMENT],
-            barber.profile.permissions?.map((p) => p.name) ?? [],
-          )
+        assertPermission(
+          [PermissionName.ACCEPT_APPOINTMENT],
+          barber.profile.permissions?.map((p) => p.name),
         )
-          throw new BarberCannotSellItemError(
-            barber.name,
-            `Appointment: ${appointment.date}`,
+      }
+
+      if (service) {
+        const relation =
+          await this.barberServiceRepository.findByProfileService(
+            barber.profile.id,
+            service.id,
           )
+        porcentagemBarbeiro = calculateBarberCommission(
+          service,
+          barber.profile,
+          relation,
+        )
+      } else if (product) {
+        const relation =
+          await this.barberProductRepository.findByProfileProduct(
+            barber.profile.id,
+            product.id,
+          )
+        porcentagemBarbeiro = calculateBarberCommission(
+          product,
+          barber.profile,
+          relation,
+        )
       }
     }
 
@@ -191,6 +204,7 @@ export class CreateSaleService {
     return {
       ...resultLogicSalesCoupons,
       basePrice,
+      porcentagemBarbeiro,
       data: {
         ...dataItem,
         barber: barberId ? { connect: { id: barberId } } : undefined,
@@ -290,6 +304,7 @@ export class CreateSaleService {
       service: temp.data.service,
       product: temp.data.product,
       barber: temp.data.barber,
+      porcentagemBarbeiro: temp.porcentagemBarbeiro ?? null,
       price: temp.price,
       discount: temp.discount,
       discountType: temp.discountType,

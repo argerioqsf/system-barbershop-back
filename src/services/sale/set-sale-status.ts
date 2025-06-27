@@ -57,8 +57,8 @@ export class SetSaleStatusService {
     private organizationRepository: OrganizationRepository,
     private profileRepository: ProfilesRepository,
     private unitRepository: UnitRepository,
-    private appointmentServiceRepository: AppointmentServiceRepository,
-    private saleItemRepository: SaleItemRepository,
+    private appointmentServiceRepository?: AppointmentServiceRepository,
+    private saleItemRepository?: SaleItemRepository,
   ) {}
 
   private async verifyCommissionUser(

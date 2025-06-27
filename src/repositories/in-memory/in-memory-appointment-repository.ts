@@ -1,4 +1,4 @@
-import { Prisma, AppointmentStatus, Appointment } from '@prisma/client'
+import { Prisma, AppointmentStatus, Appointment, Service } from '@prisma/client'
 import {
   AppointmentRepository,
   DetailedAppointment,
@@ -15,13 +15,26 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
 
   async create(
     data: Prisma.AppointmentCreateInput,
-    serviceIds: string[] = [],
+    services: Service[] = [],
   ): Promise<Appointment> {
     const typed = data as Partial<CreateInput>
-    if (serviceIds.length === 0 && 'service' in data) {
+    if (services.length === 0 && 'service' in data) {
       const srv = data.service as { connect: { id: string } }
       if (srv?.connect?.id) {
-        serviceIds = [srv.connect.id]
+        services = [
+          {
+            id: srv.connect.id,
+            name: '',
+            description: null,
+            imageUrl: null,
+            cost: 0,
+            price: 0,
+            category: null,
+            defaultTime: null,
+            commissionPercentage: null,
+            unitId: (data.unit as { connect: { id: string } }).connect.id,
+          },
+        ]
       }
     }
     const appointment: Appointment = {
@@ -37,22 +50,12 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
     this.appointments.push({
       ...appointment,
       saleItem: null,
-      services: serviceIds.map((sid) => ({
-        id: sid,
+      services: services.map((svc) => ({
+        id: randomUUID(),
         appointmentId: appointment.id,
-        serviceId: sid,
-        service: {
-          id: sid,
-          name: '',
-          description: null,
-          imageUrl: null,
-          cost: 0,
-          price: 0,
-          category: null,
-          defaultTime: null,
-          commissionPercentage: null,
-          unitId: appointment.unitId,
-        },
+        serviceId: svc.id,
+        commissionPercentage: svc.commissionPercentage ?? null,
+        service: svc,
       })),
       client: {
         id: appointment.clientId,

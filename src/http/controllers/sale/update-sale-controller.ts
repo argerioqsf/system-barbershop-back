@@ -18,9 +18,11 @@ export const UpdateSaleController = async (
   const service = makeUpdateSale()
   const { sale } = await service.execute({
     id,
-    observation,
-    method,
-    paymentStatus,
+    data: {
+      observation,
+      method,
+      paymentStatus,
+    },
   })
   return reply.status(200).send(sale)
 }

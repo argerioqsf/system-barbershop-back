@@ -7,7 +7,12 @@ import { OrganizationNotFoundError } from '@/services/@errors/organization/organ
 import { BarberProfileNotFoundError } from '@/services/@errors/profile/barber-profile-not-found-error'
 import { IncrementBalanceProfileService } from '@/services/profile/increment-balance'
 import { IncrementBalanceUnitService } from '@/services/unit/increment-balance'
-import { BarberProduct, BarberService, Transaction } from '@prisma/client'
+import {
+  BarberProduct,
+  BarberService,
+  Transaction,
+  Service,
+} from '@prisma/client'
 import { DetailedAppointment } from '@/repositories/appointment-repository'
 import { calculateBarberCommission } from './barber-commission'
 import { AppointmentNotFoundError } from '@/services/@errors/appointment/appointment-not-found-error'
@@ -73,27 +78,34 @@ export async function distributeProfits(
         const servicesAppoint = appointment.services ?? []
 
         for (const serviceAppoint of servicesAppoint) {
+          const service =
+            'service' in serviceAppoint
+              ? serviceAppoint.service
+              : (serviceAppoint as unknown as Service)
+          const appointmentServiceId =
+            'service' in serviceAppoint ? serviceAppoint.id : undefined
+
           const profileId =
             item.barber?.profile?.id ?? appointment.barber.profile?.id
 
           const relation = profileId
             ? await barberServiceRepository.findByProfileService(
                 profileId,
-                serviceAppoint.service.id,
+                service.id,
               )
             : null
 
           const perc = calculateBarberCommission(
-            serviceAppoint.service,
+            service,
             item.barber?.profile,
             relation,
           )
 
-          const valueBarber = (serviceAppoint.service.price * perc) / 100
+          const valueBarber = (service.price * perc) / 100
           const values: ValuesItemsTotals = {
             amount: valueBarber,
             percentage: perc,
-            appointmentServiceId: serviceAppoint.id,
+            appointmentServiceId,
           }
           itemsTotals[item.id] = values
           ownerShare += value - valueBarber
@@ -105,6 +117,13 @@ export async function distributeProfits(
     }
 
     if (!item.serviceId && !item.productId) {
+      if (item.porcentagemBarbeiro !== null && item.barberId) {
+        const perc = item.porcentagemBarbeiro ?? 0
+        const valueBarber = (value * perc) / 100
+        itemsTotals[item.id] = { amount: valueBarber, percentage: perc }
+        ownerShare += value - valueBarber
+        continue
+      }
       throw new ItemNeedsServiceOrProductOrAppointmentError()
     }
 
@@ -168,11 +187,11 @@ export async function distributeProfits(
     )
     transactions.push(transactionProfile.transaction)
     if (appointmentServiceId) {
-      await appointmentServiceRepository.update(appointmentServiceId, {
+      await appointmentServiceRepository?.update(appointmentServiceId, {
         commissionPercentage: percentage,
       })
     } else {
-      await saleItemRepository.update(saleItemId, {
+      await saleItemRepository?.update(saleItemId, {
         porcentagemBarbeiro: percentage,
       })
     }

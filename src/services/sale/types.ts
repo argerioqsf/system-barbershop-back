@@ -23,8 +23,8 @@ export interface DistributeProfitsDeps {
   appointmentRepository: AppointmentRepository
   barberServiceRepository: BarberServiceRepository
   barberProductRepository: BarberProductRepository
-  appointmentServiceRepository: AppointmentServiceRepository
-  saleItemRepository: SaleItemRepository
+  appointmentServiceRepository?: AppointmentServiceRepository
+  saleItemRepository?: SaleItemRepository
 }
 
 export interface CreateSaleItem {
@@ -50,9 +50,11 @@ export interface CreateSaleRequest {
 
 export interface UpdateSaleRequest {
   id: string
-  observation?: string
-  method?: PaymentMethod
-  paymentStatus?: PaymentStatus
+  data: {
+    observation?: string
+    method?: PaymentMethod
+    paymentStatus?: PaymentStatus
+  }
 }
 
 export interface CreateSaleResponse {

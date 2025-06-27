@@ -8,16 +8,11 @@ interface UpdateSaleResponse {
 export class UpdateSaleService {
   constructor(private repository: SaleRepository) {}
 
-  async execute({
-    id,
-    observation,
-    method,
-    paymentStatus,
-  }: UpdateSaleRequest): Promise<UpdateSaleResponse> {
+  async execute({ id, data }: UpdateSaleRequest): Promise<UpdateSaleResponse> {
     const sale = await this.repository.update(id, {
-      observation,
-      method,
-      paymentStatus,
+      observation: data.observation,
+      method: data.method,
+      paymentStatus: data.paymentStatus,
     })
     return { sale }
   }
