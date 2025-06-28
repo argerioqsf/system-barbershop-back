@@ -11,8 +11,6 @@ export const UpdateAppointmentController = async (
   const bodySchema = z.object({
     status: z.nativeEnum(AppointmentStatus).optional(),
     observation: z.string().optional(),
-    value: z.coerce.number().optional(),
-    discount: z.coerce.number().optional(),
   })
   const { id } = paramsSchema.parse(request.params)
   const data = bodySchema.parse(request.body)

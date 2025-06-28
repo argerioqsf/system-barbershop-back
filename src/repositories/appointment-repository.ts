@@ -1,14 +1,29 @@
-import { Appointment, Prisma, SaleItem, Service, User } from '@prisma/client'
+import {
+  Appointment,
+  Prisma,
+  SaleItem,
+  User,
+  Profile,
+  AppointmentService,
+  Service,
+} from '@prisma/client'
+
+export type DetailedAppointmentService = AppointmentService & {
+  service: Service
+}
 
 export type DetailedAppointment = Appointment & {
-  service: Service
+  services: DetailedAppointmentService[]
   client: User
-  barber: User
-  saleItem?: SaleItem
+  barber: User & { profile: Profile | null }
+  saleItem?: SaleItem | null
 }
 
 export interface AppointmentRepository {
-  create(data: Prisma.AppointmentCreateInput): Promise<Appointment>
+  create(
+    data: Prisma.AppointmentCreateInput,
+    services: Service[],
+  ): Promise<Appointment>
   findManyByUnit(unitId: string): Promise<DetailedAppointment[]>
   findMany(where?: Prisma.AppointmentWhereInput): Promise<DetailedAppointment[]>
   findById(id: string): Promise<DetailedAppointment | null>

@@ -7,13 +7,14 @@ import {
   Service,
 } from '@prisma/client'
 import { BarberDoesNotHaveThisServiceError } from '../../@errors/barber/barber-does-not-have-this-service'
+import { ProfileNotFoundError } from '@/services/@errors/profile/profile-not-found-error'
 
 export function calculateBarberCommission(
   item: Service | Product | null | undefined,
   profile: Profile | null | undefined,
   relation: BarberService | BarberProduct | null | undefined,
-): number | undefined {
-  if (!profile) return undefined
+): number {
+  if (!profile) throw new ProfileNotFoundError()
   if (relation) {
     if (item) {
       switch (relation.commissionType) {

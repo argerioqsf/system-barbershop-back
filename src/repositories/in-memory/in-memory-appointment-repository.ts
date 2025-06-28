@@ -1,4 +1,4 @@
-import { Appointment, Prisma, AppointmentStatus } from '@prisma/client'
+import { Prisma, AppointmentStatus, Appointment, Service } from '@prisma/client'
 import {
   AppointmentRepository,
   DetailedAppointment,
@@ -13,36 +13,50 @@ type CreateInput = Prisma.AppointmentCreateInput & {
 export class InMemoryAppointmentRepository implements AppointmentRepository {
   public appointments: DetailedAppointment[] = []
 
-  async create(data: CreateInput): Promise<Appointment> {
+  async create(
+    data: Prisma.AppointmentCreateInput,
+    services: Service[] = [],
+  ): Promise<Appointment> {
+    const typed = data as Partial<CreateInput>
+    if (services.length === 0 && 'service' in data) {
+      const srv = data.service as { connect: { id: string } }
+      if (srv?.connect?.id) {
+        services = [
+          {
+            id: srv.connect.id,
+            name: '',
+            description: null,
+            imageUrl: null,
+            cost: 0,
+            price: 0,
+            category: null,
+            defaultTime: null,
+            commissionPercentage: null,
+            unitId: (data.unit as { connect: { id: string } }).connect.id,
+          },
+        ]
+      }
+    }
     const appointment: Appointment = {
       id: randomUUID(),
       clientId: (data.client as { connect: { id: string } }).connect.id,
       barberId: (data.barber as { connect: { id: string } }).connect.id,
-      serviceId: (data.service as { connect: { id: string } }).connect.id,
       unitId: (data.unit as { connect: { id: string } }).connect.id,
       date: data.date as Date,
-      status: data.status,
-      durationService: data.durationService ?? null,
+      status: typed.status as AppointmentStatus,
+      durationService: typed.durationService ?? null,
       observation: data.observation ?? null,
-      discount: data.discount ?? 0,
-      value: data.value ?? null,
     }
     this.appointments.push({
       ...appointment,
-      discount: appointment.discount,
-      value: appointment.value,
-      service: {
-        id: appointment.serviceId,
-        name: '',
-        description: null,
-        imageUrl: null,
-        cost: 0,
-        price: 0,
-        category: null,
-        defaultTime: null,
-        commissionPercentage: null,
-        unitId: appointment.unitId,
-      },
+      saleItem: null,
+      services: services.map((srv) => ({
+        id: srv.id,
+        appointmentId: appointment.id,
+        serviceId: srv.id,
+        commissionPercentage: srv.commissionPercentage ?? null,
+        service: srv,
+      })),
       client: {
         id: appointment.clientId,
         name: '',
@@ -66,6 +80,23 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
         versionToken: 1,
         versionTokenInvalidate: null,
         createdAt: new Date(),
+        profile: {
+          id: 'profile-' + appointment.barberId,
+          phone: '',
+          cpf: '',
+          genre: '',
+          birthday: '',
+          pix: '',
+          roleId: '',
+          commissionPercentage: 0,
+          totalBalance: 0,
+          userId: appointment.barberId,
+          createdAt: new Date(),
+          barberServices: [],
+          barberProducts: [],
+          workHours: [],
+          blockedHours: [],
+        },
       },
       unit: {
         id: appointment.unitId,
@@ -122,11 +153,10 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
     if (data.observation !== undefined) {
       appointment.observation = data.observation as string | null
     }
-    if (data.value !== undefined) {
-      appointment.value = data.value as number | null
-    }
-    if (data.discount !== undefined) {
-      appointment.discount = data.discount as number | null
+    if (data.saleItem && 'connect' in data.saleItem) {
+      const sid = (data.saleItem as { connect: { id: string } }).connect.id
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      appointment.saleItem = { id: sid } as any
     }
     return appointment
   }

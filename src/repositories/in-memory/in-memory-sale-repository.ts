@@ -105,7 +105,7 @@ export class InMemorySaleRepository implements SaleRepository {
               birthday: '',
               pix: '',
               roleId: randomUUID(),
-              commissionPercentage: it.porcentagemBarbeiro ?? 100,
+              commissionPercentage: it.porcentagemBarbeiro ?? 0,
               totalBalance: 0,
               userId: it.barber.connect.id,
               createdAt: new Date(),

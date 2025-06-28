@@ -110,7 +110,8 @@ export const defaultClient = {
 }
 
 const p1 = makePermission('p1', PermissionName.SELL_SERVICE)
-const p2 = makePermission('p1', PermissionName.SELL_APPOINTMENT)
+const p2 = makePermission('p2', PermissionName.SELL_APPOINTMENT)
+const p3 = makePermission('p3', PermissionName.ACCEPT_APPOINTMENT)
 const r1 = makeRole()
 export const barberProfile: Profile & {
   permissions: Permission[]
@@ -119,7 +120,7 @@ export const barberProfile: Profile & {
   barberServices: BarberService[]
   role: Role
 } = {
-  id: 'profile-barber',
+  id: 'profile-barber-1',
   phone: '',
   cpf: '',
   genre: '',
@@ -130,7 +131,7 @@ export const barberProfile: Profile & {
   totalBalance: 0,
   userId: 'barber-1',
   createdAt: new Date(),
-  permissions: [p1, p2],
+  permissions: [p1, p2, p3],
   workHours: [],
   blockedHours: [],
   barberServices: [],
@@ -594,7 +595,7 @@ export const session2 = {
 export const appointment1 = {
   id: 'a1',
   unitId: 'unit-1',
-  service: {},
+  services: [],
   client: {},
   barber: {},
   date: new Date(),
@@ -608,7 +609,7 @@ export const appointment1 = {
 export const appointment2 = {
   id: 'a2',
   unitId: 'unit-2',
-  service: {},
+  services: [],
   client: {},
   barber: {},
   date: new Date(),
@@ -646,8 +647,6 @@ export function makeAppointment(
   id: string,
   service: Service,
   options: {
-    discount?: number
-    value?: number
     date?: Date
     durationService?: number | null
     status?: string
@@ -657,15 +656,20 @@ export function makeAppointment(
     id,
     clientId: defaultClient.id,
     barberId: barberUser.id,
-    serviceId: service.id,
     unitId: defaultUnit.id,
     date: options.date ?? new Date(),
     status: (options.status as any) ?? 'SCHEDULED',
     durationService: options.durationService ?? null,
     observation: null,
-    discount: options.discount ?? 0,
-    value: options.value ?? null,
-    service,
+    services: [
+      {
+        id: `${id}-srv`,
+        appointmentId: id,
+        serviceId: service.id,
+        commissionPercentage: null,
+        service,
+      },
+    ],
     client: defaultClient,
     barber: barberUser,
     unit: { organizationId: defaultOrganization.id },

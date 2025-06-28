@@ -14,8 +14,13 @@ export const UpdateSaleController = async (
     paymentStatus: z.nativeEnum(PaymentStatus).optional(),
   })
   const { id } = paramsSchema.parse(request.params)
-  const data = bodySchema.parse(request.body)
+  const { observation, method, paymentStatus } = bodySchema.parse(request.body)
   const service = makeUpdateSale()
-  const { sale } = await service.execute({ id, data })
+  const { sale } = await service.execute({
+    id,
+    observation,
+    method,
+    paymentStatus,
+  })
   return reply.status(200).send(sale)
 }

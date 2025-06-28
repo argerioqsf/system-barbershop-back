@@ -1,36 +1,63 @@
 import { prisma } from '@/lib/prisma'
-import { Appointment, Prisma } from '@prisma/client'
+import { Prisma, Appointment, Service } from '@prisma/client'
 import {
   AppointmentRepository,
   DetailedAppointment,
 } from '../appointment-repository'
 
 export class PrismaAppointmentRepository implements AppointmentRepository {
-  async create(data: Prisma.AppointmentCreateInput): Promise<Appointment> {
-    const appointment = await prisma.appointment.create({ data })
+  async create(
+    data: Prisma.AppointmentCreateInput,
+    services: Service[],
+  ): Promise<Appointment> {
+    const appointment = await prisma.appointment.create({
+      data: {
+        ...data,
+        services: {
+          create: services.map((svc) => ({
+            service: { connect: { id: svc.id } },
+          })),
+        },
+      },
+    })
     return appointment
   }
 
   async findManyByUnit(unitId: string): Promise<DetailedAppointment[]> {
-    return prisma.appointment.findMany({
+    const appointments = await prisma.appointment.findMany({
       where: { unitId },
-      include: { service: true, client: true, barber: true },
+      include: {
+        services: { include: { service: true } },
+        client: true,
+        barber: { include: { profile: true } },
+      },
     })
+    return appointments
   }
 
   async findMany(
     where: Prisma.AppointmentWhereInput = {},
   ): Promise<DetailedAppointment[]> {
-    return prisma.appointment.findMany({
+    const appointments = await prisma.appointment.findMany({
       where,
-      include: { service: true, client: true, barber: true },
+      include: {
+        services: { include: { service: true } },
+        client: true,
+        barber: { include: { profile: true } },
+      },
     })
+    return appointments
   }
 
   async findById(id: string): Promise<DetailedAppointment | null> {
     const appointment = await prisma.appointment.findUnique({
       where: { id },
-      include: { service: true, client: true, barber: true },
+      include: {
+        services: { include: { service: true } },
+        client: true,
+        barber: { include: { profile: true } },
+        saleItem: true,
+      },
     })
     return appointment
   }

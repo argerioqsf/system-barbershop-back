@@ -12,6 +12,8 @@ import {
   FakeProfilesRepository,
   FakeUnitRepository,
   FakeAppointmentRepository,
+  FakeAppointmentServiceRepository,
+  FakeSaleItemRepository,
 } from '../../helpers/fake-repositories'
 import {
   barberProfile,
@@ -35,6 +37,8 @@ let cashRepo: FakeCashRegisterRepository
 let barberServiceRepo: FakeBarberServiceRelRepository
 let barberProductRepo: FakeBarberProductRepository
 let appointmentRepo: FakeAppointmentRepository
+let appointmentServiceRepo: FakeAppointmentServiceRepository
+let saleItemRepo: FakeSaleItemRepository
 
 vi.mock(
   '../../../src/services/@factories/transaction/make-create-transaction',
@@ -57,6 +61,7 @@ describe('Set sale status service', () => {
     barberServiceRepo = new FakeBarberServiceRelRepository()
     barberProductRepo = new FakeBarberProductRepository()
     appointmentRepo = new FakeAppointmentRepository()
+    appointmentServiceRepo = new FakeAppointmentServiceRepository(appointmentRepo)
     cashRepo = new FakeCashRegisterRepository()
     transactionRepo = new FakeTransactionRepository()
     orgRepo = new FakeOrganizationRepository({ ...defaultOrganization })
@@ -66,7 +71,15 @@ describe('Set sale status service', () => {
     const unit = { ...defaultUnit }
     unitRepo = new FakeUnitRepository(unit, [unit])
 
+    saleItemRepo = new FakeSaleItemRepository(saleRepo)
+
     const sale = makeSaleWithBarber()
+    const defaultService = makeServiceWithCommission('svc-default', 100, 0)
+    sale.items[0].serviceId = defaultService.id
+    sale.items[0].service = defaultService
+    barberServiceRepo.items.push(
+      makeBarberServiceRel(barberProfile.id, defaultService.id, 'PERCENTAGE_OF_USER'),
+    )
 
     saleRepo.sales.push(sale)
 
@@ -105,6 +118,8 @@ describe('Set sale status service', () => {
       orgRepo,
       profileRepo,
       unitRepo,
+      appointmentServiceRepo,
+      saleItemRepo,
     )
   })
 
@@ -155,7 +170,7 @@ describe('Set sale status service', () => {
     saleRepo.sales.push(sale)
     barberServiceRepo.items.push(
       makeBarberServiceRel(
-        barberProfile.id,
+        `profile-${barberUser.id}`,
         serviceDef.id,
         'PERCENTAGE_OF_ITEM',
       ),
@@ -197,7 +212,7 @@ describe('Set sale status service', () => {
     saleRepo.sales.push(sale)
     barberProductRepo.items.push(
       makeBarberProductRel(
-        barberProfile.id,
+        `profile-${barberUser.id}`,
         product.id,
         'PERCENTAGE_OF_USER_ITEM',
         60,
@@ -243,7 +258,7 @@ describe('Set sale status service', () => {
     saleRepo.sales.push(sale)
     barberServiceRepo.items.push(
       makeBarberServiceRel(
-        barberProfile.id,
+        `profile-${barberUser.id}`,
         serviceDef.id,
         'PERCENTAGE_OF_ITEM',
         50,
@@ -256,7 +271,7 @@ describe('Set sale status service', () => {
       paymentStatus: PaymentStatus.PAID,
     })
 
-    expect(res.sale.items[0].porcentagemBarbeiro).toBe(50)
+    expect(res.sale.items[0].porcentagemBarbeiro).toBeNull()
     expect(profileRepo.profiles[0].totalBalance).toBeCloseTo(40)
     expect(unitRepo.unit.totalBalance).toBeCloseTo(40)
   })
@@ -290,7 +305,7 @@ describe('Set sale status service', () => {
     saleRepo.sales.push(sale)
     barberServiceRepo.items.push(
       makeBarberServiceRel(
-        barberProfile.id,
+        `profile-${barberUser.id}`,
         serviceDef.id,
         'PERCENTAGE_OF_USER_ITEM',
         40,
@@ -303,7 +318,7 @@ describe('Set sale status service', () => {
       paymentStatus: PaymentStatus.PAID,
     })
 
-    expect(res.sale.items[0].porcentagemBarbeiro).toBe(40)
+    expect(res.sale.items[0].porcentagemBarbeiro).toBeNull()
   })
 
   it('concludes appointment when paying sale', async () => {
@@ -332,7 +347,11 @@ describe('Set sale status service', () => {
     })
     saleRepo.sales.push(sale)
     barberServiceRepo.items.push(
-      makeBarberServiceRel(barberProfile.id, serviceDef.id, 'PERCENTAGE_OF_ITEM')
+      makeBarberServiceRel(
+        `profile-${barberUser.id}`,
+        serviceDef.id,
+        'PERCENTAGE_OF_ITEM',
+      )
     )
 
     await service.execute({

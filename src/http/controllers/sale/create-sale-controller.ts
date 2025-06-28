@@ -12,6 +12,7 @@ export const CreateSaleController = async (
       z.object({
         serviceId: z.string().optional(),
         productId: z.string().optional(),
+        appointmentId: z.string().optional(),
         quantity: z.number().min(1),
         barberId: z.string().optional(),
         couponCode: z.string().optional(),
