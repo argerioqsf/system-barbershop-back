@@ -7,13 +7,11 @@ import {
   FakeCashRegisterRepository,
   FakeProfilesRepository,
   FakeUnitRepository,
-  FakeOrganizationRepository,
 } from '../../helpers/fake-repositories'
 import {
   defaultUser,
   defaultProfile,
   defaultUnit,
-  defaultOrganization,
   makeProfile,
   makeUser,
 } from '../../helpers/default-values'
@@ -37,7 +35,6 @@ function setup(options?: { userBalance?: number; unitBalance?: number }) {
   const profileRepo = new FakeProfilesRepository()
   const unit = { ...defaultUnit, totalBalance: options?.unitBalance ?? 0 }
   const unitRepo = new FakeUnitRepository(unit)
-  const organizationRepo = new FakeOrganizationRepository(defaultOrganization)
 
   const profile = { ...defaultProfile, totalBalance: 0, user: { ...defaultUser } }
   profileRepo.profiles.push(profile)
@@ -62,8 +59,6 @@ function setup(options?: { userBalance?: number; unitBalance?: number }) {
     barberRepo,
     cashRepo,
     profileRepo,
-    unitRepo,
-    organizationRepo,
   )
 
   return { service, profileRepo, unitRepo, transactionRepo, user, barberRepo }
@@ -106,7 +101,7 @@ describe('Pay balance transaction service', () => {
     })
 
     expect(profile.totalBalance).toBe(10)
-    expect(ctx.unitRepo.unit.totalBalance).toBe(70)
-    expect(ctx.transactionRepo.transactions).toHaveLength(2)
+    expect(ctx.unitRepo.unit.totalBalance).toBe(100)
+    expect(ctx.transactionRepo.transactions).toHaveLength(1)
   })
 })

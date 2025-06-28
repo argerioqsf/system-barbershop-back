@@ -3,9 +3,6 @@ import { CashRegisterRepository } from '@/repositories/cash-register-repository'
 import { TransactionRepository } from '@/repositories/transaction-repository'
 import { ProfilesRepository } from '@/repositories/profiles-repository'
 import { Transaction } from '@prisma/client'
-import { UnitRepository } from '@/repositories/unit-repository'
-import { OrganizationRepository } from '@/repositories/organization-repository'
-import { IncrementBalanceUnitService } from '../unit/increment-balance'
 import { IncrementBalanceProfileService } from '../profile/increment-balance'
 import { UserNotFoundError } from '@/services/@errors/user/user-not-found-error'
 import { CashRegisterClosedError } from '@/services/@errors/cash-register/cash-register-closed-error'
@@ -31,8 +28,6 @@ export class PayBalanceTransactionService {
     private barberUserRepository: BarberUsersRepository,
     private cashRegisterRepository: CashRegisterRepository,
     private profileRepository: ProfilesRepository,
-    private unitRepository: UnitRepository,
-    private organizationRepository: OrganizationRepository,
   ) {}
 
   async execute(
@@ -64,10 +59,6 @@ export class PayBalanceTransactionService {
       this.profileRepository,
       this.repository,
     )
-    const decrementUnit = new IncrementBalanceUnitService(
-      this.unitRepository,
-      this.repository,
-    )
 
     const transactions: Transaction[] = []
     const increment = -data.amount
@@ -77,13 +68,6 @@ export class PayBalanceTransactionService {
       increment,
     )
     transactions.push(transactionProfile.transaction)
-
-    const transactionUnit = await decrementUnit.execute(
-      affectedUser.unitId,
-      affectedUser.id,
-      increment,
-    )
-    transactions.push(transactionUnit.transaction)
 
     return { transactions }
   }
