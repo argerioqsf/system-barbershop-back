@@ -3,7 +3,7 @@ import { ServiceRepository } from '@/repositories/service-repository'
 import { ProductRepository } from '@/repositories/product-repository'
 import { AppointmentRepository } from '@/repositories/appointment-repository'
 import { CouponRepository } from '@/repositories/coupon-repository'
-import { UpdateSaleRequest, CreateSaleItem, TempItems } from './types'
+import { UpdateSaleRequest, TempItems } from './types'
 import { PaymentStatus } from '@prisma/client'
 import { CannotEditPaidSaleError } from '../@errors/sale/cannot-edit-paid-sale-error'
 import { applyCouponToItems } from './utils/coupon'
@@ -21,7 +21,6 @@ export class UpdateSaleService {
     private appointmentRepository: AppointmentRepository,
     private couponRepository: CouponRepository,
   ) {}
-
 
   async execute({
     id,
@@ -84,7 +83,12 @@ export class UpdateSaleService {
       paymentStatus,
       total,
       items: {
-        create: tempItems.map((t) => t.data),
+        create: tempItems.map((t) => ({
+          ...t.data,
+          price: t.price,
+          discount: t.discount,
+          discountType: t.discountType,
+        })),
         deleteMany: removeItemIds?.map((rid) => ({ id: rid })),
       },
       coupon: couponConnect,

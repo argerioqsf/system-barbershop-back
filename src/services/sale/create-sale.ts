@@ -2,7 +2,7 @@ import { SaleRepository } from '../../repositories/sale-repository'
 import { ServiceRepository } from '../../repositories/service-repository'
 import { ProductRepository } from '../../repositories/product-repository'
 import { CouponRepository } from '../../repositories/coupon-repository'
-import { DiscountType, PaymentStatus, PermissionName } from '@prisma/client'
+import { PaymentStatus, PermissionName } from '@prisma/client'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { CashRegisterRepository } from '@/repositories/cash-register-repository'
 import { TransactionRepository } from '@/repositories/transaction-repository'
@@ -12,7 +12,6 @@ import { UnitRepository } from '@/repositories/unit-repository'
 import { distributeProfits } from './utils/profit-distribution'
 import { CashRegisterClosedError } from '../@errors/cash-register/cash-register-closed-error'
 import {
-  CreateSaleItem,
   CreateSaleRequest,
   CreateSaleResponse,
   ConnectRelation,
@@ -22,9 +21,7 @@ import {
 import { applyCouponToItems } from './utils/coupon'
 import { buildItemData } from './utils/item'
 import { assertPermission } from '@/utils/permissions'
-import {
-  AppointmentRepository,
-} from '@/repositories/appointment-repository'
+import { AppointmentRepository } from '@/repositories/appointment-repository'
 import { BarberServiceRepository } from '@/repositories/barber-service-repository'
 import { BarberProductRepository } from '@/repositories/barber-product-repository'
 import { AppointmentServiceRepository } from '@/repositories/appointment-service-repository'
@@ -48,7 +45,6 @@ export class CreateSaleService {
     private appointmentServiceRepository: AppointmentServiceRepository,
     private saleItemRepository: SaleItemRepository,
   ) {}
-
 
   private mapToSaleItems(tempItems: TempItems[]): SaleItemTemp[] {
     return tempItems.map((temp) => ({

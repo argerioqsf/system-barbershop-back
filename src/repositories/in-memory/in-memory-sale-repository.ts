@@ -281,15 +281,25 @@ export class InMemorySaleRepository implements SaleRepository {
           sale.items.push({
             id: randomUUID(),
             saleId: sale.id,
-            serviceId: (it.service as any)?.connect?.id ?? null,
-            productId: (it.product as any)?.connect?.id ?? null,
-            appointmentId: (it.appointment as any)?.connect?.id ?? null,
+            serviceId:
+              (it.service as { connect?: { id: string } } | undefined)?.connect
+                ?.id ?? null,
+            productId:
+              (it.product as { connect?: { id: string } } | undefined)?.connect
+                ?.id ?? null,
+            appointmentId:
+              (it.appointment as { connect?: { id: string } } | undefined)
+                ?.connect?.id ?? null,
             quantity: it.quantity as number,
-            barberId: (it.barber as any)?.connect?.id ?? null,
-            couponId: (it.coupon as any)?.connect?.id ?? null,
+            barberId:
+              (it.barber as { connect?: { id: string } } | undefined)?.connect
+                ?.id ?? null,
+            couponId:
+              (it.coupon as { connect?: { id: string } } | undefined)?.connect
+                ?.id ?? null,
             price: it.price as number,
             discount: (it.discount as number | null) ?? null,
-            discountType: (it.discountType as any) ?? null,
+            discountType: it.discountType ?? null,
             porcentagemBarbeiro:
               (it.porcentagemBarbeiro as number | null) ?? null,
             service: null,

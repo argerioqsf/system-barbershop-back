@@ -1,10 +1,13 @@
 import { ServiceRepository } from '@/repositories/service-repository'
 import { ProductRepository } from '@/repositories/product-repository'
-import { AppointmentRepository, DetailedAppointment } from '@/repositories/appointment-repository'
+import {
+  AppointmentRepository,
+  DetailedAppointment,
+} from '@/repositories/appointment-repository'
 import { CouponRepository } from '@/repositories/coupon-repository'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
-import { Prisma, DiscountType, Service, Product } from '@prisma/client'
-import { CreateSaleItem, TempItems } from '../types'
+import { DiscountType, Service, Product, PermissionName } from '@prisma/client'
+import { CreateSaleItem, TempItems, DataItem } from '../types'
 import { ItemNeedsServiceOrProductOrAppointmentError } from '../../@errors/sale/item-needs-service-or-product-error'
 import { ServiceNotFoundError } from '../../@errors/service/service-not-found-error'
 import { ServiceNotFromUserUnitError } from '../../@errors/service/service-not-from-user-unit-error'
@@ -17,7 +20,6 @@ import { BarberNotFoundError } from '../../@errors/barber/barber-not-found-error
 import { ProfileNotFoundError } from '../../@errors/profile/profile-not-found-error'
 import { BarberNotFromUserUnitError } from '../../@errors/barber/barber-not-from-user-unit-error'
 import { BarberCannotSellItemError } from '../../@errors/barber/barber-cannot-sell-item'
-import { PermissionName } from '@prisma/client'
 import { hasPermission } from '@/utils/permissions'
 import { applyCouponToSale } from './coupon'
 
@@ -53,7 +55,7 @@ export async function buildItemData({
   }
 
   let basePrice = 0
-  const dataItem: Prisma.SaleItemCreateWithoutSaleInput = {
+  const dataItem: DataItem = {
     quantity: item.quantity,
   }
 
@@ -76,7 +78,10 @@ export async function buildItemData({
     if (userUnitId && product.unitId !== userUnitId) {
       throw new ServiceNotFromUserUnitError()
     }
-    if (typeof product.quantity === 'number' && product.quantity < item.quantity) {
+    if (
+      typeof product.quantity === 'number' &&
+      product.quantity < item.quantity
+    ) {
       throw new InsufficientStockError()
     }
     basePrice = product.price * item.quantity
@@ -102,11 +107,11 @@ export async function buildItemData({
     barberId = barberId ?? appointment.barberId
   }
 
-  let price = basePrice
-  let discount = 0
-  let discountType: DiscountType | null = null
+  const price = basePrice
+  const discount = 0
+  const discountType: DiscountType | null = null
   let couponRel: { connect: { id: string } } | undefined
-  let ownDiscount = false
+  const ownDiscount = false
 
   if (barberId && barberUserRepository) {
     const barber = await barberUserRepository.findById(barberId)
@@ -139,7 +144,10 @@ export async function buildItemData({
           barber.profile.permissions?.map((p) => p.name) ?? [],
         )
       )
-        throw new BarberCannotSellItemError(barber.name, `Appointment: ${appointment.date}`)
+        throw new BarberCannotSellItemError(
+          barber.name,
+          `Appointment: ${appointment.date}`,
+        )
     }
   }
 
