@@ -8,9 +8,7 @@ import { CouponRepository } from '@/repositories/coupon-repository'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { Service, Product, PermissionName } from '@prisma/client'
 import { CreateSaleItem, TempItems, DataItem } from '../types'
-import {
-  ItemNeedsServiceOrProductOrAppointmentError,
-} from '../../@errors/sale/item-needs-service-or-product-error'
+import { ItemNeedsServiceOrProductOrAppointmentError } from '../../@errors/sale/item-needs-service-or-product-error'
 import { ServiceNotFoundError } from '../../@errors/service/service-not-found-error'
 import { ServiceNotFromUserUnitError } from '../../@errors/service/service-not-from-user-unit-error'
 import { ProductNotFoundError } from '../../@errors/product/product-not-found-error'
@@ -39,7 +37,9 @@ export interface BuildItemDataOptions {
 
 function ensureSingleType(item: CreateSaleItem, enforce: boolean) {
   const count =
-    (item.serviceId ? 1 : 0) + (item.productId ? 1 : 0) + (item.appointmentId ? 1 : 0)
+    (item.serviceId ? 1 : 0) +
+    (item.productId ? 1 : 0) +
+    (item.appointmentId ? 1 : 0)
   if (count === 0 || (enforce && count !== 1)) {
     throw new ItemNeedsServiceOrProductOrAppointmentError()
   }
@@ -160,7 +160,11 @@ export async function buildItemData({
   let barberId: string | undefined = item.barberId
 
   if (item.serviceId) {
-    const loaded = await loadService(item.serviceId, serviceRepository, userUnitId)
+    const loaded = await loadService(
+      item.serviceId,
+      serviceRepository,
+      userUnitId,
+    )
     service = loaded.service
     basePrice = loaded.price * item.quantity
     dataItem.service = loaded.relation

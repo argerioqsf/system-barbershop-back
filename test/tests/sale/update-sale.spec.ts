@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { UpdateSaleService } from '../../../src/services/sale/update-sale'
 import {
   FakeSaleRepository,
@@ -6,13 +6,30 @@ import {
   FakeProductRepository,
   FakeAppointmentRepository,
   FakeCouponRepository,
+  FakeBarberUsersRepository,
+  FakeBarberServiceRelRepository,
+  FakeBarberProductRepository,
+  FakeCashRegisterRepository,
+  FakeTransactionRepository,
+  FakeOrganizationRepository,
+  FakeProfilesRepository,
+  FakeUnitRepository,
+  FakeAppointmentServiceRepository,
+  FakeSaleItemRepository,
 } from '../../helpers/fake-repositories'
+import { CreateTransactionService } from '../../../src/services/transaction/create-transaction'
 import {
   makeSale,
   makeService,
   makeSaleWithBarber,
   makeAppointment,
   makeCoupon,
+  makeBarberServiceRel,
+  barberUser,
+  barberProfile,
+  defaultOrganization,
+  defaultUser,
+  defaultUnit,
 } from '../../helpers/default-values'
 import { PaymentMethod, DiscountType } from '@prisma/client'
 
@@ -23,21 +40,77 @@ describe('Update sale service', () => {
   let productRepo: FakeProductRepository
   let appointmentRepo: FakeAppointmentRepository
   let couponRepo: FakeCouponRepository
-  let service: UpdateSaleService
+  let barberRepo: FakeBarberUsersRepository
+  let barberServiceRepo: FakeBarberServiceRelRepository
+  let barberProductRepo: FakeBarberProductRepository
+  let cashRepo: FakeCashRegisterRepository
+  let transactionRepo: FakeTransactionRepository
+  let organizationRepo: FakeOrganizationRepository
+  let profilesRepo: FakeProfilesRepository
+  let unitRepo: FakeUnitRepository
+  let appointmentServiceRepo: FakeAppointmentServiceRepository
+let saleItemRepo: FakeSaleItemRepository
+let service: UpdateSaleService
+
 
   beforeEach(() => {
     repo = new FakeSaleRepository()
     repo.sales.push(makeSale('sale-up-1'))
+    repo.sales[0].userId = 'cashier'
+    ;(repo.sales[0] as any).user.id = 'cashier'
     serviceRepo = new FakeServiceRepository()
     productRepo = new FakeProductRepository()
     appointmentRepo = new FakeAppointmentRepository()
     couponRepo = new FakeCouponRepository()
+    barberRepo = new FakeBarberUsersRepository()
+    barberServiceRepo = new FakeBarberServiceRelRepository()
+    barberProductRepo = new FakeBarberProductRepository()
+    cashRepo = new FakeCashRegisterRepository()
+    transactionRepo = new FakeTransactionRepository()
+    organizationRepo = new FakeOrganizationRepository({ ...defaultOrganization })
+    profilesRepo = new FakeProfilesRepository([{ ...barberProfile, user: barberUser }])
+    unitRepo = new FakeUnitRepository({ ...defaultUnit })
+    appointmentServiceRepo = new FakeAppointmentServiceRepository(appointmentRepo)
+    saleItemRepo = new FakeSaleItemRepository(repo)
+    vi.doMock(
+      '../../../src/services/@factories/transaction/make-create-transaction',
+      () => ({
+        makeCreateTransaction: () =>
+          new CreateTransactionService(transactionRepo, barberRepo, cashRepo),
+      }),
+    )
+    barberRepo.users.push(
+      { ...defaultUser, id: 'cashier', organizationId: defaultOrganization.id, unitId: defaultUnit.id, unit: { ...defaultUnit, organizationId: defaultOrganization.id } },
+      barberUser,
+    )
+    cashRepo.session = {
+      id: 'session-1',
+      openedById: 'cashier',
+      unitId: defaultUnit.id,
+      openedAt: new Date(),
+      closedAt: null,
+      initialAmount: 0,
+      transactions: [],
+      sales: [],
+      finalAmount: null,
+      user: defaultUser,
+    }
     service = new UpdateSaleService(
       repo,
       serviceRepo,
       productRepo,
       appointmentRepo,
       couponRepo,
+      barberRepo,
+      barberServiceRepo,
+      barberProductRepo,
+      cashRepo,
+      transactionRepo,
+      organizationRepo,
+      profilesRepo,
+      unitRepo,
+      appointmentServiceRepo,
+      saleItemRepo,
     )
   })
 
@@ -156,6 +229,25 @@ describe('Update sale service', () => {
     ).toBe('CONCLUDED')
   })
 
+  it('marks sale as paid and updates balances', async () => {
+    const sale = makeSaleWithBarber()
+    const svc = makeService('svc-paid', 100)
+    sale.items[0].serviceId = svc.id
+    sale.items[0].service = svc
+    barberServiceRepo.items.push(
+      makeBarberServiceRel(barberProfile.id, svc.id, 'PERCENTAGE_OF_USER'),
+    )
+    serviceRepo.services.push(svc)
+    repo.sales = [sale]
+
+    const res = await service.execute({ id: 'sale-1', paymentStatus: 'PAID' })
+
+    expect(res.sale.paymentStatus).toBe('PAID')
+    expect(transactionRepo.transactions).toHaveLength(2)
+    expect(profilesRepo.profiles[0].totalBalance).toBeCloseTo(50)
+    expect(unitRepo.unit.totalBalance).toBeCloseTo(50)
+  })
+
   it('removes sale items', async () => {
     const withItem = makeSaleWithBarber()
     repo.sales = [withItem]
@@ -165,6 +257,16 @@ describe('Update sale service', () => {
       productRepo,
       appointmentRepo,
       couponRepo,
+      barberRepo,
+      barberServiceRepo,
+      barberProductRepo,
+      cashRepo,
+      transactionRepo,
+      organizationRepo,
+      profilesRepo,
+      unitRepo,
+      appointmentServiceRepo,
+      saleItemRepo,
     )
 
     const res = await service.execute({
