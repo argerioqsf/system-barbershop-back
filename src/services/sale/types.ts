@@ -103,6 +103,7 @@ export type SaleItemTemp = Omit<
   | 'couponId'
   | 'appointmentId'
   | 'porcentagemBarbeiro'
+  | 'commissionPaid'
 >
 
 export interface GetSaleRequest {

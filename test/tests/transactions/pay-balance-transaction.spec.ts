@@ -18,6 +18,7 @@ import {
   defaultUnit,
   makeProfile,
   makeUser,
+  makeSaleWithBarber,
 } from '../../helpers/default-values'
 
 let transactionRepo: FakeTransactionRepository
@@ -126,5 +127,47 @@ describe('Pay balance transaction service', () => {
     expect(profile.totalBalance).toBe(10)
     expect(ctx.unitRepo.unit.totalBalance).toBe(100)
     expect(ctx.transactionRepo.transactions).toHaveLength(1)
+  })
+
+  it('distributes amount across pending items', async () => {
+    const profile = makeProfile('p4', 'u4', 20)
+    ctx.profileRepo.profiles.push(profile)
+    const other = makeUser('u4', profile, ctx.unitRepo.unit)
+    ctx.barberRepo.users.push(other)
+
+    const sale1 = {
+      ...makeSaleWithBarber(),
+      id: 's1',
+      paymentStatus: 'PAID',
+      createdAt: new Date('2024-01-01'),
+    }
+    sale1.items[0].barberId = other.id
+    sale1.items[0].id = 'it1'
+    sale1.items[0].price = 10
+    ;(sale1.items[0] as any).commissionPaid = false
+    const sale2 = {
+      ...makeSaleWithBarber(),
+      id: 's2',
+      paymentStatus: 'PAID',
+      createdAt: new Date('2024-01-02'),
+    }
+    sale2.items[0].barberId = other.id
+    sale2.items[0].id = 'it2'
+    sale2.items[0].price = 10
+    ;(sale2.items[0] as any).commissionPaid = false
+    ctx.saleRepo.sales.push(sale1 as any, sale2 as any)
+
+    await ctx.service.execute({
+      userId: ctx.user.id,
+      affectedUserId: other.id,
+      description: '',
+      amount: 15,
+    })
+
+    expect(profile.totalBalance).toBe(5)
+    expect(ctx.transactionRepo.transactions).toHaveLength(3)
+    expect((sale2.items[0] as any).commissionPaid).toBe(true)
+    expect((sale1.items[0] as any).commissionPaid).toBe(true)
+    // transaction recorded for partial payment
   })
 })

@@ -13,6 +13,7 @@ export function mapToSaleItems(
     discount: temp.discount,
     discountType: temp.discountType,
     appointment: temp.data.appointment,
+    commissionPaid: false,
   }))
 }
 

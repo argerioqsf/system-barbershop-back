@@ -59,17 +59,18 @@ export class PayBalanceTransactionService {
       saleItemId?: string
       appointmentServiceId?: string
       amount: number
+      item?: any
+      service?: any
+      sale?: { createdAt: Date }
     }[] = []
 
     let total = data.amount ?? 0
 
-    if (
-      (data.saleItemIds && data.saleItemIds.length > 0) ||
-      (data.appointmentServiceIds && data.appointmentServiceIds.length > 0)
-    ) {
-      const sales = await this.saleRepository.findManyByBarber(
-        data.affectedUserId,
-      )
+    const sales = await this.saleRepository.findManyByBarber(
+      data.affectedUserId,
+    )
+
+    if (data.amount === undefined) {
       for (const sale of sales) {
         if (sale.paymentStatus !== 'PAID') continue
         for (const item of sale.items) {
@@ -84,6 +85,8 @@ export class PayBalanceTransactionService {
               saleId: sale.id,
               saleItemId: item.id,
               amount: value,
+              item,
+              sale,
             })
           }
           if (
@@ -103,12 +106,70 @@ export class PayBalanceTransactionService {
                   saleId: sale.id,
                   appointmentServiceId: srv.id,
                   amount: value,
+                  item,
+                  service: srv,
+                  sale,
                 })
               }
             }
           }
         }
       }
+    } else {
+      for (const sale of sales) {
+        if (sale.paymentStatus !== 'PAID') continue
+        for (const item of sale.items) {
+          if (item.barberId !== data.affectedUserId) continue
+          if (!(item as any).commissionPaid) {
+            const perc = item.porcentagemBarbeiro ?? 0
+            const value = ((item.price ?? 0) * perc) / 100
+            const paid =
+              (item as any).transactions?.reduce(
+                (s: number, t: { amount: number }) => s + t.amount,
+                0,
+              ) ?? 0
+            const remaining = value - paid
+            if (remaining > 0) {
+              paymentItems.push({
+                saleId: sale.id,
+                saleItemId: item.id,
+                amount: remaining,
+                item,
+                sale,
+              })
+            }
+          }
+          if (item.appointment?.services?.length) {
+            for (const srv of item.appointment.services) {
+              if (!(srv as any).commissionPaid) {
+                const perc = srv.commissionPercentage ?? 0
+                const value = (srv.service.price * perc) / 100
+                const paid =
+                  (srv as any).transactions?.reduce(
+                    (s: number, t: { amount: number }) => s + t.amount,
+                    0,
+                  ) ?? 0
+                const remaining = value - paid
+                if (remaining > 0) {
+                  paymentItems.push({
+                    saleId: sale.id,
+                    appointmentServiceId: srv.id,
+                    saleItemId: item.id,
+                    amount: remaining,
+                    item,
+                    service: srv,
+                    sale,
+                  })
+                }
+              }
+            }
+          }
+        }
+      }
+      // sort by sale date desc for paying latest first
+      paymentItems.sort(
+        (a, b) => b.sale!.createdAt.getTime() - a.sale!.createdAt.getTime(),
+      )
     }
 
     if (total < 0) {
@@ -126,39 +187,81 @@ export class PayBalanceTransactionService {
 
     const transactions: Transaction[] = []
 
-    if (data.amount && data.amount > 0) {
-      const tx = await decrementProfile.execute(
-        affectedUser.id,
-        -data.amount,
-        undefined,
-        undefined,
-        data.description,
-      )
-      transactions.push(tx.transaction)
-    }
-
-    for (const pay of paymentItems) {
-      const tx = await decrementProfile.execute(
-        affectedUser.id,
-        -pay.amount,
-        pay.saleId,
-        undefined,
-        data.description,
-        pay.saleItemId,
-        pay.appointmentServiceId,
-      )
-      transactions.push(tx.transaction)
-      if (pay.saleItemId) {
-        await this.saleItemRepository.update(
+    if (data.amount !== undefined) {
+      let remaining = data.amount
+      for (const pay of paymentItems) {
+        if (remaining <= 0) break
+        const value = Math.min(pay.amount, remaining)
+        const tx = await decrementProfile.execute(
+          affectedUser.id,
+          -value,
+          pay.saleId,
+          undefined,
+          data.description,
           pay.saleItemId,
-          { commissionPaid: true } as any,
-        )
-      }
-      if (pay.appointmentServiceId) {
-        await this.appointmentServiceRepository.update(
           pay.appointmentServiceId,
-          { commissionPaid: true } as any,
         )
+        transactions.push(tx.transaction)
+        remaining -= value
+        if (pay.item && 'transactions' in pay.item) {
+          pay.item.transactions.push(tx.transaction as any)
+        }
+        if (pay.service && 'transactions' in pay.service) {
+          pay.service.transactions.push(tx.transaction as any)
+        }
+        if (value === pay.amount) {
+          if (pay.saleItemId) {
+            await this.saleItemRepository.update(pay.saleItemId, {
+              commissionPaid: true,
+            } as any)
+          }
+          if (pay.appointmentServiceId) {
+            await this.appointmentServiceRepository.update(
+              pay.appointmentServiceId,
+              { commissionPaid: true } as any,
+            )
+          }
+        }
+      }
+      if (remaining > 0) {
+        const tx = await decrementProfile.execute(
+          affectedUser.id,
+          -remaining,
+          undefined,
+          undefined,
+          data.description,
+        )
+        transactions.push(tx.transaction)
+      }
+    } else {
+      for (const pay of paymentItems) {
+        const tx = await decrementProfile.execute(
+          affectedUser.id,
+          -pay.amount,
+          pay.saleId,
+          undefined,
+          data.description,
+          pay.saleItemId,
+          pay.appointmentServiceId,
+        )
+        transactions.push(tx.transaction)
+        if (pay.item && 'transactions' in pay.item) {
+          pay.item.transactions.push(tx.transaction as any)
+        }
+        if (pay.service && 'transactions' in pay.service) {
+          pay.service.transactions.push(tx.transaction as any)
+        }
+        if (pay.saleItemId) {
+          await this.saleItemRepository.update(pay.saleItemId, {
+            commissionPaid: true,
+          } as any)
+        }
+        if (pay.appointmentServiceId) {
+          await this.appointmentServiceRepository.update(
+            pay.appointmentServiceId,
+            { commissionPaid: true } as any,
+          )
+        }
       }
     }
 
