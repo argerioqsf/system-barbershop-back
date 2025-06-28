@@ -131,4 +131,11 @@ describe('Update sale service', () => {
     expect(res.sale.items).toHaveLength(0)
     expect(res.sale.total).toBe(0)
   })
+
+  it('throws when sale already paid', async () => {
+    repo.sales[0].paymentStatus = 'PAID'
+    await expect(
+      service.execute({ id: 'sale-up-1', observation: 'x' }),
+    ).rejects.toThrow('Cannot edit a paid sale')
+  })
 })

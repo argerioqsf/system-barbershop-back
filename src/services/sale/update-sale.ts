@@ -4,6 +4,7 @@ import { ProductRepository } from '@/repositories/product-repository'
 import { AppointmentRepository } from '@/repositories/appointment-repository'
 import { UpdateSaleRequest, CreateSaleItem } from './types'
 import { Prisma, PaymentStatus } from '@prisma/client'
+import { CannotEditPaidSaleError } from '../@errors/sale/cannot-edit-paid-sale-error'
 
 interface UpdateSaleResponse {
   sale: DetailedSale
@@ -83,6 +84,9 @@ export class UpdateSaleService {
   }: UpdateSaleRequest): Promise<UpdateSaleResponse> {
     const current = await this.repository.findById(id)
     if (!current) throw new Error('Sale not found')
+    if (current.paymentStatus === PaymentStatus.PAID) {
+      throw new CannotEditPaidSaleError()
+    }
 
     const createItems: (Prisma.SaleItemCreateWithoutSaleInput & {
       price: number

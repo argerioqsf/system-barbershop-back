@@ -28,6 +28,7 @@ import { UnitNotFromOrganizationError } from '@/services/users/set-user-unit'
 import { FastifyReply } from 'fastify'
 import { ItemPriceGreaterError } from '@/services/@errors/sale/Item-price-greater-error'
 import { InvalidAppointmentStatusError } from '@/services/@errors/appointment/invalid-appointment-status-error'
+import { CannotEditPaidSaleError } from '@/services/@errors/sale/cannot-edit-paid-sale-error'
 
 export function mapErrorToStatus(error: Error): number {
   if (
@@ -43,7 +44,8 @@ export function mapErrorToStatus(error: Error): number {
     error instanceof InsufficientStockError ||
     error instanceof ItemNeedsServiceOrProductOrAppointmentError ||
     error instanceof ItemPriceGreaterError ||
-    error instanceof InvalidAppointmentStatusError
+    error instanceof InvalidAppointmentStatusError ||
+    error instanceof CannotEditPaidSaleError
   ) {
     return 400
   }
