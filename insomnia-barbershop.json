@@ -1,7 +1,7 @@
 {
   "_type": "export",
   "__export_format": 4,
-  "__export_date": "2025-06-12T00:00:00.000Z",
+  "__export_date": "2025-06-28T00:00:00.000Z",
   "__export_source": "codex",
   "resources": [
     {
@@ -729,7 +729,7 @@
       "url": "{{ baseURL }}/sales",
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"method\": \"CASH\",\n  \"items\": [\n    {\n      \"serviceId\": \"\",\n      \"quantity\": 1,\n      \"barberId\": \"\",\n      \"couponCode\": \"\",\n      \"price\": 0\n    }\n  ],\n  \"clientId\": \"\",\n  \"paymentStatus\": \"PAID\"\n}"
+        "text": "{\n  \"method\": \"CASH\",\n  \"items\": [\n    {\n      \"serviceId\": \"\",\n      \"productId\": \"\",\n      \"appointmentId\": \"\",\n      \"quantity\": 1,\n      \"barberId\": \"\",\n      \"couponCode\": \"\",\n      \"price\": 0\n    }\n  ],\n  \"clientId\": \"\",\n  \"paymentStatus\": \"PAID\"\n}"
       },
       "headers": [
         {
@@ -779,7 +779,7 @@
       "url": "{{ baseURL }}/sales/{id}",
       "body": {
         "mimeType": "application/json",
-        "text": "{\\n  \\\"paymentStatus\\\": \\\"PAID\\\"\\n}"
+        "text": "{\n  \"observation\": \"\",\n  \"method\": \"CASH\",\n  \"paymentStatus\": \"PAID\",\n  \"items\": [\n    {\n      \"serviceId\": \"\",\n      \"productId\": \"\",\n      \"appointmentId\": \"\",\n      \"quantity\": 1,\n      \"barberId\": \"\",\n      \"couponCode\": \"\",\n      \"price\": 0\n    }\n  ],\n  \"removeItemIds\": [],\n  \"couponCode\": \"\"\n}"
       },
       "headers": [
         {

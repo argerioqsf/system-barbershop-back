@@ -53,6 +53,9 @@ export interface UpdateSaleRequest {
   observation?: string
   method?: PaymentMethod
   paymentStatus?: PaymentStatus
+  items?: CreateSaleItem[]
+  removeItemIds?: string[]
+  couponCode?: string
 }
 
 export interface CreateSaleResponse {
