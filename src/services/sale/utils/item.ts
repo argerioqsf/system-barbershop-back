@@ -6,9 +6,11 @@ import {
 } from '@/repositories/appointment-repository'
 import { CouponRepository } from '@/repositories/coupon-repository'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
-import { DiscountType, Service, Product, PermissionName } from '@prisma/client'
+import { Service, Product, PermissionName } from '@prisma/client'
 import { CreateSaleItem, TempItems, DataItem } from '../types'
-import { ItemNeedsServiceOrProductOrAppointmentError } from '../../@errors/sale/item-needs-service-or-product-error'
+import {
+  ItemNeedsServiceOrProductOrAppointmentError,
+} from '../../@errors/sale/item-needs-service-or-product-error'
 import { ServiceNotFoundError } from '../../@errors/service/service-not-found-error'
 import { ServiceNotFromUserUnitError } from '../../@errors/service/service-not-from-user-unit-error'
 import { ProductNotFoundError } from '../../@errors/product/product-not-found-error'
@@ -35,6 +37,108 @@ export interface BuildItemDataOptions {
   enforceSingleType?: boolean
 }
 
+function ensureSingleType(item: CreateSaleItem, enforce: boolean) {
+  const count =
+    (item.serviceId ? 1 : 0) + (item.productId ? 1 : 0) + (item.appointmentId ? 1 : 0)
+  if (count === 0 || (enforce && count !== 1)) {
+    throw new ItemNeedsServiceOrProductOrAppointmentError()
+  }
+}
+
+async function loadService(
+  serviceId: string,
+  repo: ServiceRepository,
+  userUnitId?: string,
+) {
+  const service = await repo.findById(serviceId)
+  if (!service) throw new ServiceNotFoundError()
+  if (userUnitId && service.unitId !== userUnitId) {
+    throw new ServiceNotFromUserUnitError()
+  }
+  const price = service.price
+  const relation = { connect: { id: serviceId } }
+  return { service, price, relation }
+}
+
+async function loadProduct(
+  productId: string,
+  quantity: number,
+  repo: ProductRepository,
+  userUnitId?: string,
+  productsToUpdate?: { id: string; quantity: number }[],
+) {
+  const product = await repo.findById(productId)
+  if (!product) throw new ProductNotFoundError()
+  if (userUnitId && product.unitId !== userUnitId) {
+    throw new ServiceNotFromUserUnitError()
+  }
+  if (typeof product.quantity === 'number' && product.quantity < quantity) {
+    throw new InsufficientStockError()
+  }
+  if (productsToUpdate) {
+    productsToUpdate.push({ id: productId, quantity })
+  }
+  const relation = { connect: { id: productId } }
+  const price = product.price
+  return { product, price, relation }
+}
+
+async function loadAppointment(
+  appointmentId: string,
+  repo: AppointmentRepository,
+  userUnitId?: string,
+) {
+  const appointment = await repo.findById(appointmentId)
+  if (!appointment) throw new AppointmentNotFoundError()
+  if (appointment.saleItem) throw new AppointmentAlreadyLinkedError()
+  if (appointment.status === 'CANCELED' || appointment.status === 'NO_SHOW') {
+    throw new InvalidAppointmentStatusError()
+  }
+  if (userUnitId && appointment.unitId !== userUnitId) {
+    throw new ServiceNotFromUserUnitError()
+  }
+  const total = appointment.services.reduce(
+    (acc, s) => acc + (s.service.price ?? 0),
+    0,
+  )
+  const relation = { connect: { id: appointmentId } }
+  return { appointment, price: total, relation, barberId: appointment.barberId }
+}
+
+async function ensureBarberPermissions(
+  barberId: string | undefined,
+  barberRepo: BarberUsersRepository | undefined,
+  service?: Service | null,
+  product?: Product | null,
+  appointment?: DetailedAppointment | null,
+  userUnitId?: string,
+) {
+  if (!barberId || !barberRepo) return
+  const barber = await barberRepo.findById(barberId)
+  if (!barber) throw new BarberNotFoundError()
+  if (!barber.profile) throw new ProfileNotFoundError()
+  if (userUnitId && barber.unitId !== userUnitId) {
+    throw new BarberNotFromUserUnitError()
+  }
+  const perms = barber.profile.permissions?.map((p) => p.name) ?? []
+  if (service) {
+    if (!hasPermission([PermissionName.SELL_SERVICE], perms)) {
+      throw new BarberCannotSellItemError(barber.name, service.name)
+    }
+  } else if (product) {
+    if (!hasPermission([PermissionName.SELL_PRODUCT], perms)) {
+      throw new BarberCannotSellItemError(barber.name, product.name)
+    }
+  } else if (appointment) {
+    if (!hasPermission([PermissionName.ACCEPT_APPOINTMENT], perms)) {
+      throw new BarberCannotSellItemError(
+        barber.name,
+        `Appointment: ${appointment.date}`,
+      )
+    }
+  }
+}
+
 export async function buildItemData({
   item,
   serviceRepository,
@@ -46,121 +150,62 @@ export async function buildItemData({
   barberUserRepository,
   enforceSingleType = true,
 }: BuildItemDataOptions): Promise<TempItems> {
-  const countIds =
-    (item.serviceId ? 1 : 0) +
-    (item.productId ? 1 : 0) +
-    (item.appointmentId ? 1 : 0)
-  if (countIds === 0 || (enforceSingleType && countIds !== 1)) {
-    throw new ItemNeedsServiceOrProductOrAppointmentError()
-  }
+  ensureSingleType(item, enforceSingleType)
 
+  const dataItem: DataItem = { quantity: item.quantity }
   let basePrice = 0
-  const dataItem: DataItem = {
-    quantity: item.quantity,
-  }
-
   let service: Service | null = null
   let product: Product | null = null
   let appointment: DetailedAppointment | null = null
   let barberId: string | undefined = item.barberId
 
   if (item.serviceId) {
-    service = await serviceRepository.findById(item.serviceId)
-    if (!service) throw new ServiceNotFoundError()
-    if (userUnitId && service.unitId !== userUnitId) {
-      throw new ServiceNotFromUserUnitError()
-    }
-    basePrice = service.price * item.quantity
-    dataItem.service = { connect: { id: item.serviceId } }
+    const loaded = await loadService(item.serviceId, serviceRepository, userUnitId)
+    service = loaded.service
+    basePrice = loaded.price * item.quantity
+    dataItem.service = loaded.relation
   } else if (item.productId) {
-    product = await productRepository.findById(item.productId)
-    if (!product) throw new ProductNotFoundError()
-    if (userUnitId && product.unitId !== userUnitId) {
-      throw new ServiceNotFromUserUnitError()
-    }
-    if (
-      typeof product.quantity === 'number' &&
-      product.quantity < item.quantity
-    ) {
-      throw new InsufficientStockError()
-    }
-    basePrice = product.price * item.quantity
-    dataItem.product = { connect: { id: item.productId } }
-    if (productsToUpdate) {
-      productsToUpdate.push({ id: item.productId, quantity: item.quantity })
-    }
+    const loaded = await loadProduct(
+      item.productId,
+      item.quantity,
+      productRepository,
+      userUnitId,
+      productsToUpdate,
+    )
+    product = loaded.product
+    basePrice = loaded.price * item.quantity
+    dataItem.product = loaded.relation
   } else if (item.appointmentId) {
-    appointment = await appointmentRepository.findById(item.appointmentId)
-    if (!appointment) throw new AppointmentNotFoundError()
-    if (appointment.saleItem) throw new AppointmentAlreadyLinkedError()
-    if (appointment.status === 'CANCELED' || appointment.status === 'NO_SHOW') {
-      throw new InvalidAppointmentStatusError()
-    }
-    if (userUnitId && appointment.unitId !== userUnitId) {
-      throw new ServiceNotFromUserUnitError()
-    }
-    const appointmentTotal = appointment.services.reduce((acc, s) => {
-      return acc + (s.service.price ?? 0)
-    }, 0)
-    basePrice = appointmentTotal
-    dataItem.appointment = { connect: { id: item.appointmentId } }
-    barberId = barberId ?? appointment.barberId
+    const loaded = await loadAppointment(
+      item.appointmentId,
+      appointmentRepository,
+      userUnitId,
+    )
+    appointment = loaded.appointment
+    basePrice = loaded.price
+    dataItem.appointment = loaded.relation
+    barberId = barberId ?? loaded.barberId
   }
 
-  const price = basePrice
-  const discount = 0
-  const discountType: DiscountType | null = null
-  let couponRel: { connect: { id: string } } | undefined
-  const ownDiscount = false
-
-  if (barberId && barberUserRepository) {
-    const barber = await barberUserRepository.findById(barberId)
-    if (!barber) throw new BarberNotFoundError()
-    if (!barber.profile) throw new ProfileNotFoundError()
-    if (userUnitId && barber.unitId !== userUnitId) {
-      throw new BarberNotFromUserUnitError()
-    }
-
-    if (service) {
-      if (
-        !hasPermission(
-          [PermissionName.SELL_SERVICE],
-          barber.profile.permissions?.map((p) => p.name) ?? [],
-        )
-      )
-        throw new BarberCannotSellItemError(barber.name, service.name)
-    } else if (product) {
-      if (
-        !hasPermission(
-          [PermissionName.SELL_PRODUCT],
-          barber.profile.permissions?.map((p) => p.name) ?? [],
-        )
-      )
-        throw new BarberCannotSellItemError(barber.name, product.name)
-    } else if (appointment) {
-      if (
-        !hasPermission(
-          [PermissionName.ACCEPT_APPOINTMENT],
-          barber.profile.permissions?.map((p) => p.name) ?? [],
-        )
-      )
-        throw new BarberCannotSellItemError(
-          barber.name,
-          `Appointment: ${appointment.date}`,
-        )
-    }
-  }
+  await ensureBarberPermissions(
+    barberId,
+    barberUserRepository,
+    service,
+    product,
+    appointment,
+    userUnitId,
+  )
 
   const result = await applyCouponToSale(
     item,
-    price,
     basePrice,
-    discount,
-    discountType,
-    ownDiscount,
+    basePrice,
+    0,
+    null,
+    false,
     couponRepository,
     userUnitId,
-    couponRel,
+    undefined,
   )
 
   return {
