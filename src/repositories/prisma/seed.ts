@@ -230,6 +230,22 @@ async function main() {
           pix: 'ownerpix',
           totalBalance: 0,
           role: { connect: { id: roleOwner.id } },
+          permissions: {
+            connect: [
+              {
+                id: permissions[PermissionName.MANAGE_USER_TRANSACTION_ADD].id,
+              },
+              {
+                id: permissions[
+                  PermissionName.MANAGE_USER_TRANSACTION_WITHDRAWAL
+                ].id,
+              },
+              {
+                id: permissions[PermissionName.MANAGE_OTHER_USER_TRANSACTION]
+                  .id,
+              },
+            ],
+          },
         },
       },
       unit: { connect: { id: Unit2.id } },
@@ -277,6 +293,22 @@ async function main() {
           pix: 'managerpix',
           totalBalance: 0,
           role: { connect: { id: roleMenager.id } },
+          permissions: {
+            connect: [
+              {
+                id: permissions[PermissionName.MANAGE_USER_TRANSACTION_ADD].id,
+              },
+              {
+                id: permissions[
+                  PermissionName.MANAGE_USER_TRANSACTION_WITHDRAWAL
+                ].id,
+              },
+              {
+                id: permissions[PermissionName.MANAGE_OTHER_USER_TRANSACTION]
+                  .id,
+              },
+            ],
+          },
         },
       },
       unit: { connect: { id: mainUnit.id } },

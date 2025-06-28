@@ -5,6 +5,7 @@ import { ListTransactionsController } from './list-transactions-controller'
 import { upload } from '@/lib/upload'
 import { WithdrawalBalanceTransactionController } from './withdrawal-balance-transaction'
 import { AddBalanceTransactionController } from './add-balance-transaction'
+import { PayBalanceTransactionController } from './pay-balance-transaction'
 
 export async function transactionRoute(app: FastifyInstance) {
   app.addHook('onRequest', verifyJWT)
@@ -28,6 +29,16 @@ export async function transactionRoute(app: FastifyInstance) {
       ],
     },
     WithdrawalBalanceTransactionController,
+  )
+  app.post(
+    '/pay/transactions',
+    {
+      preHandler: [
+        upload.single('receipt'),
+        verifyPermission(['MANAGE_USER_TRANSACTION_WITHDRAWAL']),
+      ],
+    },
+    PayBalanceTransactionController,
   )
   app.get('/transactions', ListTransactionsController)
 }
