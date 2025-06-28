@@ -12,15 +12,30 @@ export const UpdateSaleController = async (
     observation: z.string().optional(),
     method: z.nativeEnum(PaymentMethod).optional(),
     paymentStatus: z.nativeEnum(PaymentStatus).optional(),
+    items: z
+      .array(
+        z.object({
+          serviceId: z.string().optional(),
+          productId: z.string().optional(),
+          appointmentId: z.string().optional(),
+          quantity: z.number(),
+          barberId: z.string().optional(),
+        }),
+      )
+      .optional(),
+    removeItemIds: z.array(z.string()).optional(),
   })
   const { id } = paramsSchema.parse(request.params)
-  const { observation, method, paymentStatus } = bodySchema.parse(request.body)
+  const { observation, method, paymentStatus, items, removeItemIds } =
+    bodySchema.parse(request.body)
   const service = makeUpdateSale()
   const { sale } = await service.execute({
     id,
     observation,
     method,
     paymentStatus,
+    items,
+    removeItemIds,
   })
   return reply.status(200).send(sale)
 }

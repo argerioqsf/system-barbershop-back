@@ -53,6 +53,8 @@ export interface UpdateSaleRequest {
   observation?: string
   method?: PaymentMethod
   paymentStatus?: PaymentStatus
+  items?: CreateSaleItem[]
+  removeItemIds?: string[]
 }
 
 export interface CreateSaleResponse {
