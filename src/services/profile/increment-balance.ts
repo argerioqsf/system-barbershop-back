@@ -16,6 +16,8 @@ export class IncrementBalanceProfileService {
     saleId?: string,
     isLoan?: boolean,
     description?: string,
+    saleItemId?: string,
+    appointmentServiceId?: string,
   ): Promise<IncrementBalanceProfileResponse> {
     const createTransactionService = makeCreateTransaction()
     try {
@@ -29,6 +31,8 @@ export class IncrementBalanceProfileService {
         userId,
         receiptUrl: undefined,
         saleId,
+        saleItemId,
+        appointmentServiceId,
         isLoan: isLoan ?? false,
         affectedUserId: userId,
       })

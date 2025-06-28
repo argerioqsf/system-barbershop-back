@@ -8,11 +8,23 @@ export const PayBalanceTransactionController = async (
   request: FastifyRequest,
   reply: FastifyReply,
 ) => {
-  const bodySchema = z.object({
-    description: z.string().optional(),
-    amount: z.coerce.number(),
-    affectedUserId: z.string(),
-  })
+  const bodySchema = z
+    .object({
+      description: z.string().optional(),
+      amount: z.coerce.number().optional(),
+      saleItemIds: z.array(z.string()).optional(),
+      appointmentServiceIds: z.array(z.string()).optional(),
+      affectedUserId: z.string(),
+    })
+    .refine(
+      (d) =>
+        d.amount !== undefined ||
+        (d.saleItemIds?.length ?? 0) > 0 ||
+        (d.appointmentServiceIds?.length ?? 0) > 0,
+      {
+        message: 'amount or sale items required',
+      },
+    )
 
   const user = request.user as UserToken
   const data = bodySchema.parse(request.body)
@@ -28,6 +40,8 @@ export const PayBalanceTransactionController = async (
     affectedUserId: data.affectedUserId,
     description: data.description,
     amount: data.amount,
+    saleItemIds: data.saleItemIds,
+    appointmentServiceIds: data.appointmentServiceIds,
     receiptUrl,
   })
   return reply.status(201).send({ transactions })

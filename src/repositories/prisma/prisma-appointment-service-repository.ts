@@ -7,7 +7,7 @@ export class PrismaAppointmentServiceRepository
 {
   async update(
     id: string,
-    data: Prisma.AppointmentUpdateInput,
+    data: Prisma.AppointmentServiceUpdateInput,
   ): Promise<AppointmentService> {
     return prisma.appointmentService.update({ where: { id }, data })
   }

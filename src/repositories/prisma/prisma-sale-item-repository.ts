@@ -5,7 +5,7 @@ import { SaleItemRepository } from '../sale-item-repository'
 export class PrismaSaleItemRepository implements SaleItemRepository {
   async update(
     id: string,
-    data: Prisma.AppointmentUpdateInput,
+    data: Prisma.SaleItemUpdateInput,
   ): Promise<SaleItem> {
     return prisma.saleItem.update({ where: { id }, data })
   }

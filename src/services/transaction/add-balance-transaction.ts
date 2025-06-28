@@ -91,6 +91,9 @@ export class AddBalanceTransactionService {
           amountToPay,
           undefined,
           true,
+          undefined,
+          undefined,
+          undefined,
         )
         transactions.push(transactionUnit.transaction)
         transactions.push(transactionProfile.transaction)
@@ -98,6 +101,11 @@ export class AddBalanceTransactionService {
         const transactionProfile = await incrementProfile.execute(
           affectedUser.id,
           amountToPay,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
         )
         transactions.push(transactionProfile.transaction)
       }

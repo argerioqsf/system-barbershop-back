@@ -14,6 +14,8 @@ interface CreateTransactionRequest {
   amount: number
   receiptUrl?: string | null
   saleId?: string
+  saleItemId?: string
+  appointmentServiceId?: string
   isLoan?: boolean
 }
 
@@ -54,6 +56,12 @@ export class CreateTransactionService {
       unit: { connect: { id: effectiveUser.unitId } },
       session: { connect: { id: session.id } },
       sale: data.saleId ? { connect: { id: data.saleId } } : undefined,
+      ...(data.saleItemId && {
+        saleItem: { connect: { id: data.saleItemId } },
+      }),
+      ...(data.appointmentServiceId && {
+        appointmentService: { connect: { id: data.appointmentServiceId } },
+      }),
       type: data.type,
       description: data.description,
       amount: data.amount,
@@ -62,7 +70,7 @@ export class CreateTransactionService {
       affectedUser: affectedUser
         ? { connect: { id: effectiveUser.id } }
         : undefined,
-    })
+    } as any)
 
     return { transaction }
   }

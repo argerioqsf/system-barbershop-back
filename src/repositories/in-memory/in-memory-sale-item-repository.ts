@@ -15,6 +15,10 @@ export class InMemorySaleItemRepository implements SaleItemRepository {
         if (data.porcentagemBarbeiro !== undefined) {
           item.porcentagemBarbeiro = data.porcentagemBarbeiro as number | null
         }
+        if ((data as any).commissionPaid !== undefined) {
+          ;(item as unknown as { commissionPaid: boolean }).commissionPaid =
+            (data as any).commissionPaid as boolean
+        }
         return item
       }
     }

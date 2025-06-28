@@ -7,6 +7,10 @@ import {
   FakeCashRegisterRepository,
   FakeProfilesRepository,
   FakeUnitRepository,
+  FakeSaleRepository,
+  FakeSaleItemRepository,
+  FakeAppointmentServiceRepository,
+  FakeAppointmentRepository,
 } from '../../helpers/fake-repositories'
 import {
   defaultUser,
@@ -32,6 +36,12 @@ function setup(options?: { userBalance?: number; unitBalance?: number }) {
   transactionRepo = new FakeTransactionRepository()
   barberRepo = new FakeBarberUsersRepository()
   cashRepo = new FakeCashRegisterRepository()
+  const saleRepo = new FakeSaleRepository()
+  const appointmentRepo = new FakeAppointmentRepository()
+  const saleItemRepo = new FakeSaleItemRepository(saleRepo)
+  const appointmentServiceRepo = new FakeAppointmentServiceRepository(
+    appointmentRepo,
+  )
   const profileRepo = new FakeProfilesRepository()
   const unit = { ...defaultUnit, totalBalance: options?.unitBalance ?? 0 }
   const unitRepo = new FakeUnitRepository(unit)
@@ -59,9 +69,22 @@ function setup(options?: { userBalance?: number; unitBalance?: number }) {
     barberRepo,
     cashRepo,
     profileRepo,
+    saleRepo,
+    saleItemRepo,
+    appointmentServiceRepo,
   )
 
-  return { service, profileRepo, unitRepo, transactionRepo, user, barberRepo }
+  return {
+    service,
+    profileRepo,
+    unitRepo,
+    transactionRepo,
+    user,
+    barberRepo,
+    saleRepo,
+    saleItemRepo,
+    appointmentServiceRepo,
+  }
 }
 
 describe('Pay balance transaction service', () => {

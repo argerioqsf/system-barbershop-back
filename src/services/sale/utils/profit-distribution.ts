@@ -162,6 +162,9 @@ export async function distributeProfits(
       amount,
       sale.id,
       userBarber.profile.totalBalance < 0,
+      undefined,
+      appointmentServiceId ? undefined : saleItemId,
+      appointmentServiceId ?? undefined,
     )
     transactions.push(transactionProfile.transaction)
     if (appointmentServiceId) {
