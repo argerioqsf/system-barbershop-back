@@ -304,7 +304,8 @@ export class InMemorySaleRepository implements SaleRepository {
               (it.porcentagemBarbeiro as number | null) ?? null,
             appointment: it.appointment
               ? {
-                  id: it.appointment!.connect!.id,
+                  id: (it.appointment as { connect: { id: string } }).connect
+                    .id,
                   clientId: '',
                   barberId: '',
                   unitId: '',
@@ -319,7 +320,7 @@ export class InMemorySaleRepository implements SaleRepository {
               : null,
             service: it.service
               ? {
-                  id: it.service!.connect!.id,
+                  id: (it.service as { connect: { id: string } }).connect.id,
                   name: '',
                   description: null,
                   imageUrl: null,
@@ -333,7 +334,7 @@ export class InMemorySaleRepository implements SaleRepository {
               : null,
             product: it.product
               ? {
-                  id: it.product!.connect!.id,
+                  id: (it.product as { connect: { id: string } }).connect.id,
                   name: '',
                   description: null,
                   imageUrl: null,
@@ -346,7 +347,7 @@ export class InMemorySaleRepository implements SaleRepository {
               : null,
             barber: it.barber
               ? {
-                  id: it.barber!.connect!.id,
+                  id: (it.barber as { connect: { id: string } }).connect.id,
                   name: '',
                   email: '',
                   password: '',
@@ -357,7 +358,9 @@ export class InMemorySaleRepository implements SaleRepository {
                   versionTokenInvalidate: null,
                   createdAt: new Date(),
                   profile: {
-                    id: 'profile-' + it.barber!.connect!.id,
+                    id:
+                      'profile-' +
+                      (it.barber as { connect: { id: string } }).connect.id,
                     phone: '',
                     cpf: '',
                     genre: '',
@@ -366,14 +369,15 @@ export class InMemorySaleRepository implements SaleRepository {
                     roleId: randomUUID(),
                     commissionPercentage: it.porcentagemBarbeiro ?? 0,
                     totalBalance: 0,
-                    userId: it.barber!.connect!.id,
+                    userId: (it.barber as { connect: { id: string } }).connect
+                      .id,
                     createdAt: new Date(),
                   },
                 }
               : null,
             coupon: it.coupon
               ? {
-                  id: it.coupon!.connect!.id,
+                  id: (it.coupon as { connect: { id: string } }).connect.id,
                   code: '',
                   description: null,
                   discount: 0,
@@ -384,7 +388,7 @@ export class InMemorySaleRepository implements SaleRepository {
                   createdAt: new Date(),
                 }
               : null,
-          } as any)
+          } as DetailedSaleItem)
         }
       }
     }
