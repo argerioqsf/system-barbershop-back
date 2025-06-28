@@ -5,14 +5,16 @@ import {
   FakeServiceRepository,
   FakeProductRepository,
   FakeAppointmentRepository,
+  FakeCouponRepository,
 } from '../../helpers/fake-repositories'
 import {
   makeSale,
   makeService,
   makeSaleWithBarber,
   makeAppointment,
+  makeCoupon,
 } from '../../helpers/default-values'
-import { PaymentMethod } from '@prisma/client'
+import { PaymentMethod, DiscountType } from '@prisma/client'
 
 
 describe('Update sale service', () => {
@@ -20,6 +22,7 @@ describe('Update sale service', () => {
   let serviceRepo: FakeServiceRepository
   let productRepo: FakeProductRepository
   let appointmentRepo: FakeAppointmentRepository
+  let couponRepo: FakeCouponRepository
   let service: UpdateSaleService
 
   beforeEach(() => {
@@ -28,11 +31,13 @@ describe('Update sale service', () => {
     serviceRepo = new FakeServiceRepository()
     productRepo = new FakeProductRepository()
     appointmentRepo = new FakeAppointmentRepository()
+    couponRepo = new FakeCouponRepository()
     service = new UpdateSaleService(
       repo,
       serviceRepo,
       productRepo,
       appointmentRepo,
+      couponRepo,
     )
   })
 
@@ -70,6 +75,39 @@ describe('Update sale service', () => {
     expect(res.sale.items).toHaveLength(1)
     expect(res.sale.total).toBe(200)
     expect(repo.sales[0].items).toHaveLength(1)
+  })
+
+  it('adds item with coupon', async () => {
+    const svc = makeService('svc-c', 100)
+    const coupon = makeCoupon('c1', 'OFF10', 10, DiscountType.VALUE)
+    serviceRepo.services.push(svc)
+    couponRepo.coupons.push(coupon)
+
+    const res = await service.execute({
+      id: 'sale-up-1',
+      items: [{ serviceId: svc.id, quantity: 1, couponCode: coupon.code }],
+    })
+
+    expect(res.sale.total).toBe(190)
+    expect(res.sale.items[0].discount).toBe(10)
+    expect(couponRepo.coupons[0].quantity).toBe(4)
+  })
+
+  it('applies general coupon', async () => {
+    const svc = makeService('svc-g', 100)
+    const coupon = makeCoupon('c2', 'G10', 10, DiscountType.VALUE)
+    serviceRepo.services.push(svc)
+    couponRepo.coupons.push(coupon)
+
+    const res = await service.execute({
+      id: 'sale-up-1',
+      items: [{ serviceId: svc.id, quantity: 1 }],
+      couponCode: coupon.code,
+    })
+
+    expect(res.sale.total).toBe(190)
+    expect(res.sale.items[0].discount).toBe(10)
+    expect(couponRepo.coupons[0].quantity).toBe(4)
   })
 
   it('adds appointment sale item', async () => {
@@ -121,7 +159,13 @@ describe('Update sale service', () => {
   it('removes sale items', async () => {
     const withItem = makeSaleWithBarber()
     repo.sales = [withItem]
-    service = new UpdateSaleService(repo, serviceRepo, productRepo, appointmentRepo)
+    service = new UpdateSaleService(
+      repo,
+      serviceRepo,
+      productRepo,
+      appointmentRepo,
+      couponRepo,
+    )
 
     const res = await service.execute({
       id: 'sale-1',

@@ -55,6 +55,7 @@ export interface UpdateSaleRequest {
   paymentStatus?: PaymentStatus
   items?: CreateSaleItem[]
   removeItemIds?: string[]
+  couponCode?: string
 }
 
 export interface CreateSaleResponse {

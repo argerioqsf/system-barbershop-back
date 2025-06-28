@@ -251,6 +251,21 @@ export class InMemorySaleRepository implements SaleRepository {
     if (data.total !== undefined) {
       sale.total = data.total as number
     }
+    if (data.coupon && 'connect' in data.coupon) {
+      const cid = (data.coupon as { connect: { id: string } }).connect.id
+      sale.couponId = cid
+      sale.coupon = {
+        id: cid,
+        code: '',
+        description: null,
+        discount: 0,
+        discountType: DiscountType.VALUE,
+        imageUrl: null,
+        quantity: 0,
+        unitId: 'unit-1',
+        createdAt: new Date(),
+      }
+    }
     if (data.items) {
       const itemsData = data.items as {
         create?: Prisma.SaleItemCreateWithoutSaleInput[]

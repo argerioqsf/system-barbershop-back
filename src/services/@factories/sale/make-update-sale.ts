@@ -2,6 +2,7 @@ import { PrismaSaleRepository } from '@/repositories/prisma/prisma-sale-reposito
 import { PrismaServiceRepository } from '@/repositories/prisma/prisma-service-repository'
 import { PrismaProductRepository } from '@/repositories/prisma/prisma-product-repository'
 import { PrismaAppointmentRepository } from '@/repositories/prisma/prisma-appointment-repository'
+import { PrismaCouponRepository } from '@/repositories/prisma/prisma-coupon-repository'
 import { UpdateSaleService } from '@/services/sale/update-sale'
 
 export function makeUpdateSale() {
@@ -9,10 +10,12 @@ export function makeUpdateSale() {
   const serviceRepository = new PrismaServiceRepository()
   const productRepository = new PrismaProductRepository()
   const appointmentRepository = new PrismaAppointmentRepository()
+  const couponRepository = new PrismaCouponRepository()
   return new UpdateSaleService(
     repository,
     serviceRepository,
     productRepository,
     appointmentRepository,
+    couponRepository,
   )
 }
