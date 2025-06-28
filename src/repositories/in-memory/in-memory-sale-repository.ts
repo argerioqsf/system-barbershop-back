@@ -248,6 +248,59 @@ export class InMemorySaleRepository implements SaleRepository {
         finalAmount: null,
       }
     }
+    if (data.total !== undefined) {
+      sale.total = data.total as number
+    }
+    if (data.coupon && 'connect' in data.coupon) {
+      const cid = (data.coupon as { connect: { id: string } }).connect.id
+      sale.couponId = cid
+      sale.coupon = {
+        id: cid,
+        code: '',
+        description: null,
+        discount: 0,
+        discountType: DiscountType.VALUE,
+        imageUrl: null,
+        quantity: 0,
+        unitId: 'unit-1',
+        createdAt: new Date(),
+      }
+    }
+    if (data.items) {
+      const itemsData = data.items as {
+        create?: Prisma.SaleItemCreateWithoutSaleInput[]
+        deleteMany?: { id: string }[]
+      }
+      if (itemsData.deleteMany) {
+        for (const del of itemsData.deleteMany) {
+          sale.items = sale.items.filter((i) => i.id !== del.id)
+        }
+      }
+      if (itemsData.create) {
+        for (const it of itemsData.create) {
+          sale.items.push({
+            id: randomUUID(),
+            saleId: sale.id,
+            serviceId: (it.service as any)?.connect?.id ?? null,
+            productId: (it.product as any)?.connect?.id ?? null,
+            appointmentId: (it.appointment as any)?.connect?.id ?? null,
+            quantity: it.quantity as number,
+            barberId: (it.barber as any)?.connect?.id ?? null,
+            couponId: (it.coupon as any)?.connect?.id ?? null,
+            price: it.price as number,
+            discount: (it.discount as number | null) ?? null,
+            discountType: (it.discountType as any) ?? null,
+            porcentagemBarbeiro:
+              (it.porcentagemBarbeiro as number | null) ?? null,
+            service: null,
+            product: null,
+            barber: null,
+            coupon: null,
+            appointment: null,
+          })
+        }
+      }
+    }
     sale.transactions = sale.transactions ?? []
     return sale
   }
