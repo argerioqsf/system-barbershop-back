@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "darwin-arm64", "linux-arm64-openssl-3.0.x"]
 }
 
@@ -102,6 +102,13 @@ enum AppointmentStatus {
   NO_SHOW
 }
 
+enum LoanStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  DEDUCTED
+}
+
 model Role {
   id          String       @id @default(uuid())
   name        RoleName
@@ -114,36 +121,37 @@ model Role {
 }
 
 model Permission {
-  id       String              @id @default(uuid())
-  name     PermissionName      @unique
+  id       String             @id @default(uuid())
+  name     PermissionName     @unique
   category PermissionCategory
-  roles    Role[]              @relation("RolePermissions")
-  profiles  Profile[]            @relation("ProfilePermissions")
+  roles    Role[]             @relation("RolePermissions")
+  profiles Profile[]          @relation("ProfilePermissions")
 
   @@map("permissions")
 }
 
 model User {
-  id                   String                @id @default(uuid())
-  name                 String
-  email                String                @unique
-  password             String
-  active               Boolean               @default(false)
-  organizationId       String
-  unitId               String
-  profile              Profile?
-  appointments         Appointment[]         @relation("ClientAppointments")
-  barberAppointments   Appointment[]         @relation("BarberAppointments")
-  sales                Sale[]
-  clientSales          Sale[]                @relation("SaleClient")
-  saleItems            SaleItem[]
-  transactions         Transaction[]
-  affectedTransactions Transaction[]         @relation("AffectedUser")
-  sessions             CashRegisterSession[]
-  passwordResetTokens  PasswordResetToken[]
-  versionToken         Int      @default(1)
+  id                     String                @id @default(uuid())
+  name                   String
+  email                  String                @unique
+  password               String
+  active                 Boolean               @default(false)
+  organizationId         String
+  unitId                 String
+  profile                Profile?
+  appointments           Appointment[]         @relation("ClientAppointments")
+  barberAppointments     Appointment[]         @relation("BarberAppointments")
+  sales                  Sale[]
+  clientSales            Sale[]                @relation("SaleClient")
+  saleItems              SaleItem[]
+  transactions           Transaction[]
+  affectedTransactions   Transaction[]         @relation("AffectedUser")
+  sessions               CashRegisterSession[]
+  loanRequests           LoanRequest[]
+  passwordResetTokens    PasswordResetToken[]
+  versionToken           Int                   @default(1)
   versionTokenInvalidate Int?
-  createdAt            DateTime              @default(now())
+  createdAt              DateTime              @default(now())
 
   organization Organization @relation(fields: [organizationId], references: [id])
   unit         Unit         @relation(fields: [unitId], references: [id])
@@ -152,22 +160,22 @@ model User {
 }
 
 model Profile {
-  id                   String   @id @default(uuid())
+  id                   String               @id @default(uuid())
   phone                String
   cpf                  String
   genre                String
   birthday             String
   pix                  String
-  permissions          Permission[] @relation("ProfilePermissions")
+  permissions          Permission[]         @relation("ProfilePermissions")
   roleId               String
-  role                 Role @relation(fields: [roleId], references: [id])
-  commissionPercentage Float    @default(0)
-  totalBalance         Float    @default(0)
+  role                 Role                 @relation(fields: [roleId], references: [id])
+  commissionPercentage Float                @default(0)
+  totalBalance         Float                @default(0)
   barberServices       BarberService[]
   barberProducts       BarberProduct[]
-  userId               String   @unique
-  user                 User     @relation(fields: [userId], references: [id])
-  createdAt            DateTime @default(now())
+  userId               String               @unique
+  user                 User                 @relation(fields: [userId], references: [id])
+  createdAt            DateTime             @default(now())
   workHours            ProfileWorkHour[]
   blockedHours         ProfileBlockedHour[]
 
@@ -175,38 +183,38 @@ model Profile {
 }
 
 model Appointment {
-  id        String   @id @default(uuid())
-  clientId  String
-  barberId  String
-  unitId    String
-  date      DateTime
-  status    AppointmentStatus @default(SCHEDULED)
+  id              String            @id @default(uuid())
+  clientId        String
+  barberId        String
+  unitId          String
+  date            DateTime
+  status          AppointmentStatus @default(SCHEDULED)
   durationService Int?
-  observation String?
-  saleItem   SaleItem?
+  observation     String?
+  saleItem        SaleItem?
 
-  client  User    @relation("ClientAppointments", fields: [clientId], references: [id])
-  barber  User    @relation("BarberAppointments", fields: [barberId], references: [id])
+  client   User                 @relation("ClientAppointments", fields: [clientId], references: [id])
+  barber   User                 @relation("BarberAppointments", fields: [barberId], references: [id])
   services AppointmentService[]
-  unit    Unit    @relation(fields: [unitId], references: [id])
+  unit     Unit                 @relation(fields: [unitId], references: [id])
 
   @@map("appointments")
 }
 
 model Service {
-  id           String        @id @default(uuid())
-  name         String
-  description  String?
-  imageUrl     String?
-  cost         Float
-  price        Float
-  category     String?
-  defaultTime  Int?
+  id                   String               @id @default(uuid())
+  name                 String
+  description          String?
+  imageUrl             String?
+  cost                 Float
+  price                Float
+  category             String?
+  defaultTime          Int?
   commissionPercentage Float?
-  unitId       String
-  appointmentServices AppointmentService[]
-  saleItems    SaleItem[]
-  barberServices BarberService[]
+  unitId               String
+  appointmentServices  AppointmentService[]
+  saleItems            SaleItem[]
+  barberServices       BarberService[]
 
   unit Unit @relation(fields: [unitId], references: [id])
 
@@ -214,12 +222,12 @@ model Service {
 }
 
 model BarberService {
-  id        String            @id @default(uuid())
-  profileId String
-  serviceId String
-  time      Int?
+  id                   String             @id @default(uuid())
+  profileId            String
+  serviceId            String
+  time                 Int?
   commissionPercentage Float?
-  commissionType CommissionCalcType @default(PERCENTAGE_OF_ITEM)
+  commissionType       CommissionCalcType @default(PERCENTAGE_OF_ITEM)
 
   profile Profile @relation(fields: [profileId], references: [id])
   service Service @relation(fields: [serviceId], references: [id])
@@ -229,11 +237,11 @@ model BarberService {
 }
 
 model BarberProduct {
-  id        String            @id @default(uuid())
-  profileId String
-  productId String
+  id                   String             @id @default(uuid())
+  profileId            String
+  productId            String
   commissionPercentage Float?
-  commissionType CommissionCalcType @default(PERCENTAGE_OF_ITEM)
+  commissionType       CommissionCalcType @default(PERCENTAGE_OF_ITEM)
 
   profile Profile @relation(fields: [profileId], references: [id])
   product Product @relation(fields: [productId], references: [id])
@@ -243,9 +251,9 @@ model BarberProduct {
 }
 
 model AppointmentService {
-  id            String   @id @default(uuid())
-  appointmentId String
-  serviceId     String
+  id                   String @id @default(uuid())
+  appointmentId        String
+  serviceId            String
   commissionPercentage Float?
 
   appointment Appointment @relation(fields: [appointmentId], references: [id])
@@ -256,17 +264,17 @@ model AppointmentService {
 }
 
 model Product {
-  id          String     @id @default(uuid())
-  name        String
-  description String?
-  imageUrl    String?
-  quantity    Int        @default(0)
-  cost        Float
+  id                   String          @id @default(uuid())
+  name                 String
+  description          String?
+  imageUrl             String?
+  quantity             Int             @default(0)
+  cost                 Float
   commissionPercentage Float?
-  price       Float
-  unitId      String
-  saleItems   SaleItem[]
-  barberProducts BarberProduct[]
+  price                Float
+  unitId               String
+  saleItems            SaleItem[]
+  barberProducts       BarberProduct[]
 
   unit Unit @relation(fields: [unitId], references: [id])
 
@@ -282,12 +290,12 @@ model Transaction {
   type                  TransactionType
   description           String
   amount                Float
-  isLoan                Boolean       @default(false)
+  isLoan                Boolean         @default(false)
   receiptUrl            String?
   createdAt             DateTime        @default(now())
 
   saleId String?
-  sale   Sale?          @relation(fields: [saleId], references: [id])
+  sale   Sale?   @relation(fields: [saleId], references: [id])
 
   user         User                 @relation(fields: [userId], references: [id])
   affectedUser User?                @relation("AffectedUser", fields: [affectedUserId], references: [id])
@@ -328,19 +336,19 @@ model SaleItem {
   productId           String?
   quantity            Int           @default(1)
   barberId            String?
-  appointmentId       String? @unique
+  appointmentId       String?       @unique
   couponId            String?
   price               Float
   discount            Float?
   discountType        DiscountType?
   porcentagemBarbeiro Float?
 
-  sale    Sale     @relation(fields: [saleId], references: [id])
-  service Service? @relation(fields: [serviceId], references: [id])
-  product Product? @relation(fields: [productId], references: [id])
-  barber  User?    @relation(fields: [barberId], references: [id])
+  sale        Sale         @relation(fields: [saleId], references: [id])
+  service     Service?     @relation(fields: [serviceId], references: [id])
+  product     Product?     @relation(fields: [productId], references: [id])
+  barber      User?        @relation(fields: [barberId], references: [id])
   appointment Appointment? @relation(fields: [appointmentId], references: [id])
-  coupon  Coupon?  @relation(fields: [couponId], references: [id])
+  coupon      Coupon?      @relation(fields: [couponId], references: [id])
 
   @@map("sale_items")
 }
@@ -420,7 +428,8 @@ model Unit {
   sessions       CashRegisterSession[]
   users          User[]
   roles          Role[]
-  openingHours       UnitOpeningHour[]
+  openingHours   UnitOpeningHour[]
+  loanRequests   LoanRequest[]
 
   organization Organization @relation(fields: [organizationId], references: [id])
   Coupon       Coupon[]
@@ -428,9 +437,8 @@ model Unit {
   @@map("units")
 }
 
-
 model UnitOpeningHour {
-  id        String   @id @default(uuid())
+  id        String @id @default(uuid())
   unitId    String
   weekDay   Int
   startHour String
@@ -442,7 +450,7 @@ model UnitOpeningHour {
 }
 
 model ProfileWorkHour {
-  id        String   @id @default(uuid())
+  id        String @id @default(uuid())
   profileId String
   weekDay   Int
   startHour String
@@ -462,4 +470,19 @@ model ProfileBlockedHour {
   profile Profile @relation(fields: [profileId], references: [id])
 
   @@map("profile_blocked_hours")
+}
+
+model LoanRequest {
+  id        String     @id @default(uuid())
+  userId    String
+  unitId    String
+  amount    Float
+  status    LoanStatus @default(PENDING)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+  unit Unit @relation(fields: [unitId], references: [id])
+
+  @@map("loan_requests")
 }

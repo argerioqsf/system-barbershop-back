@@ -103,3 +103,4 @@ export { InMemoryProfileWorkHourRepository as FakeProfileWorkHourRepository } fr
 export { InMemoryProfileBlockedHourRepository as FakeProfileBlockedHourRepository } from '../../src/repositories/in-memory/in-memory-profile-blocked-hour-repository'
 export { InMemoryAppointmentServiceRepository as FakeAppointmentServiceRepository } from '../../src/repositories/in-memory/in-memory-appointment-service-repository'
 export { InMemorySaleItemRepository as FakeSaleItemRepository } from '../../src/repositories/in-memory/in-memory-sale-item-repository'
+export { InMemoryLoanRequestRepository as FakeLoanRequestRepository } from '../../src/repositories/in-memory/in-memory-loan-request-repository'
