@@ -66,7 +66,7 @@ describe('Update sale service', () => {
     repo = new FakeSaleRepository()
     repo.sales.push(makeSale('sale-up-1'))
     repo.sales[0].userId = 'cashier'
-    ;(repo.sales[0] as any).user.id = 'cashier'
+    repo.sales[0].user.id = 'cashier'
     serviceRepo = new FakeServiceRepository()
     productRepo = new FakeProductRepository()
     appointmentRepo = new FakeAppointmentRepository()

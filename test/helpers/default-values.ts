@@ -18,6 +18,7 @@ import {
   ProfileWorkHour,
   ProfileBlockedHour,
   RoleName,
+  AppointmentStatus,
 } from '@prisma/client'
 import { TransactionFull } from '../../src/repositories/prisma/prisma-transaction-repository'
 import { DetailedSale } from '../../src/repositories/sale-repository'
@@ -649,7 +650,7 @@ export function makeAppointment(
   options: {
     date?: Date
     durationService?: number | null
-    status?: string
+    status?: AppointmentStatus
   } = {},
 ) {
   return {
@@ -658,7 +659,7 @@ export function makeAppointment(
     barberId: barberUser.id,
     unitId: defaultUnit.id,
     date: options.date ?? new Date(),
-    status: (options.status as any) ?? 'SCHEDULED',
+    status: options.status ?? 'SCHEDULED',
     durationService: options.durationService ?? null,
     observation: null,
     services: [
