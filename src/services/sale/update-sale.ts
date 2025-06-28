@@ -6,9 +6,7 @@ import { CouponRepository } from '@/repositories/coupon-repository'
 import { UpdateSaleRequest, CreateSaleItem } from './types'
 import { Prisma, PaymentStatus, DiscountType } from '@prisma/client'
 import { CannotEditPaidSaleError } from '../@errors/sale/cannot-edit-paid-sale-error'
-import { ItemPriceGreaterError } from '../@errors/sale/Item-price-greater-error'
-import { CouponNotFoundError } from '../@errors/coupon/coupon-not-found-error'
-import { CouponExhaustedError } from '../@errors/coupon/coupon-exhausted-error'
+import { applyCouponToSale, applyCouponToItems } from './utils/coupon'
 
 interface UpdateSaleResponse {
   sale: DetailedSale
@@ -69,41 +67,27 @@ export class UpdateSaleService {
     }
 
     let price = basePrice
-    let discount: number | null = null
+    let discount = 0
     let discountType: DiscountType | null = null
-    let couponRel: { connect: { id: string } } | undefined
     let ownDiscount = false
 
-    if (typeof item.price === 'number') {
-      price = item.price
-      if (basePrice - price > 0) {
-        discount = basePrice - price
-        discountType = DiscountType.VALUE
-        ownDiscount = true
-      } else if (basePrice - price < 0) {
-        throw new ItemPriceGreaterError()
-      }
-    } else if (item.couponCode) {
-      const coupon = await this.couponRepository.findByCode(item.couponCode)
-      if (!coupon) throw new CouponNotFoundError()
-      if (coupon.quantity <= 0) throw new CouponExhaustedError()
-      const reduction =
-        coupon.discountType === 'PERCENTAGE'
-          ? (price * coupon.discount) / 100
-          : coupon.discount
-      price = Math.max(price - reduction, 0)
-      discount =
-        coupon.discountType === 'PERCENTAGE' ? coupon.discount : reduction
-      discountType = coupon.discountType
-      couponRel = { connect: { id: coupon.id } }
-      ownDiscount = true
-      await this.couponRepository.update(coupon.id, {
-        quantity: { decrement: 1 },
-      })
-    }
+    const couponResult = await applyCouponToSale(
+      item,
+      price,
+      basePrice,
+      discount,
+      discountType,
+      ownDiscount,
+      this.couponRepository,
+    )
+    price = couponResult.price
+    discount = couponResult.discount
+    discountType = couponResult.discountType
+    const couponRel = couponResult.couponRel
+    ownDiscount = couponResult.ownDiscount
 
     data.price = price
-    data.discount = discount
+    data.discount = discountType ? discount : null
     data.discountType = discountType
     if (couponRel) data.coupon = couponRel
 
@@ -150,29 +134,11 @@ export class UpdateSaleService {
     let couponConnect: { connect: { id: string } } | undefined
 
     if (couponCode) {
-      const affectedTotal = tempItems
-        .filter((i) => !i.ownDiscount)
-        .reduce((acc, i) => acc + i.price, 0)
-      const coupon = await this.couponRepository.findByCode(couponCode)
-      if (!coupon) throw new CouponNotFoundError()
-      if (coupon.quantity <= 0) throw new CouponExhaustedError()
-      for (const temp of tempItems) {
-        if (temp.ownDiscount) continue
-        if (coupon.discountType === 'PERCENTAGE') {
-          const reduction = (temp.price * coupon.discount) / 100
-          temp.price = Math.max(temp.price - reduction, 0)
-          ;(temp.data.discount as number | null) = coupon.discount
-        } else if (affectedTotal > 0) {
-          const part = (temp.price / affectedTotal) * coupon.discount
-          temp.price = Math.max(temp.price - part, 0)
-          ;(temp.data.discount as number | null) = part
-        }
-        ;(temp.data.discountType as DiscountType | null) = coupon.discountType
-      }
-      couponConnect = { connect: { id: coupon.id } }
-      await this.couponRepository.update(coupon.id, {
-        quantity: { decrement: 1 },
-      })
+      couponConnect = await applyCouponToItems(
+        tempItems,
+        couponCode,
+        this.couponRepository,
+      )
     }
 
     const total =

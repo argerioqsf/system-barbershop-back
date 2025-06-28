@@ -16,15 +16,12 @@ import { OrganizationRepository } from '@/repositories/organization-repository'
 import { ProfilesRepository } from '@/repositories/profiles-repository'
 import { ServiceNotFromUserUnitError } from '../@errors/service/service-not-from-user-unit-error'
 import { BarberNotFromUserUnitError } from '../@errors/barber/barber-not-from-user-unit-error'
-import { CouponNotFromUserUnitError } from '../@errors/coupon/coupon-not-from-user-unit-error'
 import { UnitRepository } from '@/repositories/unit-repository'
 import { distributeProfits } from './utils/profit-distribution'
 import { ItemNeedsServiceOrProductOrAppointmentError } from '../@errors/sale/item-needs-service-or-product-error'
 import { ServiceNotFoundError } from '../@errors/service/service-not-found-error'
 import { ProductNotFoundError } from '../@errors/product/product-not-found-error'
 import { InsufficientStockError } from '../@errors/product/insufficient-stock-error'
-import { CouponNotFoundError } from '../@errors/coupon/coupon-not-found-error'
-import { CouponExhaustedError } from '../@errors/coupon/coupon-exhausted-error'
 import { CashRegisterClosedError } from '../@errors/cash-register/cash-register-closed-error'
 import {
   CreateSaleItem,
@@ -35,6 +32,7 @@ import {
   TempItems,
   SaleItemTemp,
 } from './types'
+import { applyCouponToSale, applyCouponToItems } from './utils/coupon'
 import { BarberNotFoundError } from '../@errors/barber/barber-not-found-error'
 import { ProfileNotFoundError } from '../@errors/profile/profile-not-found-error'
 import { assertPermission, hasPermission } from '@/utils/permissions'
@@ -44,7 +42,6 @@ import {
 } from '@/repositories/appointment-repository'
 import { AppointmentAlreadyLinkedError } from '../@errors/appointment/appointment-already-linked-error'
 import { AppointmentNotFoundError } from '../@errors/appointment/appointment-not-found-error'
-import { ItemPriceGreaterError } from '../@errors/sale/Item-price-greater-error'
 import { InvalidAppointmentStatusError } from '../@errors/appointment/invalid-appointment-status-error'
 import { BarberServiceRepository } from '@/repositories/barber-service-repository'
 import { BarberProductRepository } from '@/repositories/barber-product-repository'
@@ -177,13 +174,14 @@ export class CreateSaleService {
       }
     }
 
-    const resultLogicSalesCoupons = await this.applyCouponToSale(
+    const resultLogicSalesCoupons = await applyCouponToSale(
       item,
       price,
       basePrice,
       discount,
       discountType,
       ownDiscount,
+      this.couponRepository,
       userUnitId,
       couponRel,
     )
@@ -197,90 +195,6 @@ export class CreateSaleService {
         coupon: resultLogicSalesCoupons.couponRel,
       },
     }
-  }
-
-  private async applyCouponToSale(
-    item: CreateSaleItem,
-    price: number,
-    basePrice: number,
-    discount: number,
-    discountType: DiscountType | null,
-    ownDiscount: boolean,
-    userUnitId: string,
-    couponRel: { connect: { id: string } } | undefined,
-  ) {
-    if (typeof item.price === 'number') {
-      price = item.price
-      if (basePrice - price > 0) {
-        discount = basePrice - price
-        discountType = DiscountType.VALUE
-        ownDiscount = true
-      } else {
-        throw new ItemPriceGreaterError()
-      }
-    } else if (item.couponCode) {
-      const coupon = await this.couponRepository.findByCode(item.couponCode)
-      if (!coupon) throw new CouponNotFoundError()
-      if (coupon.unitId !== userUnitId) {
-        throw new CouponNotFromUserUnitError()
-      }
-      if (coupon.quantity <= 0) throw new CouponExhaustedError()
-      const discountAmount =
-        coupon.discountType === 'PERCENTAGE'
-          ? (price * coupon.discount) / 100
-          : coupon.discount
-      price = Math.max(price - discountAmount, 0)
-      discount = coupon.discount
-      discountType = coupon.discountType
-      couponRel = { connect: { id: coupon.id } }
-      await this.couponRepository.update(coupon.id, {
-        quantity: { decrement: 1 },
-      })
-      ownDiscount = true
-    }
-    return {
-      price,
-      discount,
-      discountType,
-      ownDiscount,
-      couponRel,
-    }
-  }
-
-  private async applyCouponToItems(
-    items: TempItems[],
-    couponCode: string,
-    userUnitId: string,
-  ): Promise<ConnectRelation | undefined> {
-    const affectedTotal = items
-      .filter((i) => !i.ownDiscount)
-      .reduce((acc, i) => acc + i.price, 0)
-    const coupon = await this.couponRepository.findByCode(couponCode)
-    if (!coupon) throw new CouponNotFoundError()
-    if (coupon.unitId !== userUnitId) {
-      throw new CouponNotFromUserUnitError()
-    }
-    if (coupon.quantity <= 0) throw new CouponExhaustedError()
-
-    for (const temp of items) {
-      if (temp.ownDiscount) continue
-      if (coupon.discountType === 'PERCENTAGE') {
-        const reduction = (temp.price * coupon.discount) / 100
-        temp.price = Math.max(temp.price - reduction, 0)
-        temp.discount = coupon.discount
-      } else if (affectedTotal > 0) {
-        const part = (temp.price / affectedTotal) * coupon.discount
-        temp.price = Math.max(temp.price - part, 0)
-        temp.discount = part
-      }
-      temp.discountType = coupon.discountType
-    }
-
-    await this.couponRepository.update(coupon.id, {
-      quantity: { decrement: 1 },
-    })
-
-    return { connect: { id: coupon.id } }
   }
 
   private mapToSaleItems(tempItems: TempItems[]): SaleItemTemp[] {
@@ -345,9 +259,10 @@ export class CreateSaleService {
 
     let couponConnect: ConnectRelation | undefined
     if (couponCode) {
-      couponConnect = await this.applyCouponToItems(
+      couponConnect = await applyCouponToItems(
         tempItems,
         couponCode,
+        this.couponRepository,
         user?.unitId as string,
       )
     }
