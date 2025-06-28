@@ -8,6 +8,11 @@ import { PaymentStatus } from '@prisma/client'
 import { CannotEditPaidSaleError } from '../@errors/sale/cannot-edit-paid-sale-error'
 import { applyCouponToItems } from './utils/coupon'
 import { buildItemData } from './utils/item'
+import {
+  mapToSaleItems,
+  calculateTotal,
+  updateProductsStock,
+} from './utils/sale'
 
 interface UpdateSaleResponse {
   sale: DetailedSale
@@ -38,6 +43,8 @@ export class UpdateSaleService {
     }
 
     const tempItems: TempItems[] = []
+    const productsToUpdate: { id: string; quantity: number }[] = []
+    const productsToRestore: { id: string; quantity: number }[] = []
     const appointmentsToLink: string[] = []
     if (items) {
       for (const it of items) {
@@ -48,6 +55,7 @@ export class UpdateSaleService {
           appointmentRepository: this.appointmentRepository,
           couponRepository: this.couponRepository,
           enforceSingleType: false,
+          productsToUpdate,
         })
         tempItems.push(built)
         if (it.appointmentId) appointmentsToLink.push(it.appointmentId)
@@ -58,7 +66,15 @@ export class UpdateSaleService {
     if (removeItemIds) {
       for (const idToRemove of removeItemIds) {
         const found = current.items.find((i) => i.id === idToRemove)
-        if (found) subtractTotal += found.price
+        if (found) {
+          subtractTotal += found.price
+          if (found.productId) {
+            productsToRestore.push({
+              id: found.productId,
+              quantity: found.quantity,
+            })
+          }
+        }
       }
     }
 
@@ -72,10 +88,9 @@ export class UpdateSaleService {
       )
     }
 
-    const total =
-      current.total +
-      tempItems.reduce((acc, t) => acc + t.price, 0) -
-      subtractTotal
+    const total = current.total + calculateTotal(tempItems) - subtractTotal
+
+    const saleItems = mapToSaleItems(tempItems)
 
     const sale = await this.repository.update(id, {
       observation,
@@ -83,12 +98,7 @@ export class UpdateSaleService {
       paymentStatus,
       total,
       items: {
-        create: tempItems.map((t) => ({
-          ...t.data,
-          price: t.price,
-          discount: t.discount,
-          discountType: t.discountType,
-        })),
+        create: saleItems,
         deleteMany: removeItemIds?.map((rid) => ({ id: rid })),
       },
       coupon: couponConnect,
@@ -114,6 +124,13 @@ export class UpdateSaleService {
         })
       }
     }
+
+    await updateProductsStock(this.productRepository, productsToUpdate)
+    await updateProductsStock(
+      this.productRepository,
+      productsToRestore,
+      'increment',
+    )
 
     return { sale }
   }

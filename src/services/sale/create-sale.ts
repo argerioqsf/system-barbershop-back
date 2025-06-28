@@ -16,10 +16,14 @@ import {
   CreateSaleResponse,
   ConnectRelation,
   TempItems,
-  SaleItemTemp,
 } from './types'
 import { applyCouponToItems } from './utils/coupon'
 import { buildItemData } from './utils/item'
+import {
+  mapToSaleItems,
+  calculateTotal,
+  updateProductsStock,
+} from './utils/sale'
 import { assertPermission } from '@/utils/permissions'
 import { AppointmentRepository } from '@/repositories/appointment-repository'
 import { BarberServiceRepository } from '@/repositories/barber-service-repository'
@@ -45,34 +49,6 @@ export class CreateSaleService {
     private appointmentServiceRepository: AppointmentServiceRepository,
     private saleItemRepository: SaleItemRepository,
   ) {}
-
-  private mapToSaleItems(tempItems: TempItems[]): SaleItemTemp[] {
-    return tempItems.map((temp) => ({
-      coupon: temp.data.coupon,
-      quantity: temp.data.quantity,
-      service: temp.data.service,
-      product: temp.data.product,
-      barber: temp.data.barber,
-      price: temp.price,
-      discount: temp.discount,
-      discountType: temp.discountType,
-      appointment: temp.data.appointment,
-    }))
-  }
-
-  private calculateTotal(tempItems: TempItems[]): number {
-    return tempItems.reduce((acc, i) => acc + i.price, 0)
-  }
-
-  private async updateProductsStock(
-    products: { id: string; quantity: number }[],
-  ): Promise<void> {
-    for (const prod of products) {
-      await this.productRepository.update(prod.id, {
-        quantity: { decrement: prod.quantity },
-      })
-    }
-  }
 
   async execute({
     userId,
@@ -122,8 +98,8 @@ export class CreateSaleService {
       )
     }
 
-    const saleItems = this.mapToSaleItems(tempItems)
-    const calculatedTotal = this.calculateTotal(tempItems)
+    const saleItems = mapToSaleItems(tempItems)
+    const calculatedTotal = calculateTotal(tempItems)
 
     const sale = await this.saleRepository.create({
       total: calculatedTotal,
@@ -178,7 +154,7 @@ export class CreateSaleService {
       }
     }
 
-    await this.updateProductsStock(productsToUpdate)
+    await updateProductsStock(this.productRepository, productsToUpdate)
 
     return { sale }
   }
