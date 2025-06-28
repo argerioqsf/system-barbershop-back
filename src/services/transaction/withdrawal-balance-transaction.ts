@@ -58,7 +58,6 @@ export class WithdrawalBalanceTransactionService {
 
     const incrementProfile = new IncrementBalanceProfileService(
       this.profileRepository,
-      this.repository,
     )
     const incrementUnit = new IncrementBalanceUnitService(
       this.unitRepository,

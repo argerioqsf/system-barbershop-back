@@ -13,7 +13,7 @@ import { InsufficientBalanceError } from '@/services/@errors/transaction/insuffi
 interface PayBalanceTransactionRequest {
   userId: string
   affectedUserId: string
-  description: string
+  description?: string
   amount: number
   receiptUrl?: string | null
 }
@@ -57,7 +57,6 @@ export class PayBalanceTransactionService {
 
     const decrementProfile = new IncrementBalanceProfileService(
       this.profileRepository,
-      this.repository,
     )
 
     const transactions: Transaction[] = []
@@ -66,6 +65,9 @@ export class PayBalanceTransactionService {
     const transactionProfile = await decrementProfile.execute(
       affectedUser.id,
       increment,
+      undefined,
+      undefined,
+      data.description,
     )
     transactions.push(transactionProfile.transaction)
 

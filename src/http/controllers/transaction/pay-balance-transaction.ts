@@ -9,7 +9,7 @@ export const PayBalanceTransactionController = async (
   reply: FastifyReply,
 ) => {
   const bodySchema = z.object({
-    description: z.string(),
+    description: z.string().optional(),
     amount: z.coerce.number(),
     affectedUserId: z.string(),
   })

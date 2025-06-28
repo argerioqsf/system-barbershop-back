@@ -1,4 +1,3 @@
-import { TransactionRepository } from '@/repositories/transaction-repository'
 import { ProfilesRepository } from '@/repositories/profiles-repository'
 import { Profile, Transaction, TransactionType, User } from '@prisma/client'
 import { makeCreateTransaction } from '../@factories/transaction/make-create-transaction'
@@ -9,16 +8,14 @@ interface IncrementBalanceProfileResponse {
 }
 
 export class IncrementBalanceProfileService {
-  constructor(
-    private repository: ProfilesRepository,
-    private transactionRepository: TransactionRepository,
-  ) {}
+  constructor(private repository: ProfilesRepository) {}
 
   async execute(
     userId: string,
     amount: number,
     saleId?: string,
     isLoan?: boolean,
+    description?: string,
   ): Promise<IncrementBalanceProfileResponse> {
     const createTransactionService = makeCreateTransaction()
     try {
@@ -27,7 +24,7 @@ export class IncrementBalanceProfileService {
       const transaction = await createTransactionService.execute({
         type:
           amount < 0 ? TransactionType.WITHDRAWAL : TransactionType.ADDITION,
-        description: 'Increment Balance Profile',
+        description: description ?? 'Increment Balance Profile',
         amount: isLoan ? amount : Math.abs(amount),
         userId,
         receiptUrl: undefined,
