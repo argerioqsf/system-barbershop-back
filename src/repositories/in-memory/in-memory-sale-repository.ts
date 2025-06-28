@@ -302,12 +302,89 @@ export class InMemorySaleRepository implements SaleRepository {
             discountType: it.discountType ?? null,
             porcentagemBarbeiro:
               (it.porcentagemBarbeiro as number | null) ?? null,
-            service: null,
-            product: null,
-            barber: null,
-            coupon: null,
-            appointment: null,
-          })
+            appointment: it.appointment
+              ? {
+                  id: it.appointment!.connect!.id,
+                  clientId: '',
+                  barberId: '',
+                  unitId: '',
+                  date: new Date(),
+                  status: 'SCHEDULED',
+                  durationService: null,
+                  observation: null,
+                  discount: 0,
+                  value: null,
+                  services: [],
+                }
+              : null,
+            service: it.service
+              ? {
+                  id: it.service!.connect!.id,
+                  name: '',
+                  description: null,
+                  imageUrl: null,
+                  cost: 0,
+                  price: 0,
+                  category: null,
+                  defaultTime: null,
+                  commissionPercentage: null,
+                  unitId: 'unit-1',
+                }
+              : null,
+            product: it.product
+              ? {
+                  id: it.product!.connect!.id,
+                  name: '',
+                  description: null,
+                  imageUrl: null,
+                  quantity: 0,
+                  cost: 0,
+                  commissionPercentage: null,
+                  price: 0,
+                  unitId: 'unit-1',
+                }
+              : null,
+            barber: it.barber
+              ? {
+                  id: it.barber!.connect!.id,
+                  name: '',
+                  email: '',
+                  password: '',
+                  active: true,
+                  organizationId: 'org-1',
+                  unitId: 'unit-1',
+                  versionToken: 1,
+                  versionTokenInvalidate: null,
+                  createdAt: new Date(),
+                  profile: {
+                    id: 'profile-' + it.barber!.connect!.id,
+                    phone: '',
+                    cpf: '',
+                    genre: '',
+                    birthday: '',
+                    pix: '',
+                    roleId: randomUUID(),
+                    commissionPercentage: it.porcentagemBarbeiro ?? 0,
+                    totalBalance: 0,
+                    userId: it.barber!.connect!.id,
+                  createdAt: new Date(),
+                  },
+                }
+              : null,
+            coupon: it.coupon
+              ? {
+                  id: it.coupon!.connect!.id,
+                  code: '',
+                  description: null,
+                  discount: 0,
+                  discountType: DiscountType.VALUE,
+                  imageUrl: null,
+                  quantity: 0,
+                  unitId: 'unit-1',
+                  createdAt: new Date(),
+                }
+              : null,
+          } as any)
         }
       }
     }

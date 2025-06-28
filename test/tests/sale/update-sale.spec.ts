@@ -18,6 +18,17 @@ import {
   FakeSaleItemRepository,
 } from '../../helpers/fake-repositories'
 import { CreateTransactionService } from '../../../src/services/transaction/create-transaction'
+
+let transactionRepo: FakeTransactionRepository
+let barberRepo: FakeBarberUsersRepository
+let cashRepo: FakeCashRegisterRepository
+
+vi.mock('../../../src/services/@factories/transaction/make-create-transaction', () => {
+  return {
+    makeCreateTransaction: () =>
+      new CreateTransactionService(transactionRepo, barberRepo, cashRepo),
+  }
+})
 import {
   makeSale,
   makeService,
@@ -40,11 +51,8 @@ describe('Update sale service', () => {
   let productRepo: FakeProductRepository
   let appointmentRepo: FakeAppointmentRepository
   let couponRepo: FakeCouponRepository
-  let barberRepo: FakeBarberUsersRepository
   let barberServiceRepo: FakeBarberServiceRelRepository
   let barberProductRepo: FakeBarberProductRepository
-  let cashRepo: FakeCashRegisterRepository
-  let transactionRepo: FakeTransactionRepository
   let organizationRepo: FakeOrganizationRepository
   let profilesRepo: FakeProfilesRepository
   let unitRepo: FakeUnitRepository
@@ -72,13 +80,6 @@ let service: UpdateSaleService
     unitRepo = new FakeUnitRepository({ ...defaultUnit })
     appointmentServiceRepo = new FakeAppointmentServiceRepository(appointmentRepo)
     saleItemRepo = new FakeSaleItemRepository(repo)
-    vi.doMock(
-      '../../../src/services/@factories/transaction/make-create-transaction',
-      () => ({
-        makeCreateTransaction: () =>
-          new CreateTransactionService(transactionRepo, barberRepo, cashRepo),
-      }),
-    )
     barberRepo.users.push(
       { ...defaultUser, id: 'cashier', organizationId: defaultOrganization.id, unitId: defaultUnit.id, unit: { ...defaultUnit, organizationId: defaultOrganization.id } },
       barberUser,

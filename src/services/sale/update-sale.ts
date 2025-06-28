@@ -138,22 +138,13 @@ export class UpdateSaleService {
     })
 
     for (const item of sale.items) {
-      if (
-        item.appointmentId &&
-        appointmentsToLink.includes(item.appointmentId)
-      ) {
+      if (item.appointmentId) {
+        const paid = sale.paymentStatus === PaymentStatus.PAID
+        const newAppointment = appointmentsToLink.includes(item.appointmentId)
+
         await this.appointmentRepository.update(item.appointmentId, {
-          saleItem: { connect: { id: item.id } },
-          ...(sale.paymentStatus === PaymentStatus.PAID
-            ? { status: 'CONCLUDED' }
-            : {}),
-        })
-      } else if (
-        item.appointmentId &&
-        sale.paymentStatus === PaymentStatus.PAID
-      ) {
-        await this.appointmentRepository.update(item.appointmentId, {
-          status: 'CONCLUDED',
+          ...(newAppointment ? { saleItem: { connect: { id: item.id } } } : {}),
+          ...(paid ? { status: 'CONCLUDED' } : {}),
         })
       }
     }
