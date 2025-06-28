@@ -10,6 +10,8 @@ Este projeto usa Node.js 20 e TypeScript com Fastify e Prisma. Os testes são ex
 - Ao criar novas regras de negócio, isole a lógica em funções de nomes claros.
 - Reaproveite código agrupando lógicas semelhantes em funções reutilizáveis.
 - Dê nomes de variáveis que expliquem seu propósito e contexto.
+- Evite utilizar o tipo `any`. Mantenha tudo estritamente tipado e recorra ao
+  `any` apenas quando não houver alternativa viável.
 
 ## Testes
 - Antes de enviar código, rode `npm test` para garantir que todos os testes Vitest passam.
