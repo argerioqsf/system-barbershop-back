@@ -19,7 +19,7 @@ describe('Update sale service', () => {
   it('updates sale data', async () => {
     const res = await service.execute({
       id: 'sale-up-1',
-      data: { method: PaymentMethod.PIX },
+      method: PaymentMethod.PIX,
     })
     expect(res.sale.method).toBe(PaymentMethod.PIX)
     expect(repo.sales[0].method).toBe(PaymentMethod.PIX)
@@ -28,7 +28,8 @@ describe('Update sale service', () => {
   it('updates observation and payment status', async () => {
     const res = await service.execute({
       id: 'sale-up-1',
-      data: { observation: 'note', paymentStatus: 'PAID' },
+      observation: 'note',
+      paymentStatus: 'PAID',
     })
     expect(res.sale.observation).toBe('note')
     expect(res.sale.paymentStatus).toBe('PAID')

@@ -120,7 +120,7 @@ export const barberProfile: Profile & {
   barberServices: BarberService[]
   role: Role
 } = {
-  id: 'profile-barber',
+  id: 'profile-barber-1',
   phone: '',
   cpf: '',
   genre: '',
@@ -661,7 +661,15 @@ export function makeAppointment(
     status: (options.status as any) ?? 'SCHEDULED',
     durationService: options.durationService ?? null,
     observation: null,
-    services: [service],
+    services: [
+      {
+        id: `${id}-srv`,
+        appointmentId: id,
+        serviceId: service.id,
+        commissionPercentage: null,
+        service,
+      },
+    ],
     client: defaultClient,
     barber: barberUser,
     unit: { organizationId: defaultOrganization.id },
