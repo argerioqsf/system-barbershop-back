@@ -15,7 +15,7 @@ export class InMemoryAppointmentServiceRepository
       const service = appointment.services?.find((s) => s.id === id)
       if (service) {
         if (data.commissionPercentage !== undefined) {
-          ;(service as any).commissionPercentage = data.commissionPercentage as
+          service.commissionPercentage = data.commissionPercentage as
             | number
             | null
         }

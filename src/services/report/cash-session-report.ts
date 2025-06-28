@@ -84,7 +84,7 @@ export class CashSessionReportService {
         totalByService[name] = (totalByService[name] || 0) + (value as number)
       })
 
-      const barberPerc = sale.user.profile?.commissionPercentage ?? 100
+      const barberPerc = sale.user.profile?.commissionPercentage ?? 0
       const barberValue = totals.service * (barberPerc / 100)
       barberCommissions[sale.user.id] =
         (barberCommissions[sale.user.id] || 0) + barberValue
