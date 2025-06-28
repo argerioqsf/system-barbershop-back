@@ -888,6 +888,42 @@
       "headers": [
         {
           "name": "Authorization",
+      "value": "Bearer {{ token }}"
+      }
+      ]
+    },
+    {
+      "_id": "req_pay_balance_transaction",
+      "_type": "request",
+      "parentId": "fld_transactions",
+      "name": "Pay balance transaction",
+      "method": "POST",
+      "url": "{{ baseURL }}/pay/transactions",
+      "body": {
+        "mimeType": "multipart/form-data",
+        "params": [
+          {
+            "name": "description",
+            "value": ""
+          },
+          {
+            "name": "amount",
+            "value": "0"
+          },
+          {
+            "name": "affectedUserId",
+            "value": ""
+          },
+          {
+            "name": "receipt",
+            "value": "",
+            "type": "file"
+          }
+        ]
+      },
+      "headers": [
+        {
+          "name": "Authorization",
           "value": "Bearer {{ token }}"
         }
       ]

@@ -41,10 +41,7 @@ export async function distributeProfits(
     unitRepository,
     transactionRepository,
   )
-  const incrementProfile = new IncrementBalanceProfileService(
-    profileRepository,
-    transactionRepository,
-  )
+  const incrementProfile = new IncrementBalanceProfileService(profileRepository)
   type ValuesItemsTotals = {
     amount: number
     appointmentServiceId?: string
