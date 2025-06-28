@@ -374,7 +374,7 @@ export function makeSale(
   unitId = 'unit-1',
   organizationId = 'org-1',
   status: PaymentStatus = PaymentStatus.PENDING,
-  total = 100,
+  total = 0,
 ): DetailedSale & { unit: Unit } {
   return {
     ...defaultSale,

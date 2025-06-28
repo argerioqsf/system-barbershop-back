@@ -18,17 +18,6 @@ import {
   FakeSaleItemRepository,
 } from '../../helpers/fake-repositories'
 import { CreateTransactionService } from '../../../src/services/transaction/create-transaction'
-
-let transactionRepo: FakeTransactionRepository
-let barberRepo: FakeBarberUsersRepository
-let cashRepo: FakeCashRegisterRepository
-
-vi.mock('../../../src/services/@factories/transaction/make-create-transaction', () => {
-  return {
-    makeCreateTransaction: () =>
-      new CreateTransactionService(transactionRepo, barberRepo, cashRepo),
-  }
-})
 import {
   makeSale,
   makeService,
@@ -44,6 +33,19 @@ import {
 } from '../../helpers/default-values'
 import { PaymentMethod, DiscountType } from '@prisma/client'
 
+let transactionRepo: FakeTransactionRepository
+let barberRepo: FakeBarberUsersRepository
+let cashRepo: FakeCashRegisterRepository
+
+vi.mock(
+  '../../../src/services/@factories/transaction/make-create-transaction',
+  () => {
+    return {
+      makeCreateTransaction: () =>
+        new CreateTransactionService(transactionRepo, barberRepo, cashRepo),
+    }
+  },
+)
 
 describe('Update sale service', () => {
   let repo: FakeSaleRepository
@@ -57,9 +59,8 @@ describe('Update sale service', () => {
   let profilesRepo: FakeProfilesRepository
   let unitRepo: FakeUnitRepository
   let appointmentServiceRepo: FakeAppointmentServiceRepository
-let saleItemRepo: FakeSaleItemRepository
-let service: UpdateSaleService
-
+  let saleItemRepo: FakeSaleItemRepository
+  let service: UpdateSaleService
 
   beforeEach(() => {
     repo = new FakeSaleRepository()
@@ -75,13 +76,25 @@ let service: UpdateSaleService
     barberProductRepo = new FakeBarberProductRepository()
     cashRepo = new FakeCashRegisterRepository()
     transactionRepo = new FakeTransactionRepository()
-    organizationRepo = new FakeOrganizationRepository({ ...defaultOrganization })
-    profilesRepo = new FakeProfilesRepository([{ ...barberProfile, user: barberUser }])
+    organizationRepo = new FakeOrganizationRepository({
+      ...defaultOrganization,
+    })
+    profilesRepo = new FakeProfilesRepository([
+      { ...barberProfile, user: barberUser },
+    ])
     unitRepo = new FakeUnitRepository({ ...defaultUnit })
-    appointmentServiceRepo = new FakeAppointmentServiceRepository(appointmentRepo)
+    appointmentServiceRepo = new FakeAppointmentServiceRepository(
+      appointmentRepo,
+    )
     saleItemRepo = new FakeSaleItemRepository(repo)
     barberRepo.users.push(
-      { ...defaultUser, id: 'cashier', organizationId: defaultOrganization.id, unitId: defaultUnit.id, unit: { ...defaultUnit, organizationId: defaultOrganization.id } },
+      {
+        ...defaultUser,
+        id: 'cashier',
+        organizationId: defaultOrganization.id,
+        unitId: defaultUnit.id,
+        unit: { ...defaultUnit, organizationId: defaultOrganization.id },
+      },
       barberUser,
     )
     cashRepo.session = {
@@ -140,15 +153,16 @@ let service: UpdateSaleService
   it('adds new sale items', async () => {
     const svc = makeService('svc-1', 50)
     serviceRepo.services.push(svc)
+    repo.sales.push({ ...makeSale('sale-up-5'), total: 50 })
 
     const res = await service.execute({
-      id: 'sale-up-1',
+      id: 'sale-up-5',
       items: [{ serviceId: svc.id, quantity: 2 }],
     })
 
     expect(res.sale.items).toHaveLength(1)
-    expect(res.sale.total).toBe(200)
-    expect(repo.sales[0].items).toHaveLength(1)
+    expect(res.sale.total).toBe(150)
+    expect(repo.sales[1].items).toHaveLength(1)
   })
 
   it('adds item with coupon', async () => {
@@ -156,13 +170,14 @@ let service: UpdateSaleService
     const coupon = makeCoupon('c1', 'OFF10', 10, DiscountType.VALUE)
     serviceRepo.services.push(svc)
     couponRepo.coupons.push(coupon)
+    repo.sales.push({ ...makeSale('sale-up-6'), total: 50 })
 
     const res = await service.execute({
-      id: 'sale-up-1',
+      id: 'sale-up-6',
       items: [{ serviceId: svc.id, quantity: 1, couponCode: coupon.code }],
     })
 
-    expect(res.sale.total).toBe(190)
+    expect(res.sale.total).toBe(140)
     expect(res.sale.items[0].discount).toBe(10)
     expect(couponRepo.coupons[0].quantity).toBe(4)
   })
@@ -172,14 +187,15 @@ let service: UpdateSaleService
     const coupon = makeCoupon('c2', 'G10', 10, DiscountType.VALUE)
     serviceRepo.services.push(svc)
     couponRepo.coupons.push(coupon)
+    repo.sales.push({ ...makeSale('sale-up-7'), total: 80 })
 
     const res = await service.execute({
-      id: 'sale-up-1',
+      id: 'sale-up-7',
       items: [{ serviceId: svc.id, quantity: 1 }],
       couponCode: coupon.code,
     })
 
-    expect(res.sale.total).toBe(190)
+    expect(res.sale.total).toBe(170)
     expect(res.sale.items[0].discount).toBe(10)
     expect(couponRepo.coupons[0].quantity).toBe(4)
   })
@@ -192,17 +208,19 @@ let service: UpdateSaleService
       saleItem: null,
     }
     appointmentRepo.appointments.push(appointment)
+    repo.sales.push({ ...makeSale('sale-up-8'), total: 20 })
 
     const res = await service.execute({
-      id: 'sale-up-1',
+      id: 'sale-up-8',
       items: [{ appointmentId: appointment.id, quantity: 1 }],
     })
 
     expect(res.sale.items).toHaveLength(1)
     expect(res.sale.items[0].appointmentId).toBe(appointment.id)
-    expect(res.sale.total).toBe(130)
+    expect(res.sale.total).toBe(50)
     expect(
-      appointmentRepo.appointments.find((a) => a.id === appointment.id)?.saleItem,
+      appointmentRepo.appointments.find((a) => a.id === appointment.id)
+        ?.saleItem,
     ).not.toBeNull()
     expect(
       appointmentRepo.appointments.find((a) => a.id === appointment.id)?.status,

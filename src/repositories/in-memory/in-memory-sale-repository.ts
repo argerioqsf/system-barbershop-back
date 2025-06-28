@@ -367,7 +367,7 @@ export class InMemorySaleRepository implements SaleRepository {
                     commissionPercentage: it.porcentagemBarbeiro ?? 0,
                     totalBalance: 0,
                     userId: it.barber!.connect!.id,
-                  createdAt: new Date(),
+                    createdAt: new Date(),
                   },
                 }
               : null,

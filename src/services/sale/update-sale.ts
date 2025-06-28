@@ -137,18 +137,6 @@ export class UpdateSaleService {
       coupon: couponConnect,
     })
 
-    for (const item of sale.items) {
-      if (item.appointmentId) {
-        const paid = sale.paymentStatus === PaymentStatus.PAID
-        const newAppointment = appointmentsToLink.includes(item.appointmentId)
-
-        await this.appointmentRepository.update(item.appointmentId, {
-          ...(newAppointment ? { saleItem: { connect: { id: item.id } } } : {}),
-          ...(paid ? { status: 'CONCLUDED' } : {}),
-        })
-      }
-    }
-
     if (paymentStatus === PaymentStatus.PAID) {
       const { transactions } = await distributeProfits(
         sale,
@@ -168,6 +156,18 @@ export class UpdateSaleService {
       )
 
       sale.transactions = [...transactions]
+    }
+
+    for (const item of sale.items) {
+      if (item.appointmentId) {
+        const paid = sale.paymentStatus === PaymentStatus.PAID
+        const newAppointment = appointmentsToLink.includes(item.appointmentId)
+
+        await this.appointmentRepository.update(item.appointmentId, {
+          ...(newAppointment ? { saleItem: { connect: { id: item.id } } } : {}),
+          ...(paid ? { status: 'CONCLUDED' } : {}),
+        })
+      }
     }
 
     await updateProductsStock(this.productRepository, productsToUpdate)
