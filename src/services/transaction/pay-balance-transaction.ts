@@ -3,15 +3,32 @@ import { CashRegisterRepository } from '@/repositories/cash-register-repository'
 import { TransactionRepository } from '@/repositories/transaction-repository'
 import { ProfilesRepository } from '@/repositories/profiles-repository'
 import { SaleRepository } from '@/repositories/sale-repository'
-import { SaleItemRepository } from '@/repositories/sale-item-repository'
+import {
+  DetailedSaleItemFindMany,
+  SaleItemRepository,
+} from '@/repositories/sale-item-repository'
 import { AppointmentServiceRepository } from '@/repositories/appointment-service-repository'
-import { Transaction } from '@prisma/client'
+import {
+  BarberService,
+  PaymentStatus,
+  Permission,
+  Profile,
+  ProfileBlockedHour,
+  ProfileWorkHour,
+  Role,
+  Service,
+  Transaction,
+  Unit,
+  User,
+} from '@prisma/client'
 import { IncrementBalanceProfileService } from '../profile/increment-balance'
 import { UserNotFoundError } from '@/services/@errors/user/user-not-found-error'
 import { CashRegisterClosedError } from '@/services/@errors/cash-register/cash-register-closed-error'
 import { AffectedUserNotFoundError } from '@/services/@errors/transaction/affected-user-not-found-error'
 import { NegativeValuesNotAllowedError } from '@/services/@errors/transaction/negative-values-not-allowed-error'
 import { InsufficientBalanceError } from '@/services/@errors/transaction/insufficient-balance-error'
+import { SaleItemIdNotValidError } from '../@errors/sale/saleItemid-not-valid-error'
+import { AppointmentServiceIdNotValidError } from '../@errors/sale/appointmentserviceid-not-valid-error'
 
 interface PayBalanceTransactionRequest {
   userId: string
@@ -27,6 +44,30 @@ interface PayBalanceTransactionResponse {
   transactions: Transaction[]
 }
 
+type PaymentItems = {
+  saleId: string
+  saleItemId?: string
+  appointmentServiceId?: string
+  amount: number
+  item: DetailedSaleItemFindMany
+  service?: Service
+  sale?: { createdAt: Date }
+  transactions: Transaction[]
+}
+
+type AffectedUser = User & {
+  profile:
+    | (Profile & {
+        role: Role
+        permissions: Permission[]
+        workHours: ProfileWorkHour[]
+        blockedHours: ProfileBlockedHour[]
+        barberServices: BarberService[]
+      })
+    | null
+  unit: Unit | null
+}
+
 export class PayBalanceTransactionService {
   constructor(
     private repository: TransactionRepository,
@@ -37,6 +78,100 @@ export class PayBalanceTransactionService {
     private saleItemRepository: SaleItemRepository,
     private appointmentServiceRepository: AppointmentServiceRepository,
   ) {}
+
+  private async payItems(
+    data: PayBalanceTransactionRequest,
+    paymentItems: PaymentItems[],
+    affectedUser: AffectedUser,
+    total: number,
+  ): Promise<Transaction[]> {
+    const balanceUser = affectedUser.profile?.totalBalance ?? 0
+
+    if (total < 0) {
+      throw new NegativeValuesNotAllowedError()
+    }
+
+    if (total > balanceUser) {
+      throw new InsufficientBalanceError()
+    }
+
+    const decrementProfile = new IncrementBalanceProfileService(
+      this.profileRepository,
+    )
+
+    const transactions: Transaction[] = []
+
+    if (data.amount) {
+      if (data.amount > total) {
+        throw new Error('Amount to pay greater than amount to receive')
+      }
+      let remaining = data.amount
+      for (const pay of paymentItems) {
+        if (remaining <= 0) break
+        const value = Math.min(pay.amount, remaining)
+        const tx = await decrementProfile.execute(
+          affectedUser.id,
+          -value,
+          pay.saleId,
+          undefined,
+          data.description,
+          pay.appointmentServiceId ? undefined : pay.saleItemId,
+          pay.appointmentServiceId,
+        )
+        transactions.push(tx.transaction)
+        remaining -= value
+
+        if (value === pay.amount) {
+          if (pay.appointmentServiceId) {
+            await this.appointmentServiceRepository.update(
+              pay.appointmentServiceId,
+              {
+                commissionPaid: true,
+              },
+            )
+          } else if (pay.saleItemId) {
+            await this.saleItemRepository.update(pay.saleItemId, {
+              commissionPaid: true,
+            })
+          } else
+            throw new Error(
+              'the item must have an appointmentServiceId or saleItemId linked',
+            )
+        }
+      }
+    } else {
+      for (const pay of paymentItems) {
+        const tx = await decrementProfile.execute(
+          affectedUser.id,
+          -pay.amount,
+          pay.saleId,
+          undefined,
+          data.description,
+          pay.appointmentServiceId ? undefined : pay.saleItemId,
+          pay.appointmentServiceId,
+        )
+        transactions.push(tx.transaction)
+        if (pay.item && 'transactions' in pay.item) {
+          pay.transactions.push(tx.transaction)
+        }
+        if (pay.service && 'transactions' in pay.service) {
+          pay.transactions.push(tx.transaction)
+        }
+        if (pay.saleItemId) {
+          await this.saleItemRepository.update(pay.saleItemId, {
+            commissionPaid: true,
+          })
+        }
+        if (pay.appointmentServiceId) {
+          await this.appointmentServiceRepository.update(
+            pay.appointmentServiceId,
+            { commissionPaid: true },
+          )
+        }
+      }
+    }
+    return transactions
+  }
 
   async execute(
     data: PayBalanceTransactionRequest,
@@ -54,216 +189,148 @@ export class PayBalanceTransactionService {
     )
     if (!affectedUser) throw new AffectedUserNotFoundError()
 
-    const paymentItems: {
-      saleId: string
-      saleItemId?: string
-      appointmentServiceId?: string
-      amount: number
-      item?: any
-      service?: any
-      sale?: { createdAt: Date }
-    }[] = []
+    const paymentItems: PaymentItems[] = []
 
-    let total = data.amount ?? 0
+    let total = 0
 
-    const sales = await this.saleRepository.findManyByBarber(
-      data.affectedUserId,
-    )
+    if (data.amount) {
+      const salesItems = await this.saleItemRepository.findMany({
+        barberId: affectedUser.id,
+        sale: { paymentStatus: PaymentStatus.PAID },
+        commissionPaid: false,
+        OR: [{ serviceId: { not: null } }, { productId: { not: null } }],
+      })
+      const salesItemsAppointment = await this.saleItemRepository.findMany({
+        barberId: affectedUser.id,
+        sale: { paymentStatus: PaymentStatus.PAID },
+        commissionPaid: false,
+        appointmentId: {
+          not: null,
+        },
+      })
 
-    if (data.amount === undefined) {
-      for (const sale of sales) {
-        if (sale.paymentStatus !== 'PAID') continue
-        for (const item of sale.items) {
-          if (
-            data.saleItemIds?.includes(item.id) &&
-            !(item as any).commissionPaid
-          ) {
-            const perc = item.porcentagemBarbeiro ?? 0
-            const value = ((item.price ?? 0) * perc) / 100
-            total += value
+      for (const item of salesItems) {
+        const perc = item.porcentagemBarbeiro ?? 0
+        const value = ((item.price ?? 0) * perc) / 100
+        const paid =
+          item.transactions?.reduce(
+            (s: number, t: { amount: number }) => s + t.amount,
+            0,
+          ) ?? 0
+        const remaining = value - paid
+        if (remaining > 0) {
+          total += remaining
+          paymentItems.push({
+            saleId: item.sale.id,
+            saleItemId: item.id,
+            amount: remaining,
+            item,
+            sale: item.sale,
+            transactions: [],
+          })
+        }
+      }
+
+      for (const item of salesItemsAppointment) {
+        for (const service of item.appointment?.services ?? []) {
+          const perc = service.commissionPercentage ?? 0
+          const value = (service.service.price * perc) / 100
+          const paid =
+            service.transactions.reduce(
+              (s: number, t: { amount: number }) => s + t.amount,
+              0,
+            ) ?? 0
+          const remaining = value - paid
+          if (remaining > 0) {
+            total += remaining
             paymentItems.push({
-              saleId: sale.id,
+              saleId: item.sale.id,
+              appointmentServiceId: service.id,
               saleItemId: item.id,
-              amount: value,
+              amount: remaining,
               item,
-              sale,
+              service: service.service,
+              sale: item.sale,
+              transactions: [],
             })
           }
-          if (
-            item.appointment &&
-            item.appointment.services?.length &&
-            data.appointmentServiceIds?.length
-          ) {
-            for (const srv of item.appointment.services) {
-              if (
-                data.appointmentServiceIds?.includes(srv.id) &&
-                !(srv as any).commissionPaid
-              ) {
-                const perc = srv.commissionPercentage ?? 0
-                const value = (srv.service.price * perc) / 100
-                total += value
-                paymentItems.push({
-                  saleId: sale.id,
-                  appointmentServiceId: srv.id,
-                  amount: value,
-                  item,
-                  service: srv,
-                  sale,
-                })
-              }
-            }
-          }
         }
       }
-    } else {
-      for (const sale of sales) {
-        if (sale.paymentStatus !== 'PAID') continue
-        for (const item of sale.items) {
-          if (item.barberId !== data.affectedUserId) continue
-          if (!(item as any).commissionPaid) {
-            const perc = item.porcentagemBarbeiro ?? 0
-            const value = ((item.price ?? 0) * perc) / 100
-            const paid =
-              (item as any).transactions?.reduce(
-                (s: number, t: { amount: number }) => s + t.amount,
-                0,
-              ) ?? 0
-            const remaining = value - paid
-            if (remaining > 0) {
-              paymentItems.push({
-                saleId: sale.id,
-                saleItemId: item.id,
-                amount: remaining,
-                item,
-                sale,
-              })
-            }
-          }
-          if (item.appointment?.services?.length) {
-            for (const srv of item.appointment.services) {
-              if (!(srv as any).commissionPaid) {
-                const perc = srv.commissionPercentage ?? 0
-                const value = (srv.service.price * perc) / 100
-                const paid =
-                  (srv as any).transactions?.reduce(
-                    (s: number, t: { amount: number }) => s + t.amount,
-                    0,
-                  ) ?? 0
-                const remaining = value - paid
-                if (remaining > 0) {
-                  paymentItems.push({
-                    saleId: sale.id,
-                    appointmentServiceId: srv.id,
-                    saleItemId: item.id,
-                    amount: remaining,
-                    item,
-                    service: srv,
-                    sale,
-                  })
-                }
-              }
-            }
-          }
-        }
-      }
-      // sort by sale date desc for paying latest first
+
       paymentItems.sort(
-        (a, b) => b.sale!.createdAt.getTime() - a.sale!.createdAt.getTime(),
+        (a, b) => a.sale!.createdAt.getTime() - b.sale!.createdAt.getTime(),
       )
-    }
-
-    if (total < 0) {
-      throw new NegativeValuesNotAllowedError()
-    }
-
-    const balanceUser = affectedUser.profile?.totalBalance ?? 0
-    if (total > balanceUser) {
-      throw new InsufficientBalanceError()
-    }
-
-    const decrementProfile = new IncrementBalanceProfileService(
-      this.profileRepository,
-    )
-
-    const transactions: Transaction[] = []
-
-    if (data.amount !== undefined) {
-      let remaining = data.amount
-      for (const pay of paymentItems) {
-        if (remaining <= 0) break
-        const value = Math.min(pay.amount, remaining)
-        const tx = await decrementProfile.execute(
-          affectedUser.id,
-          -value,
-          pay.saleId,
-          undefined,
-          data.description,
-          pay.saleItemId,
-          pay.appointmentServiceId,
-        )
-        transactions.push(tx.transaction)
-        remaining -= value
-        if (pay.item && 'transactions' in pay.item) {
-          pay.item.transactions.push(tx.transaction as any)
-        }
-        if (pay.service && 'transactions' in pay.service) {
-          pay.service.transactions.push(tx.transaction as any)
-        }
-        if (value === pay.amount) {
-          if (pay.saleItemId) {
-            await this.saleItemRepository.update(pay.saleItemId, {
-              commissionPaid: true,
-            } as any)
-          }
-          if (pay.appointmentServiceId) {
-            await this.appointmentServiceRepository.update(
-              pay.appointmentServiceId,
-              { commissionPaid: true } as any,
-            )
-          }
-        }
-      }
-      if (remaining > 0) {
-        const tx = await decrementProfile.execute(
-          affectedUser.id,
-          -remaining,
-          undefined,
-          undefined,
-          data.description,
-        )
-        transactions.push(tx.transaction)
-      }
     } else {
-      for (const pay of paymentItems) {
-        const tx = await decrementProfile.execute(
-          affectedUser.id,
-          -pay.amount,
-          pay.saleId,
-          undefined,
-          data.description,
-          pay.saleItemId,
-          pay.appointmentServiceId,
-        )
-        transactions.push(tx.transaction)
-        if (pay.item && 'transactions' in pay.item) {
-          pay.item.transactions.push(tx.transaction as any)
+      if (data.saleItemIds?.length) {
+        const saleItemIds = data.saleItemIds
+        const salesItems = await this.saleItemRepository.findMany({
+          id: { in: saleItemIds },
+          barberId: affectedUser.id,
+          sale: { paymentStatus: PaymentStatus.PAID },
+          commissionPaid: false,
+          OR: [{ serviceId: { not: null } }, { productId: { not: null } }],
+        })
+
+        if (salesItems.length === 0) throw new SaleItemIdNotValidError()
+
+        for (const item of salesItems) {
+          const perc = item.porcentagemBarbeiro ?? 0
+          const value = ((item.price ?? 0) * perc) / 100
+          total += value
+          paymentItems.push({
+            saleId: item.sale.id,
+            saleItemId: item.id,
+            amount: value,
+            item,
+            sale: item.sale,
+            transactions: [],
+          })
         }
-        if (pay.service && 'transactions' in pay.service) {
-          pay.service.transactions.push(tx.transaction as any)
-        }
-        if (pay.saleItemId) {
-          await this.saleItemRepository.update(pay.saleItemId, {
-            commissionPaid: true,
-          } as any)
-        }
-        if (pay.appointmentServiceId) {
-          await this.appointmentServiceRepository.update(
-            pay.appointmentServiceId,
-            { commissionPaid: true } as any,
-          )
+      }
+
+      if (data.appointmentServiceIds?.length) {
+        const appointmentServiceIds = data.appointmentServiceIds
+        const salesItems = await this.saleItemRepository.findMany({
+          barberId: affectedUser.id,
+          sale: { paymentStatus: PaymentStatus.PAID },
+          commissionPaid: false,
+          appointment: {
+            services: {
+              every: { id: { in: appointmentServiceIds } },
+            },
+          },
+        })
+        if (salesItems.length === 0)
+          throw new AppointmentServiceIdNotValidError()
+
+        const items = []
+        for (const item of salesItems) {
+          const services = item.appointment?.services ?? []
+          for (const service of services) {
+            const perc = service.commissionPercentage ?? 0
+            const value = (service.service.price * perc) / 100
+            total += value
+            paymentItems.push({
+              saleId: item.sale.id,
+              appointmentServiceId: service.id,
+              amount: value,
+              item,
+              service: service.service,
+              sale: item.sale,
+              transactions: [],
+            })
+            items.push(service)
+          }
         }
       }
     }
+
+    const transactions: Transaction[] = await this.payItems(
+      data,
+      paymentItems,
+      affectedUser,
+      total,
+    )
 
     return { transactions }
   }

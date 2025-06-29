@@ -179,6 +179,13 @@ async function main() {
     data: {
       name: RoleName.BARBER,
       unit: { connect: { id: mainUnit.id } },
+      permissions: {
+        connect: [
+          { id: permissions[PermissionName.SELL_SERVICE].id },
+          { id: permissions[PermissionName.SELL_PRODUCT].id },
+          { id: permissions[PermissionName.ACCEPT_APPOINTMENT].id },
+        ],
+      },
     },
   })
 
@@ -336,6 +343,7 @@ async function main() {
             connect: [
               { id: permissions[PermissionName.SELL_SERVICE].id },
               { id: permissions[PermissionName.SELL_PRODUCT].id },
+              { id: permissions[PermissionName.ACCEPT_APPOINTMENT].id },
             ],
           },
         },
@@ -376,6 +384,7 @@ async function main() {
       cost: 10,
       price: 30,
       unit: { connect: { id: mainUnit.id } },
+      commissionPercentage: 50,
     },
   })
 
@@ -384,6 +393,7 @@ async function main() {
       profile: { connect: { id: barber?.profile?.id } },
       service: { connect: { id: haircut.id } },
       time: 30,
+      commissionPercentage: 50,
     },
   })
 
@@ -395,6 +405,7 @@ async function main() {
       price: 15,
       quantity: 10,
       unit: { connect: { id: mainUnit.id } },
+      commissionPercentage: 50,
     },
   })
 

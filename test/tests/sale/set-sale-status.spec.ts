@@ -61,7 +61,9 @@ describe('Set sale status service', () => {
     barberServiceRepo = new FakeBarberServiceRelRepository()
     barberProductRepo = new FakeBarberProductRepository()
     appointmentRepo = new FakeAppointmentRepository()
-    appointmentServiceRepo = new FakeAppointmentServiceRepository(appointmentRepo)
+    appointmentServiceRepo = new FakeAppointmentServiceRepository(
+      appointmentRepo,
+    )
     cashRepo = new FakeCashRegisterRepository()
     transactionRepo = new FakeTransactionRepository()
     orgRepo = new FakeOrganizationRepository({ ...defaultOrganization })
@@ -78,7 +80,11 @@ describe('Set sale status service', () => {
     sale.items[0].serviceId = defaultService.id
     sale.items[0].service = defaultService
     barberServiceRepo.items.push(
-      makeBarberServiceRel(barberProfile.id, defaultService.id, 'PERCENTAGE_OF_USER'),
+      makeBarberServiceRel(
+        barberProfile.id,
+        defaultService.id,
+        'PERCENTAGE_OF_USER',
+      ),
     )
 
     saleRepo.sales.push(sale)
@@ -351,7 +357,7 @@ describe('Set sale status service', () => {
         `profile-${barberUser.id}`,
         serviceDef.id,
         'PERCENTAGE_OF_ITEM',
-      )
+      ),
     )
 
     await service.execute({

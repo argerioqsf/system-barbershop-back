@@ -1,10 +1,12 @@
-import { SaleRepository } from '@/repositories/sale-repository'
-import { AppointmentService } from '@prisma/client'
+import { SaleItemRepository } from '@/repositories/sale-item-repository'
+import { PaymentStatus, Transaction } from '@prisma/client'
 
 interface PendingCommissionItem {
   saleId: string
   saleItemId: string
   amount: number
+  porcentagebarber: number
+  transactions: Transaction[]
 }
 
 interface PendingCommissionService {
@@ -12,6 +14,8 @@ interface PendingCommissionService {
   saleItemId: string
   appointmentServiceId: string
   amount: number
+  porcentagebarber: number
+  transactions: Transaction[]
 }
 
 interface ListUserPendingCommissionsRequest {
@@ -21,61 +25,80 @@ interface ListUserPendingCommissionsRequest {
 interface ListUserPendingCommissionsResponse {
   saleItems: PendingCommissionItem[]
   appointmentServices: PendingCommissionService[]
+  total: number
 }
 
 export class ListUserPendingCommissionsService {
-  constructor(private repository: SaleRepository) {}
+  constructor(private saleItemRepository: SaleItemRepository) {}
 
   async execute({
     userId,
   }: ListUserPendingCommissionsRequest): Promise<ListUserPendingCommissionsResponse> {
-    const sales = await this.repository.findManyByBarber(userId)
     const saleItems: PendingCommissionItem[] = []
     const appointmentServices: PendingCommissionService[] = []
 
-    for (const sale of sales) {
-      if (sale.paymentStatus !== 'PAID') continue
-      for (const item of sale.items) {
-        if (item.barberId !== userId) continue
-        if ((item as any).commissionPaid) continue
-        const perc = item.porcentagemBarbeiro ?? 0
-        const total = ((item.price ?? 0) * perc) / 100
+    const salesItems = await this.saleItemRepository.findMany({
+      barberId: userId,
+      sale: { paymentStatus: PaymentStatus.PAID },
+      commissionPaid: false,
+      OR: [{ serviceId: { not: null } }, { productId: { not: null } }],
+    })
+
+    const salesItemsAppointment = await this.saleItemRepository.findMany({
+      barberId: userId,
+      sale: { paymentStatus: PaymentStatus.PAID },
+      commissionPaid: false,
+      appointmentId: {
+        not: null,
+      },
+    })
+    let total = 0
+
+    for (const item of salesItems) {
+      const perc = item.porcentagemBarbeiro ?? 0
+      const value = ((item.price ?? 0) * perc) / 100
+      const paid =
+        item.transactions?.reduce(
+          (s: number, t: { amount: number }) => s + t.amount,
+          0,
+        ) ?? 0
+      const remaining = value - paid
+      if (remaining > 0) {
+        total += remaining
+        saleItems.push({
+          saleId: item.sale.id,
+          saleItemId: item.id,
+          amount: remaining,
+          porcentagebarber: perc,
+          transactions: item.transactions,
+        })
+      }
+    }
+
+    for (const item of salesItemsAppointment) {
+      for (const service of item.appointment?.services ?? []) {
+        const perc = service.commissionPercentage ?? 0
+        const value = (service.service.price * perc) / 100
         const paid =
-          (item as any).transactions?.reduce(
+          service.transactions.reduce(
             (s: number, t: { amount: number }) => s + t.amount,
             0,
           ) ?? 0
-        const remaining = total - paid
+        const remaining = value - paid
         if (remaining > 0) {
-          saleItems.push({
-            saleId: sale.id,
+          total += remaining
+          appointmentServices.push({
+            saleId: item.sale.id,
             saleItemId: item.id,
+            appointmentServiceId: service.id,
             amount: remaining,
+            porcentagebarber: perc,
+            transactions: service.transactions,
           })
-        }
-        if (item.appointment?.services?.length) {
-          for (const srv of item.appointment.services) {
-            const percSrv = srv.commissionPercentage ?? 0
-            const totalSrv = (srv.service.price * percSrv) / 100
-            const paidSrv =
-              (srv as any).transactions?.reduce(
-                (s: number, t: { amount: number }) => s + t.amount,
-                0,
-              ) ?? 0
-            const remainingSrv = totalSrv - paidSrv
-            if (remainingSrv > 0) {
-              appointmentServices.push({
-                saleId: sale.id,
-                saleItemId: item.id,
-                appointmentServiceId: srv.id,
-                amount: remainingSrv,
-              })
-            }
-          }
         }
       }
     }
 
-    return { saleItems, appointmentServices }
+    return { saleItems, appointmentServices, total }
   }
 }

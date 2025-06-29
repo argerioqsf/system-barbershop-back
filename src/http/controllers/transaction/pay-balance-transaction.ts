@@ -11,9 +11,25 @@ export const PayBalanceTransactionController = async (
   const bodySchema = z
     .object({
       description: z.string().optional(),
-      amount: z.coerce.number().optional(),
-      saleItemIds: z.array(z.string()).optional(),
-      appointmentServiceIds: z.array(z.string()).optional(),
+      amount: z.coerce.number().gt(0).optional(),
+      saleItemIds: z
+        .union([
+          z.array(z.string()),
+          z.string().transform((val) => JSON.parse(val) as string[]),
+        ])
+        .refine((arr) => !arr || new Set(arr).size === arr.length, {
+          message: 'IDs em saleItemIds devem ser únicos.',
+        })
+        .optional(),
+      appointmentServiceIds: z
+        .union([
+          z.array(z.string()),
+          z.string().transform((val) => JSON.parse(val) as string[]),
+        ])
+        .refine((arr) => !arr || new Set(arr).size === arr.length, {
+          message: 'IDs em appointmentServiceIds devem ser únicos.',
+        })
+        .optional(),
       affectedUserId: z.string(),
     })
     .refine(

@@ -160,9 +160,12 @@ export class PrismaSaleRepository implements SaleRepository {
     return sales as unknown as DetailedSale[]
   }
 
-  async findManyByBarber(barberId: string): Promise<DetailedSale[]> {
+  async findManyByBarber(
+    barberId: string,
+    where?: Prisma.SaleWhereInput,
+  ): Promise<DetailedSale[]> {
     const sales = await prisma.sale.findMany({
-      where: { items: { some: { barberId } } },
+      where: { items: { some: { barberId } }, ...where },
       include: {
         items: {
           include: {
