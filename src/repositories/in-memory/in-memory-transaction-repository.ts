@@ -6,7 +6,7 @@ import { TransactionFull } from '../prisma/prisma-transaction-repository'
 export class InMemoryTransactionRepository implements TransactionRepository {
   public transactions: TransactionFull[] = []
 
-  async create(data: Prisma.TransactionCreateInput | any): Promise<Transaction> {
+  async create(data: Prisma.TransactionCreateInput): Promise<Transaction> {
     const tr: Transaction & {
       saleItemId: string | null
       appointmentServiceId: string | null

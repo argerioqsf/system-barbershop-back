@@ -1,12 +1,13 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { ListUserPendingCommissionsService } from '../../../src/services/users/list-user-pending-commissions'
-import { FakeSaleRepository } from '../../helpers/fake-repositories'
-import { makeSaleWithBarber, makeProfile, makeUser, defaultUnit } from '../../helpers/default-values'
+import { FakeSaleRepository, FakeSaleItemRepository } from '../../helpers/fake-repositories'
+import { makeSaleWithBarber, makeProfile, makeUser, defaultUnit, makeService } from '../../helpers/default-values'
 
 function setup() {
   const saleRepo = new FakeSaleRepository()
-  const service = new ListUserPendingCommissionsService(saleRepo)
-  return { saleRepo, service }
+  const saleItemRepo = new FakeSaleItemRepository(saleRepo)
+  const service = new ListUserPendingCommissionsService(saleItemRepo)
+  return { saleRepo, saleItemRepo, service }
 }
 
 describe('List user pending commissions', () => {
@@ -23,10 +24,14 @@ describe('List user pending commissions', () => {
     const sale1 = { ...makeSaleWithBarber(), id: 's1', paymentStatus: 'PAID', createdAt: new Date('2024-01-01') }
     sale1.items[0].barberId = user.id
     sale1.items[0].id = 'it1'
+    sale1.items[0].serviceId = 'svc1'
+    sale1.items[0].service = makeService('svc1')
     ;(sale1.items[0] as any).commissionPaid = false
     const sale2 = { ...makeSaleWithBarber(), id: 's2', paymentStatus: 'PAID', createdAt: new Date('2024-01-02') }
     sale2.items[0].barberId = user.id
     sale2.items[0].id = 'it2'
+    sale2.items[0].serviceId = 'svc2'
+    sale2.items[0].service = makeService('svc2')
     ;(sale2.items[0] as any).commissionPaid = true
 
     ctx.saleRepo.sales.push(sale1 as any, sale2 as any)

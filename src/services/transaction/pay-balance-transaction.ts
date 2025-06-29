@@ -95,6 +95,10 @@ export class PayBalanceTransactionService {
       throw new InsufficientBalanceError()
     }
 
+    if (data.amount && data.amount > balanceUser) {
+      throw new InsufficientBalanceError()
+    }
+
     const decrementProfile = new IncrementBalanceProfileService(
       this.profileRepository,
     )
@@ -102,41 +106,60 @@ export class PayBalanceTransactionService {
     const transactions: Transaction[] = []
 
     if (data.amount) {
-      if (data.amount > total) {
-        throw new Error('Amount to pay greater than amount to receive')
-      }
-      let remaining = data.amount
-      for (const pay of paymentItems) {
-        if (remaining <= 0) break
-        const value = Math.min(pay.amount, remaining)
+      if (paymentItems.length === 0) {
         const tx = await decrementProfile.execute(
           affectedUser.id,
-          -value,
-          pay.saleId,
+          -data.amount,
+          undefined,
           undefined,
           data.description,
-          pay.appointmentServiceId ? undefined : pay.saleItemId,
-          pay.appointmentServiceId,
         )
         transactions.push(tx.transaction)
-        remaining -= value
+      } else {
+        let remaining = data.amount
+        for (const pay of paymentItems) {
+          if (remaining <= 0) break
+          const value = Math.min(pay.amount, remaining)
+          const tx = await decrementProfile.execute(
+            affectedUser.id,
+            -value,
+            pay.saleId,
+            undefined,
+            data.description,
+            pay.appointmentServiceId ? undefined : pay.saleItemId,
+            pay.appointmentServiceId,
+          )
+          transactions.push(tx.transaction)
+          remaining -= value
 
-        if (value === pay.amount) {
-          if (pay.appointmentServiceId) {
-            await this.appointmentServiceRepository.update(
-              pay.appointmentServiceId,
-              {
+          if (value === pay.amount) {
+            if (pay.appointmentServiceId) {
+              await this.appointmentServiceRepository.update(
+                pay.appointmentServiceId,
+                {
+                  commissionPaid: true,
+                },
+              )
+            } else if (pay.saleItemId) {
+              await this.saleItemRepository.update(pay.saleItemId, {
                 commissionPaid: true,
-              },
-            )
-          } else if (pay.saleItemId) {
-            await this.saleItemRepository.update(pay.saleItemId, {
-              commissionPaid: true,
-            })
-          } else
-            throw new Error(
-              'the item must have an appointmentServiceId or saleItemId linked',
-            )
+              })
+            } else {
+              throw new Error(
+                'the item must have an appointmentServiceId or saleItemId linked',
+              )
+            }
+          }
+        }
+        if (remaining > 0) {
+          const tx = await decrementProfile.execute(
+            affectedUser.id,
+            -remaining,
+            undefined,
+            undefined,
+            data.description,
+          )
+          transactions.push(tx.transaction)
         }
       }
     } else {
@@ -258,7 +281,9 @@ export class PayBalanceTransactionService {
       }
 
       paymentItems.sort(
-        (a, b) => a.sale!.createdAt.getTime() - b.sale!.createdAt.getTime(),
+        (a, b) =>
+          (a.sale?.createdAt.getTime() ?? 0) -
+          (b.sale?.createdAt.getTime() ?? 0),
       )
     } else {
       if (data.saleItemIds?.length) {

@@ -19,6 +19,7 @@ import {
   makeProfile,
   makeUser,
   makeSaleWithBarber,
+  makeService,
 } from '../../helpers/default-values'
 
 let transactionRepo: FakeTransactionRepository
@@ -143,6 +144,8 @@ describe('Pay balance transaction service', () => {
     }
     sale1.items[0].barberId = other.id
     sale1.items[0].id = 'it1'
+    sale1.items[0].serviceId = 'svc1'
+    sale1.items[0].service = makeService('svc1', 10)
     sale1.items[0].price = 10
     ;(sale1.items[0] as any).commissionPaid = false
     const sale2 = {
@@ -153,6 +156,8 @@ describe('Pay balance transaction service', () => {
     }
     sale2.items[0].barberId = other.id
     sale2.items[0].id = 'it2'
+    sale2.items[0].serviceId = 'svc2'
+    sale2.items[0].service = makeService('svc2', 10)
     sale2.items[0].price = 10
     ;(sale2.items[0] as any).commissionPaid = false
     ctx.saleRepo.sales.push(sale1 as any, sale2 as any)
