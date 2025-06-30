@@ -85,6 +85,7 @@ function setup(options?: { userBalance?: number; unitBalance?: number }) {
     saleRepo,
     saleItemRepo,
     appointmentServiceRepo,
+    appointmentRepo,
   }
 }
 
@@ -101,6 +102,18 @@ describe('Pay balance transaction service', () => {
     const other = makeUser('u2', profile, ctx.unitRepo.unit)
     ctx.barberRepo.users.push(other)
 
+    const sale = {
+      ...makeSaleWithBarber(),
+      id: 's-over',
+      paymentStatus: 'PAID',
+    }
+    sale.items[0].barberId = other.id
+    sale.items[0].id = 'it-over'
+    sale.items[0].serviceId = 'svc-over'
+    sale.items[0].price = 40
+    ;(sale.items[0] as any).commissionPaid = false
+    ctx.saleRepo.sales.push(sale as any)
+
     await expect(
       ctx.service.execute({
         userId: ctx.user.id,
@@ -116,6 +129,18 @@ describe('Pay balance transaction service', () => {
     ctx.profileRepo.profiles.push(profile)
     const other = makeUser('u3', profile, ctx.unitRepo.unit)
     ctx.barberRepo.users.push(other)
+
+    const sale = {
+      ...makeSaleWithBarber(),
+      id: 's-pay',
+      paymentStatus: 'PAID',
+    }
+    sale.items[0].barberId = other.id
+    sale.items[0].id = 'it-pay'
+    sale.items[0].serviceId = 'svc-pay'
+    sale.items[0].price = 60
+    ;(sale.items[0] as any).commissionPaid = false
+    ctx.saleRepo.sales.push(sale as any)
 
     await ctx.service.execute({
       userId: ctx.user.id,
@@ -143,7 +168,8 @@ describe('Pay balance transaction service', () => {
     }
     sale1.items[0].barberId = other.id
     sale1.items[0].id = 'it1'
-    sale1.items[0].price = 10
+    sale1.items[0].serviceId = 'svc1'
+    sale1.items[0].price = 20
     ;(sale1.items[0] as any).commissionPaid = false
     const sale2 = {
       ...makeSaleWithBarber(),
@@ -153,7 +179,8 @@ describe('Pay balance transaction service', () => {
     }
     sale2.items[0].barberId = other.id
     sale2.items[0].id = 'it2'
-    sale2.items[0].price = 10
+    sale2.items[0].serviceId = 'svc2'
+    sale2.items[0].price = 20
     ;(sale2.items[0] as any).commissionPaid = false
     ctx.saleRepo.sales.push(sale1 as any, sale2 as any)
 
@@ -165,9 +192,95 @@ describe('Pay balance transaction service', () => {
     })
 
     expect(profile.totalBalance).toBe(5)
-    expect(ctx.transactionRepo.transactions).toHaveLength(3)
-    expect((sale2.items[0] as any).commissionPaid).toBe(true)
+    expect(ctx.transactionRepo.transactions).toHaveLength(2)
+    expect((sale2.items[0] as any).commissionPaid).toBe(false)
     expect((sale1.items[0] as any).commissionPaid).toBe(true)
     // transaction recorded for partial payment
+  })
+
+  it('pays specific sale items by id', async () => {
+    const profile = makeProfile('p6', 'u6', 40)
+    ctx.profileRepo.profiles.push(profile)
+    const other = makeUser('u6', profile, ctx.unitRepo.unit)
+    ctx.barberRepo.users.push(other)
+
+    const sale = {
+      ...makeSaleWithBarber(),
+      id: 's-pay-items',
+      paymentStatus: 'PAID',
+    }
+    sale.items[0].barberId = other.id
+    sale.items[0].id = 'it-pay-items'
+    sale.items[0].serviceId = 'svc-pay-items'
+    sale.items[0].price = 40
+    ;(sale.items[0] as any).commissionPaid = false
+    ctx.saleRepo.sales.push(sale as any)
+
+    await ctx.service.execute({
+      userId: ctx.user.id,
+      affectedUserId: other.id,
+      saleItemIds: ['it-pay-items'],
+      description: '',
+    })
+
+    expect(ctx.transactionRepo.transactions).toHaveLength(1)
+    expect((sale.items[0] as any).commissionPaid).toBe(true)
+  })
+
+  it('pays appointment services by id', async () => {
+    const profile = makeProfile('p7', 'u7', 40)
+    ctx.profileRepo.profiles.push(profile)
+    const other = makeUser('u7', profile, ctx.unitRepo.unit)
+    ctx.barberRepo.users.push(other)
+
+    const appointment = await ctx.appointmentRepo.create(
+      {
+        client: { connect: { id: other.id } },
+        barber: { connect: { id: other.id } },
+        unit: { connect: { id: ctx.unitRepo.unit.id } },
+        date: new Date('2024-05-01T08:00:00'),
+        status: 'SCHEDULED',
+      },
+      [
+        {
+          id: 'svc-appt',
+          name: '',
+          description: null,
+          imageUrl: null,
+          cost: 0,
+          price: 30,
+          category: null,
+          defaultTime: null,
+          commissionPercentage: null,
+          unitId: ctx.unitRepo.unit.id,
+        },
+      ],
+    )
+    ctx.appointmentRepo.appointments[0].services[0].id = 'aps1'
+
+    const sale = {
+      ...makeSaleWithBarber(),
+      id: 's-appt',
+      paymentStatus: 'PAID',
+    }
+    sale.items[0].barberId = other.id
+    sale.items[0].id = 'it-appt'
+    sale.items[0].serviceId = 'svc-appt'
+    sale.items[0].appointmentId = appointment.id
+    sale.items[0].appointment = ctx.appointmentRepo.appointments[0]
+    ;(sale.items[0] as any).commissionPaid = false
+    ctx.saleRepo.sales.push(sale as any)
+
+    await ctx.service.execute({
+      userId: ctx.user.id,
+      affectedUserId: other.id,
+      appointmentServiceIds: ['aps1'],
+      description: '',
+    })
+
+    expect(ctx.transactionRepo.transactions).toHaveLength(1)
+    expect(
+      ctx.appointmentRepo.appointments[0].services[0].commissionPaid,
+    ).toBe(true)
   })
 })

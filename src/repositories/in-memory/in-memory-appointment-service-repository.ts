@@ -19,9 +19,10 @@ export class InMemoryAppointmentServiceRepository
             | number
             | null
         }
-        if ((data as any).commissionPaid !== undefined) {
+        const extra = data as { commissionPaid?: boolean }
+        if (extra.commissionPaid !== undefined) {
           ;(service as unknown as { commissionPaid: boolean }).commissionPaid =
-            (data as any).commissionPaid as boolean
+            extra.commissionPaid
         }
         return service as AppointmentService
       }
