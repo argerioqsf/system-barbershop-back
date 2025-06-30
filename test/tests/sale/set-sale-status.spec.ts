@@ -370,4 +370,19 @@ describe('Set sale status service', () => {
       appointmentRepo.appointments.find((a) => a.id === appointment.id)?.status,
     ).toBe('CONCLUDED')
   })
+
+  it('returns sale when already paid', async () => {
+    const sale = makeSaleWithBarber()
+    sale.paymentStatus = PaymentStatus.PAID
+    saleRepo.sales = [sale]
+
+    const res = await service.execute({
+      saleId: sale.id,
+      userId: 'cashier',
+      paymentStatus: PaymentStatus.PAID,
+    })
+
+    expect(res.sale.paymentStatus).toBe(PaymentStatus.PAID)
+    expect(transactionRepo.transactions).toHaveLength(0)
+  })
 })

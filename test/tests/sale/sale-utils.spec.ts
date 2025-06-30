@@ -1,0 +1,45 @@
+import { describe, it, expect } from 'vitest'
+import { mapToSaleItems, calculateTotal, updateProductsStock } from '../../../src/services/sale/utils/sale'
+import { FakeProductRepository } from '../../helpers/fake-repositories'
+import { makeProduct } from '../../helpers/default-values'
+
+
+describe('sale utilities', () => {
+  it('maps temp items to sale items', () => {
+    const result = mapToSaleItems([
+      {
+        basePrice: 100,
+        price: 90,
+        discount: 10,
+        discountType: 'VALUE',
+        ownDiscount: true,
+        data: { quantity: 1, service: { connect: { id: 's1' } }, barber: { connect: { id: 'b1' } }, coupon: { connect: { id: 'c1' } } },
+      },
+    ] as any)
+
+    expect(result[0]).toEqual(
+      expect.objectContaining({
+        price: 90,
+        discount: 10,
+        discountType: 'VALUE',
+        commissionPaid: false,
+      }),
+    )
+  })
+
+  it('calculates total', () => {
+    const total = calculateTotal([
+      { price: 40 } as any,
+      { price: 60 } as any,
+    ])
+    expect(total).toBe(100)
+  })
+
+  it('updates product stock', async () => {
+    const repo = new FakeProductRepository([makeProduct('p1', 10, 5)])
+    await updateProductsStock(repo, [{ id: 'p1', quantity: 2 }], 'decrement')
+    expect(repo.products[0].quantity).toBe(3)
+    await updateProductsStock(repo, [{ id: 'p1', quantity: 1 }], 'increment')
+    expect(repo.products[0].quantity).toBe(3)
+  })
+})
