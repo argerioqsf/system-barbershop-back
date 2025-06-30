@@ -55,6 +55,8 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
         appointmentId: appointment.id,
         serviceId: srv.id,
         commissionPercentage: srv.commissionPercentage ?? null,
+        commissionPaid: false,
+        transactions: [],
         service: srv,
       })),
       client: {

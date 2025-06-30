@@ -10,7 +10,9 @@ export const CreateAppointmentController = async (
   const bodySchema = z.object({
     clientId: z.string(),
     barberId: z.string(),
-    serviceIds: z.array(z.string()),
+    serviceIds: z.array(z.string()).min(1, {
+      message: 'É obrigatório informar ao menos um serviço.',
+    }),
     date: z.coerce.date(),
     unitId: z.string().optional(),
   })

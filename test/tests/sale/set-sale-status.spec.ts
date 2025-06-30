@@ -61,7 +61,9 @@ describe('Set sale status service', () => {
     barberServiceRepo = new FakeBarberServiceRelRepository()
     barberProductRepo = new FakeBarberProductRepository()
     appointmentRepo = new FakeAppointmentRepository()
-    appointmentServiceRepo = new FakeAppointmentServiceRepository(appointmentRepo)
+    appointmentServiceRepo = new FakeAppointmentServiceRepository(
+      appointmentRepo,
+    )
     cashRepo = new FakeCashRegisterRepository()
     transactionRepo = new FakeTransactionRepository()
     orgRepo = new FakeOrganizationRepository({ ...defaultOrganization })
@@ -78,7 +80,11 @@ describe('Set sale status service', () => {
     sale.items[0].serviceId = defaultService.id
     sale.items[0].service = defaultService
     barberServiceRepo.items.push(
-      makeBarberServiceRel(barberProfile.id, defaultService.id, 'PERCENTAGE_OF_USER'),
+      makeBarberServiceRel(
+        barberProfile.id,
+        defaultService.id,
+        'PERCENTAGE_OF_USER',
+      ),
     )
 
     saleRepo.sales.push(sale)
@@ -351,7 +357,7 @@ describe('Set sale status service', () => {
         `profile-${barberUser.id}`,
         serviceDef.id,
         'PERCENTAGE_OF_ITEM',
-      )
+      ),
     )
 
     await service.execute({
@@ -363,5 +369,20 @@ describe('Set sale status service', () => {
     expect(
       appointmentRepo.appointments.find((a) => a.id === appointment.id)?.status,
     ).toBe('CONCLUDED')
+  })
+
+  it('returns sale when already paid', async () => {
+    const sale = makeSaleWithBarber()
+    sale.paymentStatus = PaymentStatus.PAID
+    saleRepo.sales = [sale]
+
+    const res = await service.execute({
+      saleId: sale.id,
+      userId: 'cashier',
+      paymentStatus: PaymentStatus.PAID,
+    })
+
+    expect(res.sale.paymentStatus).toBe(PaymentStatus.PAID)
+    expect(transactionRepo.transactions).toHaveLength(0)
   })
 })

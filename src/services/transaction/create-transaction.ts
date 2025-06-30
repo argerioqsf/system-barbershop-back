@@ -4,7 +4,7 @@ import { TransactionRepository } from '@/repositories/transaction-repository'
 import { UserNotFoundError } from '@/services/@errors/user/user-not-found-error'
 import { CashRegisterClosedError } from '@/services/@errors/cash-register/cash-register-closed-error'
 import { AffectedUserNotFoundError } from '@/services/@errors/transaction/affected-user-not-found-error'
-import { Transaction, TransactionType } from '@prisma/client'
+import { Prisma, Transaction, TransactionType } from '@prisma/client'
 
 interface CreateTransactionRequest {
   userId: string
@@ -14,6 +14,8 @@ interface CreateTransactionRequest {
   amount: number
   receiptUrl?: string | null
   saleId?: string
+  saleItemId?: string
+  appointmentServiceId?: string
   isLoan?: boolean
 }
 
@@ -49,11 +51,17 @@ export class CreateTransactionService {
 
     const effectiveUser = affectedUser ?? user
 
-    const transaction = await this.repository.create({
+    const prismaData: Prisma.TransactionCreateInput = {
       user: { connect: { id: effectiveUser.id } },
       unit: { connect: { id: effectiveUser.unitId } },
       session: { connect: { id: session.id } },
       sale: data.saleId ? { connect: { id: data.saleId } } : undefined,
+      ...(data.saleItemId && {
+        saleItem: { connect: { id: data.saleItemId } },
+      }),
+      ...(data.appointmentServiceId && {
+        appointmentService: { connect: { id: data.appointmentServiceId } },
+      }),
       type: data.type,
       description: data.description,
       amount: data.amount,
@@ -62,7 +70,9 @@ export class CreateTransactionService {
       affectedUser: affectedUser
         ? { connect: { id: effectiveUser.id } }
         : undefined,
-    })
+    }
+
+    const transaction = await this.repository.create(prismaData)
 
     return { transaction }
   }

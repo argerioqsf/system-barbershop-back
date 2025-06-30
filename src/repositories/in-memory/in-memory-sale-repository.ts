@@ -43,6 +43,8 @@ export class InMemorySaleRepository implements SaleRepository {
       discount: it.discount ?? null,
       discountType: it.discountType ?? null,
       porcentagemBarbeiro: it.porcentagemBarbeiro ?? null,
+      commissionPaid: false,
+      transactions: [],
       appointment: it.appointment
         ? {
             id: it.appointment.connect.id,
@@ -302,6 +304,8 @@ export class InMemorySaleRepository implements SaleRepository {
             discountType: it.discountType ?? null,
             porcentagemBarbeiro:
               (it.porcentagemBarbeiro as number | null) ?? null,
+            commissionPaid: false,
+            transactions: [],
             appointment: it.appointment
               ? {
                   id: (it.appointment as { connect: { id: string } }).connect
