@@ -8,6 +8,9 @@ import {
   SaleItemRepository,
 } from '@/repositories/sale-item-repository'
 import { AppointmentServiceRepository } from '@/repositories/appointment-service-repository'
+import { UnitRepository } from '@/repositories/unit-repository'
+import { LoanRepository } from '@/repositories/loan-repository'
+import { PayUserLoansService } from '../loan/pay-user-loans'
 import {
   BarberService,
   PaymentStatus,
@@ -38,6 +41,7 @@ interface PayBalanceTransactionRequest {
   saleItemIds?: string[]
   appointmentServiceIds?: string[]
   receiptUrl?: string | null
+  discountLoans?: boolean
 }
 
 interface PayBalanceTransactionResponse {
@@ -77,6 +81,8 @@ export class PayBalanceTransactionService {
     private saleRepository: SaleRepository,
     private saleItemRepository: SaleItemRepository,
     private appointmentServiceRepository: AppointmentServiceRepository,
+    private unitRepository: UnitRepository,
+    private loanRepository: LoanRepository,
   ) {}
 
   private async payItems(
@@ -327,12 +333,29 @@ export class PayBalanceTransactionService {
       }
     }
 
-    const transactions: Transaction[] = await this.payItems(
-      data,
-      paymentItems,
-      affectedUser,
-      total,
-    )
+    let payValue = data.amount ?? total
+    const transactions: Transaction[] = []
+
+    if (data.discountLoans && payValue > 0) {
+      const payLoans = new PayUserLoansService(
+        this.loanRepository,
+        this.profileRepository,
+        this.unitRepository,
+        this.repository,
+      )
+      const res = await payLoans.execute({
+        userId: affectedUser.id,
+        amount: payValue,
+      })
+      transactions.push(...res.transactions)
+      payValue = res.remaining
+      data.amount = payValue
+    }
+
+    if (payValue > 0) {
+      const txs = await this.payItems(data, paymentItems, affectedUser, total)
+      transactions.push(...txs)
+    }
 
     return { transactions }
   }

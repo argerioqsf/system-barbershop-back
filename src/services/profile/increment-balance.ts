@@ -18,6 +18,7 @@ export class IncrementBalanceProfileService {
     description?: string,
     saleItemId?: string,
     appointmentServiceId?: string,
+    loanId?: string,
   ): Promise<IncrementBalanceProfileResponse> {
     const createTransactionService = makeCreateTransaction()
     try {
@@ -35,6 +36,7 @@ export class IncrementBalanceProfileService {
         appointmentServiceId,
         isLoan: isLoan ?? false,
         affectedUserId: userId,
+        loanId,
       })
       return { profile, transaction: transaction.transaction }
     } catch (error) {

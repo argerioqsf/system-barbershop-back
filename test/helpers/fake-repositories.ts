@@ -15,6 +15,7 @@ export { InMemoryRoleRepository } from '../../src/repositories/in-memory/in-memo
 export { InMemoryCashRegisterRepository } from '../../src/repositories/in-memory/in-memory-cash-register-repository'
 export { InMemoryTransactionRepository as FakeTransactionRepository } from '../../src/repositories/in-memory/in-memory-transaction-repository'
 export { InMemoryOrganizationRepository as FakeOrganizationRepository } from '../../src/repositories/in-memory/in-memory-organization-repository'
+export { InMemoryLoanRepository as FakeLoanRepository } from '../../src/repositories/in-memory/in-memory-loan-repository'
 
 export class FakeProfilesRepository extends InMemoryProfilesRepository {
   private _profiles: (Profile & {

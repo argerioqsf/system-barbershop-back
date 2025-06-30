@@ -102,6 +102,14 @@ enum AppointmentStatus {
   NO_SHOW
 }
 
+enum LoanStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELED
+  PAID
+}
+
 model Role {
   id          String       @id @default(uuid())
   name        RoleName
@@ -140,6 +148,8 @@ model User {
   transactions         Transaction[]
   affectedTransactions Transaction[]         @relation("AffectedUser")
   sessions             CashRegisterSession[]
+  loans                Loan[]
+  updatedLoans         Loan[] @relation("LoanUpdatedBy")
   passwordResetTokens  PasswordResetToken[]
   versionToken         Int      @default(1)
   versionTokenInvalidate Int?
@@ -295,6 +305,8 @@ model Transaction {
   saleItem   SaleItem?  @relation(fields: [saleItemId], references: [id])
   appointmentServiceId String?
   appointmentService AppointmentService? @relation(fields: [appointmentServiceId], references: [id])
+  loanId String?
+  loan Loan? @relation(fields: [loanId], references: [id])
 
   user         User                 @relation(fields: [userId], references: [id])
   affectedUser User?                @relation("AffectedUser", fields: [affectedUserId], references: [id])
@@ -368,8 +380,30 @@ model CashRegisterSession {
   unit         Unit          @relation(fields: [unitId], references: [id])
   sales        Sale[]
   transactions Transaction[]
+  loans        Loan[]
 
   @@map("cash_register_sessions")
+}
+
+model Loan {
+  id        String   @id @default(uuid())
+  userId    String
+  unitId    String
+  sessionId String
+  status    LoanStatus   @default(PENDING)
+  amount    Float
+  createdAt DateTime @default(now())
+  paidAt    DateTime?
+  fullyPaid Boolean  @default(false)
+  updatedById String?
+
+  user    User   @relation(fields: [userId], references: [id])
+  unit    Unit   @relation(fields: [unitId], references: [id])
+  session CashRegisterSession @relation(fields: [sessionId], references: [id])
+  updatedBy User? @relation("LoanUpdatedBy", fields: [updatedById], references: [id])
+  transactions Transaction[]
+
+  @@map("loans")
 }
 
 model Coupon {
@@ -428,6 +462,7 @@ model Unit {
   sales          Sale[]
   transactions   Transaction[]
   sessions       CashRegisterSession[]
+  loans          Loan[]
   users          User[]
   roles          Role[]
   openingHours       UnitOpeningHour[]

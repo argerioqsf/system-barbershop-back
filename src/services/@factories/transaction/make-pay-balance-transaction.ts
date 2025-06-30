@@ -5,6 +5,8 @@ import { PrismaProfilesRepository } from '@/repositories/prisma/prisma-profile-r
 import { PrismaSaleRepository } from '@/repositories/prisma/prisma-sale-repository'
 import { PrismaSaleItemRepository } from '@/repositories/prisma/prisma-sale-item-repository'
 import { PrismaAppointmentServiceRepository } from '@/repositories/prisma/prisma-appointment-service-repository'
+import { PrismaLoanRepository } from '@/repositories/prisma/prisma-loan-repository'
+import { PrismaUnitRepository } from '@/repositories/prisma/prisma-unit-repository'
 import { PayBalanceTransactionService } from '@/services/transaction/pay-balance-transaction'
 
 export function makePayBalanceTransaction() {
@@ -16,5 +18,7 @@ export function makePayBalanceTransaction() {
     new PrismaSaleRepository(),
     new PrismaSaleItemRepository(),
     new PrismaAppointmentServiceRepository(),
+    new PrismaUnitRepository(),
+    new PrismaLoanRepository(),
   )
 }

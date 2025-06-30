@@ -11,6 +11,7 @@ import {
   FakeSaleItemRepository,
   FakeAppointmentServiceRepository,
   FakeAppointmentRepository,
+  FakeLoanRepository,
 } from '../../helpers/fake-repositories'
 import {
   defaultUser,
@@ -24,6 +25,7 @@ import {
 let transactionRepo: FakeTransactionRepository
 let barberRepo: FakeBarberUsersRepository
 let cashRepo: FakeCashRegisterRepository
+let loanRepo: FakeLoanRepository
 
 vi.mock(
   '../../../src/services/@factories/transaction/make-create-transaction',
@@ -37,6 +39,7 @@ function setup(options?: { userBalance?: number; unitBalance?: number }) {
   transactionRepo = new FakeTransactionRepository()
   barberRepo = new FakeBarberUsersRepository()
   cashRepo = new FakeCashRegisterRepository()
+  loanRepo = new FakeLoanRepository()
   const saleRepo = new FakeSaleRepository()
   const appointmentRepo = new FakeAppointmentRepository()
   const saleItemRepo = new FakeSaleItemRepository(saleRepo)
@@ -73,6 +76,8 @@ function setup(options?: { userBalance?: number; unitBalance?: number }) {
     saleRepo,
     saleItemRepo,
     appointmentServiceRepo,
+    unitRepo,
+    loanRepo,
   )
 
   return {
@@ -86,6 +91,8 @@ function setup(options?: { userBalance?: number; unitBalance?: number }) {
     saleItemRepo,
     appointmentServiceRepo,
     appointmentRepo,
+    unitRepo,
+    loanRepo,
   }
 }
 
