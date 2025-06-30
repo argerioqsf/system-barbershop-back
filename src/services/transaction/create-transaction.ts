@@ -51,7 +51,7 @@ export class CreateTransactionService {
 
     const effectiveUser = affectedUser ?? user
 
-    const transaction = await this.repository.create({
+    const prismaData: Prisma.TransactionCreateInput = {
       user: { connect: { id: effectiveUser.id } },
       unit: { connect: { id: effectiveUser.unitId } },
       session: { connect: { id: session.id } },
@@ -70,7 +70,9 @@ export class CreateTransactionService {
       affectedUser: affectedUser
         ? { connect: { id: effectiveUser.id } }
         : undefined,
-    } as any)
+    }
+
+    const transaction = await this.repository.create(prismaData)
 
     return { transaction }
   }

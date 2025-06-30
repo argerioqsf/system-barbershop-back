@@ -101,6 +101,18 @@ describe('Pay balance transaction service', () => {
     const other = makeUser('u2', profile, ctx.unitRepo.unit)
     ctx.barberRepo.users.push(other)
 
+    const sale = {
+      ...makeSaleWithBarber(),
+      id: 's-over',
+      paymentStatus: 'PAID',
+    }
+    sale.items[0].barberId = other.id
+    sale.items[0].id = 'it-over'
+    sale.items[0].serviceId = 'svc-over'
+    sale.items[0].price = 40
+    ;(sale.items[0] as any).commissionPaid = false
+    ctx.saleRepo.sales.push(sale as any)
+
     await expect(
       ctx.service.execute({
         userId: ctx.user.id,
@@ -116,6 +128,18 @@ describe('Pay balance transaction service', () => {
     ctx.profileRepo.profiles.push(profile)
     const other = makeUser('u3', profile, ctx.unitRepo.unit)
     ctx.barberRepo.users.push(other)
+
+    const sale = {
+      ...makeSaleWithBarber(),
+      id: 's-pay',
+      paymentStatus: 'PAID',
+    }
+    sale.items[0].barberId = other.id
+    sale.items[0].id = 'it-pay'
+    sale.items[0].serviceId = 'svc-pay'
+    sale.items[0].price = 60
+    ;(sale.items[0] as any).commissionPaid = false
+    ctx.saleRepo.sales.push(sale as any)
 
     await ctx.service.execute({
       userId: ctx.user.id,
@@ -143,7 +167,8 @@ describe('Pay balance transaction service', () => {
     }
     sale1.items[0].barberId = other.id
     sale1.items[0].id = 'it1'
-    sale1.items[0].price = 10
+    sale1.items[0].serviceId = 'svc1'
+    sale1.items[0].price = 20
     ;(sale1.items[0] as any).commissionPaid = false
     const sale2 = {
       ...makeSaleWithBarber(),
@@ -153,7 +178,8 @@ describe('Pay balance transaction service', () => {
     }
     sale2.items[0].barberId = other.id
     sale2.items[0].id = 'it2'
-    sale2.items[0].price = 10
+    sale2.items[0].serviceId = 'svc2'
+    sale2.items[0].price = 20
     ;(sale2.items[0] as any).commissionPaid = false
     ctx.saleRepo.sales.push(sale1 as any, sale2 as any)
 
@@ -165,8 +191,8 @@ describe('Pay balance transaction service', () => {
     })
 
     expect(profile.totalBalance).toBe(5)
-    expect(ctx.transactionRepo.transactions).toHaveLength(3)
-    expect((sale2.items[0] as any).commissionPaid).toBe(true)
+    expect(ctx.transactionRepo.transactions).toHaveLength(2)
+    expect((sale2.items[0] as any).commissionPaid).toBe(false)
     expect((sale1.items[0] as any).commissionPaid).toBe(true)
     // transaction recorded for partial payment
   })

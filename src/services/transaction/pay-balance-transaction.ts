@@ -258,7 +258,9 @@ export class PayBalanceTransactionService {
       }
 
       paymentItems.sort(
-        (a, b) => a.sale!.createdAt.getTime() - b.sale!.createdAt.getTime(),
+        (a, b) =>
+          (a.sale?.createdAt.getTime() ?? 0) -
+          (b.sale?.createdAt.getTime() ?? 0),
       )
     } else {
       if (data.saleItemIds?.length) {
