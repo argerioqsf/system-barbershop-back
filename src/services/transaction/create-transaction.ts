@@ -4,7 +4,7 @@ import { TransactionRepository } from '@/repositories/transaction-repository'
 import { UserNotFoundError } from '@/services/@errors/user/user-not-found-error'
 import { CashRegisterClosedError } from '@/services/@errors/cash-register/cash-register-closed-error'
 import { AffectedUserNotFoundError } from '@/services/@errors/transaction/affected-user-not-found-error'
-import { Transaction, TransactionType } from '@prisma/client'
+import { Prisma, Transaction, TransactionType } from '@prisma/client'
 
 interface CreateTransactionRequest {
   userId: string
