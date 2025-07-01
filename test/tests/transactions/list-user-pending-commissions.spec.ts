@@ -3,14 +3,16 @@ import { ListUserPendingCommissionsService } from '../../../src/services/users/l
 import {
   FakeSaleRepository,
   FakeSaleItemRepository,
+  FakeLoanRepository,
 } from '../../helpers/fake-repositories'
 import { makeSaleWithBarber, makeProfile, makeUser, defaultUnit } from '../../helpers/default-values'
 
 function setup() {
   const saleRepo = new FakeSaleRepository()
   const saleItemRepo = new FakeSaleItemRepository(saleRepo)
-  const service = new ListUserPendingCommissionsService(saleItemRepo)
-  return { saleRepo, saleItemRepo, service }
+  const loanRepo = new FakeLoanRepository()
+  const service = new ListUserPendingCommissionsService(saleItemRepo, loanRepo)
+  return { saleRepo, saleItemRepo, loanRepo, service }
 }
 
 describe('List user pending commissions', () => {

@@ -1,4 +1,8 @@
 import { SaleItemRepository } from '@/repositories/sale-item-repository'
+import {
+  LoanRepository,
+  LoanWithTransactions,
+} from '@/repositories/loan-repository'
 import { PaymentStatus, Transaction } from '@prisma/client'
 
 interface PendingCommissionItem {
@@ -26,10 +30,14 @@ interface ListUserPendingCommissionsResponse {
   saleItems: PendingCommissionItem[]
   appointmentServices: PendingCommissionService[]
   total: number
+  loans: LoanWithTransactions[]
 }
 
 export class ListUserPendingCommissionsService {
-  constructor(private saleItemRepository: SaleItemRepository) {}
+  constructor(
+    private saleItemRepository: SaleItemRepository,
+    private loanRepository: LoanRepository,
+  ) {}
 
   async execute({
     userId,
@@ -77,7 +85,8 @@ export class ListUserPendingCommissionsService {
 
     for (const item of salesItemsAppointment) {
       for (const service of item.appointment?.services ?? []) {
-        const perc = service.commissionPercentage ?? 0
+        const perc =
+          service.commissionPercentage ?? item.porcentagemBarbeiro ?? 0
         const value = (service.service.price * perc) / 100
         const paid =
           service.transactions.reduce(
@@ -99,6 +108,18 @@ export class ListUserPendingCommissionsService {
       }
     }
 
-    return { saleItems, appointmentServices, total }
+    const loans = await this.loanRepository.findMany({ userId })
+    const outstanding = loans.reduce((sum, loan) => {
+      const paid = loan.transactions.reduce(
+        (s, t) => (t.amount > 0 ? s + t.amount : s),
+        0,
+      )
+      const remain = loan.amount - paid
+      return remain > 0 ? sum + remain : sum
+    }, 0)
+
+    total -= outstanding
+
+    return { saleItems, appointmentServices, total, loans }
   }
 }

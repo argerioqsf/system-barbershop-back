@@ -239,7 +239,8 @@ export class PayBalanceTransactionService {
 
       for (const item of salesItemsAppointment) {
         for (const service of item.appointment?.services ?? []) {
-          const perc = service.commissionPercentage ?? 0
+          const perc =
+            service.commissionPercentage ?? item.porcentagemBarbeiro ?? 0
           const value = (service.service.price * perc) / 100
           const paid =
             service.transactions.reduce(
@@ -315,7 +316,8 @@ export class PayBalanceTransactionService {
         for (const item of salesItems) {
           const services = item.appointment?.services ?? []
           for (const service of services) {
-            const perc = service.commissionPercentage ?? 0
+            const perc =
+              service.commissionPercentage ?? item.porcentagemBarbeiro ?? 0
             const value = (service.service.price * perc) / 100
             total += value
             paymentItems.push({

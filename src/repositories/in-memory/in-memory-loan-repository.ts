@@ -40,16 +40,34 @@ export class InMemoryLoanRepository implements LoanRepository {
     return this.loans.find((l) => l.id === id) ?? null
   }
 
-  async findMany(where: Prisma.LoanWhereInput = {}): Promise<LoanWithTransactions[]> {
+  async findMany(
+    where: Prisma.LoanWhereInput = {},
+  ): Promise<LoanWithTransactions[]> {
     // simple filter only by userId, unitId, status
     return this.loans.filter((l) => {
-      if (where.userId && (where.userId as any).equals && l.userId !== (where.userId as any).equals)
+      if (
+        where.userId &&
+        (where.userId as any).equals &&
+        l.userId !== (where.userId as any).equals
+      )
         return false
-      if (where.unitId && (where.unitId as any).equals && l.unitId !== (where.unitId as any).equals)
+      if (
+        where.unitId &&
+        (where.unitId as any).equals &&
+        l.unitId !== (where.unitId as any).equals
+      )
         return false
-      if (where.status && (where.status as any).equals && l.status !== (where.status as any).equals)
+      if (
+        where.status &&
+        (where.status as any).equals &&
+        l.status !== (where.status as any).equals
+      )
         return false
-      if (where.fullyPaid && (where.fullyPaid as any).equals && l.fullyPaid !== (where.fullyPaid as any).equals)
+      if (
+        where.fullyPaid &&
+        (where.fullyPaid as any).equals &&
+        l.fullyPaid !== (where.fullyPaid as any).equals
+      )
         return false
       return true
     })

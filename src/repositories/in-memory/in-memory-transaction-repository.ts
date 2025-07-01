@@ -41,7 +41,9 @@ export class InMemoryTransactionRepository implements TransactionRepository {
       appointmentServiceId:
         (data.appointmentService as { connect: { id: string } } | undefined)
           ?.connect.id ?? null,
-      loanId: (data.loan as { connect: { id: string } } | undefined)?.connect.id ?? null,
+      loanId:
+        (data.loan as { connect: { id: string } } | undefined)?.connect.id ??
+        null,
     }
     this.transactions.push({
       ...(tr as unknown as TransactionFull),
