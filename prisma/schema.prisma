@@ -455,6 +455,7 @@ model Unit {
   organizationId String
   totalBalance   Float                 @default(0)
   allowsLoan     Boolean               @default(false)
+  loanMonthlyLimit Float               @default(0)
   slotDuration   Int                   @default(60)
   services       Service[]
   products       Product[]

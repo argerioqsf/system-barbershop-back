@@ -16,13 +16,22 @@ export const UpdateUnitController = async (
         return val === 'true'
       })
       .optional(),
+    loanMonthlyLimit: z.coerce.number().optional(),
   })
   const paramsSchema = z.object({
     id: z.string(),
   })
-  const { name, slug, allowsLoan } = bodySchema.parse(request.body)
+  const { name, slug, allowsLoan, loanMonthlyLimit } = bodySchema.parse(
+    request.body,
+  )
   const { id } = paramsSchema.parse(request.params)
   const service = makeUpdateUnitService()
-  const { unit } = await service.execute({ id, name, slug, allowsLoan })
+  const { unit } = await service.execute({
+    id,
+    name,
+    slug,
+    allowsLoan,
+    loanMonthlyLimit,
+  })
   return reply.status(200).send(unit)
 }

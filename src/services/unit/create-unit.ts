@@ -8,6 +8,7 @@ interface CreateUnitRequest {
   slug: string
   organizationId?: string
   allowsLoan?: boolean
+  loanMonthlyLimit?: number
   userToken: UserToken
 }
 
@@ -31,6 +32,7 @@ export class CreateUnitService {
       name: data.name,
       slug: data.slug,
       allowsLoan: data.allowsLoan ?? false,
+      loanMonthlyLimit: data.loanMonthlyLimit ?? 0,
       organization: { connect: { id: organizationId } },
     })
     return { unit }

@@ -12,6 +12,7 @@ export const CreateUnitController = async (
     slug: z.string(),
     organizationId: z.string().optional(),
     allowsLoan: z.boolean().optional(),
+    loanMonthlyLimit: z.number().optional(),
   })
   const data = bodySchema.parse(request.body)
   const service = makeCreateUnitService()
@@ -21,6 +22,7 @@ export const CreateUnitController = async (
     slug: data.slug,
     organizationId: data.organizationId,
     allowsLoan: data.allowsLoan,
+    loanMonthlyLimit: data.loanMonthlyLimit,
     userToken,
   })
   return reply.status(201).send(unit)

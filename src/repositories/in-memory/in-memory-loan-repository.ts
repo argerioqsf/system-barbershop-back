@@ -53,7 +53,7 @@ export class InMemoryLoanRepository implements LoanRepository {
   async findMany(
     where: Prisma.LoanWhereInput = {},
   ): Promise<LoanWithTransactions[]> {
-    // simple filter only by userId, unitId, status
+    // simple filter by userId, unitId, status, fullyPaid and createdAt range
     return this.loans.filter((l) => {
       const uid = where.userId && (where.userId as Prisma.StringFilter).equals
       if (uid && l.userId !== uid) return false
@@ -67,6 +67,9 @@ export class InMemoryLoanRepository implements LoanRepository {
         where.fullyPaid && (where.fullyPaid as Prisma.BoolFilter).equals
       if (typeof fullyPaid === 'boolean' && l.fullyPaid !== fullyPaid)
         return false
+      const createdAt = where.createdAt as Prisma.DateTimeFilter | undefined
+      if (createdAt?.gte && l.createdAt < createdAt.gte) return false
+      if (createdAt?.lt && l.createdAt >= createdAt.lt) return false
       return true
     })
   }
