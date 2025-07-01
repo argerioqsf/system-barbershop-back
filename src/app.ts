@@ -22,6 +22,7 @@ import { reportRoute } from './http/controllers/report/route'
 import { configRoute } from './http/controllers/config/route'
 import { permissionRoute } from './http/controllers/permission/route'
 import { roleRoute } from './http/controllers/role/route'
+import { loanRoute } from './http/controllers/loan/route'
 import { authRoute } from './http/controllers/auth/route'
 import { organizationRoute } from './http/controllers/organization/route'
 import { unitRoute } from './http/controllers/unit/route'
@@ -141,6 +142,7 @@ app.register(appointmentRoute)
 app.register(barberUserRoute)
 app.register(couponRoute)
 app.register(cashRegisterRoute)
+app.register(loanRoute)
 app.register(transactionRoute)
 app.register(permissionRoute)
 app.register(roleRoute)

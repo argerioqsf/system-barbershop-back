@@ -17,6 +17,7 @@ interface CreateTransactionRequest {
   saleItemId?: string
   appointmentServiceId?: string
   isLoan?: boolean
+  loanId?: string
 }
 
 interface CreateTransactionResponse {
@@ -67,6 +68,7 @@ export class CreateTransactionService {
       amount: data.amount,
       isLoan: data.isLoan ?? false,
       receiptUrl: data.receiptUrl ?? null,
+      ...(data.loanId && { loan: { connect: { id: data.loanId } } }),
       affectedUser: affectedUser
         ? { connect: { id: effectiveUser.id } }
         : undefined,

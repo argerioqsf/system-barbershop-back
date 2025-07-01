@@ -20,6 +20,7 @@ export class IncrementBalanceUnitService {
     amount: number,
     saleId?: string,
     isLoan?: boolean,
+    loanId?: string,
   ): Promise<IncrementBalanceUnitResponse> {
     const createTransactionService = makeCreateTransaction()
     try {
@@ -34,6 +35,7 @@ export class IncrementBalanceUnitService {
         receiptUrl: undefined,
         saleId,
         isLoan: isLoan ?? false,
+        loanId,
       })
       return { unit, transaction: transaction.transaction }
     } catch (error) {

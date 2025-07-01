@@ -10,11 +10,13 @@ export class InMemoryTransactionRepository implements TransactionRepository {
     data: Prisma.TransactionCreateInput & {
       saleItemId?: string | null
       appointmentServiceId?: string | null
+      loanId?: string | null
     },
   ): Promise<Transaction> {
     const tr: Transaction & {
       saleItemId: string | null
       appointmentServiceId: string | null
+      loanId: string | null
     } = {
       id: randomUUID(),
       userId: (data.user as { connect: { id: string } }).connect.id,
@@ -39,6 +41,9 @@ export class InMemoryTransactionRepository implements TransactionRepository {
       appointmentServiceId:
         (data.appointmentService as { connect: { id: string } } | undefined)
           ?.connect.id ?? null,
+      loanId:
+        (data.loan as { connect: { id: string } } | undefined)?.connect.id ??
+        null,
     }
     this.transactions.push({
       ...(tr as unknown as TransactionFull),

@@ -9,8 +9,11 @@ export const ListPendingCommissionsController = async (
   const paramsSchema = z.object({ userId: z.string() })
   const { userId } = paramsSchema.parse(request.params)
   const service = makeListUserPendingCommissions()
-  const { saleItems, appointmentServices, total } = await service.execute({
-    userId,
-  })
-  return reply.status(200).send({ saleItems, appointmentServices, total })
+  const { saleItems, appointmentServices, total, loans } =
+    await service.execute({
+      userId,
+    })
+  return reply
+    .status(200)
+    .send({ saleItems, appointmentServices, total, loans })
 }
