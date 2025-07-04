@@ -1,5 +1,9 @@
 ### barbershop API
 
+This project requires **Node.js 20.19.0** or newer. Earlier patch versions
+may crash while running the Vitest suite due to a bug in Node's V8 integration.
+Ensure your local Node installation is up to date before running tests.
+
 After cloning the repository, install dependencies:
 
 ```bash
