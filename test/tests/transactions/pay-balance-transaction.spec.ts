@@ -309,4 +309,64 @@ describe('Pay balance transaction service', () => {
       ctx.appointmentRepo.appointments[0].services[0].commissionPaid,
     ).toBe(true)
   })
+
+  it('throws when cash register is closed', async () => {
+    const profile = makeProfile('p8', 'u8', 10)
+    ctx.profileRepo.profiles.push(profile)
+    const other = makeUser('u8', profile, ctx.unitRepo.unit)
+    ctx.barberRepo.users.push(other)
+
+    cashRepo.session = null
+
+    await expect(
+      ctx.service.execute(
+        {
+          userId: ctx.user.id,
+          affectedUserId: other.id,
+          amount: 5,
+        },
+        { unitId: ctx.unitRepo.unit.id } as any,
+      ),
+    ).rejects.toThrow('Cash register closed')
+  })
+
+  it('throws when affected user is missing', async () => {
+    await expect(
+      ctx.service.execute(
+        {
+          userId: ctx.user.id,
+          affectedUserId: 'no-user',
+          amount: 5,
+        },
+        { unitId: ctx.unitRepo.unit.id } as any,
+      ),
+    ).rejects.toThrow('Affected user not found')
+  })
+
+  it('throws when receivable amounts are inconsistent', async () => {
+    const profile = makeProfile('p9', 'u9', 40)
+    ctx.profileRepo.profiles.push(profile)
+    const other = makeUser('u9', profile, ctx.unitRepo.unit)
+    ctx.barberRepo.users.push(other)
+
+    const sale = { ...makeSaleWithBarber(), id: 's-incons', paymentStatus: 'PAID' }
+    sale.items[0].barberId = other.id
+    sale.items[0].id = 'it-incons'
+    sale.items[0].serviceId = 'svc-incons'
+    sale.items[0].price = 100
+    sale.items[0].porcentagemBarbeiro = profile.commissionPercentage
+    ;(sale.items[0] as any).commissionPaid = false
+    ctx.saleRepo.sales.push(sale as any)
+
+    await expect(
+      ctx.service.execute(
+        {
+          userId: ctx.user.id,
+          affectedUserId: other.id,
+          amount: 10,
+        },
+        { unitId: ctx.unitRepo.unit.id } as any,
+      ),
+    ).rejects.toThrow('Amounts receivable from the user are inconsistent')
+  })
 })

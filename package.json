@@ -22,6 +22,9 @@
     "prisma:reset": "docker exec -it api-barbershop npx prisma migrate reset",
     "prisma-studio": "docker exec api-barbershop npx prisma studio"
   },
+  "engines": {
+    "node": ">=20.19.0"
+  },
   "author": "codecodedev",
   "license": "ISC",
   "devDependencies": {
