@@ -22,7 +22,6 @@ export async function distributeProfits(
     organizationRepository,
     profileRepository,
     unitRepository,
-    transactionRepository,
     appointmentRepository,
     barberServiceRepository,
     barberProductRepository,
@@ -37,10 +36,7 @@ export async function distributeProfits(
 
   const transactions: Transaction[] = []
 
-  const incrementUnit = new IncrementBalanceUnitService(
-    unitRepository,
-    transactionRepository,
-  )
+  const incrementUnit = new IncrementBalanceUnitService(unitRepository)
   const incrementProfile = new IncrementBalanceProfileService(profileRepository)
   type ValuesItemsTotals = {
     amount: number

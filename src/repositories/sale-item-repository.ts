@@ -16,15 +16,21 @@ export type DetailedAppointmentService = AppointmentService & {
 export type DetailedSaleItemFindMany = SaleItem & {
   sale: Sale
   transactions: Transaction[]
-  appointment:
+  appointment?:
     | (Appointment & {
         services: DetailedAppointmentService[]
       })
     | null
 }
+
 export interface SaleItemRepository {
   update(id: string, data: Prisma.SaleItemUpdateInput): Promise<SaleItem>
   findMany(
     where?: Prisma.SaleItemWhereInput,
+  ): Promise<DetailedSaleItemFindMany[]>
+
+  findManyFilterAppointmentService(
+    where?: Prisma.SaleItemWhereInput,
+    appointmentServiceIds?: string[],
   ): Promise<DetailedSaleItemFindMany[]>
 }

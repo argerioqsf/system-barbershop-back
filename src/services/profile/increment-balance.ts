@@ -28,7 +28,7 @@ export class IncrementBalanceProfileService {
         type:
           amount < 0 ? TransactionType.WITHDRAWAL : TransactionType.ADDITION,
         description: description ?? 'Increment Balance Profile',
-        amount: isLoan ? amount : Math.abs(amount),
+        amount: Math.abs(amount),
         userId,
         receiptUrl: undefined,
         saleId,

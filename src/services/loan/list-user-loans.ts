@@ -4,7 +4,6 @@ import {
 } from '@/repositories/loan-repository'
 
 interface ListUserLoansResponse {
-  loans: LoanWithTransactions[]
   pending: LoanWithTransactions[]
   paid: LoanWithTransactions[]
   totalOwed: number
@@ -37,6 +36,6 @@ export class ListUserLoansService {
       }
     }
 
-    return { loans, pending, paid, totalOwed }
+    return { pending, paid, totalOwed }
   }
 }

@@ -1,4 +1,3 @@
-import { TransactionRepository } from '@/repositories/transaction-repository'
 import { UnitRepository } from '@/repositories/unit-repository'
 import { Transaction, TransactionType, Unit } from '@prisma/client'
 import { makeCreateTransaction } from '../@factories/transaction/make-create-transaction'
@@ -9,10 +8,7 @@ interface IncrementBalanceUnitResponse {
 }
 
 export class IncrementBalanceUnitService {
-  constructor(
-    private repository: UnitRepository,
-    private transactionRepository: TransactionRepository,
-  ) {}
+  constructor(private repository: UnitRepository) {}
 
   async execute(
     id: string,
@@ -30,7 +26,7 @@ export class IncrementBalanceUnitService {
         type:
           amount < 0 ? TransactionType.WITHDRAWAL : TransactionType.ADDITION,
         description: 'Increment Balance Unit',
-        amount: isLoan ? amount : Math.abs(amount),
+        amount: Math.abs(amount),
         userId,
         receiptUrl: undefined,
         saleId,

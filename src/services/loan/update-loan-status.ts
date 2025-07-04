@@ -1,28 +1,35 @@
 import { LoanRepository } from '@/repositories/loan-repository'
-import { ProfilesRepository } from '@/repositories/profiles-repository'
 import { UnitRepository } from '@/repositories/unit-repository'
-import { TransactionRepository } from '@/repositories/transaction-repository'
-import { LoanStatus, Transaction } from '@prisma/client'
-import { IncrementBalanceProfileService } from '../profile/increment-balance'
+import { LoanStatus, RoleName, Transaction } from '@prisma/client'
 import { IncrementBalanceUnitService } from '../unit/increment-balance'
+import { UnauthorizedError } from '../@errors/auth/unauthorized-error'
+import { UserToken } from '@/http/controllers/authenticate-controller'
 
 interface UpdateLoanStatusRequest {
   loanId: string
   status: LoanStatus
   updatedById: string
+  user: UserToken
 }
 
 export class UpdateLoanStatusService {
   constructor(
     private loanRepository: LoanRepository,
-    private profileRepository: ProfilesRepository,
     private unitRepository: UnitRepository,
-    private transactionRepository: TransactionRepository,
   ) {}
 
-  async execute({ loanId, status, updatedById }: UpdateLoanStatusRequest) {
+  async execute({
+    loanId,
+    status,
+    updatedById,
+    user,
+  }: UpdateLoanStatusRequest) {
     const loan = await this.loanRepository.findById(loanId)
     if (!loan) throw new Error('Loan not found')
+    if (user.role === RoleName.MANAGER && loan.unitId !== user.unitId)
+      throw new UnauthorizedError()
+
+    const incUnit = new IncrementBalanceUnitService(this.unitRepository)
 
     const updated = await this.loanRepository.update(loanId, {
       status,
@@ -31,33 +38,15 @@ export class UpdateLoanStatusService {
 
     const transactions: Transaction[] = []
 
-    if (status === LoanStatus.APPROVED) {
-      const incProfile = new IncrementBalanceProfileService(
-        this.profileRepository,
-      )
-      const incUnit = new IncrementBalanceUnitService(
-        this.unitRepository,
-        this.transactionRepository,
-      )
-      const txProfile = await incProfile.execute(
-        loan.userId,
-        -loan.amount,
-        undefined,
-        true,
-        'Loan withdrawal',
-        undefined,
-        undefined,
-        loan.id,
-      )
+    if (status === LoanStatus.PAID) {
       const txUnit = await incUnit.execute(
         loan.unitId,
         loan.userId,
         -loan.amount,
         undefined,
         true,
-        loan.id,
       )
-      transactions.push(txProfile.transaction, txUnit.transaction)
+      transactions.push(txUnit.transaction)
     }
 
     return { loan: updated, transactions }

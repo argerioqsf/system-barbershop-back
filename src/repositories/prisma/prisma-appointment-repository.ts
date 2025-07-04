@@ -27,7 +27,7 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
     const appointments = await prisma.appointment.findMany({
       where: { unitId },
       include: {
-        services: { include: { service: true } },
+        services: { include: { service: true, transactions: true } },
         client: true,
         barber: { include: { profile: true } },
       },
@@ -41,7 +41,7 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
     const appointments = await prisma.appointment.findMany({
       where,
       include: {
-        services: { include: { service: true } },
+        services: { include: { service: true, transactions: true } },
         client: true,
         barber: { include: { profile: true } },
       },
@@ -53,7 +53,7 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
     const appointment = await prisma.appointment.findUnique({
       where: { id },
       include: {
-        services: { include: { service: true } },
+        services: { include: { service: true, transactions: true } },
         client: true,
         barber: { include: { profile: true } },
         saleItem: true,
