@@ -45,8 +45,8 @@ describe('List user pending commissions', () => {
     ctx.saleRepo.sales.push(sale1 as any, sale2 as any)
 
     const res = await ctx.service.execute({ userId: user.id })
-    expect(res.saleItems).toHaveLength(1)
-    expect(res.saleItems[0].saleItemId).toBe('it1')
+    expect(res.saleItemsRecords).toHaveLength(1)
+    expect(res.saleItemsRecords[0].saleItemId).toBe('it1')
   })
 
   it('includes appointment service commissions', async () => {
@@ -102,7 +102,8 @@ describe('List user pending commissions', () => {
 
     const res = await ctx.service.execute({ userId: user.id })
 
-    expect(res.appointmentServices).toHaveLength(1)
-    expect(res.total).toBeGreaterThan(0)
+    expect(res.saleItemsRecords).toHaveLength(1)
+    expect(res.saleItemsRecords[0].appointmentServiceId).toBe('aps1')
+    expect(res.totalCommission).toBeGreaterThan(0)
   })
 })

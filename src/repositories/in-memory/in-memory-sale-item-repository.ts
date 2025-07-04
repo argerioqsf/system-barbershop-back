@@ -1,4 +1,5 @@
 import { Prisma, SaleItem, PaymentStatus } from '@prisma/client'
+import { DetailedSaleItem } from '../sale-repository'
 import {
   DetailedSaleItemFindMany,
   SaleItemRepository,
@@ -67,22 +68,41 @@ export class InMemorySaleItemRepository implements SaleItemRepository {
         if (where.OR && Array.isArray(where.OR) && where.OR.length > 0) {
           let orMatch = false
           for (const condition of where.OR) {
-            if (
-              condition.serviceId &&
-              typeof condition.serviceId === 'object' &&
-              'not' in condition.serviceId &&
-              condition.serviceId.not === null &&
-              item.serviceId !== null
-            )
+            const cond = condition as Prisma.SaleItemWhereInput
+            const ands: Prisma.SaleItemWhereInput[] = Array.isArray(cond.AND)
+              ? cond.AND
+              : [cond.AND ?? cond]
+            const match = ands.every((c) => {
+              if (
+                c.serviceId &&
+                typeof c.serviceId === 'object' &&
+                'not' in c.serviceId &&
+                c.serviceId.not === null &&
+                item.serviceId === null
+              )
+                return false
+              if (
+                c.productId &&
+                typeof c.productId === 'object' &&
+                'not' in c.productId &&
+                c.productId.not === null &&
+                item.productId === null
+              )
+                return false
+              if (
+                c.id &&
+                typeof c.id === 'object' &&
+                'in' in c.id &&
+                Array.isArray(c.id.in) &&
+                !c.id.in.includes(item.id)
+              )
+                return false
+              return true
+            })
+            if (match) {
               orMatch = true
-            if (
-              condition.productId &&
-              typeof condition.productId === 'object' &&
-              'not' in condition.productId &&
-              condition.productId.not === null &&
-              item.productId !== null
-            )
-              orMatch = true
+              break
+            }
           }
           if (!orMatch) continue
         }
@@ -117,7 +137,10 @@ export class InMemorySaleItemRepository implements SaleItemRepository {
           }
         }
 
-        items.push({ ...item, sale } as unknown as DetailedSaleItemFindMany)
+        items.push({
+          ...(item as DetailedSaleItem),
+          sale,
+        } as unknown as DetailedSaleItemFindMany)
       }
     }
 
@@ -126,6 +149,7 @@ export class InMemorySaleItemRepository implements SaleItemRepository {
 
   async findManyFilterAppointmentService(
     where: Prisma.SaleItemWhereInput = {},
+    appointmentServiceIds: string[] = [],
   ): Promise<DetailedSaleItemFindMany[]> {
     const items: DetailedSaleItemFindMany[] = []
 
@@ -162,22 +186,69 @@ export class InMemorySaleItemRepository implements SaleItemRepository {
         if (where.OR && Array.isArray(where.OR) && where.OR.length > 0) {
           let orMatch = false
           for (const condition of where.OR) {
-            if (
-              condition.serviceId &&
-              typeof condition.serviceId === 'object' &&
-              'not' in condition.serviceId &&
-              condition.serviceId.not === null &&
-              item.serviceId !== null
-            )
+            const cond = condition as Prisma.SaleItemWhereInput
+            const ands: Prisma.SaleItemWhereInput[] = Array.isArray(cond.AND)
+              ? cond.AND
+              : [cond.AND ?? cond]
+            const match = ands.every((c) => {
+              if (
+                c.serviceId &&
+                typeof c.serviceId === 'object' &&
+                'not' in c.serviceId &&
+                c.serviceId.not === null &&
+                item.serviceId === null
+              )
+                return false
+              if (
+                c.productId &&
+                typeof c.productId === 'object' &&
+                'not' in c.productId &&
+                c.productId.not === null &&
+                item.productId === null
+              )
+                return false
+              if (
+                c.appointmentId &&
+                typeof c.appointmentId === 'object' &&
+                'not' in c.appointmentId &&
+                c.appointmentId.not === null &&
+                item.appointmentId === null
+              )
+                return false
+              if (
+                c.id &&
+                typeof c.id === 'object' &&
+                'in' in c.id &&
+                Array.isArray(c.id.in) &&
+                !c.id.in.includes(item.id)
+              )
+                return false
+              if (
+                c.appointment &&
+                'services' in c.appointment &&
+                c.appointment.services &&
+                'some' in c.appointment.services &&
+                c.appointment.services.some &&
+                'id' in c.appointment.services.some &&
+                c.appointment.services.some.id &&
+                typeof c.appointment.services.some.id === 'object' &&
+                'in' in c.appointment.services.some.id
+              ) {
+                const ids = c.appointment.services.some.id.in as string[]
+                const appointment = item.appointment
+                if (
+                  !appointment ||
+                  !appointment.services?.some((s) => ids.includes(s.id))
+                ) {
+                  return false
+                }
+              }
+              return true
+            })
+            if (match) {
               orMatch = true
-            if (
-              condition.productId &&
-              typeof condition.productId === 'object' &&
-              'not' in condition.productId &&
-              condition.productId.not === null &&
-              item.productId !== null
-            )
-              orMatch = true
+              break
+            }
           }
           if (!orMatch) continue
         }
@@ -212,7 +283,22 @@ export class InMemorySaleItemRepository implements SaleItemRepository {
           }
         }
 
-        items.push({ ...item, sale } as unknown as DetailedSaleItemFindMany)
+        const cloned = {
+          ...(item as DetailedSaleItem),
+          sale,
+        } as unknown as DetailedSaleItemFindMany
+
+        if (appointmentServiceIds.length > 0 && cloned.appointment) {
+          cloned.appointment = {
+            ...cloned.appointment,
+            services:
+              cloned.appointment.services?.filter((svc) =>
+                appointmentServiceIds.includes(svc.id),
+              ) ?? [],
+          }
+        }
+
+        items.push(cloned)
       }
     }
 
