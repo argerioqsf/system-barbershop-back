@@ -2,9 +2,6 @@
 
 Este projeto usa Node.js 20 e TypeScript com Fastify e Prisma. Os testes são executados via Vitest.
 
-## Idioma
-- Todas as respostas do bot devem ser em **português**. Só utilize outro idioma se for solicitado explicitamente.
-
 ## Estilo de código
 - Indentação de 2 espaços.
 - Utilize `npm run lint` para aplicar o ESLint (configurado via `@rocketseat/eslint-config`).
