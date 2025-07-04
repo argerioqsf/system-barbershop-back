@@ -31,6 +31,13 @@ export const PayBalanceTransactionController = async (
         })
         .optional(),
       affectedUserId: z.string(),
+      discountLoans: z
+        .union([z.boolean(), z.string()])
+        .transform((val) => {
+          if (typeof val === 'boolean') return val
+          return val === 'true'
+        })
+        .optional(),
     })
     .refine(
       (d) =>
@@ -51,14 +58,18 @@ export const PayBalanceTransactionController = async (
     ? `/uploads/${request.file.filename}`
     : undefined
   const service = makePayBalanceTransaction()
-  const { transactions } = await service.execute({
-    userId: user.sub,
-    affectedUserId: data.affectedUserId,
-    description: data.description,
-    amount: data.amount,
-    saleItemIds: data.saleItemIds,
-    appointmentServiceIds: data.appointmentServiceIds,
-    receiptUrl,
-  })
+  const { transactions } = await service.execute(
+    {
+      userId: user.sub,
+      affectedUserId: data.affectedUserId,
+      description: data.description,
+      amount: data.amount,
+      saleItemIds: data.saleItemIds,
+      appointmentServiceIds: data.appointmentServiceIds,
+      receiptUrl,
+      discountLoans: data.discountLoans,
+    },
+    user,
+  )
   return reply.status(201).send({ transactions })
 }

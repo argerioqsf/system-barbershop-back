@@ -6,10 +6,12 @@ import {
   Profile,
   AppointmentService,
   Service,
+  Transaction,
 } from '@prisma/client'
 
 export type DetailedAppointmentService = AppointmentService & {
   service: Service
+  transactions: Transaction[]
 }
 
 export type DetailedAppointment = Appointment & {

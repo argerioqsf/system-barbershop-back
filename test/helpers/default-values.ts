@@ -248,6 +248,7 @@ export const defaultUnit: Unit = {
   organizationId: 'org-1',
   totalBalance: 0,
   allowsLoan: false,
+  loanMonthlyLimit: 0,
   slotDuration: 30,
 }
 
@@ -366,6 +367,7 @@ export function makeUnit(
     organizationId,
     totalBalance: 0,
     allowsLoan: false,
+    loanMonthlyLimit: 0,
     slotDuration: 30,
   }
 }

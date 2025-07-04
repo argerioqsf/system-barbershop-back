@@ -6,11 +6,9 @@ import {
   ProfileWorkHour,
   ProfileBlockedHour,
   Role,
-  Unit,
   User,
-  BarberService,
 } from '@prisma/client'
-import { BarberUsersRepository } from '../barber-users-repository'
+import { BarberUsersRepository, UserFindById } from '../barber-users-repository'
 
 export class PrismaBarberUsersRepository implements BarberUsersRepository {
   private sanitizeUser<T>(user: T & { password: string }): Omit<T, 'password'> {
@@ -127,21 +125,7 @@ export class PrismaBarberUsersRepository implements BarberUsersRepository {
     >(users)
   }
 
-  async findById(id: string): Promise<
-    | (User & {
-        profile:
-          | (Profile & {
-              role: Role
-              permissions: Permission[]
-              workHours: ProfileWorkHour[]
-              blockedHours: ProfileBlockedHour[]
-              barberServices: BarberService[]
-            })
-          | null
-        unit: Unit | null
-      })
-    | null
-  > {
+  async findById(id: string): Promise<UserFindById> {
     return prisma.user.findUnique({
       where: { id },
       include: {
@@ -152,6 +136,7 @@ export class PrismaBarberUsersRepository implements BarberUsersRepository {
             workHours: true,
             blockedHours: true,
             barberServices: true,
+            barberProducts: true,
           },
         },
         unit: true,

@@ -4,7 +4,6 @@ import {
   DetailedSaleItemFindMany,
   SaleItemRepository,
 } from '../sale-item-repository'
-
 export class PrismaSaleItemRepository implements SaleItemRepository {
   async update(
     id: string,
@@ -16,7 +15,7 @@ export class PrismaSaleItemRepository implements SaleItemRepository {
   async findMany(
     where: Prisma.SaleItemWhereInput = {},
   ): Promise<DetailedSaleItemFindMany[]> {
-    const saleItems = await prisma.saleItem.findMany({
+    return prisma.saleItem.findMany({
       where,
       include: {
         sale: true,
@@ -24,15 +23,32 @@ export class PrismaSaleItemRepository implements SaleItemRepository {
         appointment: {
           include: {
             services: {
-              include: {
-                service: true,
-                transactions: true,
-              },
+              include: { service: true, transactions: true },
             },
           },
         },
       },
     })
-    return saleItems
+  }
+
+  async findManyFilterAppointmentService(
+    where: Prisma.SaleItemWhereInput = {},
+    appointmentServiceIds?: string[],
+  ): Promise<DetailedSaleItemFindMany[]> {
+    return prisma.saleItem.findMany({
+      where,
+      include: {
+        sale: true,
+        transactions: true,
+        appointment: {
+          include: {
+            services: {
+              where: { id: { in: appointmentServiceIds } },
+              include: { service: true, transactions: true },
+            },
+          },
+        },
+      },
+    })
   }
 }

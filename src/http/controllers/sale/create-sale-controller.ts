@@ -1,4 +1,5 @@
 import { makeCreateSale } from '@/services/@factories/sale/make-create-sale'
+import { PaymentMethod, PaymentStatus } from '@prisma/client'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
@@ -7,7 +8,7 @@ export const CreateSaleController = async (
   reply: FastifyReply,
 ) => {
   const bodySchema = z.object({
-    method: z.enum(['CASH', 'PIX', 'CREDIT_CARD', 'DEBIT_CARD']),
+    method: z.nativeEnum(PaymentMethod),
     items: z.array(
       z.object({
         serviceId: z.string().optional(),
@@ -21,7 +22,7 @@ export const CreateSaleController = async (
     ),
     clientId: z.string(),
     couponCode: z.string().optional(),
-    paymentStatus: z.enum(['PAID', 'PENDING']).optional().default('PENDING'),
+    paymentStatus: z.nativeEnum(PaymentStatus).optional().default('PENDING'),
   })
   const data = bodySchema.parse(request.body)
   const userId = request.user.sub

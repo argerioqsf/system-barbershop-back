@@ -57,10 +57,7 @@ export class AddBalanceTransactionService {
     const incrementProfile = new IncrementBalanceProfileService(
       this.profileRepository,
     )
-    const incrementUnit = new IncrementBalanceUnitService(
-      this.unitRepository,
-      this.repository,
-    )
+    const incrementUnit = new IncrementBalanceUnitService(this.unitRepository)
 
     const transactions: Transaction[] = []
     let surplusValue: number | undefined

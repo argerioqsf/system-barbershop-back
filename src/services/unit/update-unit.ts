@@ -6,6 +6,7 @@ interface UpdateUnitRequest {
   name?: string
   slug?: string
   allowsLoan?: boolean
+  loanMonthlyLimit?: number
 }
 
 interface UpdateUnitResponse {
@@ -21,6 +22,9 @@ export class UpdateUnitService {
       name,
       ...(slug ? { slug } : {}),
       ...(allowsLoan !== undefined ? { allowsLoan } : {}),
+      ...(data.loanMonthlyLimit !== undefined
+        ? { loanMonthlyLimit: data.loanMonthlyLimit }
+        : {}),
     })
     return { unit }
   }

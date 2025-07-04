@@ -1,5 +1,6 @@
 import { makeGetUserService } from '@/services/@factories/barber-user/make-get-user'
 import { makeBarberBalance } from '@/services/@factories/report/make-barber-balance'
+import { makeListUserLoans } from '@/services/@factories/loan/make-list-user-loans'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
@@ -16,5 +17,8 @@ export const GetBarberUserController = async (
   const balanceService = makeBarberBalance()
   const { balance } = await balanceService.execute({ barberId: id })
 
-  return reply.status(200).send({ ...user, balance })
+  const loanService = makeListUserLoans()
+  const loans = await loanService.execute({ userId: id })
+
+  return reply.status(200).send({ ...user, balance, loans })
 }

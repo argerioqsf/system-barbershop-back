@@ -26,6 +26,7 @@ export class InMemoryCouponRepository implements CouponRepository {
         organizationId: 'org-1',
         totalBalance: 0,
         allowsLoan: false,
+        loanMonthlyLimit: 0,
         slotDuration: 60,
       },
     } as Coupon & { unit: { organizationId: string } })

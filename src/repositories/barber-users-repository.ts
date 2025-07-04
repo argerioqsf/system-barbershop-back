@@ -8,7 +8,24 @@ import {
   Unit,
   User,
   BarberService,
+  BarberProduct,
 } from '@prisma/client'
+
+export type UserFindById =
+  | (User & {
+      profile:
+        | (Profile & {
+            role: Role
+            permissions: Permission[]
+            workHours: ProfileWorkHour[]
+            blockedHours: ProfileBlockedHour[]
+            barberServices: BarberService[]
+            barberProducts: BarberProduct[]
+          })
+        | null
+      unit: Unit | null
+    })
+  | null
 
 export interface BarberUsersRepository {
   create(
@@ -35,21 +52,7 @@ export interface BarberUsersRepository {
         | null
     })[]
   >
-  findById(id: string): Promise<
-    | (User & {
-        profile:
-          | (Profile & {
-              role: Role
-              permissions: Permission[]
-              workHours: ProfileWorkHour[]
-              blockedHours: ProfileBlockedHour[]
-              barberServices: BarberService[]
-            })
-          | null
-        unit: Unit | null
-      })
-    | null
-  >
+  findById(id: string): Promise<UserFindById>
   findByEmail(email: string): Promise<
     | (User & {
         profile:

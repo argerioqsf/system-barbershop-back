@@ -1,10 +1,8 @@
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { CashRegisterRepository } from '@/repositories/cash-register-repository'
-import { TransactionRepository } from '@/repositories/transaction-repository'
 import { ProfilesRepository } from '@/repositories/profiles-repository'
 import { Transaction } from '@prisma/client'
 import { UnitRepository } from '@/repositories/unit-repository'
-import { OrganizationRepository } from '@/repositories/organization-repository'
 import { IncrementBalanceUnitService } from '../unit/increment-balance'
 import { IncrementBalanceProfileService } from '../profile/increment-balance'
 import { UserNotFoundError } from '@/services/@errors/user/user-not-found-error'
@@ -29,12 +27,10 @@ interface withdrawalBalanceTransactionResponse {
 
 export class WithdrawalBalanceTransactionService {
   constructor(
-    private repository: TransactionRepository,
     private barberUserRepository: BarberUsersRepository,
     private cashRegisterRepository: CashRegisterRepository,
     private profileRepository: ProfilesRepository,
     private unitRepository: UnitRepository,
-    private organizationRepository: OrganizationRepository,
   ) {}
 
   async execute(
@@ -59,10 +55,7 @@ export class WithdrawalBalanceTransactionService {
     const incrementProfile = new IncrementBalanceProfileService(
       this.profileRepository,
     )
-    const incrementUnit = new IncrementBalanceUnitService(
-      this.unitRepository,
-      this.repository,
-    )
+    const incrementUnit = new IncrementBalanceUnitService(this.unitRepository)
 
     const transactions: Transaction[] = []
 

@@ -888,8 +888,8 @@
       "headers": [
         {
           "name": "Authorization",
-      "value": "Bearer {{ token }}"
-      }
+          "value": "Bearer {{ token }}"
+        }
       ]
     },
     {
@@ -1508,6 +1508,70 @@
       "method": "GET",
       "url": "{{ baseURL }}/units/opening-hours",
       "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "fld_loans",
+      "_type": "request_group",
+      "parentId": "wrk_9bc2c94a4e7579532748a266ff7bafa9",
+      "name": "Loans"
+    },
+    {
+      "_id": "req_create_loan",
+      "_type": "request",
+      "parentId": "fld_loans",
+      "name": "Create loan",
+      "method": "POST",
+      "url": "{{ baseURL }}/loans",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"amount\": 0\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_list_user_loans",
+      "_type": "request",
+      "parentId": "fld_loans",
+      "name": "List user loans",
+      "method": "GET",
+      "url": "{{ baseURL }}/users/{userId}/loans",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ token }}"
+        }
+      ]
+    },
+    {
+      "_id": "req_update_loan_status",
+      "_type": "request",
+      "parentId": "fld_loans",
+      "name": "Update loan status",
+      "method": "PATCH",
+      "url": "{{ baseURL }}/loans/{id}/status",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"status\": \"APPROVED\"\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
         {
           "name": "Authorization",
           "value": "Bearer {{ token }}"

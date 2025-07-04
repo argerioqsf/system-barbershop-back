@@ -42,6 +42,7 @@ export class InMemoryProfilesRepository implements ProfilesRepository {
         id: 'unit-1',
         name: '',
         organizationId: '',
+        loanMonthlyLimit: 0,
         slotDuration: 30,
         slug: '',
         totalBalance: 0,

@@ -3,14 +3,16 @@ import { ListUserPendingCommissionsService } from '../../../src/services/users/l
 import {
   FakeSaleRepository,
   FakeSaleItemRepository,
+  FakeLoanRepository,
 } from '../../helpers/fake-repositories'
 import { makeSaleWithBarber, makeProfile, makeUser, defaultUnit } from '../../helpers/default-values'
 
 function setup() {
   const saleRepo = new FakeSaleRepository()
   const saleItemRepo = new FakeSaleItemRepository(saleRepo)
-  const service = new ListUserPendingCommissionsService(saleItemRepo)
-  return { saleRepo, saleItemRepo, service }
+  const loanRepo = new FakeLoanRepository()
+  const service = new ListUserPendingCommissionsService(saleItemRepo, loanRepo)
+  return { saleRepo, saleItemRepo, loanRepo, service }
 }
 
 describe('List user pending commissions', () => {
@@ -43,8 +45,8 @@ describe('List user pending commissions', () => {
     ctx.saleRepo.sales.push(sale1 as any, sale2 as any)
 
     const res = await ctx.service.execute({ userId: user.id })
-    expect(res.saleItems).toHaveLength(1)
-    expect(res.saleItems[0].saleItemId).toBe('it1')
+    expect(res.saleItemsRecords).toHaveLength(1)
+    expect(res.saleItemsRecords[0].saleItemId).toBe('it1')
   })
 
   it('includes appointment service commissions', async () => {
@@ -100,7 +102,8 @@ describe('List user pending commissions', () => {
 
     const res = await ctx.service.execute({ userId: user.id })
 
-    expect(res.appointmentServices).toHaveLength(1)
-    expect(res.total).toBeGreaterThan(0)
+    expect(res.saleItemsRecords).toHaveLength(1)
+    expect(res.saleItemsRecords[0].appointmentServiceId).toBe('aps1')
+    expect(res.totalCommission).toBeGreaterThan(0)
   })
 })

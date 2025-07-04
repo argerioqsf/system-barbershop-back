@@ -1,8 +1,6 @@
 import { env } from '@/env'
 import {
   PrismaClient,
-  PaymentMethod,
-  PaymentStatus,
   TransactionType,
   DiscountType,
   RoleName,
@@ -17,31 +15,6 @@ import 'dotenv/config'
 const prisma = new PrismaClient()
 
 async function main() {
-  const passwordHash = await hash(env.PASSWORD_SEED, 6)
-
-  const organization = await prisma.organization.create({
-    data: {
-      name: 'Lobo BarberShop',
-      slug: 'lobo-barbershop',
-    },
-  })
-
-  const organization2 = await prisma.organization.create({
-    data: {
-      name: 'Argerio BarberShop',
-      slug: 'argerio-barbershop',
-    },
-  })
-
-  const mainUnit = await prisma.unit.create({
-    data: {
-      name: 'Main Unit',
-      slug: 'main-unit',
-      slotDuration: 60,
-      organization: { connect: { id: organization.id } },
-    },
-  })
-
   const permissionData = [
     { name: PermissionName.LIST_USER_ALL, category: PermissionCategory.USER },
     { name: PermissionName.LIST_USER_UNIT, category: PermissionCategory.USER },
@@ -137,6 +110,32 @@ async function main() {
     { id: string }
   >
 
+  const passwordHash = await hash(env.PASSWORD_SEED, 6)
+
+  const organization = await prisma.organization.create({
+    data: {
+      name: 'Lobo BarberShop',
+      slug: 'lobo-barbershop',
+    },
+  })
+
+  const organization2 = await prisma.organization.create({
+    data: {
+      name: 'Argerio BarberShop',
+      slug: 'argerio-barbershop',
+    },
+  })
+
+  const mainUnit = await prisma.unit.create({
+    data: {
+      name: 'Main Unit',
+      slug: 'main-unit',
+      slotDuration: 60,
+      organization: { connect: { id: organization.id } },
+      loanMonthlyLimit: 500,
+    },
+  })
+
   for (const data of permissionData) {
     const permission = await prisma.permission.create({ data })
     permissions[data.name] = permission
@@ -213,7 +212,7 @@ async function main() {
           totalBalance: 0,
           role: { connect: { id: roleAdmin.id } },
           permissions: {
-            connect: [{ id: permissions[PermissionName.LIST_USER_ORG].id }],
+            connect: [],
           },
         },
       },
@@ -237,22 +236,7 @@ async function main() {
           pix: 'ownerpix',
           totalBalance: 0,
           role: { connect: { id: roleOwner.id } },
-          permissions: {
-            connect: [
-              {
-                id: permissions[PermissionName.MANAGE_USER_TRANSACTION_ADD].id,
-              },
-              {
-                id: permissions[
-                  PermissionName.MANAGE_USER_TRANSACTION_WITHDRAWAL
-                ].id,
-              },
-              {
-                id: permissions[PermissionName.MANAGE_OTHER_USER_TRANSACTION]
-                  .id,
-              },
-            ],
-          },
+          permissions: { connect: [] },
         },
       },
       unit: { connect: { id: Unit2.id } },
@@ -301,20 +285,7 @@ async function main() {
           totalBalance: 0,
           role: { connect: { id: roleMenager.id } },
           permissions: {
-            connect: [
-              {
-                id: permissions[PermissionName.MANAGE_USER_TRANSACTION_ADD].id,
-              },
-              {
-                id: permissions[
-                  PermissionName.MANAGE_USER_TRANSACTION_WITHDRAWAL
-                ].id,
-              },
-              {
-                id: permissions[PermissionName.MANAGE_OTHER_USER_TRANSACTION]
-                  .id,
-              },
-            ],
+            connect: [],
           },
         },
       },
@@ -433,13 +404,13 @@ async function main() {
         unitId: mainUnit.id,
         weekDay: 1,
         startHour: '08:00',
-        endHour: '09:00',
+        endHour: '12:00',
       },
       {
         unitId: mainUnit.id,
         weekDay: 1,
-        startHour: '09:00',
-        endHour: '10:00',
+        startHour: '14:00',
+        endHour: '18:00',
       },
     ],
   })
@@ -451,13 +422,13 @@ async function main() {
           profileId: barber.profile.id,
           weekDay: 1,
           startHour: '08:00',
-          endHour: '09:00',
+          endHour: '10:00',
         },
         {
           profileId: barber.profile.id,
           weekDay: 1,
-          startHour: '09:00',
-          endHour: '10:00',
+          startHour: '14:00',
+          endHour: '16:30',
         },
       ],
     })
@@ -469,18 +440,6 @@ async function main() {
       },
     })
   }
-
-  const appointment = await prisma.appointment.create({
-    data: {
-      client: { connect: { id: client.id } },
-      barber: { connect: { id: barber.id } },
-      unit: { connect: { id: mainUnit.id } },
-      date: new Date(new Date().setHours(10, 0, 0, 0)),
-      status: 'SCHEDULED',
-      durationService: 30,
-      services: { create: [{ serviceId: haircut.id }] },
-    },
-  })
 
   const cashSession = await prisma.cashRegisterSession.create({
     data: {
@@ -507,103 +466,6 @@ async function main() {
     data: { totalBalance: { increment: 100 } },
   })
 
-  await prisma.organization.update({
-    where: { id: organization.id },
-    data: { totalBalance: { increment: 100 } },
-  })
-
-  await prisma.unit.update({
-    where: { id: mainUnit.id },
-    data: { totalBalance: { increment: 35 } },
-  })
-
-  await prisma.organization.update({
-    where: { id: organization.id },
-    data: { totalBalance: { increment: 35 } },
-  })
-
-  const sale = await prisma.sale.create({
-    data: {
-      user: { connect: { id: admin.id } },
-      client: { connect: { id: client.id } },
-      unit: { connect: { id: mainUnit.id } },
-      session: { connect: { id: cashSession.id } },
-      total: 35,
-      method: PaymentMethod.CASH,
-      paymentStatus: PaymentStatus.PAID,
-      items: {
-        create: [
-          {
-            serviceId: haircut.id,
-            quantity: 1,
-            barberId: barber.id,
-            price: 25,
-            discount: 5,
-            discountType: DiscountType.VALUE,
-            porcentagemBarbeiro: 70,
-          },
-          {
-            productId: shampoo.id,
-            quantity: 1,
-            couponId: itemCoupon.id,
-            price: 10,
-            discount: 5,
-            discountType: DiscountType.VALUE,
-          },
-        ],
-      },
-    },
-  })
-
-  const pendingSale = await prisma.sale.create({
-    data: {
-      user: { connect: { id: admin.id } },
-      client: { connect: { id: client.id } },
-      unit: { connect: { id: mainUnit.id } },
-      total: 20,
-      method: PaymentMethod.CASH,
-      paymentStatus: PaymentStatus.PENDING,
-      items: {
-        create: [
-          {
-            serviceId: haircut.id,
-            quantity: 1,
-            barberId: barber.id,
-            price: 20,
-            porcentagemBarbeiro: 70,
-          },
-        ],
-      },
-    },
-  })
-
-  await prisma.product.update({
-    where: { id: shampoo.id },
-    data: { quantity: { decrement: 1 } },
-  })
-
-  const shareBarber = (25 * 70) / 100
-  const shareOwner = 25 - shareBarber
-  await prisma.profile.update({
-    where: { userId: barber.id },
-    data: { totalBalance: { increment: shareBarber } },
-  })
-
-  await prisma.profile.update({
-    where: { userId: owner.id },
-    data: { totalBalance: { increment: shareOwner } },
-  })
-
-  await prisma.unit.update({
-    where: { id: mainUnit.id },
-    data: { totalBalance: { increment: 35 } },
-  })
-
-  await prisma.organization.update({
-    where: { id: organization.id },
-    data: { totalBalance: { increment: 35 } },
-  })
-
   await prisma.coupon.create({
     data: {
       code: 'WELCOME10',
@@ -625,10 +487,8 @@ async function main() {
     client,
     haircut,
     shampoo,
-    appointment,
+    owner,
     cashSession,
-    sale,
-    pendingSale,
     itemCoupon,
     manager,
     owner2,
