@@ -1,4 +1,5 @@
 import { Prisma, SaleItem, PaymentStatus } from '@prisma/client'
+import { DetailedSaleItem } from '../sale-repository'
 import {
   DetailedSaleItemFindMany,
   SaleItemRepository,
@@ -67,8 +68,10 @@ export class InMemorySaleItemRepository implements SaleItemRepository {
         if (where.OR && Array.isArray(where.OR) && where.OR.length > 0) {
           let orMatch = false
           for (const condition of where.OR) {
-            const cond = condition as any
-            const ands: any[] = cond.AND ?? [cond]
+            const cond = condition as Prisma.SaleItemWhereInput
+            const ands: Prisma.SaleItemWhereInput[] = Array.isArray(cond.AND)
+              ? cond.AND
+              : [cond.AND ?? cond]
             const match = ands.every((c) => {
               if (
                 c.serviceId &&
@@ -134,7 +137,10 @@ export class InMemorySaleItemRepository implements SaleItemRepository {
           }
         }
 
-        items.push({ ...item, sale } as unknown as DetailedSaleItemFindMany)
+        items.push({
+          ...(item as DetailedSaleItem),
+          sale,
+        } as unknown as DetailedSaleItemFindMany)
       }
     }
 
@@ -180,8 +186,10 @@ export class InMemorySaleItemRepository implements SaleItemRepository {
         if (where.OR && Array.isArray(where.OR) && where.OR.length > 0) {
           let orMatch = false
           for (const condition of where.OR) {
-            const cond = condition as any
-            const ands: any[] = cond.AND ?? [cond]
+            const cond = condition as Prisma.SaleItemWhereInput
+            const ands: Prisma.SaleItemWhereInput[] = Array.isArray(cond.AND)
+              ? cond.AND
+              : [cond.AND ?? cond]
             const match = ands.every((c) => {
               if (
                 c.serviceId &&
@@ -275,10 +283,10 @@ export class InMemorySaleItemRepository implements SaleItemRepository {
           }
         }
 
-        const cloned: DetailedSaleItemFindMany = {
-          ...(item as any),
+        const cloned = {
+          ...(item as DetailedSaleItem),
           sale,
-        }
+        } as unknown as DetailedSaleItemFindMany
 
         if (appointmentServiceIds.length > 0 && cloned.appointment) {
           cloned.appointment = {
