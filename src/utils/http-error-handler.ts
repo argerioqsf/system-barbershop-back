@@ -29,6 +29,7 @@ import { FastifyReply } from 'fastify'
 import { ItemPriceGreaterError } from '@/services/@errors/sale/Item-price-greater-error'
 import { InvalidAppointmentStatusError } from '@/services/@errors/appointment/invalid-appointment-status-error'
 import { CannotEditPaidSaleError } from '@/services/@errors/sale/cannot-edit-paid-sale-error'
+import { LoanPaymentGreaterThanRemainingError } from '@/services/@errors/loan/loan-payment-greater-than-remaining-error'
 
 export function mapErrorToStatus(error: Error): number {
   if (
@@ -45,7 +46,8 @@ export function mapErrorToStatus(error: Error): number {
     error instanceof ItemNeedsServiceOrProductOrAppointmentError ||
     error instanceof ItemPriceGreaterError ||
     error instanceof InvalidAppointmentStatusError ||
-    error instanceof CannotEditPaidSaleError
+    error instanceof CannotEditPaidSaleError ||
+    error instanceof LoanPaymentGreaterThanRemainingError
   ) {
     return 400
   }
