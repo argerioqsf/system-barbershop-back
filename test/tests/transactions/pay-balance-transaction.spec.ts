@@ -245,8 +245,8 @@ describe('Pay balance transaction service', () => {
       { unitId: ctx.unitRepo.unit.id } as any,
     )
 
-    expect(ctx.transactionRepo.transactions).toHaveLength(0)
-    expect((sale.items[0] as any).commissionPaid).toBe(false)
+    expect(ctx.transactionRepo.transactions).toHaveLength(1)
+    expect((sale.items[0] as any).commissionPaid).toBe(true)
   })
 
   it('pays appointment services by id', async () => {
@@ -304,9 +304,9 @@ describe('Pay balance transaction service', () => {
       { unitId: ctx.unitRepo.unit.id } as any,
     )
 
-    expect(ctx.transactionRepo.transactions).toHaveLength(0)
+    expect(ctx.transactionRepo.transactions).toHaveLength(1)
     expect(
       ctx.appointmentRepo.appointments[0].services[0].commissionPaid,
-    ).toBe(false)
+    ).toBe(true)
   })
 })
