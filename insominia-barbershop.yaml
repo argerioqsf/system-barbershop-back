@@ -1,0 +1,2277 @@
+type: collection.insomnia.rest/5.0
+name: Lobo Barbearia
+meta:
+  id: wrk_689db74c5f1d4d0783c0f609678d1832
+  created: 1751331396291
+  modified: 1751331396291
+  description: ""
+collection:
+  - name: Auth
+    meta:
+      id: fld_2850163e9bef433b9fccda6534f9b671
+      created: 1751331396294
+      modified: 1751442764954
+      sortKey: -1751331396294
+      description: ""
+    children:
+      - url: "{{ baseURL }}/users"
+        name: Register
+        meta:
+          id: req_86588b9aadad481db197b00d271cb9f3
+          created: 1751331396294
+          modified: 1751331396294
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396294
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "",
+              "email": "",
+              "password": "",
+              "phone": "",
+              "cpf": "",
+              "genre": "M",
+              "birthday": "1990-01-01",
+              "pix": "",
+              "role": "BARBER",
+              "organizationId": "",
+              "unitId": ""
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/forgot-password"
+        name: Forgot password
+        meta:
+          id: req_1bb41e07f08941668aac5f0b1a50cd87
+          created: 1751331396295
+          modified: 1751331396295
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396295
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "email": ""
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/sessions"
+        name: Authenticate
+        meta:
+          id: req_cbb3834547de48b982958c51fddd68d6
+          created: 1751331396295
+          modified: 1751442760972
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396295
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "email": "admin@barbershop.com",
+              "password": "12345678A@"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        scripts:
+          preRequest: ""
+          afterResponse: >-
+            let response = insomnia.response.json();
+
+
+            if (response.token) {
+                // Define o token como variável de ambiente
+                insomnia.environment.set("token", response.token);
+                console.log("Token salvo como variável de ambiente.");
+            } else if (response.user && response.user.token) {
+                // Caso o token esteja dentro de user.token
+                insomnia.environment.set("token", response.user.token);
+                console.log("Token salvo como variável de ambiente a partir de user.token.");
+            } else {
+                console.warn("Token não encontrado na resposta.");
+            }
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/reset-password"
+        name: Reset password
+        meta:
+          id: req_1b5805b0b7b041fc9f0c6411441b2743
+          created: 1751331396296
+          modified: 1751331396296
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396296
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "token": "",
+              "password": ""
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/sessions/unit"
+        name: Set unit
+        meta:
+          id: req_2be50de67988491f8f5a721dfbd1adf3
+          created: 1751331396296
+          modified: 1751331396296
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396296
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "unitId": ""
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Profile
+    meta:
+      id: fld_700d43b418354dc4a420f6bae166e082
+      created: 1751331396296
+      modified: 1751331396296
+      sortKey: -1751331396296
+      description: ""
+    children:
+      - url: "{{ baseURL }}/profile"
+        name: Get profile
+        meta:
+          id: req_007947ffb03c449d865c014299b2aa72
+          created: 1751331396297
+          modified: 1751331396297
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396297
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/profile/{id}"
+        name: Update profile with id
+        meta:
+          id: req_41c6998d38f64d5d8101699f581246a9
+          created: 1751331396297
+          modified: 1751331396297
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396297
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "phone": ""
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/create/profile"
+        name: Create profile
+        meta:
+          id: req_89b19e1c072440e5b311e1b1b90b308b
+          created: 1751331396297
+          modified: 1751331396297
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396297
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "phone": "",
+              "cpf": "",
+              "genre": "M",
+              "birthday": "1990-01-01",
+              "pix": ""
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/profile"
+        name: Update profile
+        meta:
+          id: req_8ba33d019f0f422ebafc7fcbe06e7a00
+          created: 1751331396298
+          modified: 1751331396298
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396298
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "phone": ""
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Services
+    meta:
+      id: fld_b7dfbebe544b4b43a1e3bfab75dff22c
+      created: 1751331396298
+      modified: 1751441502546
+      sortKey: -1751331396298
+      description: ""
+    children:
+      - url: "{{ baseURL }}/create/service"
+        name: Create service
+        meta:
+          id: req_c0bad1a836ec44c4968e29907a9cd7a7
+          created: 1751331396298
+          modified: 1751331396298
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396298
+        method: POST
+        body:
+          mimeType: multipart/form-data
+          params:
+            - name: name
+              value: Corte
+            - name: description
+              value: Corte simples
+            - name: cost
+              value: "10"
+            - name: price
+              value: "20"
+            - name: category
+              value: ""
+            - name: defaultTime
+              value: ""
+            - name: commissionPercentage
+              value: ""
+            - name: unitId
+              value: ""
+            - name: image
+              value: ""
+              type: file
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/services"
+        name: List services
+        meta:
+          id: req_9225a4082fb5409fa6923db117f83b14
+          created: 1751331396299
+          modified: 1751431649486
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396299
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        scripts:
+          afterResponse: |-
+            let response = insomnia.response.json();
+            if(!response) console.warn("service nao encontrado")
+            if (response[0]) {
+                insomnia.environment.set("serviceId", response[0].id);
+                console.log("serviceId salvo com sucesso!");
+            } else {
+                console.warn("Servico nao encontrado");
+            }
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Products
+    meta:
+      id: fld_28c2c469726845088098ff412e825e84
+      created: 1751331396299
+      modified: 1751441510534
+      sortKey: -1751331396299
+      description: ""
+    children:
+      - url: "{{ baseURL }}/products"
+        name: Create product
+        meta:
+          id: req_afc0f9bf3f774867ab53141421a58a59
+          created: 1751331396299
+          modified: 1751331396299
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396299
+        method: POST
+        body:
+          mimeType: multipart/form-data
+          params:
+            - name: name
+              value: Shampoo
+            - name: description
+              value: Hair shampoo
+            - name: quantity
+              value: "10"
+            - name: cost
+              value: "5"
+            - name: price
+              value: "15"
+            - name: image
+              value: ""
+              type: file
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/products"
+        name: List products
+        meta:
+          id: req_ccce497b0df3461a9c6d63eff49ab560
+          created: 1751331396299
+          modified: 1751431461841
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396299
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        scripts:
+          afterResponse: |-
+            let response = insomnia.response.json();
+            if(!response) console.warn("products nao encontrado")
+            if (response[0]) {
+                insomnia.environment.set("productId", response[0].id);
+                console.log("productid salvo com sucesso!");
+            } else {
+                console.warn("Produto nao encontrado");
+            }
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/products/9db00721-e2d9-4a04-bd55-811a42ac0da5"
+        name: Update product
+        meta:
+          id: req_1f4f084524fa4e1fbaa3618a4bd880f6
+          created: 1751331396300
+          modified: 1751425314320
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396300
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "commissionPercentage": 50
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/products/7eef789c-bfa9-472e-a589-550e7b22d688"
+        name: Get product
+        meta:
+          id: req_ce6ffad8eec448d9963a91b1f6f7b60a
+          created: 1751331396300
+          modified: 1751427472927
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396300
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/product-sellers"
+        name: List product sellers
+        meta:
+          id: req_19f9171926724f0099fabf03882027a4
+          created: 1751331396301
+          modified: 1751331396301
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396301
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/products/{id}"
+        name: Delete product
+        meta:
+          id: req_5a3bb442de394e3ca6cd86a3fbd971d0
+          created: 1751331396301
+          modified: 1751331396301
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396301
+        method: DELETE
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Appointments
+    meta:
+      id: fld_3a2662e345ee447ba802f552e3ca71b1
+      created: 1751331396301
+      modified: 1751331396301
+      sortKey: -1751331396301
+      description: ""
+    children:
+      - url: "{{ baseURL }}/create/appointment"
+        name: Create appointment
+        meta:
+          id: req_6753b946d1ab4e46a7488e4ac529c019
+          created: 1751331396301
+          modified: 1751601142227
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396301
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "clientId": "{{ _.clientId }}",
+              "barberId": "{{ _.barberId }}",
+              "serviceIds": ["{{ _.serviceId }}"],
+              "date": "2025-07-07T09:00:00Z",
+              "unitId": "9e836932-c1ac-4171-a044-609d00f77420"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/appointments/{id}"
+        name: Update appointment
+        meta:
+          id: req_02bfabec6046432c829abe9ff037ac98
+          created: 1751331396302
+          modified: 1751331396302
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396302
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: '{\n  \"status\": \"CANCELED\"\n}'
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/appointments"
+        name: List appointments
+        meta:
+          id: req_14e2837b06254782b3bab55c45ff9f2a
+          created: 1751331396302
+          modified: 1751331396302
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396302
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/appointment-barbers"
+        name: List available barbers
+        meta:
+          id: req_b9ec531a0d584ad8bc8f0acad5014d31
+          created: 1751331396302
+          modified: 1751331396302
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396302
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Barber Users
+    meta:
+      id: fld_38d60f46ae1e4e289e60eb389acdbbf3
+      created: 1751331396302
+      modified: 1751441488762
+      sortKey: -1751331396302
+      description: ""
+    children:
+      - url: "{{ baseURL }}/barber/users"
+        name: List barber users
+        meta:
+          id: req_1c779fed33a94c64be1478fa66d4ed1e
+          created: 1751331396303
+          modified: 1751431618014
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396303
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        scripts:
+          afterResponse: |-
+            let response = insomnia.response.json();
+            if(!response.users) console.warn("users nao encontrado")
+            const barber = response.users.find(user=>user.name === "Barber")
+            const client = response.users.find(user=>user.name === "Client")
+
+            if (client) {
+                insomnia.environment.set("clientId", client.id);
+                console.log("userid salvo com sucesso!");
+            } else {
+                console.warn("Cliente nao encontrado");
+            }
+
+            if (barber) {
+                insomnia.environment.set("barberId", barber.id);
+                console.log("userid salvo com sucesso!");
+            } else {
+                console.warn("Barbeiro nao encontrado");
+            }
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/barber/users"
+        name: Create barber user
+        meta:
+          id: req_515978963eac497d9a5312c2124675e6
+          created: 1751331396303
+          modified: 1751331396303
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396303
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "",
+              "email": "",
+              "password": "",
+              "phone": "",
+              "cpf": "",
+              "genre": "M",
+              "birthday": "1990-01-01",
+              "pix": "",
+              "role": "BARBER",
+              "organizationId": "",
+              "unitId": ""
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/barber/users/{id}"
+        name: Update barber user
+        meta:
+          id: req_aa56ffd10d45480c97597e122771e224
+          created: 1751331396303
+          modified: 1751331396303
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396303
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "New Name",
+              "phone": "999999999",
+              "unitId": "",
+              "roleId": "",
+              "commissionPercentage": 0
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/barber/users/{{ _.barberId }}"
+        name: Get barber user
+        meta:
+          id: req_ac39c3adc4694a05aec4c6616c23ca3f
+          created: 1751331396303
+          modified: 1751431500087
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396303
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/barber/users/{id}"
+        name: Delete barber user
+        meta:
+          id: req_134686d2c030464ba881b842a6ad69d6
+          created: 1751331396304
+          modified: 1751331396304
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396304
+        method: DELETE
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Coupons
+    meta:
+      id: fld_e3215b01ab7d4a5b9fb9a1500148b2c4
+      created: 1751331396304
+      modified: 1751331396304
+      sortKey: -1751331396304
+      description: ""
+    children:
+      - url: "{{ baseURL }}/coupons/{id}"
+        name: Get coupon
+        meta:
+          id: req_05e10a6fb5d045cda19832a1e5a7a692
+          created: 1751331396304
+          modified: 1751331396304
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396304
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/coupons"
+        name: List coupons
+        meta:
+          id: req_4254006d107242849e25338bfc251473
+          created: 1751331396304
+          modified: 1751331396304
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396304
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/coupons"
+        name: Create coupon
+        meta:
+          id: req_a0ec13c1b1ce45628216d3ed72ab2b44
+          created: 1751331396304
+          modified: 1751331396304
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396304
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "code": "",
+              "discount": 10,
+              "discountType": "PERCENTAGE",
+              "quantity": 1
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/coupons/{id}"
+        name: Delete coupon
+        meta:
+          id: req_34747499a84e45eb8c6bb62a4f72be3f
+          created: 1751331396305
+          modified: 1751331396305
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396305
+        method: DELETE
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/coupons/{id}"
+        name: Update coupon
+        meta:
+          id: req_48bf65e3460547c8be54f1aac6d1fafb
+          created: 1751331396312
+          modified: 1751331396312
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396312
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "quantity": 1
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Cash Register
+    meta:
+      id: fld_11b0fd0bd2ca4571a1e1a07ea8893d6f
+      created: 1751331396305
+      modified: 1751331396305
+      sortKey: -1751331396305
+      description: ""
+    children:
+      - url: "{{ baseURL }}/cash-session/open"
+        name: Open session
+        meta:
+          id: req_17454cf69ed84c97b333d4d9833028e5
+          created: 1751331396305
+          modified: 1751331396305
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396305
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "userId": "",
+              "unitId": "",
+              "initialAmount": 0
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/cash-session/close"
+        name: Close session
+        meta:
+          id: req_3491a480d2b344229b011a33b1e52912
+          created: 1751331396305
+          modified: 1751331396305
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396305
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "sessionId": ""
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/cash-session"
+        name: List sessions
+        meta:
+          id: req_4744323f2f224ed0a31792cb5c356ab9
+          created: 1751331396306
+          modified: 1751331396306
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396306
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Sales
+    meta:
+      id: fld_39b9d184dc194d4f9d86e9d08810983b
+      created: 1751331396306
+      modified: 1751331396306
+      sortKey: -1751331396306
+      description: ""
+    children:
+      - url: "{{ baseURL }}/sales"
+        name: List sales
+        meta:
+          id: req_48a6c1e309b4447a87697cb1a962aa9e
+          created: 1751331396306
+          modified: 1751331396306
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396306
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/sales"
+        name: Create sale (auto transaction)
+        meta:
+          id: req_6d186a04442a4d66a05287186fb4e61f
+          created: 1751331396306
+          modified: 1751431752078
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396306
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "method": "CASH",
+              "items": [
+                {
+                  "serviceId": "{{ _.serviceId }}",
+                  "quantity": 1,
+                  "barberId": "{{ _.barberId }}"
+                },
+            		{
+                  "productId": "{{ _.productId }}",
+                  "quantity": 1,
+                  "barberId": "{{ _.barberId }}"
+                }
+              ],
+              "clientId": "{{ _.clientId }}",
+              "paymentStatus": "PAID"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/sales/536faa91-a32d-435d-9984-8c1ac6c2a9ea"
+        name: Update sale
+        meta:
+          id: req_158d4b015ec540cba5907b7b01427ab9
+          created: 1751331396307
+          modified: 1751601220037
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396307
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "observation": "teste",
+              "method": "CASH",
+              "paymentStatus": "PAID",
+              "items": [
+                {
+                  "serviceId": "{{ _.serviceId }}",
+                  "quantity": 1,
+                  "barberId": "{{ _.barberId }}"
+                }
+              ],
+              "removeItemIds": []
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/sales/536faa91-a32d-435d-9984-8c1ac6c2a9ea/status"
+        name: Set sale status
+        meta:
+          id: req_d0334802de1c42c9a8bb85d3c64268b1
+          created: 1751331396307
+          modified: 1751601239828
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396307
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "paymentStatus": "PAID"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/sales/{id}"
+        name: Get sale
+        meta:
+          id: req_db436b7114d0412c83c0632e3dc7ad83
+          created: 1751331396307
+          modified: 1751331396307
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396307
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Transactions
+    meta:
+      id: fld_4bee9df811da4894ac14e1afad89b6b7
+      created: 1751331396307
+      modified: 1751331396307
+      sortKey: -1751331396307
+      description: ""
+    children:
+      - url: "{{ baseURL }}/add/transactions"
+        name: Add balance transaction
+        meta:
+          id: req_58bbbdff28c14387ae66379b30e8d910
+          created: 1751331396307
+          modified: 1751331396307
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396307
+        method: POST
+        body:
+          mimeType: multipart/form-data
+          params:
+            - name: description
+              value: ""
+            - name: amount
+              value: "0"
+            - name: affectedUserId
+              value: ""
+            - name: receipt
+              value: ""
+              type: file
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/withdrawal/transactions"
+        name: Withdrawal balance transaction
+        meta:
+          id: req_532e747f5a1e4de2ac98c41c1a8e26a2
+          created: 1751331396308
+          modified: 1751331396308
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396308
+        method: POST
+        body:
+          mimeType: multipart/form-data
+          params:
+            - name: description
+              value: ""
+            - name: amount
+              value: "0"
+            - name: affectedUserId
+              value: ""
+            - name: receipt
+              value: ""
+              type: file
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/transactions"
+        name: List transactions
+        meta:
+          id: req_75150f72ebd64d50a3d3cddd5f0994c9
+          created: 1751331396308
+          modified: 1751331396308
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396308
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/pay/transactions"
+        name: Pay balance transaction
+        meta:
+          id: req_d40d59a7bf844950a394c05ad19c1bc2
+          created: 1751331396308
+          modified: 1751648139355
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396308
+        method: POST
+        body:
+          mimeType: multipart/form-data
+          params:
+            - name: description
+              value: teste
+              id: pair_5707088637504bb6b56f03b7743fe5b9
+            - name: amount
+              value: "10"
+              id: pair_9e2688abe9d949c08732aa7171b94a53
+              disabled: true
+            - name: affectedUserId
+              value: "{{ _.barberId }}"
+              id: pair_b746540c9a9c4b9cb72a2214db0df6a0
+            - name: receipt
+              value: ""
+              type: file
+              id: pair_100a44b9530948dc8a2af1d685cfc80a
+            - id: pair_d14961a2b4724e18ae58264301bb9282
+              name: discountLoans
+              value: "true"
+              description: ""
+              disabled: false
+            - id: pair_be5ce2c9103f4de4b828c85bc6a25693
+              name: saleItemIds
+              value: |-
+                [
+                	"29a8d1e1-8600-4e9f-9596-a58bccefbb72"
+                ]
+              description: ""
+              disabled: false
+              type: text
+              multiline: true
+            - id: pair_abeba885f3db48aa987ed0d2267560a0
+              name: appointmentServiceIds
+              value: >-
+                [
+                	"f08e3b0f-0c08-4ac6-9214-9844d6e4c42b","f547d7c3-37ad-4213-a91b-fcd77a404227"
+                ]
+              description: ""
+              disabled: false
+              type: text
+              multiline: true
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/pay/pending/{{ _.barberId }}"
+        name: List pending comissions
+        meta:
+          id: req_ca73b17cb0c446afa08d03726db1f548
+          created: 1751427754612
+          modified: 1751431528439
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396307.5
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Organizations
+    meta:
+      id: fld_7d1e82bc8d8e46798068aa7203cf3bb8
+      created: 1751331396308
+      modified: 1751331396308
+      sortKey: -1751331396308
+      description: ""
+    children:
+      - url: "{{ baseURL }}/organizations/{{ organizationId }}"
+        name: Update organization
+        meta:
+          id: req_04da918a75b142e99d0f2605da5b17d4
+          created: 1751331396309
+          modified: 1751331396309
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396309
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "New Name",
+              "slug": "new-slug"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/organizations/{{ organizationId }}"
+        name: Delete organization
+        meta:
+          id: req_38ccb7af90e3451a91c02987b9591200
+          created: 1751331396309
+          modified: 1751331396309
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396309
+        method: DELETE
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/organizations/{{ organizationId }}"
+        name: Get organization
+        meta:
+          id: req_6a2f2646b9594d90901b967f82b0816f
+          created: 1751331396309
+          modified: 1751331396309
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396309
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/organizations"
+        name: Create organization
+        meta:
+          id: req_a6b45644736a49f780f410091e9cb7e4
+          created: 1751331396309
+          modified: 1751331396309
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396309
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "",
+              "slug": "",
+              "totalBalance": 0
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/organizations"
+        name: List organizations
+        meta:
+          id: req_fa35c1548c374c2782900009348ca7c1
+          created: 1751331396309
+          modified: 1751331396309
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396309
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Units
+    meta:
+      id: fld_808c19cbfcf7440fab97f75b35963524
+      created: 1751331396310
+      modified: 1751331396310
+      sortKey: -1751331396310
+      description: ""
+    children:
+      - url: "{{ baseURL }}/units/{{ unitId }}"
+        name: Update unit
+        meta:
+          id: req_25f2eef338ba4751bab8decba6e4e272
+          created: 1751331396310
+          modified: 1751331396310
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396310
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "New Unit",
+              "slug": "new-unit",
+              "allowsLoan": false
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/units/{{ unitId }}"
+        name: Get unit
+        meta:
+          id: req_8cf7c02a660a48f099d944cadd8994fa
+          created: 1751331396310
+          modified: 1751331396310
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396310
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/units"
+        name: Create unit
+        meta:
+          id: req_99cf0edc94104c99868e016760a9c1b8
+          created: 1751331396310
+          modified: 1751331396310
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396310
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "",
+              "slug": "",
+              "organizationId": "",
+              "totalBalance": 0,
+              "allowsLoan": false
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/units"
+        name: List units
+        meta:
+          id: req_e38fd25030a243799b79a560004de91a
+          created: 1751331396310
+          modified: 1751431916595
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396310
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/units/{{ unitId }}"
+        name: Delete unit
+        meta:
+          id: req_0452121b215f4697992be911c6fc27ff
+          created: 1751331396311
+          modified: 1751331396311
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396311
+        method: DELETE
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Reports
+    meta:
+      id: fld_a2d4ee521b7d4be8a4cc270af2f0dd60
+      created: 1751331396311
+      modified: 1751331396311
+      sortKey: -1751331396311
+      description: ""
+    children:
+      - url: "{{ baseURL }}/reports/barber/{{ barberId }}/balance"
+        name: Barber balance
+        meta:
+          id: req_65a46dd9db064c3b88eb1ba64701ee4a
+          created: 1751331396311
+          modified: 1751331396311
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396311
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/reports/sales?start=2025-01-01&end=2025-01-31"
+        name: Sales report
+        meta:
+          id: req_929e360f164c4ef98f8b131b10220e0b
+          created: 1751331396311
+          modified: 1751331396311
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396311
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/reports/unit/{{ unitId }}/loan-balance"
+        name: Unit loan balance
+        meta:
+          id: req_f9c5db51d4c9411eb8f526bd0827b7a2
+          created: 1751331396312
+          modified: 1751331396312
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396312
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/reports/owner/{{ ownerId }}/balance"
+        name: Owner balance
+        meta:
+          id: req_fead5f85509347ad91dee6fb8144a6be
+          created: 1751331396312
+          modified: 1751331396312
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396312
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/reports/cash-session/{sessionId}"
+        name: Cash session report
+        meta:
+          id: req_165eba92419b498994771cd870973a66
+          created: 1751331396313
+          modified: 1751331396313
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396313
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/reports/user/{{ userId }}/products"
+        name: User products
+        meta:
+          id: req_ed2634ae848845da971dd04605d24b44
+          created: 1751331396313
+          modified: 1751331396313
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396313
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Config
+    meta:
+      id: fld_fd40c50cbb3a48b7b306e91c2305a7e1
+      created: 1751331396311
+      modified: 1751331396311
+      sortKey: -1751331396311
+      description: ""
+    children:
+      - url: "{{ baseURL }}/config/export/users"
+        name: Export users
+        meta:
+          id: req_2dafe24cc452454a98c3e140bc02c116
+          created: 1751331396312
+          modified: 1751331396312
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396312
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Permissions
+    meta:
+      id: fld_298477b632874badace106f33fcbaae0
+      created: 1751331396313
+      modified: 1751331396313
+      sortKey: -1751331396313
+      description: ""
+    children:
+      - url: "{{ baseURL }}/permissions"
+        name: List permissions
+        meta:
+          id: req_21a28ac66e5c439fbe506088b9581bbe
+          created: 1751331396313
+          modified: 1751331396313
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396313
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/permissions"
+        name: Create permission
+        meta:
+          id: req_d56fe57180584999bc9e224648542faf
+          created: 1751331396313
+          modified: 1751331396313
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396313
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": ""
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/permissions/{id}"
+        name: Update permission
+        meta:
+          id: req_b47bc71d6e784b7c8dfe5c66c468a37a
+          created: 1751331396314
+          modified: 1751331396314
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396314
+        method: PUT
+        body:
+          mimeType: application/json
+          text: '{\n  \"name\": \"\",\n  \"category\": \"ACCESS\"\n}'
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Roles
+    meta:
+      id: fld_f6b97f3c72874e09b4ab559b12a114b6
+      created: 1751331396314
+      modified: 1751331396314
+      sortKey: -1751331396314
+      description: ""
+    children:
+      - url: "{{ baseURL }}/roles"
+        name: Create role
+        meta:
+          id: req_6d3dc6260aba4436bd29d7d2ced066cd
+          created: 1751331396314
+          modified: 1751331396314
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396314
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "",
+              "permissionIds": []
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/roles"
+        name: List roles
+        meta:
+          id: req_e4eeb5c1133f4fc78fd3bcad12b30c73
+          created: 1751331396314
+          modified: 1751331396314
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396314
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/roles/{id}"
+        name: Update role
+        meta:
+          id: req_4391751c6c7249d5b5ee16741a921b76
+          created: 1751331396315
+          modified: 1751331396315
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396315
+        method: PUT
+        body:
+          mimeType: application/json
+          text: '{\n  \"name\": \"ADMIN\",\n  \"permissionIds\": []\n}'
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Schedule
+    meta:
+      id: fld_808afae830604041abbaa9c64cbf381d
+      created: 1751331396315
+      modified: 1751331396315
+      sortKey: -1751331396315
+      description: ""
+    children:
+      - url: "{{ baseURL }}/profile/{profileId}/work-hours"
+        name: Add profile work hour
+        meta:
+          id: req_03a4bc4851a146559cb62508dbff52b7
+          created: 1751331396315
+          modified: 1751331396315
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396315
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "weekDay": 1,
+              "startHour": "08:00",
+              "endHour": "09:00"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/units/{unitId}/opening-hours"
+        name: Add unit opening hour
+        meta:
+          id: req_44ef706f49e34dd6b52e442e7f6ba452
+          created: 1751331396315
+          modified: 1751331396315
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396315
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "unitId": "",
+              "weekDay": 1,
+              "startHour": "08:00",
+              "endHour": "09:00"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/profile/{profileId}/blocked-hours"
+        name: Add profile blocked hour
+        meta:
+          id: req_eb15f50d67904a779dd5024eed0013a7
+          created: 1751331396315
+          modified: 1751331396315
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396315
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "startHour": "2025-01-01T10:00:00Z",
+              "endHour": "2025-01-01T11:00:00Z"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/profile/{profileId}/blocked-hours/{id}"
+        name: Delete profile blocked hour
+        meta:
+          id: req_1ddaf694ff54486c88eb4fc12c75ca69
+          created: 1751331396316
+          modified: 1751331396316
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396316
+        method: DELETE
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/profile/{profileId}/work-hours/{id}"
+        name: Delete profile work hour
+        meta:
+          id: req_22589c56547f4ecc9430c1b44614e39a
+          created: 1751331396316
+          modified: 1751331396316
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396316
+        method: DELETE
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/units/opening-hours"
+        name: List unit opening hours
+        meta:
+          id: req_27452ab0a95b4b7bbdaa7fd8e01b8712
+          created: 1751331396316
+          modified: 1751331396316
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396316
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/units/{unitId}/opening-hours/{id}"
+        name: Delete unit opening hour
+        meta:
+          id: req_560d528e82984b44b276a03624e52f66
+          created: 1751331396316
+          modified: 1751331396316
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396316
+        method: DELETE
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Loans
+    meta:
+      id: fld_e810a0db99074ef3bce030563f51ade4
+      created: 1751331396316
+      modified: 1751331396316
+      sortKey: -1751331396316
+      description: ""
+    children:
+      - url: "{{ baseURL }}/loans/c8d2c893-d3ba-4325-a9b2-1a224cd3f296/status"
+        name: Update loan status
+        meta:
+          id: req_799dc6c4fb4b42e8bceb5c682dd932bb
+          created: 1751331396317
+          modified: 1751647823147
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396317
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "status": "PAID"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/users/{{ _.barberId }}/loans"
+        name: List user loans
+        meta:
+          id: req_d562780d2c734bd3a86bd574ac32c7ee
+          created: 1751331396317
+          modified: 1751431781115
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396317
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/loans"
+        name: Create loan
+        meta:
+          id: req_f18e629bc05944108f1c91bcd4af0de8
+          created: 1751331396317
+          modified: 1751434362223
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396317
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "amount": 10
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_ec912ce31933aa9275766d36a72f02864395391c
+    created: 1751331396318
+    modified: 1751442764948
+environments:
+  name: Base Environment
+  meta:
+    id: env_25838e0332ea487389eee576ded2f08c
+    created: 1751331396293
+    modified: 1751442764951
+    isPrivate: false
+  data:
+    baseURL: http://localhost:3333
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bml0SWQiOiI5ZTgzNjkzMi1jMWFjLTQxNzEtYTA0NC02MDlkMDBmNzc0MjAiLCJvcmdhbml6YXRpb25JZCI6IjZiNzkyMjQ2LWM2NmYtNDE1Ny1iNTRhLTNhMDgwMGQ2ZTk3NyIsInJvbGUiOiJBRE1JTiIsInBlcm1pc3Npb25zIjpbIkFDQ0VQVF9BUFBPSU5UTUVOVCIsIkNSRUFURV9VU0VSX01BTkFHRVIiLCJMSVNUX1VTRVJfQUxMIiwiTElTVF9VU0VSX1VOSVQiLCJTRUxMX1BST0RVQ1QiLCJNRU5BR0VfVVNFUlNfV09SS0lOR19IT1VSUyIsIkxJU1RfVU5JVF9BTEwiLCJNQU5BR0VfT1RIRVJfVVNFUl9UUkFOU0FDVElPTiIsIlVQREFURV9VU0VSX09XTkVSIiwiTElTVF9ST0xFU19VTklUIiwiU0VMTF9TRVJWSUNFIiwiTUFOQUdFX1VTRVJfVFJBTlNBQ1RJT05fV0lUSERSQVdBTCIsIlVQREFURV9VU0VSX0JBUkJFUiIsIlVQREFURV9VU0VSX0FETUlOIiwiQ1JFQVRFX1VTRVJfT1dORVIiLCJDUkVBVEVfVVNFUl9DTElFTlQiLCJNQU5BR0VfU0VMRl9CTE9DS0VEX0hPVVJTIiwiTElTVF9ST0xFU19BTEwiLCJDUkVBVEVfVVNFUl9BVFRFTkRBTlQiLCJMSVNUX1VOSVRfT1JHIiwiTUFOQUdFX1VTRVJfVFJBTlNBQ1RJT05fQUREIiwiU0VMTF9BUFBPSU5UTUVOVCIsIkxJU1RfU0FMRVNfVU5JVCIsIkNSRUFURV9TQUxFIiwiTElTVF9VU0VSX09SRyIsIkNSRUFURV9VU0VSX0JBUkJFUiIsIkxJU1RfUEVSTUlTU0lPTlNfQUxMIiwiTElTVF9BUFBPSU5UTUVOVFNfVU5JVCIsIk1FTkFHRV9VU0VSU19CTE9DS0VEX0hPVVJTIiwiTElTVF9TRVJWSUNFU19VTklUIl0sInZlcnNpb25Ub2tlbiI6MSwic3ViIjoiOTlhZTRjY2MtMTc4NC00MzU3LWI1ZjEtOTU1ZjRhNDdiZGMyIiwiaWF0IjoxNzUxNDQyNzY0fQ.MfsHZORayAydeXWjA56BdtpIoyjXGQFlF2APjYRJP0M
+    serviceId: a089bd48-2ad6-440a-9ad5-6141661c2184
+    productId: a1a5c3c0-b188-45be-bbbb-b082e569383e
+    barberId: 7311c934-ab51-42c2-9357-135cebc9e7f8
+    clientId: 8790fa17-beca-44a3-a3da-5dfd9ace2c7b
+    tokenBarber: ""
