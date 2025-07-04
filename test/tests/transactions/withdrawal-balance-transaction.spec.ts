@@ -70,12 +70,10 @@ function setup(options?: {
   }
 
   const service = new WithdrawalBalanceTransactionService(
-    transactionRepo,
     barberRepo,
     cashRepo,
     profileRepo,
     unitRepo,
-    organizationRepo,
   )
 
   return { service, profileRepo, unitRepo, transactionRepo, user, barberRepo }

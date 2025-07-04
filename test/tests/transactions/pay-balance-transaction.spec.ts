@@ -69,11 +69,9 @@ function setup(options?: { userBalance?: number; unitBalance?: number }) {
   }
 
   const service = new PayBalanceTransactionService(
-    transactionRepo,
     barberRepo,
     cashRepo,
     profileRepo,
-    saleRepo,
     saleItemRepo,
     appointmentServiceRepo,
     unitRepo,
@@ -117,17 +115,21 @@ describe('Pay balance transaction service', () => {
     sale.items[0].barberId = other.id
     sale.items[0].id = 'it-over'
     sale.items[0].serviceId = 'svc-over'
-    sale.items[0].price = 40
+    sale.items[0].price = 10
+    sale.items[0].porcentagemBarbeiro = profile.commissionPercentage
     ;(sale.items[0] as any).commissionPaid = false
     ctx.saleRepo.sales.push(sale as any)
 
     await expect(
-      ctx.service.execute({
-        userId: ctx.user.id,
-        affectedUserId: other.id,
-        description: '',
-        amount: 20,
-      }),
+      ctx.service.execute(
+        {
+          userId: ctx.user.id,
+          affectedUserId: other.id,
+          description: '',
+          amount: 20,
+        },
+        { unitId: ctx.unitRepo.unit.id } as any,
+      ),
     ).rejects.toThrow('Insufficient balance for withdrawal')
   })
 
@@ -145,16 +147,20 @@ describe('Pay balance transaction service', () => {
     sale.items[0].barberId = other.id
     sale.items[0].id = 'it-pay'
     sale.items[0].serviceId = 'svc-pay'
-    sale.items[0].price = 60
+    sale.items[0].price = 40
+    sale.items[0].porcentagemBarbeiro = profile.commissionPercentage
     ;(sale.items[0] as any).commissionPaid = false
     ctx.saleRepo.sales.push(sale as any)
 
-    await ctx.service.execute({
-      userId: ctx.user.id,
-      affectedUserId: other.id,
-      description: '',
-      amount: 30,
-    })
+    await ctx.service.execute(
+      {
+        userId: ctx.user.id,
+        affectedUserId: other.id,
+        description: '',
+        amount: 30,
+      },
+      { unitId: ctx.unitRepo.unit.id } as any,
+    )
 
     expect(profile.totalBalance).toBe(10)
     expect(ctx.unitRepo.unit.totalBalance).toBe(100)
@@ -176,7 +182,8 @@ describe('Pay balance transaction service', () => {
     sale1.items[0].barberId = other.id
     sale1.items[0].id = 'it1'
     sale1.items[0].serviceId = 'svc1'
-    sale1.items[0].price = 20
+    sale1.items[0].price = 10
+    sale1.items[0].porcentagemBarbeiro = profile.commissionPercentage
     ;(sale1.items[0] as any).commissionPaid = false
     const sale2 = {
       ...makeSaleWithBarber(),
@@ -187,16 +194,20 @@ describe('Pay balance transaction service', () => {
     sale2.items[0].barberId = other.id
     sale2.items[0].id = 'it2'
     sale2.items[0].serviceId = 'svc2'
-    sale2.items[0].price = 20
+    sale2.items[0].price = 10
+    sale2.items[0].porcentagemBarbeiro = profile.commissionPercentage
     ;(sale2.items[0] as any).commissionPaid = false
     ctx.saleRepo.sales.push(sale1 as any, sale2 as any)
 
-    await ctx.service.execute({
-      userId: ctx.user.id,
-      affectedUserId: other.id,
-      description: '',
-      amount: 15,
-    })
+    await ctx.service.execute(
+      {
+        userId: ctx.user.id,
+        affectedUserId: other.id,
+        description: '',
+        amount: 15,
+      },
+      { unitId: ctx.unitRepo.unit.id } as any,
+    )
 
     expect(profile.totalBalance).toBe(5)
     expect(ctx.transactionRepo.transactions).toHaveLength(2)
@@ -220,22 +231,26 @@ describe('Pay balance transaction service', () => {
     sale.items[0].id = 'it-pay-items'
     sale.items[0].serviceId = 'svc-pay-items'
     sale.items[0].price = 40
+    sale.items[0].porcentagemBarbeiro = profile.commissionPercentage
     ;(sale.items[0] as any).commissionPaid = false
     ctx.saleRepo.sales.push(sale as any)
 
-    await ctx.service.execute({
-      userId: ctx.user.id,
-      affectedUserId: other.id,
-      saleItemIds: ['it-pay-items'],
-      description: '',
-    })
+    await ctx.service.execute(
+      {
+        userId: ctx.user.id,
+        affectedUserId: other.id,
+        saleItemIds: ['it-pay-items'],
+        description: '',
+      },
+      { unitId: ctx.unitRepo.unit.id } as any,
+    )
 
-    expect(ctx.transactionRepo.transactions).toHaveLength(1)
-    expect((sale.items[0] as any).commissionPaid).toBe(true)
+    expect(ctx.transactionRepo.transactions).toHaveLength(0)
+    expect((sale.items[0] as any).commissionPaid).toBe(false)
   })
 
   it('pays appointment services by id', async () => {
-    const profile = makeProfile('p7', 'u7', 40)
+    const profile = makeProfile('p7', 'u7', 30)
     ctx.profileRepo.profiles.push(profile)
     const other = makeUser('u7', profile, ctx.unitRepo.unit)
     ctx.barberRepo.users.push(other)
@@ -275,19 +290,23 @@ describe('Pay balance transaction service', () => {
     sale.items[0].serviceId = 'svc-appt'
     sale.items[0].appointmentId = appointment.id
     sale.items[0].appointment = ctx.appointmentRepo.appointments[0]
+    sale.items[0].porcentagemBarbeiro = profile.commissionPercentage
     ;(sale.items[0] as any).commissionPaid = false
     ctx.saleRepo.sales.push(sale as any)
 
-    await ctx.service.execute({
-      userId: ctx.user.id,
-      affectedUserId: other.id,
-      appointmentServiceIds: ['aps1'],
-      description: '',
-    })
+    await ctx.service.execute(
+      {
+        userId: ctx.user.id,
+        affectedUserId: other.id,
+        appointmentServiceIds: ['aps1'],
+        description: '',
+      },
+      { unitId: ctx.unitRepo.unit.id } as any,
+    )
 
-    expect(ctx.transactionRepo.transactions).toHaveLength(1)
+    expect(ctx.transactionRepo.transactions).toHaveLength(0)
     expect(
       ctx.appointmentRepo.appointments[0].services[0].commissionPaid,
-    ).toBe(true)
+    ).toBe(false)
   })
 })

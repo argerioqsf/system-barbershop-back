@@ -67,22 +67,39 @@ export class InMemorySaleItemRepository implements SaleItemRepository {
         if (where.OR && Array.isArray(where.OR) && where.OR.length > 0) {
           let orMatch = false
           for (const condition of where.OR) {
-            if (
-              condition.serviceId &&
-              typeof condition.serviceId === 'object' &&
-              'not' in condition.serviceId &&
-              condition.serviceId.not === null &&
-              item.serviceId !== null
-            )
+            const cond = condition as any
+            const ands: any[] = cond.AND ?? [cond]
+            const match = ands.every((c) => {
+              if (
+                c.serviceId &&
+                typeof c.serviceId === 'object' &&
+                'not' in c.serviceId &&
+                c.serviceId.not === null &&
+                item.serviceId === null
+              )
+                return false
+              if (
+                c.productId &&
+                typeof c.productId === 'object' &&
+                'not' in c.productId &&
+                c.productId.not === null &&
+                item.productId === null
+              )
+                return false
+              if (
+                c.id &&
+                typeof c.id === 'object' &&
+                'in' in c.id &&
+                Array.isArray(c.id.in) &&
+                !c.id.in.includes(item.id)
+              )
+                return false
+              return true
+            })
+            if (match) {
               orMatch = true
-            if (
-              condition.productId &&
-              typeof condition.productId === 'object' &&
-              'not' in condition.productId &&
-              condition.productId.not === null &&
-              item.productId !== null
-            )
-              orMatch = true
+              break
+            }
           }
           if (!orMatch) continue
         }
