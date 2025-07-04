@@ -2254,6 +2254,35 @@ collection:
             send: true
             store: true
           rebuildPath: true
+      - url: "{{ baseURL }}/loans/{{ _.loanId }}/pay"
+        name: Pay loan
+        meta:
+          id: req_e78349bbcfbfbb05464c2fff4c9df769
+          created: 1751331396317
+          modified: 1751331396317
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396317
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "amount": 10
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
 cookieJar:
   name: Default Jar
   meta:
