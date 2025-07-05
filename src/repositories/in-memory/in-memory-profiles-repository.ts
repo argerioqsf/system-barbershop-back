@@ -44,6 +44,7 @@ export class InMemoryProfilesRepository implements ProfilesRepository {
         organizationId: '',
         loanMonthlyLimit: 0,
         slotDuration: 30,
+        appointmentFutureLimitDays: 7,
         slug: '',
         totalBalance: 0,
       },

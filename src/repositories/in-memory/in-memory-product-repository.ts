@@ -29,6 +29,7 @@ export class InMemoryProductRepository implements ProductRepository {
         allowsLoan: false,
         loanMonthlyLimit: 0,
         slotDuration: 60,
+        appointmentFutureLimitDays: 7,
       },
     } as Product & { unit: { organizationId: string } })
     return product

@@ -45,6 +45,7 @@ export class InMemoryCashRegisterRepository implements CashRegisterRepository {
         allowsLoan: false,
         loanMonthlyLimit: 0,
         slotDuration: 60,
+        appointmentFutureLimitDays: 7,
       },
       sales: [],
       transactions: [],

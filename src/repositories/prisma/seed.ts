@@ -131,6 +131,7 @@ async function main() {
       name: 'Main Unit',
       slug: 'main-unit',
       slotDuration: 60,
+      appointmentFutureLimitDays: 7,
       organization: { connect: { id: organization.id } },
       loanMonthlyLimit: 500,
     },
@@ -146,6 +147,7 @@ async function main() {
       name: 'Unit 2',
       slug: 'unit-2',
       slotDuration: 30,
+      appointmentFutureLimitDays: 7,
       organization: { connect: { id: organization2.id } },
     },
   })

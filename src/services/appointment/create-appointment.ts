@@ -8,6 +8,7 @@ import {
 } from '@prisma/client'
 import { ServiceRepository } from '@/repositories/service-repository'
 import { SaleRepository } from '@/repositories/sale-repository'
+import { UnitRepository } from '@/repositories/unit-repository'
 import { ServiceNotFoundError } from '../@errors/service/service-not-found-error'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { BarberNotFoundError } from '../@errors/barber/barber-not-found-error'
@@ -19,9 +20,11 @@ import {
 } from '@/utils/barber-availability'
 import { BarberNotAvailableError } from '../@errors/barber/barber-not-available-error'
 import { AppointmentDateInPastError } from '../@errors/appointment/appointment-date-in-past-error'
+import { AppointmentDateAfterLimitError } from '../@errors/appointment/appointment-date-after-limit-error'
 import { BarberNotFromUserUnitError } from '../@errors/barber/barber-not-from-user-unit-error'
 import { ProfileNotFoundError } from '../@errors/profile/profile-not-found-error'
 import { assertPermission } from '@/utils/permissions'
+import { addDays } from 'date-fns'
 
 interface CreateAppointmentRequest {
   clientId: string
@@ -43,6 +46,7 @@ export class CreateAppointmentService {
     private serviceRepository: ServiceRepository,
     private barberUserRepository: BarberUsersRepository,
     private saleRepository: SaleRepository,
+    private unitRepository: UnitRepository,
   ) {}
 
   async execute(
@@ -78,6 +82,13 @@ export class CreateAppointmentService {
 
     if (data.date < new Date()) {
       throw new AppointmentDateInPastError()
+    }
+
+    const unit = await this.unitRepository.findById(data.unitId)
+    const limit = unit?.appointmentFutureLimitDays ?? 7
+    if (limit > 0) {
+      const maxDate = addDays(new Date(), limit)
+      if (data.date > maxDate) throw new AppointmentDateAfterLimitError()
     }
 
     const duration = totalDuration

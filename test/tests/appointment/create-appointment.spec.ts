@@ -5,11 +5,13 @@ import {
   FakeBarberUsersRepository,
   FakeServiceRepository,
   FakeSaleRepository,
+  FakeUnitRepository,
 } from '../../helpers/fake-repositories'
 import {
   barberUser,
   defaultClient,
   defaultUser,
+  defaultUnit,
   makeService,
   makeBarberServiceRel,
   barberProfile,
@@ -21,6 +23,7 @@ describe('Create appointment service', () => {
   let serviceRepo: FakeServiceRepository
   let barberUserRepo: FakeBarberUsersRepository
   let saleRepo: FakeSaleRepository
+  let unitRepo: FakeUnitRepository
 
   beforeEach(() => {
     vi.useFakeTimers()
@@ -29,11 +32,13 @@ describe('Create appointment service', () => {
     serviceRepo = new FakeServiceRepository()
     barberUserRepo = new FakeBarberUsersRepository()
     saleRepo = new FakeSaleRepository()
+    unitRepo = new FakeUnitRepository({ ...defaultUnit })
     service = new CreateAppointmentService(
       repo,
       serviceRepo,
       barberUserRepo,
       saleRepo,
+      unitRepo,
     )
   })
 
@@ -388,6 +393,7 @@ describe('Create appointment service', () => {
       },
     }
     barberUserRepo.users.push(barberWithService, defaultClient)
+    unitRepo.unit.appointmentFutureLimitDays = 0
 
     const { appointment } = await service.execute({
       clientId: defaultClient.id,
@@ -437,5 +443,39 @@ describe('Create appointment service', () => {
         date: new Date('2024-01-01T10:00:00'),
       }),
     ).rejects.toThrow('Cannot schedule appointment in the past')
+  })
+
+  it('fails when scheduling beyond unit limit', async () => {
+    const svc = makeService('svc-limit', 60)
+    serviceRepo.services.push({ ...svc, defaultTime: 30 })
+    const wh = {
+      id: 'wh-limit',
+      profileId: barberProfile.id,
+      weekDay: 1,
+      startHour: '09:00',
+      endHour: '18:00',
+    }
+    unitRepo.unit.appointmentFutureLimitDays = 3
+    barberUserRepo.users.push(
+      {
+        ...barberUser,
+        profile: {
+          ...barberProfile,
+          workHours: [wh],
+          barberServices: [makeBarberServiceRel(barberProfile.id, 'svc-limit')],
+        },
+      },
+      defaultClient,
+    )
+    await expect(
+      service.execute({
+        clientId: defaultClient.id,
+        barberId: barberUser.id,
+        serviceIds: ['svc-limit'],
+        unitId: 'unit-1',
+        userId: defaultUser.id,
+        date: new Date('2024-01-05T10:00:00'),
+      }),
+    ).rejects.toThrow('Cannot schedule appointment so far in the future')
   })
 })

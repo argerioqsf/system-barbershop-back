@@ -28,6 +28,7 @@ export class InMemoryCouponRepository implements CouponRepository {
         allowsLoan: false,
         loanMonthlyLimit: 0,
         slotDuration: 60,
+        appointmentFutureLimitDays: 7,
       },
     } as Coupon & { unit: { organizationId: string } })
     return coupon

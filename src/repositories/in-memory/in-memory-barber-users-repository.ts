@@ -100,6 +100,7 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
         allowsLoan: false,
         loanMonthlyLimit: 0,
         slotDuration: 60,
+        appointmentFutureLimitDays: 7,
       },
     })
     return { user, profile }
