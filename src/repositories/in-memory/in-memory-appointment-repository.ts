@@ -109,6 +109,7 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
         allowsLoan: false,
         loanMonthlyLimit: 0,
         slotDuration: 60,
+        appointmentFutureLimitDays: 7,
       },
     } as DetailedAppointment & { unit: { organizationId: string } })
     return appointment

@@ -17,13 +17,18 @@ export const UpdateUnitController = async (
       })
       .optional(),
     loanMonthlyLimit: z.coerce.number().optional(),
+    appointmentFutureLimitDays: z.coerce.number().optional(),
   })
   const paramsSchema = z.object({
     id: z.string(),
   })
-  const { name, slug, allowsLoan, loanMonthlyLimit } = bodySchema.parse(
-    request.body,
-  )
+  const {
+    name,
+    slug,
+    allowsLoan,
+    loanMonthlyLimit,
+    appointmentFutureLimitDays,
+  } = bodySchema.parse(request.body)
   const { id } = paramsSchema.parse(request.params)
   const service = makeUpdateUnitService()
   const { unit } = await service.execute({
@@ -32,6 +37,7 @@ export const UpdateUnitController = async (
     slug,
     allowsLoan,
     loanMonthlyLimit,
+    appointmentFutureLimitDays,
   })
   return reply.status(200).send(unit)
 }

@@ -250,6 +250,7 @@ export const defaultUnit: Unit = {
   allowsLoan: false,
   loanMonthlyLimit: 0,
   slotDuration: 30,
+  appointmentFutureLimitDays: 7,
 }
 
 export const defaultProfile: Profile & {
@@ -369,6 +370,7 @@ export function makeUnit(
     allowsLoan: false,
     loanMonthlyLimit: 0,
     slotDuration: 30,
+    appointmentFutureLimitDays: 7,
   }
 }
 

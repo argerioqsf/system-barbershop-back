@@ -56,6 +56,7 @@ export class InMemoryTransactionRepository implements TransactionRepository {
         allowsLoan: false,
         loanMonthlyLimit: 0,
         slotDuration: 60,
+        appointmentFutureLimitDays: 7,
       },
     } as TransactionFull & { unit: { organizationId: string } })
     return tr

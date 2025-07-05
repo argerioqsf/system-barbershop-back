@@ -2,6 +2,7 @@ import { PrismaAppointmentRepository } from '@/repositories/prisma/prisma-appoin
 import { PrismaBarberUsersRepository } from '@/repositories/prisma/prisma-barber-users-repository'
 import { PrismaServiceRepository } from '@/repositories/prisma/prisma-service-repository'
 import { PrismaSaleRepository } from '@/repositories/prisma/prisma-sale-repository'
+import { PrismaUnitRepository } from '@/repositories/prisma/prisma-unit-repository'
 import { CreateAppointmentService } from '@/services/appointment/create-appointment'
 
 export function makeCreateAppointment() {
@@ -9,11 +10,13 @@ export function makeCreateAppointment() {
   const serviceRepository = new PrismaServiceRepository()
   const barberUserRepository = new PrismaBarberUsersRepository()
   const saleRepository = new PrismaSaleRepository()
+  const unitRepository = new PrismaUnitRepository()
   const service = new CreateAppointmentService(
     repository,
     serviceRepository,
     barberUserRepository,
     saleRepository,
+    unitRepository,
   )
   return service
 }

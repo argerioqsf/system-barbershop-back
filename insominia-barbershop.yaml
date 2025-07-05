@@ -1539,7 +1539,8 @@ collection:
             {
               "name": "New Unit",
               "slug": "new-unit",
-              "allowsLoan": false
+              "allowsLoan": false,
+              "appointmentFutureLimitDays": 7
             }
         headers:
           - name: Content-Type
@@ -1593,7 +1594,8 @@ collection:
               "slug": "",
               "organizationId": "",
               "totalBalance": 0,
-              "allowsLoan": false
+              "allowsLoan": false,
+              "appointmentFutureLimitDays": 7
             }
         headers:
           - name: Content-Type
