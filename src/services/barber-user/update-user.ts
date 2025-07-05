@@ -109,8 +109,13 @@ export class UpdateUserService {
         throw new InvalidPermissionError()
       }
       permissionIds = data.permissions
+    } else if (
+      data.roleId &&
+      oldUser.profile &&
+      data.roleId !== oldUser.profile.roleId
+    ) {
+      permissionIds = []
     }
-
     const changeCredentials = this.handleChangeCredentials(oldUser, data)
 
     const { user, profile } = await this.repository.update(
