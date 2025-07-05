@@ -152,18 +152,13 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
       )
         profile.commissionPercentage =
           profileData.commissionPercentage as number
-      if (permissionIds) {
-        const existingIds = profile.permissions?.map((p) => p.id) ?? []
-        const toAdd = permissionIds.filter((id) => !existingIds.includes(id))
-        profile.permissions = [
-          ...(profile.permissions ?? []),
-          ...toAdd.map((id) => ({
-            id,
-            name: 'LIST_APPOINTMENTS_UNIT' as PermissionName,
-            category: 'USER' as PermissionCategory,
-            unitId: randomUUID() as string,
-          })),
-        ]
+      if (permissionIds !== undefined) {
+        profile.permissions = permissionIds.map((id) => ({
+          id,
+          name: 'LIST_APPOINTMENTS_UNIT' as PermissionName,
+          category: 'USER' as PermissionCategory,
+          unitId: randomUUID() as string,
+        }))
       }
     }
     this.users[index] = { ...current, ...updatedUser, profile }

@@ -111,7 +111,7 @@ describe('Update user service', () => {
     ).rejects.toThrow('permission not allowed for role')
   })
 
-  it('adds permissions instead of replacing', async () => {
+  it('replaces permissions when provided', async () => {
     repo.users[0].profile = {
       ...stored.profile,
       roleId: 'role-1',
@@ -143,7 +143,44 @@ describe('Update user service', () => {
       },
     )
     const ids = repo.users[0].profile?.permissions?.map((p) => p.id)
-    expect(ids).toContain('p1')
+    expect(ids).not.toContain('p1')
     expect(ids).toContain('p2')
+  })
+
+  it('removes old permissions when role changes without new permissions', async () => {
+    repo.users[0].profile = {
+      ...stored.profile,
+      roleId: 'role-1',
+      permissions: [
+        {
+          id: 'p1',
+          name: PermissionName.UPDATE_USER_ADMIN,
+          category: PermissionCategory.USER,
+        },
+      ],
+    }
+
+    await service.execute(
+      { id: stored.id, roleId: 'role-2' },
+      { permissions: [PermissionName.UPDATE_USER_ADMIN] },
+    )
+
+    expect(repo.users[0].profile?.permissions).toHaveLength(0)
+  })
+
+  it('validates permissions when role changes', async () => {
+    permissionRepo.permissions.push({
+      id: 'p1',
+      name: PermissionName.UPDATE_USER_ADMIN,
+      category: PermissionCategory.USER,
+    })
+    permissionRepo.permissions[0].roles = [{ id: 'role-1' }]
+
+    await expect(
+      service.execute(
+        { id: stored.id, roleId: 'role-2', permissions: ['p1'] },
+        { permissions: [PermissionName.UPDATE_USER_ADMIN] },
+      ),
+    ).rejects.toThrow('permission not allowed for role')
   })
 })
