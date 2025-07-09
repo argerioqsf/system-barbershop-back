@@ -18,8 +18,8 @@ export class InMemoryProductRepository implements ProductRepository {
       price: data.price as number,
       unitId: (data.unit as { connect: { id: string } }).connect.id,
       categoryId:
-        (data.category as { connect: { id: string } } | undefined)?.connect.id ??
-          null,
+        (data.category as { connect: { id: string } } | undefined)?.connect
+          .id ?? null,
     }
     this.products.push({
       ...product,

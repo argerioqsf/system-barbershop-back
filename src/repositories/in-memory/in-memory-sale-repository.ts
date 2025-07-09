@@ -88,6 +88,7 @@ export class InMemorySaleRepository implements SaleRepository {
             commissionPercentage: null,
             price: 0,
             unitId: 'unit-1',
+            categoryId: null,
           }
         : null,
       plan: it.plan
@@ -303,8 +304,8 @@ export class InMemorySaleRepository implements SaleRepository {
               (it.product as { connect?: { id: string } } | undefined)?.connect
                 ?.id ?? null,
             planId:
-              (it.plan as { connect?: { id: string } } | undefined)?.connect?.id ??
-                null,
+              (it.plan as { connect?: { id: string } } | undefined)?.connect
+                ?.id ?? null,
             appointmentId:
               (it.appointment as { connect?: { id: string } } | undefined)
                 ?.connect?.id ?? null,
@@ -364,6 +365,7 @@ export class InMemorySaleRepository implements SaleRepository {
                   commissionPercentage: null,
                   price: 0,
                   unitId: 'unit-1',
+                  categoryId: null,
                 }
               : null,
             plan: it.plan
