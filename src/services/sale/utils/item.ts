@@ -7,6 +7,7 @@ import {
 import { CouponRepository } from '@/repositories/coupon-repository'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { Service, Product, PermissionName } from '@prisma/client'
+import { PlanRepository } from '@/repositories/plan-repository'
 import { CreateSaleItem, TempItems, DataItem } from '../types'
 import { ItemNeedsServiceOrProductOrAppointmentError } from '../../@errors/sale/item-needs-service-or-product-error'
 import { ServiceNotFoundError } from '../../@errors/service/service-not-found-error'
@@ -29,6 +30,7 @@ export interface BuildItemDataOptions {
   productRepository: ProductRepository
   appointmentRepository: AppointmentRepository
   couponRepository: CouponRepository
+  planRepository?: PlanRepository
   userUnitId?: string
   productsToUpdate?: { id: string; quantity: number }[]
   barberUserRepository?: BarberUsersRepository
@@ -105,6 +107,14 @@ async function loadAppointment(
   return { appointment, price: total, relation, barberId: appointment.barberId }
 }
 
+async function loadPlan(planId: string, repo: PlanRepository) {
+  const plan = await repo.findById(planId)
+  if (!plan) throw new Error('Plan not found')
+  const relation = { connect: { id: planId } }
+  const price = plan.price
+  return { plan, price, relation }
+}
+
 async function ensureBarberPermissions(
   barberId: string | undefined,
   barberRepo: BarberUsersRepository | undefined,
@@ -148,6 +158,7 @@ export async function buildItemData({
   userUnitId,
   productsToUpdate,
   barberUserRepository,
+  planRepository,
   enforceSingleType = true,
 }: BuildItemDataOptions): Promise<TempItems> {
   ensureSingleType(item, enforceSingleType)
@@ -189,6 +200,10 @@ export async function buildItemData({
     basePrice = loaded.price
     dataItem.appointment = loaded.relation
     barberId = barberId ?? loaded.barberId
+  } else if (item.planId && planRepository) {
+    const loaded = await loadPlan(item.planId, planRepository)
+    basePrice = loaded.price
+    dataItem.plan = loaded.relation
   }
 
   await ensureBarberPermissions(
@@ -219,6 +234,7 @@ export async function buildItemData({
       ...dataItem,
       barber: barberId ? { connect: { id: barberId } } : undefined,
       coupon: result.couponRel,
+      plan: dataItem.plan,
     },
   }
 }

@@ -8,6 +8,7 @@ export function mapToSaleItems(
     quantity: temp.data.quantity,
     service: temp.data.service,
     product: temp.data.product,
+    plan: temp.data.plan,
     barber: temp.data.barber,
     price: temp.price,
     discount: temp.discount,

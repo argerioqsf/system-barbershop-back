@@ -31,6 +31,7 @@ export interface CreateSaleItem {
   serviceId?: string
   productId?: string
   appointmentId?: string
+  planId?: string
   quantity: number
   barberId?: string
   couponCode?: string
@@ -71,6 +72,7 @@ export type DataItem = {
   service?: { connect: { id?: string } }
   product?: { connect: { id?: string } }
   appointment?: { connect: { id: string } }
+  plan?: { connect: { id: string } }
 }
 
 export type TempItems = {
@@ -84,6 +86,7 @@ export type TempItems = {
   data: DataItem & {
     barber?: { connect: { id: string } }
     coupon?: { connect: { id: string } }
+    plan?: { connect: { id: string } }
   }
 }
 
@@ -94,6 +97,7 @@ export type SaleItemTemp = Omit<
     product?: { connect: { id?: string } }
     barber?: { connect: { id: string } }
     appointment?: { connect: { id: string } }
+    plan?: { connect: { id: string } }
   },
   | 'id'
   | 'saleId'

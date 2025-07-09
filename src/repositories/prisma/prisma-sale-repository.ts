@@ -11,6 +11,7 @@ export class PrismaSaleRepository implements SaleRepository {
           include: {
             service: true,
             product: true,
+            plan: true,
             barber: { include: { profile: true } },
             coupon: true,
             appointment: {
@@ -39,6 +40,7 @@ export class PrismaSaleRepository implements SaleRepository {
           include: {
             service: true,
             product: true,
+            plan: true,
             barber: { include: { profile: true } },
             coupon: true,
             appointment: {
@@ -64,6 +66,7 @@ export class PrismaSaleRepository implements SaleRepository {
           include: {
             service: true,
             product: true,
+            plan: true,
             barber: { include: { profile: true } },
             coupon: true,
             appointment: {
@@ -93,6 +96,7 @@ export class PrismaSaleRepository implements SaleRepository {
           include: {
             service: true,
             product: true,
+            plan: true,
             barber: { include: { profile: true } },
             coupon: true,
             appointment: {
@@ -118,6 +122,7 @@ export class PrismaSaleRepository implements SaleRepository {
           include: {
             service: true,
             product: true,
+            plan: true,
             barber: { include: { profile: true } },
             coupon: true,
             appointment: {
@@ -143,6 +148,7 @@ export class PrismaSaleRepository implements SaleRepository {
           include: {
             service: true,
             product: true,
+            plan: true,
             barber: { include: { profile: true } },
             coupon: true,
             appointment: {
@@ -171,6 +177,7 @@ export class PrismaSaleRepository implements SaleRepository {
           include: {
             service: true,
             product: true,
+            plan: true,
             barber: { include: { profile: true } },
             coupon: true,
             appointment: {
@@ -196,6 +203,7 @@ export class PrismaSaleRepository implements SaleRepository {
           include: {
             service: true,
             product: true,
+            plan: true,
             barber: { include: { profile: true } },
             coupon: true,
             appointment: {

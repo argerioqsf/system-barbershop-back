@@ -18,6 +18,7 @@ export const UpdateSaleController = async (
           serviceId: z.string().optional(),
           productId: z.string().optional(),
           appointmentId: z.string().optional(),
+          planId: z.string().optional(),
           quantity: z.number(),
           barberId: z.string().optional(),
           couponCode: z.string().optional(),

@@ -13,6 +13,7 @@ import { ProfilesRepository } from '@/repositories/profiles-repository'
 import { UnitRepository } from '@/repositories/unit-repository'
 import { AppointmentServiceRepository } from '@/repositories/appointment-service-repository'
 import { SaleItemRepository } from '@/repositories/sale-item-repository'
+import { PlanRepository } from '@/repositories/plan-repository'
 import { UpdateSaleRequest, TempItems } from './types'
 import { PaymentStatus } from '@prisma/client'
 import { CannotEditPaidSaleError } from '../@errors/sale/cannot-edit-paid-sale-error'
@@ -47,6 +48,7 @@ export class UpdateSaleService {
     private unitRepository: UnitRepository,
     private appointmentServiceRepository: AppointmentServiceRepository,
     private saleItemRepository: SaleItemRepository,
+    private planRepository: PlanRepository,
   ) {}
 
   async execute({
@@ -85,6 +87,7 @@ export class UpdateSaleService {
           couponRepository: this.couponRepository,
           enforceSingleType: false,
           productsToUpdate,
+          planRepository: this.planRepository,
         })
         tempItems.push(built)
         if (it.appointmentId) appointmentsToLink.push(it.appointmentId)

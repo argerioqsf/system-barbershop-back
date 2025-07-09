@@ -30,6 +30,7 @@ import { BarberServiceRepository } from '@/repositories/barber-service-repositor
 import { BarberProductRepository } from '@/repositories/barber-product-repository'
 import { AppointmentServiceRepository } from '@/repositories/appointment-service-repository'
 import { SaleItemRepository } from '@/repositories/sale-item-repository'
+import { PlanRepository } from '@/repositories/plan-repository'
 
 export class CreateSaleService {
   constructor(
@@ -48,6 +49,7 @@ export class CreateSaleService {
     private appointmentRepository: AppointmentRepository,
     private appointmentServiceRepository: AppointmentServiceRepository,
     private saleItemRepository: SaleItemRepository,
+    private planRepository: PlanRepository,
   ) {}
 
   async execute({
@@ -83,6 +85,7 @@ export class CreateSaleService {
         userUnitId: user?.unitId as string,
         productsToUpdate,
         barberUserRepository: this.barberUserRepository,
+        planRepository: this.planRepository,
         enforceSingleType: true,
       })
       tempItems.push(temp)

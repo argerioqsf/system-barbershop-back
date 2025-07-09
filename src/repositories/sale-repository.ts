@@ -4,6 +4,7 @@ import {
   SaleItem,
   Service,
   Product,
+  Plan,
   User,
   Coupon,
   Profile,
@@ -17,6 +18,7 @@ import { DetailedAppointment } from './appointment-repository'
 export type DetailedSaleItem = SaleItem & {
   service: Service | null
   product: Product | null
+  plan: Plan | null
   barber: (User & { profile: Profile | null }) | null
   coupon: Coupon | null
   appointment:
