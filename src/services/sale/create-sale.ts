@@ -2,7 +2,11 @@ import { SaleRepository } from '../../repositories/sale-repository'
 import { ServiceRepository } from '../../repositories/service-repository'
 import { ProductRepository } from '../../repositories/product-repository'
 import { CouponRepository } from '../../repositories/coupon-repository'
-import { PaymentStatus, PermissionName } from '@prisma/client'
+import {
+  PaymentStatus,
+  PermissionName,
+  PlanProfileStatus,
+} from '@prisma/client'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { CashRegisterRepository } from '@/repositories/cash-register-repository'
 import { TransactionRepository } from '@/repositories/transaction-repository'
@@ -31,6 +35,7 @@ import { BarberProductRepository } from '@/repositories/barber-product-repositor
 import { AppointmentServiceRepository } from '@/repositories/appointment-service-repository'
 import { SaleItemRepository } from '@/repositories/sale-item-repository'
 import { PlanRepository } from '@/repositories/plan-repository'
+import { PlanProfileRepository } from '@/repositories/plan-profile-repository'
 
 export class CreateSaleService {
   constructor(
@@ -50,6 +55,7 @@ export class CreateSaleService {
     private appointmentServiceRepository: AppointmentServiceRepository,
     private saleItemRepository: SaleItemRepository,
     private planRepository: PlanRepository,
+    private planProfileRepository: PlanProfileRepository,
   ) {}
 
   async execute({
@@ -153,6 +159,30 @@ export class CreateSaleService {
           await this.appointmentRepository.update(item.appointmentId, {
             status: 'CONCLUDED',
           })
+        }
+      }
+
+      const clientProfile = await this.profileRepository.findByUserId(clientId)
+      if (clientProfile) {
+        for (const item of sale.items) {
+          if (item.planId) {
+            await this.planProfileRepository.create({
+              saleItemId: item.id,
+              planId: item.planId,
+              profileId: clientProfile.id,
+              planStartDate: sale.createdAt,
+              dueDateDebt: sale.createdAt.getDate(),
+              status: PlanProfileStatus.PAID,
+              debts: [
+                {
+                  value: item.price,
+                  status: PaymentStatus.PAID,
+                  planId: item.planId,
+                  paymentDate: sale.createdAt,
+                },
+              ],
+            })
+          }
         }
       }
     }

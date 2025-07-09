@@ -14,8 +14,9 @@ import { UnitRepository } from '@/repositories/unit-repository'
 import { AppointmentServiceRepository } from '@/repositories/appointment-service-repository'
 import { SaleItemRepository } from '@/repositories/sale-item-repository'
 import { PlanRepository } from '@/repositories/plan-repository'
+import { PlanProfileRepository } from '@/repositories/plan-profile-repository'
 import { UpdateSaleRequest, TempItems } from './types'
-import { PaymentStatus } from '@prisma/client'
+import { PaymentStatus, PlanProfileStatus } from '@prisma/client'
 import { CannotEditPaidSaleError } from '../@errors/sale/cannot-edit-paid-sale-error'
 import { CashRegisterClosedError } from '../@errors/cash-register/cash-register-closed-error'
 import { applyCouponToItems } from './utils/coupon'
@@ -49,6 +50,7 @@ export class UpdateSaleService {
     private appointmentServiceRepository: AppointmentServiceRepository,
     private saleItemRepository: SaleItemRepository,
     private planRepository: PlanRepository,
+    private planProfileRepository: PlanProfileRepository,
   ) {}
 
   async execute({
@@ -159,6 +161,32 @@ export class UpdateSaleService {
       )
 
       sale.transactions = [...transactions]
+
+      const clientProfile = await this.profileRepository.findByUserId(
+        sale.clientId,
+      )
+      if (clientProfile) {
+        for (const item of sale.items) {
+          if (item.planId) {
+            await this.planProfileRepository.create({
+              saleItemId: item.id,
+              planId: item.planId,
+              profileId: clientProfile.id,
+              planStartDate: sale.createdAt,
+              dueDateDebt: sale.createdAt.getDate(),
+              status: PlanProfileStatus.PAID,
+              debts: [
+                {
+                  value: item.price,
+                  status: PaymentStatus.PAID,
+                  planId: item.planId,
+                  paymentDate: sale.createdAt,
+                },
+              ],
+            })
+          }
+        }
+      }
     }
 
     for (const item of sale.items) {

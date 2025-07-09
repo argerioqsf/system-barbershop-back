@@ -31,6 +31,8 @@ import {
   FakeAppointmentRepository,
   FakeAppointmentServiceRepository,
   FakeSaleItemRepository,
+  FakePlanRepository,
+  FakePlanProfileRepository,
 } from '../../helpers/fake-repositories'
 
 import {
@@ -75,6 +77,8 @@ function setup() {
     appointmentRepo,
   )
   const saleItemRepo = new FakeSaleItemRepository(saleRepo)
+  const planRepository = new FakePlanRepository()
+  const planProfileRepository = new FakePlanProfileRepository()
   const organizationRepo = new FakeOrganizationRepository({
     ...defaultOrganization,
   })
@@ -98,6 +102,8 @@ function setup() {
     appointmentRepo,
     appointmentServiceRepo,
     saleItemRepo,
+    planRepository,
+    planProfileRepository,
   )
 
   return {
@@ -116,6 +122,8 @@ function setup() {
     appointmentRepo,
     appointmentServiceRepo,
     saleItemRepo,
+    planRepository,
+    planProfileRepository,
     createSale,
   }
 }
@@ -1105,5 +1113,56 @@ describe('Create sale service', () => {
       ctx.appointmentRepo.appointments.find((a) => a.id === appointment.id)
         ?.status,
     ).toBe('CONCLUDED')
+  })
+
+  it('creates plan profile when paying a sale with plan item', async () => {
+    const plan = { id: "plan-1", price: 50, name: "Basic", typeRecurrenceId: "rec-1" }
+    ctx.planRepository.plans.push(plan)
+    const clientProfile = {
+      id: "profile-client",
+      phone: '',
+      cpf: '',
+      genre: '',
+      birthday: '',
+      pix: '',
+      roleId: 'role-1',
+      commissionPercentage: 0,
+      totalBalance: 0,
+      userId: defaultClient.id,
+      createdAt: new Date(),
+      permissions: [],
+      role: { id: 'role-1', name: 'CLIENT', unitId: 'unit-1' },
+      workHours: [],
+      blockedHours: [],
+      barberServices: [],
+    }
+    ctx.profilesRepo.profiles.push({ ...clientProfile, user: defaultClient })
+    ctx.barberRepo.users.push({ ...defaultClient, profile: clientProfile })
+    ctx.cashRepo.session = {
+      id: "session-plan",
+      openedById: defaultUser.id,
+      unitId: "unit-1",
+      openedAt: new Date(),
+      closedAt: null,
+      initialAmount: 0,
+      transactions: [],
+      sales: [],
+      finalAmount: null,
+      user: defaultUser,
+    }
+
+
+    await ctx.createSale.execute({
+      userId: defaultUser.id,
+      method: PaymentMethod.CASH,
+      items: [{ planId: plan.id, quantity: 1 }],
+      clientId: defaultClient.id,
+      paymentStatus: PaymentStatus.PAID,
+    })
+
+    expect(ctx.planProfileRepository.items).toHaveLength(1)
+    expect(ctx.planProfileRepository.items[0].planId).toBe(plan.id)
+    expect(ctx.planProfileRepository.items[0].debts).toHaveLength(1)
+    expect(ctx.planProfileRepository.items[0].debts[0].status).toBe('PAID')
   })
 })

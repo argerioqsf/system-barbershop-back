@@ -14,6 +14,7 @@ import { PrismaUnitRepository } from '@/repositories/prisma/prisma-unit-reposito
 import { PrismaSaleItemRepository } from '@/repositories/prisma/prisma-sale-item-repository'
 import { PrismaAppointmentServiceRepository } from '@/repositories/prisma/prisma-appointment-service-repository'
 import { PrismaPlanRepository } from '@/repositories/prisma/prisma-plan-repository'
+import { PrismaPlanProfileRepository } from '@/repositories/prisma/prisma-plan-profile-repository'
 import { UpdateSaleService } from '@/services/sale/update-sale'
 
 export function makeUpdateSale() {
@@ -33,6 +34,7 @@ export function makeUpdateSale() {
   const appointmentServiceRepository = new PrismaAppointmentServiceRepository()
   const saleItemRepository = new PrismaSaleItemRepository()
   const planRepository = new PrismaPlanRepository()
+  const planProfileRepository = new PrismaPlanProfileRepository()
   return new UpdateSaleService(
     repository,
     serviceRepository,
@@ -50,5 +52,6 @@ export function makeUpdateSale() {
     appointmentServiceRepository,
     saleItemRepository,
     planRepository,
+    planProfileRepository,
   )
 }

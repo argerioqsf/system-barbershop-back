@@ -15,6 +15,7 @@ import { PrismaAppointmentRepository } from '@/repositories/prisma/prisma-appoin
 import { PrismaSaleItemRepository } from '@/repositories/prisma/prisma-sale-item-repository'
 import { PrismaAppointmentServiceRepository } from '@/repositories/prisma/prisma-appointment-service-repository'
 import { PrismaPlanRepository } from '@/repositories/prisma/prisma-plan-repository'
+import { PrismaPlanProfileRepository } from '@/repositories/prisma/prisma-plan-profile-repository'
 
 export function makeCreateSale() {
   const repository = new PrismaSaleRepository()
@@ -33,6 +34,7 @@ export function makeCreateSale() {
   const appointmentServiceRepository = new PrismaAppointmentServiceRepository()
   const saleItemRepository = new PrismaSaleItemRepository()
   const planRepository = new PrismaPlanRepository()
+  const planProfileRepository = new PrismaPlanProfileRepository()
   const service = new CreateSaleService(
     repository,
     serviceRepository,
@@ -50,6 +52,7 @@ export function makeCreateSale() {
     appointmentServiceRepository,
     saleItemRepository,
     planRepository,
+    planProfileRepository,
   )
   return service
 }

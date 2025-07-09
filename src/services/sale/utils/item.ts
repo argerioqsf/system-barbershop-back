@@ -41,7 +41,8 @@ function ensureSingleType(item: CreateSaleItem, enforce: boolean) {
   const count =
     (item.serviceId ? 1 : 0) +
     (item.productId ? 1 : 0) +
-    (item.appointmentId ? 1 : 0)
+    (item.appointmentId ? 1 : 0) +
+    (item.planId ? 1 : 0)
   if (count === 0 || (enforce && count !== 1)) {
     throw new ItemNeedsServiceOrProductOrAppointmentError()
   }
