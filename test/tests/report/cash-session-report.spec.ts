@@ -85,7 +85,7 @@ describe('Cash session report service', () => {
                 description: null,
                 imageUrl: null,
                 cost: 0,
-                category: null,
+                categoryId: null,
                 defaultTime: null,
                 commissionPercentage: null,
                 unitId: '',

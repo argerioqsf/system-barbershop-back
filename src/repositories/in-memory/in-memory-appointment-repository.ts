@@ -29,7 +29,7 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
             imageUrl: null,
             cost: 0,
             price: 0,
-            category: null,
+            categoryId: null,
             defaultTime: null,
             commissionPercentage: null,
             unitId: (data.unit as { connect: { id: string } }).connect.id,

@@ -271,7 +271,7 @@ describe('Pay balance transaction service', () => {
           imageUrl: null,
           cost: 0,
           price: 30,
-          category: null,
+          categoryId: null,
           defaultTime: null,
           commissionPercentage: null,
           unitId: ctx.unitRepo.unit.id,

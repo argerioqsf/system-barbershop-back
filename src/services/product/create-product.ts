@@ -8,6 +8,7 @@ interface CreateProductRequest {
   quantity?: number
   cost: number
   price: number
+  categoryId?: string | null
   unitId: string
 }
 
@@ -26,6 +27,7 @@ export class CreateProductService {
       quantity: data.quantity ?? 0,
       cost: data.cost,
       price: data.price,
+      ...(data.categoryId && { category: { connect: { id: data.categoryId } } }),
       unit: { connect: { id: data.unitId } },
     })
     return { product }

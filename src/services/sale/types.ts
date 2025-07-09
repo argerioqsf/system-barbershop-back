@@ -102,6 +102,8 @@ export type SaleItemTemp = Omit<
   | 'barberId'
   | 'couponId'
   | 'appointmentId'
+  | 'planId'
+  | 'planProfiles'
   | 'porcentagemBarbeiro'
   | 'commissionPaid'
 >

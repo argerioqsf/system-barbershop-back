@@ -161,7 +161,7 @@ export function makeService(id: string, price = 100): Service {
     imageUrl: null,
     cost: 0,
     price,
-    category: null,
+    categoryId: null,
     defaultTime: null,
     commissionPercentage: null,
     unitId: 'unit-1',
@@ -211,6 +211,7 @@ export function makeProduct(id: string, price = 50, quantity = 5): Product {
     price,
     unitId: 'unit-1',
     commissionPercentage: 0,
+    categoryId: null,
   }
 }
 

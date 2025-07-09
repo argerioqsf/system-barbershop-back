@@ -20,6 +20,7 @@ export class InMemorySaleRepository implements SaleRepository {
     type SaleItemData = {
       service?: { connect: { id: string } }
       product?: { connect: { id: string } }
+      plan?: { connect: { id: string } }
       quantity: number
       barber?: { connect: { id: string } }
       coupon?: { connect: { id: string } }
@@ -39,12 +40,14 @@ export class InMemorySaleRepository implements SaleRepository {
       quantity: it.quantity,
       barberId: it.barber?.connect.id ?? null,
       couponId: it.coupon?.connect.id ?? null,
+      planId: it.plan?.connect.id ?? null,
       price: it.price as number,
       discount: it.discount ?? null,
       discountType: it.discountType ?? null,
       porcentagemBarbeiro: it.porcentagemBarbeiro ?? null,
       commissionPaid: false,
       transactions: [],
+      planProfiles: [],
       appointment: it.appointment
         ? {
             id: it.appointment.connect.id,
@@ -68,7 +71,7 @@ export class InMemorySaleRepository implements SaleRepository {
             imageUrl: null,
             cost: 0,
             price: 0,
-            category: null,
+            categoryId: null,
             defaultTime: null,
             commissionPercentage: null,
             unitId: 'unit-1',
@@ -85,6 +88,14 @@ export class InMemorySaleRepository implements SaleRepository {
             commissionPercentage: null,
             price: 0,
             unitId: 'unit-1',
+          }
+        : null,
+      plan: it.plan
+        ? {
+            id: it.plan.connect.id,
+            price: 0,
+            name: '',
+            typeRecurrenceId: '',
           }
         : null,
       barber: it.barber
@@ -291,6 +302,9 @@ export class InMemorySaleRepository implements SaleRepository {
             productId:
               (it.product as { connect?: { id: string } } | undefined)?.connect
                 ?.id ?? null,
+            planId:
+              (it.plan as { connect?: { id: string } } | undefined)?.connect?.id ??
+                null,
             appointmentId:
               (it.appointment as { connect?: { id: string } } | undefined)
                 ?.connect?.id ?? null,
@@ -308,6 +322,7 @@ export class InMemorySaleRepository implements SaleRepository {
               (it.porcentagemBarbeiro as number | null) ?? null,
             commissionPaid: false,
             transactions: [],
+            planProfiles: [],
             appointment: it.appointment
               ? {
                   id: (it.appointment as { connect: { id: string } }).connect
@@ -332,7 +347,7 @@ export class InMemorySaleRepository implements SaleRepository {
                   imageUrl: null,
                   cost: 0,
                   price: 0,
-                  category: null,
+                  categoryId: null,
                   defaultTime: null,
                   commissionPercentage: null,
                   unitId: 'unit-1',
@@ -349,6 +364,14 @@ export class InMemorySaleRepository implements SaleRepository {
                   commissionPercentage: null,
                   price: 0,
                   unitId: 'unit-1',
+                }
+              : null,
+            plan: it.plan
+              ? {
+                  id: (it.plan as { connect: { id: string } }).connect.id,
+                  price: 0,
+                  name: '',
+                  typeRecurrenceId: '',
                 }
               : null,
             barber: it.barber

@@ -14,6 +14,7 @@ export const CreateProductController = async (
     cost: z.coerce.number(),
     price: z.coerce.number(),
     commissionPercentage: z.number().optional(),
+    categoryId: z.string().optional(),
   })
   const data = bodySchema.parse(request.body)
 
@@ -31,6 +32,7 @@ export const CreateProductController = async (
     price: data.price,
     imageUrl,
     unitId,
+    categoryId: data.categoryId,
   })
 
   return reply.status(201).send(product)

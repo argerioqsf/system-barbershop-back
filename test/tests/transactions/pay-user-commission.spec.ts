@@ -89,7 +89,7 @@ async function makePaymentItems(): Promise<PaymentItems[]> {
         imageUrl: null,
         cost: 0,
         price: 30,
-        category: null,
+        categoryId: null,
         defaultTime: null,
         commissionPercentage: null,
         unitId: user.unitId,
