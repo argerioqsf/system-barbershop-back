@@ -164,7 +164,7 @@ export async function buildItemData({
 }: BuildItemDataOptions): Promise<TempItems> {
   ensureSingleType(item, enforceSingleType)
 
-  const dataItem: DataItem = { quantity: item.quantity }
+  const dataItem: DataItem = { quantity: item.quantity, categoryId: null }
   let basePrice = 0
   let service: Service | null = null
   let product: Product | null = null
@@ -180,6 +180,7 @@ export async function buildItemData({
     service = loaded.service
     basePrice = loaded.price * item.quantity
     dataItem.service = loaded.relation
+    dataItem.categoryId = loaded.service.categoryId
   } else if (item.productId) {
     const loaded = await loadProduct(
       item.productId,
@@ -191,6 +192,7 @@ export async function buildItemData({
     product = loaded.product
     basePrice = loaded.price * item.quantity
     dataItem.product = loaded.relation
+    dataItem.categoryId = loaded.product.categoryId
   } else if (item.appointmentId) {
     const loaded = await loadAppointment(
       item.appointmentId,

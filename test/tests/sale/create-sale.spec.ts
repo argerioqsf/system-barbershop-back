@@ -1165,4 +1165,72 @@ describe('Create sale service', () => {
     expect(ctx.planProfileRepository.items[0].debts).toHaveLength(1)
     expect(ctx.planProfileRepository.items[0].debts[0].status).toBe('PAID')
   })
+
+  it('applies active plan benefits on sale items', async () => {
+    const service = makeService('benefit-service', 100)
+    ctx.serviceRepo.services.push(service)
+
+    const benefit = {
+      id: 'ben-1',
+      name: 'disc',
+      description: null,
+      discount: 20,
+      discountType: DiscountType.VALUE,
+      categories: [],
+      services: [{ id: 'bs-1', benefitId: 'ben-1', serviceId: service.id }],
+      products: [],
+    }
+    const plan = {
+      id: 'plan-b',
+      price: 50,
+      name: 'Basic',
+      typeRecurrenceId: 'rec-1',
+      benefits: [
+        { id: 'pb-1', planId: 'plan-b', benefitId: benefit.id, benefit },
+      ],
+    }
+    ctx.planRepository.plans.push(plan as any)
+
+    const clientProfile = {
+      id: 'profile-client-plan',
+      phone: '',
+      cpf: '',
+      genre: '',
+      birthday: '',
+      pix: '',
+      roleId: 'role-1',
+      commissionPercentage: 0,
+      totalBalance: 0,
+      userId: defaultClient.id,
+      createdAt: new Date(),
+      permissions: [],
+      role: { id: 'role-1', name: 'CLIENT', unitId: 'unit-1' },
+      workHours: [],
+      blockedHours: [],
+      barberServices: [],
+    }
+    ctx.profilesRepo.profiles.push({ ...clientProfile, user: defaultClient })
+    ctx.barberRepo.users.push({ ...defaultClient, profile: clientProfile })
+
+    ctx.planProfileRepository.items.push({
+      id: 'pp1',
+      planStartDate: new Date(),
+      status: 'PAID',
+      saleItemId: 'item-plan',
+      dueDateDebt: 1,
+      planId: plan.id,
+      profileId: clientProfile.id,
+      debts: [],
+    })
+
+    const result = await ctx.createSale.execute({
+      userId: defaultUser.id,
+      method: PaymentMethod.CASH,
+      items: [{ serviceId: service.id, quantity: 1 }],
+      clientId: defaultClient.id,
+    })
+
+    expect(result.sale.items[0].price).toBe(80)
+    expect(result.sale.items[0].discount).toBe(20)
+  })
 })

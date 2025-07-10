@@ -1,12 +1,18 @@
 import { Plan, Prisma } from '@prisma/client'
-import { PlanRepository } from '../plan-repository'
+import { PlanRepository, PlanWithBenefits } from '../plan-repository'
 import { randomUUID } from 'crypto'
 
 export class InMemoryPlanRepository implements PlanRepository {
-  constructor(public plans: Plan[] = []) {}
+  constructor(public plans: (PlanWithBenefits | Plan)[] = []) {}
 
   async findById(id: string) {
     return this.plans.find((p) => p.id === id) ?? null
+  }
+
+  async findByIdWithBenefits(id: string): Promise<PlanWithBenefits | null> {
+    const plan = this.plans.find((p) => p.id === id)
+    if (!plan) return null
+    return plan as PlanWithBenefits
   }
 
   async create(data: Prisma.PlanCreateInput) {

@@ -73,6 +73,7 @@ export type DataItem = {
   product?: { connect: { id?: string } }
   appointment?: { connect: { id: string } }
   plan?: { connect: { id: string } }
+  categoryId?: string | null
 }
 
 export type TempItems = {

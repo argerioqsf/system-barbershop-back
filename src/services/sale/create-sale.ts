@@ -22,6 +22,7 @@ import {
   TempItems,
 } from './types'
 import { applyCouponToItems } from './utils/coupon'
+import { applyPlanDiscounts } from './utils/plan'
 import { buildItemData } from './utils/item'
 import {
   mapToSaleItems,
@@ -107,6 +108,16 @@ export class CreateSaleService {
       )
     }
 
+    const clientProfile = await this.profileRepository.findByUserId(clientId)
+    if (clientProfile) {
+      await applyPlanDiscounts(
+        tempItems,
+        clientProfile.id,
+        this.planProfileRepository,
+        this.planRepository,
+      )
+    }
+
     const saleItems = mapToSaleItems(tempItems)
     const calculatedTotal = calculateTotal(tempItems)
 
@@ -162,14 +173,15 @@ export class CreateSaleService {
         }
       }
 
-      const clientProfile = await this.profileRepository.findByUserId(clientId)
-      if (clientProfile) {
+      const clientProfileAtPayment =
+        await this.profileRepository.findByUserId(clientId)
+      if (clientProfileAtPayment) {
         for (const item of sale.items) {
           if (item.planId) {
             await this.planProfileRepository.create({
               saleItemId: item.id,
               planId: item.planId,
-              profileId: clientProfile.id,
+              profileId: clientProfileAtPayment.id,
               planStartDate: sale.createdAt,
               dueDateDebt: sale.createdAt.getDate(),
               status: PlanProfileStatus.PAID,

@@ -20,6 +20,7 @@ import { PaymentStatus, PlanProfileStatus } from '@prisma/client'
 import { CannotEditPaidSaleError } from '../@errors/sale/cannot-edit-paid-sale-error'
 import { CashRegisterClosedError } from '../@errors/cash-register/cash-register-closed-error'
 import { applyCouponToItems } from './utils/coupon'
+import { applyPlanDiscounts } from './utils/plan'
 import { buildItemData } from './utils/item'
 import { distributeProfits } from './utils/profit-distribution'
 import {
@@ -119,6 +120,18 @@ export class UpdateSaleService {
         tempItems,
         couponCode,
         this.couponRepository,
+      )
+    }
+
+    const clientProfile = await this.profileRepository.findByUserId(
+      current.clientId,
+    )
+    if (clientProfile) {
+      await applyPlanDiscounts(
+        tempItems,
+        clientProfile.id,
+        this.planProfileRepository,
+        this.planRepository,
       )
     }
 
