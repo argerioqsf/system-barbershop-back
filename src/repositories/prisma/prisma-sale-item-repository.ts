@@ -12,6 +12,19 @@ export class PrismaSaleItemRepository implements SaleItemRepository {
     return prisma.saleItem.update({ where: { id }, data })
   }
 
+  async findById(id: string): Promise<DetailedSaleItemFindMany | null> {
+    return prisma.saleItem.findUnique({
+      where: { id },
+      include: {
+        sale: true,
+        transactions: true,
+        appointment: {
+          include: { services: { include: { service: true, transactions: true } } },
+        },
+      },
+    }) as Promise<DetailedSaleItemFindMany | null>
+  }
+
   async findMany(
     where: Prisma.SaleItemWhereInput = {},
   ): Promise<DetailedSaleItemFindMany[]> {

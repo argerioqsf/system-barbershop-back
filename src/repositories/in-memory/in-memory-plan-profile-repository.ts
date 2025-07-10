@@ -59,4 +59,10 @@ export class InMemoryPlanProfileRepository implements PlanProfileRepository {
   async findById(id: string): Promise<PlanProfileWithDebts | null> {
     return this.items.find((p) => p.id === id) ?? null
   }
+
+  async findByDebtId(id: string): Promise<PlanProfileWithDebts | null> {
+    return (
+      this.items.find((p) => p.debts.some((d) => d.id === id)) ?? null
+    )
+  }
 }

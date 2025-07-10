@@ -97,8 +97,13 @@ export async function distributeProfits(
       }
     }
 
-    if (!item.serviceId && !item.productId) {
+    if (!item.serviceId && !item.productId && !item.planId) {
       throw new ItemNeedsServiceOrProductOrAppointmentError()
+    }
+
+    if (item.planId) {
+      ownerShare += value
+      continue
     }
 
     let relation: BarberService | BarberProduct | null | undefined = null

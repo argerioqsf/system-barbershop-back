@@ -37,6 +37,7 @@ export class ListUserPendingCommissionsService {
         { appointmentId: { not: null } },
         { serviceId: { not: null } },
         { productId: { not: null } },
+        { planId: { not: null } },
       ],
     })
 

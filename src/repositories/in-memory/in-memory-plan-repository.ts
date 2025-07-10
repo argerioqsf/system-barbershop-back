@@ -15,6 +15,19 @@ export class InMemoryPlanRepository implements PlanRepository {
     return plan as PlanWithBenefits
   }
 
+  async findByIdWithRecurrence(
+    id: string,
+  ): Promise<(Plan & { typeRecurrence: { period: number } }) | null> {
+    const plan = this.plans.find((p) => p.id === id) as
+      | (Plan & { typeRecurrence?: { period: number } })
+      | undefined
+    if (!plan) return null
+    return {
+      ...plan,
+      typeRecurrence: plan.typeRecurrence ?? { period: 1 },
+    }
+  }
+
   async create(data: Prisma.PlanCreateInput) {
     const plan: Plan = {
       id: randomUUID(),

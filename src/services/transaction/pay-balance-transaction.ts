@@ -71,6 +71,9 @@ export class PayBalanceTransactionService {
               AND: [{ id: { in: saleItemIds } }, { productId: { not: null } }],
             },
             {
+              AND: [{ id: { in: saleItemIds } }, { planId: { not: null } }],
+            },
+            {
               AND: [
                 { appointmentId: { not: null } },
                 {
@@ -104,6 +107,7 @@ export class PayBalanceTransactionService {
         { appointmentId: { not: null } },
         { serviceId: { not: null } },
         { productId: { not: null } },
+        { planId: { not: null } },
       ],
     })
 

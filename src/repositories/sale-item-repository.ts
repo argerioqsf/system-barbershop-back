@@ -25,6 +25,7 @@ export type DetailedSaleItemFindMany = SaleItem & {
 
 export interface SaleItemRepository {
   update(id: string, data: Prisma.SaleItemUpdateInput): Promise<SaleItem>
+  findById(id: string): Promise<DetailedSaleItemFindMany | null>
   findMany(
     where?: Prisma.SaleItemWhereInput,
   ): Promise<DetailedSaleItemFindMany[]>

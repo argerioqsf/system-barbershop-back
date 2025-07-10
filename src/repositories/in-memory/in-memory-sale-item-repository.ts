@@ -30,6 +30,16 @@ export class InMemorySaleItemRepository implements SaleItemRepository {
     throw new Error('Sale item not found')
   }
 
+  async findById(id: string): Promise<DetailedSaleItemFindMany | null> {
+    for (const sale of this.saleRepository.sales) {
+      const item = sale.items.find((i) => i.id === id)
+      if (item) {
+        return { ...(item as DetailedSaleItem), sale } as unknown as DetailedSaleItemFindMany
+      }
+    }
+    return null
+  }
+
   async findMany(
     where: Prisma.SaleItemWhereInput = {},
   ): Promise<DetailedSaleItemFindMany[]> {

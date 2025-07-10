@@ -12,4 +12,5 @@ export interface PlanProfileRepository {
     where?: Prisma.PlanProfileWhereInput,
   ): Promise<PlanProfileWithDebts[]>
   findById(id: string): Promise<PlanProfileWithDebts | null>
+  findByDebtId(id: string): Promise<PlanProfileWithDebts | null>
 }

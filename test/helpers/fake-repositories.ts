@@ -106,4 +106,5 @@ export { InMemoryAppointmentServiceRepository as FakeAppointmentServiceRepositor
 export { InMemorySaleItemRepository as FakeSaleItemRepository } from '../../src/repositories/in-memory/in-memory-sale-item-repository'
 export { InMemoryPlanRepository as FakePlanRepository } from '../../src/repositories/in-memory/in-memory-plan-repository'
 export { InMemoryPlanProfileRepository as FakePlanProfileRepository } from '../../src/repositories/in-memory/in-memory-plan-profile-repository'
+export { InMemoryDebtRepository as FakeDebtRepository } from '../../src/repositories/in-memory/in-memory-debt-repository'
 

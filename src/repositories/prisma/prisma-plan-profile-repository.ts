@@ -37,4 +37,11 @@ export class PrismaPlanProfileRepository implements PlanProfileRepository {
       include: { debts: true },
     })
   }
+
+  async findByDebtId(id: string): Promise<PlanProfileWithDebts | null> {
+    return prisma.planProfile.findFirst({
+      where: { debts: { some: { id } } },
+      include: { debts: true },
+    })
+  }
 }

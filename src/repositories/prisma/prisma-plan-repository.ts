@@ -22,6 +22,15 @@ export class PrismaPlanRepository implements PlanRepository {
     }) as Promise<PlanWithBenefits | null>
   }
 
+  findByIdWithRecurrence(
+    id: string,
+  ): Promise<(Plan & { typeRecurrence: { period: number } }) | null> {
+    return prisma.plan.findUnique({
+      where: { id },
+      include: { typeRecurrence: true },
+    }) as Promise<Plan & { typeRecurrence: { period: number } } | null>
+  }
+
   create(data: Prisma.PlanCreateInput) {
     return prisma.plan.create({ data })
   }
