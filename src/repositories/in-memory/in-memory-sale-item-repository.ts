@@ -34,7 +34,10 @@ export class InMemorySaleItemRepository implements SaleItemRepository {
     for (const sale of this.saleRepository.sales) {
       const item = sale.items.find((i) => i.id === id)
       if (item) {
-        return { ...(item as DetailedSaleItem), sale } as unknown as DetailedSaleItemFindMany
+        return {
+          ...(item as DetailedSaleItem),
+          sale,
+        } as unknown as DetailedSaleItemFindMany
       }
     }
     return null

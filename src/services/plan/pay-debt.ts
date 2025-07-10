@@ -25,8 +25,7 @@ export class PayDebtService {
   async execute({ debtId, userId }: PayDebtRequest): Promise<PayDebtResponse> {
     const debt = await this.debtRepo.findById(debtId)
     if (!debt) throw new Error('Debt not found')
-    if (debt.status === PaymentStatus.PAID)
-      throw new Error('Debt already paid')
+    if (debt.status === PaymentStatus.PAID) throw new Error('Debt already paid')
 
     const profile = await this.planProfileRepo.findById(debt.planProfileId)
     if (!profile) throw new Error('Plan profile not found')

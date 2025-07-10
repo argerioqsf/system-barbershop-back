@@ -19,7 +19,9 @@ export class PrismaSaleItemRepository implements SaleItemRepository {
         sale: true,
         transactions: true,
         appointment: {
-          include: { services: { include: { service: true, transactions: true } } },
+          include: {
+            services: { include: { service: true, transactions: true } },
+          },
         },
       },
     }) as Promise<DetailedSaleItemFindMany | null>

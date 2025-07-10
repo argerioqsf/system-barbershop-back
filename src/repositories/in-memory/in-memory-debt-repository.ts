@@ -19,7 +19,10 @@ export class InMemoryDebtRepository implements DebtRepository {
     return debt
   }
 
-  async update(id: string, data: Prisma.DebtUncheckedUpdateInput): Promise<Debt> {
+  async update(
+    id: string,
+    data: Prisma.DebtUncheckedUpdateInput,
+  ): Promise<Debt> {
     const idx = this.debts.findIndex((d) => d.id === id)
     if (idx < 0) throw new Error('Debt not found')
     const current = this.debts[idx]

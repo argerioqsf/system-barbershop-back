@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { Prisma } from '@prisma/client'
+import { Prisma, Plan } from '@prisma/client'
 import { PlanRepository, PlanWithBenefits } from '../plan-repository'
 
 export class PrismaPlanRepository implements PlanRepository {
@@ -28,7 +28,7 @@ export class PrismaPlanRepository implements PlanRepository {
     return prisma.plan.findUnique({
       where: { id },
       include: { typeRecurrence: true },
-    }) as Promise<Plan & { typeRecurrence: { period: number } } | null>
+    }) as Promise<(Plan & { typeRecurrence: { period: number } }) | null>
   }
 
   create(data: Prisma.PlanCreateInput) {

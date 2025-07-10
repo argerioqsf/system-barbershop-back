@@ -1,4 +1,5 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
+import { CreateTransactionService } from '../../../src/services/transaction/create-transaction'
 import { PayDebtService } from '../../../src/services/plan/pay-debt'
 import {
   FakeDebtRepository,
@@ -6,10 +7,29 @@ import {
   FakeSaleRepository,
   FakeSaleItemRepository,
   FakeUnitRepository,
+  FakeTransactionRepository,
+  FakeBarberUsersRepository,
+  FakeCashRegisterRepository,
 } from '../../helpers/fake-repositories'
-import { defaultUnit } from '../../helpers/default-values'
+import { defaultUnit, defaultUser, makeCashSession } from '../../helpers/default-values'
+
+let transactionRepo: FakeTransactionRepository
+let barberRepo: FakeBarberUsersRepository
+let cashRepo: FakeCashRegisterRepository
+
+vi.mock(
+  '../../../src/services/@factories/transaction/make-create-transaction',
+  () => ({
+    makeCreateTransaction: () =>
+      new CreateTransactionService(transactionRepo, barberRepo, cashRepo),
+  }),
+)
 
 it('increments unit balance when paying a debt', async () => {
+  transactionRepo = new FakeTransactionRepository()
+  barberRepo = new FakeBarberUsersRepository()
+  cashRepo = new FakeCashRegisterRepository()
+
   const saleRepo = new FakeSaleRepository()
   const sale = await saleRepo.create({
     total: 80,
@@ -46,6 +66,9 @@ it('increments unit balance when paying a debt', async () => {
   ])
   const itemRepo = new FakeSaleItemRepository(saleRepo)
   const unitRepo = new FakeUnitRepository({ ...defaultUnit, id: 'unit-1', totalBalance: 0 })
+  const user = { ...defaultUser, id: 'u1', unitId: 'unit-1' }
+  barberRepo.users.push(user)
+  cashRepo.session = { ...makeCashSession('session-1', user.unitId), user }
 
   const service = new PayDebtService(debtRepo, profileRepo, itemRepo, unitRepo)
   await service.execute({ debtId: debt.id, userId: 'u1' })
