@@ -23,6 +23,7 @@ import { applyCouponToItems } from './utils/coupon'
 import { applyPlanDiscounts } from './utils/plan'
 import { buildItemData } from './utils/item'
 import { distributeProfits } from './utils/profit-distribution'
+import { PlanAlreadyLinkedError } from '../@errors/plan/plan-already-linked-error'
 import {
   mapToSaleItems,
   calculateTotal,
@@ -127,8 +128,10 @@ export class UpdateSaleService {
       current.clientId,
     )
 
-    // TODO: aplicar descontos apenas se tiver alteracao alterar os saleItems
-    if (clientProfile) {
+    const hasItemChanges =
+      (items && items.length > 0) || (removeItemIds && removeItemIds.length > 0)
+
+    if (clientProfile && hasItemChanges) {
       await applyPlanDiscounts(
         tempItems,
         clientProfile.id,
@@ -177,25 +180,23 @@ export class UpdateSaleService {
 
       sale.transactions = [...transactions]
 
-      // TODO: aproveitar a query de clientProfile a cima, se não tiver possibilidade
-      // de divergencia de ids da sale entre as duas consultas
-      const clientProfile = await this.profileRepository.findByUserId(
-        sale.clientId,
-      )
+      const clientProfileAtPayment = clientProfile
 
-      // TODO: verificar se nao esta duplicando o vinculo do plano com o cliente
-      // o cliente não pode ter dois vinculos com o mesmo plano
-      // só pode ter vinculo com o mesmo plano se o outro vinculo estiver cancelado
-      // se tentar vincular um plano no usuario que ja esta vinculado a ele, verificar se
-      // o plano ja inculado esta CANCELED, se nao estiver CANCELED ele nao pode ser vinculado ( retornar um erro )
-      // se estiver CANCELED pode vinculalo novanemnte,
-      if (clientProfile) {
+      if (clientProfileAtPayment) {
         for (const item of sale.items) {
           if (item.planId) {
+            const existing = await this.planProfileRepository.findMany({
+              planId: item.planId,
+              profileId: clientProfileAtPayment.id,
+              NOT: { status: 'CANCELED' },
+            } as any)
+            if (existing.length > 0) {
+              throw new PlanAlreadyLinkedError()
+            }
             await this.planProfileRepository.create({
               saleItemId: item.id,
               planId: item.planId,
-              profileId: clientProfile.id,
+              profileId: clientProfileAtPayment.id,
               planStartDate: sale.createdAt,
               dueDateDebt: sale.createdAt.getDate(),
               status: PlanProfileStatus.PAID,
