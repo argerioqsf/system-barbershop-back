@@ -22,7 +22,10 @@ function applyBenefitOnItem(
     productId && benefit.products.some((p) => p.productId === productId)
   if (!matchCategory && !matchService && !matchProduct) return
 
+  // TODO: adicionar um if para verificar se o item.price ja é zero
+  // se for nao aplicar mais descontos
   const discount = benefit.discount ?? 0
+  // TODO: trocar o nome da variavel value para valueDiscount
   let value = 0
   if (benefit.discountType === DiscountType.PERCENTAGE) {
     value = (item.price * discount) / 100
@@ -45,6 +48,7 @@ export async function applyPlanDiscounts(
   planProfileRepo: PlanProfileRepository,
   planRepo: PlanRepository,
 ): Promise<void> {
+  // TODO: troca o nome da variavel profiles a baixo para planProfiles
   const profiles = await planProfileRepo.findMany({
     profileId,
     status: PlanProfileStatus.PAID,

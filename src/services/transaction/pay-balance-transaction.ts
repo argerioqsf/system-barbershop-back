@@ -70,6 +70,7 @@ export class PayBalanceTransactionService {
             {
               AND: [{ id: { in: saleItemIds } }, { productId: { not: null } }],
             },
+            // TODO: retirar esse AND a baixo de planID
             {
               AND: [{ id: { in: saleItemIds } }, { planId: { not: null } }],
             },
@@ -107,6 +108,7 @@ export class PayBalanceTransactionService {
         { appointmentId: { not: null } },
         { serviceId: { not: null } },
         { productId: { not: null } },
+        // TODO: retirar esse OR de planID a baixo
         { planId: { not: null } },
       ],
     })

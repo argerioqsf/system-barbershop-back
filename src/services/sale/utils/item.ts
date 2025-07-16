@@ -237,6 +237,7 @@ export async function buildItemData({
       ...dataItem,
       barber: barberId ? { connect: { id: barberId } } : undefined,
       coupon: result.couponRel,
+      // TODO: retirar a linha a baixo, pois plan ja ta sendo adicionado quando faço ...dataItem
       plan: dataItem.plan,
     },
   }

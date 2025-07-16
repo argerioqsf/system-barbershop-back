@@ -126,6 +126,8 @@ export class UpdateSaleService {
     const clientProfile = await this.profileRepository.findByUserId(
       current.clientId,
     )
+
+    // TODO: aplicar descontos apenas se tiver alteracao alterar os saleItems
     if (clientProfile) {
       await applyPlanDiscounts(
         tempItems,
@@ -175,9 +177,18 @@ export class UpdateSaleService {
 
       sale.transactions = [...transactions]
 
+      // TODO: aproveitar a query de clientProfile a cima, se não tiver possibilidade
+      // de divergencia de ids da sale entre as duas consultas
       const clientProfile = await this.profileRepository.findByUserId(
         sale.clientId,
       )
+
+      // TODO: verificar se nao esta dupoicando o vinculo do plano com o cliente
+      // o cliente não pode ter dois vinculos com o mesmo plano
+      // só pode ter vinculo com o mesmo plano se o outro vinculo estiver cancelado
+      // se tentar vincular um plano no usuario que ja esta vinculado a ele, verificar se
+      // o plano ja inculado esta CANCELED, se nao estiver CANCELED ele nao pode ser vinculado ( retornar um erro )
+      // se estiver CANCELED pode vinculalo novanemnte,
       if (clientProfile) {
         for (const item of sale.items) {
           if (item.planId) {
