@@ -1,10 +1,4 @@
-import {
-  PlanProfileStatus,
-  PaymentStatus,
-  Prisma,
-  PlanProfile,
-  Debt,
-} from '@prisma/client'
+import { PlanProfileStatus, PaymentStatus, Prisma } from '@prisma/client'
 import {
   PlanProfileRepository,
   PlanProfileWithDebts,

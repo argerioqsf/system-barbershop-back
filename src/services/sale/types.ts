@@ -3,7 +3,6 @@ import {
   PaymentMethod,
   PaymentStatus,
   SaleItem,
-  Prisma,
 } from '@prisma/client'
 import { DetailedSale } from '@/repositories/sale-repository'
 import { OrganizationRepository } from '@/repositories/organization-repository'

@@ -4,6 +4,7 @@ import {
   PaymentMethod,
   PaymentStatus,
   Discount,
+  DiscountOrigin,
 } from '@prisma/client'
 import { computeDiscountInfo } from '@/services/sale/utils/discount'
 import {
@@ -55,7 +56,7 @@ export class InMemorySaleRepository implements SaleRepository {
         saleItemId: '',
         amount: d.amount,
         type: d.type,
-        origin: d.origin as any,
+        origin: d.origin as DiscountOrigin,
         order: d.order,
       })),
       discount: null,
@@ -342,7 +343,7 @@ export class InMemorySaleRepository implements SaleRepository {
               saleItemId: '',
               amount: d.amount,
               type: d.type,
-              origin: d.origin as any,
+              origin: d.origin as DiscountOrigin,
               order: d.order,
             })),
             discount: null,

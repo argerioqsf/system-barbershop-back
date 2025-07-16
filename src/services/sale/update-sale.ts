@@ -16,7 +16,7 @@ import { SaleItemRepository } from '@/repositories/sale-item-repository'
 import { PlanRepository } from '@/repositories/plan-repository'
 import { PlanProfileRepository } from '@/repositories/plan-profile-repository'
 import { UpdateSaleRequest, TempItems } from './types'
-import { PaymentStatus, PlanProfileStatus } from '@prisma/client'
+import { PaymentStatus, PlanProfileStatus, Prisma } from '@prisma/client'
 import { CannotEditPaidSaleError } from '../@errors/sale/cannot-edit-paid-sale-error'
 import { CashRegisterClosedError } from '../@errors/cash-register/cash-register-closed-error'
 import { applyCouponToItems } from './utils/coupon'
@@ -143,6 +143,7 @@ export class UpdateSaleService {
     const total = current.total + calculateTotal(tempItems) - subtractTotal
 
     const saleItems = mapToSaleItems(tempItems).map(
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       ({ discount, discountType, ...rest }) => rest,
     )
 
@@ -187,11 +188,12 @@ export class UpdateSaleService {
       if (clientProfileAtPayment) {
         for (const item of sale.items) {
           if (item.planId) {
-            const existing = await this.planProfileRepository.findMany({
+            const where: Prisma.PlanProfileWhereInput = {
               planId: item.planId,
               profileId: clientProfileAtPayment.id,
               NOT: { status: 'CANCELED' },
-            } as any)
+            }
+            const existing = await this.planProfileRepository.findMany(where)
             if (existing.length > 0) {
               throw new PlanAlreadyLinkedError()
             }

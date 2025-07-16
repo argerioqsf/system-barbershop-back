@@ -1,7 +1,11 @@
 import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
 import { computeDiscountInfo } from '@/services/sale/utils/discount'
-import { SaleRepository, DetailedSale } from '../sale-repository'
+import {
+  SaleRepository,
+  DetailedSale,
+  DetailedSaleItem,
+} from '../sale-repository'
 
 export class PrismaSaleRepository implements SaleRepository {
   private addDiscountInfo(sales: DetailedSale | DetailedSale[]): void {
@@ -9,8 +13,9 @@ export class PrismaSaleRepository implements SaleRepository {
     for (const sale of list) {
       for (const item of sale.items) {
         const info = computeDiscountInfo(item.price, item.discounts)
-        ;(item as any).discount = info.discount
-        ;(item as any).discountType = info.discountType
+        const typedItem = item as unknown as DetailedSaleItem
+        typedItem.discount = info.discount
+        typedItem.discountType = info.discountType
       }
     }
   }
