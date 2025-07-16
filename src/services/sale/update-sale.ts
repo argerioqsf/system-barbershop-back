@@ -121,6 +121,7 @@ export class UpdateSaleService {
 
     const saleItems = mapToSaleItems(tempItems)
 
+    // TODO: poder editar um saleItem que ja existe, hoje apenas pode criar ou excluir
     const sale = await this.repository.update(id, {
       observation,
       method,
