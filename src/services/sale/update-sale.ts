@@ -183,7 +183,7 @@ export class UpdateSaleService {
         sale.clientId,
       )
 
-      // TODO: verificar se nao esta dupoicando o vinculo do plano com o cliente
+      // TODO: verificar se nao esta duplicando o vinculo do plano com o cliente
       // o cliente não pode ter dois vinculos com o mesmo plano
       // só pode ter vinculo com o mesmo plano se o outro vinculo estiver cancelado
       // se tentar vincular um plano no usuario que ja esta vinculado a ele, verificar se
