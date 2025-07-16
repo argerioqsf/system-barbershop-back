@@ -1,5 +1,5 @@
 import { ProductRepository } from '@/repositories/product-repository'
-import { DiscountType } from '@prisma/client'
+import { DiscountType, Prisma } from '@prisma/client'
 
 export function mapToSaleItems(
   tempItems: import('../types').TempItems[],
@@ -25,6 +25,7 @@ export function mapToSaleItems(
       price: temp.price,
       discount,
       discountType,
+      discounts: discounts as Prisma.JsonValue,
       appointment: temp.data.appointment,
       commissionPaid: false,
     }

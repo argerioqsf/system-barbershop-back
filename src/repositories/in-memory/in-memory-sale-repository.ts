@@ -28,6 +28,7 @@ export class InMemorySaleRepository implements SaleRepository {
       price: number
       discount?: number | null
       discountType?: DiscountType | null
+      discounts?: Prisma.JsonValue
       porcentagemBarbeiro?: number | null
     }
     const itemsData = (data.items as { create: SaleItemData[] }).create
@@ -44,6 +45,7 @@ export class InMemorySaleRepository implements SaleRepository {
       price: it.price as number,
       discount: it.discount ?? null,
       discountType: it.discountType ?? null,
+      discounts: (it.discounts as Prisma.JsonValue) ?? [],
       porcentagemBarbeiro: it.porcentagemBarbeiro ?? null,
       commissionPaid: false,
       transactions: [],
@@ -319,6 +321,7 @@ export class InMemorySaleRepository implements SaleRepository {
             price: it.price as number,
             discount: (it.discount as number | null) ?? null,
             discountType: it.discountType ?? null,
+            discounts: (it.discounts as Prisma.JsonValue) ?? [],
             porcentagemBarbeiro:
               (it.porcentagemBarbeiro as number | null) ?? null,
             commissionPaid: false,

@@ -29,6 +29,7 @@ import {
   calculateTotal,
   updateProductsStock,
 } from './utils/sale'
+import { Prisma } from '@prisma/client'
 
 interface UpdateSaleResponse {
   sale: DetailedSale
@@ -142,7 +143,8 @@ export class UpdateSaleService {
 
     const total = current.total + calculateTotal(tempItems) - subtractTotal
 
-    const saleItems = mapToSaleItems(tempItems)
+    const saleItems = mapToSaleItems(tempItems) as unknown as
+      Prisma.SaleItemCreateWithoutSaleInput[]
 
     const sale = await this.repository.update(id, {
       observation,

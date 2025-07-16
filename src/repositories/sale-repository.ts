@@ -27,6 +27,7 @@ export type DetailedSaleItem = SaleItem & {
   price: number
   discount: number | null
   discountType: DiscountType | null
+  discounts: Prisma.JsonValue | null
   porcentagemBarbeiro: number | null
 }
 

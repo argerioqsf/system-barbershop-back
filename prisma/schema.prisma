@@ -365,6 +365,7 @@ model SaleItem {
   price               Float
   discount            Float?
   discountType        DiscountType?
+  discounts           Json?
   porcentagemBarbeiro Float?
   commissionPaid      Boolean       @default(false)
 

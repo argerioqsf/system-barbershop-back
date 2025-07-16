@@ -3,6 +3,7 @@ import {
   PaymentMethod,
   PaymentStatus,
   SaleItem,
+  Prisma,
 } from '@prisma/client'
 import { DetailedSale } from '@/repositories/sale-repository'
 import { OrganizationRepository } from '@/repositories/organization-repository'
@@ -113,6 +114,7 @@ export type SaleItemTemp = Omit<
     barber?: { connect: { id: string } }
     appointment?: { connect: { id: string } }
     plan?: { connect: { id: string } }
+    discounts?: Prisma.JsonValue
   },
   | 'id'
   | 'saleId'
