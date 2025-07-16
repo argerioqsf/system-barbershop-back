@@ -3,7 +3,9 @@ import {
   DiscountType,
   PaymentMethod,
   PaymentStatus,
+  Discount,
 } from '@prisma/client'
+import { computeDiscountInfo } from '@/services/sale/utils/discount'
 import {
   SaleRepository,
   DetailedSale,
@@ -26,9 +28,14 @@ export class InMemorySaleRepository implements SaleRepository {
       coupon?: { connect: { id: string } }
       appointment?: { connect: { id: string } }
       price: number
-      discount?: number | null
-      discountType?: DiscountType | null
-      discounts?: Prisma.JsonValue
+      discounts: {
+        create: {
+          amount: number
+          type: DiscountType
+          origin: string
+          order: number
+        }[]
+      }
       porcentagemBarbeiro?: number | null
     }
     const itemsData = (data.items as { create: SaleItemData[] }).create
@@ -43,13 +50,18 @@ export class InMemorySaleRepository implements SaleRepository {
       couponId: it.coupon?.connect.id ?? null,
       planId: it.plan?.connect.id ?? null,
       price: it.price as number,
-      discount: it.discount ?? null,
-      discountType: it.discountType ?? null,
-      discounts: (it.discounts as Prisma.JsonValue) ?? [],
+      discounts: (it.discounts?.create ?? []).map((d) => ({
+        id: randomUUID(),
+        saleItemId: '',
+        amount: d.amount,
+        type: d.type,
+        origin: d.origin as any,
+        order: d.order,
+      })),
+      discount: null,
+      discountType: null,
       porcentagemBarbeiro: it.porcentagemBarbeiro ?? null,
       commissionPaid: false,
-      transactions: [],
-      planProfiles: [],
       appointment: it.appointment
         ? {
             id: it.appointment.connect.id,
@@ -61,8 +73,6 @@ export class InMemorySaleRepository implements SaleRepository {
             status: 'SCHEDULED',
             durationService: null,
             observation: null,
-            discount: 0,
-            value: null,
           }
         : null,
       service: it.service
@@ -142,6 +152,12 @@ export class InMemorySaleRepository implements SaleRepository {
           }
         : null,
     }))
+
+    for (const item of items) {
+      const info = computeDiscountInfo(item.price, item.discounts as Discount[])
+      item.discount = info.discount
+      item.discountType = info.discountType
+    }
     const sale = {
       id: saleId,
       userId: (data.user as { connect: { id: string } }).connect.id,
@@ -296,7 +312,7 @@ export class InMemorySaleRepository implements SaleRepository {
       }
       if (itemsData.create) {
         for (const it of itemsData.create) {
-          sale.items.push({
+          const newItem: DetailedSaleItem = {
             id: randomUUID(),
             saleId: sale.id,
             serviceId:
@@ -319,14 +335,21 @@ export class InMemorySaleRepository implements SaleRepository {
               (it.coupon as { connect?: { id: string } } | undefined)?.connect
                 ?.id ?? null,
             price: it.price as number,
-            discount: (it.discount as number | null) ?? null,
-            discountType: it.discountType ?? null,
-            discounts: (it.discounts as Prisma.JsonValue) ?? [],
+            discounts: (
+              (it.discounts as { create: Discount[] })?.create ?? []
+            ).map((d) => ({
+              id: randomUUID(),
+              saleItemId: '',
+              amount: d.amount,
+              type: d.type,
+              origin: d.origin as any,
+              order: d.order,
+            })),
+            discount: null,
+            discountType: null,
             porcentagemBarbeiro:
               (it.porcentagemBarbeiro as number | null) ?? null,
             commissionPaid: false,
-            transactions: [],
-            planProfiles: [],
             appointment: it.appointment
               ? {
                   id: (it.appointment as { connect: { id: string } }).connect
@@ -338,8 +361,6 @@ export class InMemorySaleRepository implements SaleRepository {
                   status: 'SCHEDULED',
                   durationService: null,
                   observation: null,
-                  discount: 0,
-                  value: null,
                   services: [],
                 }
               : null,
@@ -422,7 +443,14 @@ export class InMemorySaleRepository implements SaleRepository {
                   createdAt: new Date(),
                 }
               : null,
-          } as DetailedSaleItem)
+          }
+          const info = computeDiscountInfo(
+            newItem.price,
+            newItem.discounts as Discount[],
+          )
+          newItem.discount = info.discount
+          newItem.discountType = info.discountType
+          sale.items.push(newItem)
         }
       }
     }

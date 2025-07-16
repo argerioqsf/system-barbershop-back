@@ -70,8 +70,8 @@ export interface ConnectRelation {
 
 export type DataItem = {
   quantity: number
-  service?: { connect: { id?: string } }
-  product?: { connect: { id?: string } }
+  service?: { connect: { id: string } }
+  product?: { connect: { id: string } }
   appointment?: { connect: { id: string } }
   plan?: { connect: { id: string } }
   categoryId?: string | null
@@ -114,7 +114,7 @@ export type SaleItemTemp = Omit<
     barber?: { connect: { id: string } }
     appointment?: { connect: { id: string } }
     plan?: { connect: { id: string } }
-    discounts?: Prisma.JsonValue
+    discounts?: { create: ItemDiscount[] }
   },
   | 'id'
   | 'saleId'

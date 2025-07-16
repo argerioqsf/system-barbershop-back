@@ -29,7 +29,6 @@ import {
   calculateTotal,
   updateProductsStock,
 } from './utils/sale'
-import { Prisma } from '@prisma/client'
 import { assertPermission } from '@/utils/permissions'
 import { AppointmentRepository } from '@/repositories/appointment-repository'
 import { BarberServiceRepository } from '@/repositories/barber-service-repository'
@@ -120,8 +119,9 @@ export class CreateSaleService {
       )
     }
 
-    const saleItems = mapToSaleItems(tempItems) as unknown as
-      Prisma.SaleItemCreateWithoutSaleInput[]
+    const saleItems = mapToSaleItems(tempItems).map(
+      ({ discount, discountType, ...rest }) => rest,
+    )
     const calculatedTotal = calculateTotal(tempItems)
 
     const sale = await this.saleRepository.create({

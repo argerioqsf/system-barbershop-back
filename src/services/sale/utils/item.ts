@@ -231,7 +231,11 @@ export async function buildItemData({
   )
 
   return {
-    ...result,
+    price: result.price,
+    discount: result.discount,
+    discountType: result.discountType,
+    ownDiscount: result.ownDiscount,
+    discounts: result.discounts,
     basePrice,
     data: {
       ...dataItem,

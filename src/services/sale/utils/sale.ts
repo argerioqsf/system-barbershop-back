@@ -1,9 +1,14 @@
 import { ProductRepository } from '@/repositories/product-repository'
-import { DiscountType, Prisma } from '@prisma/client'
+import { Prisma, DiscountType } from '@prisma/client'
 
 export function mapToSaleItems(
   tempItems: import('../types').TempItems[],
-): import('../types').SaleItemTemp[] {
+): Array<
+  Prisma.SaleItemCreateWithoutSaleInput & {
+    discount: number
+    discountType: DiscountType | null
+  }
+> {
   return tempItems.map((temp) => {
     const discountTotal = temp.basePrice - temp.price
     let discount = discountTotal > 0 ? discountTotal : 0
@@ -23,9 +28,16 @@ export function mapToSaleItems(
       plan: temp.data.plan,
       barber: temp.data.barber,
       price: temp.price,
+      discounts: {
+        create: discounts.map((d) => ({
+          amount: d.amount,
+          type: d.type,
+          origin: d.origin,
+          order: d.order,
+        })),
+      },
       discount,
       discountType,
-      discounts: discounts as Prisma.JsonValue,
       appointment: temp.data.appointment,
       commissionPaid: false,
     }
