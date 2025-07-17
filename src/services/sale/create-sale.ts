@@ -120,10 +120,7 @@ export class CreateSaleService {
       )
     }
 
-    const saleItems = mapToSaleItems(tempItems).map(
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      ({ discount, discountType, ...rest }) => rest,
-    )
+    const saleItems = mapToSaleItems(tempItems)
     const calculatedTotal = calculateTotal(tempItems)
 
     const sale = await this.saleRepository.create({

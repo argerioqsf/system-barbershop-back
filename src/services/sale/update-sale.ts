@@ -142,10 +142,7 @@ export class UpdateSaleService {
 
     const total = current.total + calculateTotal(tempItems) - subtractTotal
 
-    const saleItems = mapToSaleItems(tempItems).map(
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      ({ discount, discountType, ...rest }) => rest,
-    )
+    const saleItems = mapToSaleItems(tempItems)
 
     const sale = await this.repository.update(id, {
       observation,
