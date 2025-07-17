@@ -83,7 +83,7 @@ export class InMemoryProfilesRepository implements ProfilesRepository {
     if (index >= 0) {
       this.items[index] = {
         ...this.items[index],
-        ...(data as unknown as Partial<Profile>),
+        ...(data as Partial<Profile>),
       }
       return { ...this.items[index] }
     }

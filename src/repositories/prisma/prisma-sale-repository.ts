@@ -13,7 +13,7 @@ export class PrismaSaleRepository implements SaleRepository {
     for (const sale of list) {
       for (const item of sale.items) {
         const info = computeDiscountInfo(item.price, item.discounts)
-        const typedItem = item as unknown as DetailedSaleItem
+        const typedItem = item as DetailedSaleItem
         typedItem.discount = info.discount
         typedItem.discountType = info.discountType
       }
@@ -44,7 +44,7 @@ export class PrismaSaleRepository implements SaleRepository {
         transactions: true,
       },
     })
-    const detailed = sale as unknown as DetailedSale
+    const detailed = sale as DetailedSale
     this.addDiscountInfo(detailed)
     return detailed
   }
@@ -76,7 +76,7 @@ export class PrismaSaleRepository implements SaleRepository {
         transactions: true,
       },
     })
-    const detailed = sales as unknown as DetailedSale[]
+    const detailed = sales as DetailedSale[]
     this.addDiscountInfo(detailed)
     return detailed
   }
@@ -105,7 +105,7 @@ export class PrismaSaleRepository implements SaleRepository {
         transactions: true,
       },
     })
-    const detailed = sale as unknown as DetailedSale | null
+    const detailed = sale as DetailedSale | null
     if (detailed) this.addDiscountInfo(detailed)
     return detailed
   }
@@ -138,7 +138,7 @@ export class PrismaSaleRepository implements SaleRepository {
         transactions: true,
       },
     })
-    const detailed = sale as unknown as DetailedSale
+    const detailed = sale as DetailedSale
     this.addDiscountInfo(detailed)
     return detailed
   }
@@ -167,7 +167,7 @@ export class PrismaSaleRepository implements SaleRepository {
         transactions: true,
       },
     })
-    const detailed = sales as unknown as DetailedSale[]
+    const detailed = sales as DetailedSale[]
     this.addDiscountInfo(detailed)
     return detailed
   }
@@ -196,7 +196,7 @@ export class PrismaSaleRepository implements SaleRepository {
         transactions: true,
       },
     })
-    const detailed = sales as unknown as DetailedSale[]
+    const detailed = sales as DetailedSale[]
     this.addDiscountInfo(detailed)
     return detailed
   }
@@ -228,7 +228,7 @@ export class PrismaSaleRepository implements SaleRepository {
         transactions: true,
       },
     })
-    const detailed = sales as unknown as DetailedSale[]
+    const detailed = sales as DetailedSale[]
     this.addDiscountInfo(detailed)
     return detailed
   }
@@ -257,7 +257,7 @@ export class PrismaSaleRepository implements SaleRepository {
         transactions: true,
       },
     })
-    const detailed = sales as unknown as DetailedSale[]
+    const detailed = sales as DetailedSale[]
     this.addDiscountInfo(detailed)
     return detailed
   }

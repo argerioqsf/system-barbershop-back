@@ -10,9 +10,6 @@ export interface CouponItem {
   price: number
   ownDiscount: boolean
   discounts: ItemDiscount[]
-  data?: {
-    [key: string]: unknown
-  }
 }
 
 export async function applyCouponToSale(

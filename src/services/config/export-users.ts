@@ -1,7 +1,11 @@
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 
+type ExportedUser = Awaited<
+  ReturnType<BarberUsersRepository['findMany']>
+>[number]
+
 interface ExportUsersResponse {
-  users: unknown[]
+  users: ExportedUser[]
 }
 
 export class ExportUsersService {

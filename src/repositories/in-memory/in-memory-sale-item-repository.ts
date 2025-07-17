@@ -2,6 +2,7 @@ import { Prisma, SaleItem, PaymentStatus } from '@prisma/client'
 import { DetailedSaleItem } from '../sale-repository'
 import {
   DetailedSaleItemFindMany,
+  DetailedAppointmentService,
   SaleItemRepository,
 } from '../sale-item-repository'
 import { InMemorySaleRepository } from './in-memory-sale-repository'
@@ -21,8 +22,7 @@ export class InMemorySaleItemRepository implements SaleItemRepository {
         }
         const extra = data as { commissionPaid?: boolean }
         if (extra.commissionPaid !== undefined) {
-          ;(item as unknown as { commissionPaid: boolean }).commissionPaid =
-            extra.commissionPaid
+          item.commissionPaid = extra.commissionPaid
         }
         return item
       }
@@ -34,10 +34,19 @@ export class InMemorySaleItemRepository implements SaleItemRepository {
     for (const sale of this.saleRepository.sales) {
       const item = sale.items.find((i) => i.id === id)
       if (item) {
-        return {
+        const result: DetailedSaleItemFindMany = {
           ...(item as DetailedSaleItem),
           sale,
-        } as unknown as DetailedSaleItemFindMany
+          transactions: [],
+          appointment: item.appointment
+            ? {
+                ...item.appointment,
+                services: (item.appointment.services ??
+                  []) as DetailedAppointmentService[],
+              }
+            : null,
+        }
+        return result
       }
     }
     return null
@@ -153,7 +162,15 @@ export class InMemorySaleItemRepository implements SaleItemRepository {
         items.push({
           ...(item as DetailedSaleItem),
           sale,
-        } as unknown as DetailedSaleItemFindMany)
+          transactions: [],
+          appointment: item.appointment
+            ? {
+                ...item.appointment,
+                services: (item.appointment.services ??
+                  []) as DetailedAppointmentService[],
+              }
+            : null,
+        })
       }
     }
 
@@ -296,10 +313,18 @@ export class InMemorySaleItemRepository implements SaleItemRepository {
           }
         }
 
-        const cloned = {
+        const cloned: DetailedSaleItemFindMany = {
           ...(item as DetailedSaleItem),
           sale,
-        } as unknown as DetailedSaleItemFindMany
+          transactions: [],
+          appointment: item.appointment
+            ? {
+                ...item.appointment,
+                services: (item.appointment.services ??
+                  []) as DetailedAppointmentService[],
+              }
+            : null,
+        }
 
         if (appointmentServiceIds.length > 0 && cloned.appointment) {
           cloned.appointment = {
