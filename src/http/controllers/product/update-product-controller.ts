@@ -14,6 +14,7 @@ export const UpdateProductController = async (
     cost: z.coerce.number().optional(),
     price: z.coerce.number().optional(),
     commissionPercentage: z.coerce.number().optional(),
+    categoryId: z.string().optional(),
   })
   const { id } = paramsSchema.parse(request.params)
   const data = bodySchema.parse(request.body)

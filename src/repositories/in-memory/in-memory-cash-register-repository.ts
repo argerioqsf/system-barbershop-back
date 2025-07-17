@@ -78,9 +78,9 @@ export class InMemoryCashRegisterRepository implements CashRegisterRepository {
         where.unit &&
         'organizationId' in (where.unit as { organizationId: string })
       ) {
+        const session = s as { unit?: { organizationId: string } }
         return (
-          (s as unknown as { unit?: { organizationId: string } }).unit
-            ?.organizationId ===
+          session.unit?.organizationId ===
           (where.unit as { organizationId: string }).organizationId
         )
       }

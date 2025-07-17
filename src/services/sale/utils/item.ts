@@ -231,14 +231,16 @@ export async function buildItemData({
   )
 
   return {
-    ...result,
+    price: result.price,
+    discount: result.discount,
+    discountType: result.discountType,
+    ownDiscount: result.ownDiscount,
+    discounts: result.discounts,
     basePrice,
     data: {
       ...dataItem,
       barber: barberId ? { connect: { id: barberId } } : undefined,
       coupon: result.couponRel,
-      // TODO: retirar a linha a baixo, pois plan ja ta sendo adicionado quando faço ...dataItem
-      plan: dataItem.plan,
     },
   }
 }

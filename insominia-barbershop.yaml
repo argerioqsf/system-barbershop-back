@@ -329,8 +329,8 @@ collection:
               value: "10"
             - name: price
               value: "20"
-            - name: category
-              value: ""
+            - name: categoryId
+              value: "{{ categoryId }}"
             - name: defaultTime
               value: ""
             - name: commissionPercentage
@@ -413,6 +413,8 @@ collection:
               value: "5"
             - name: price
               value: "15"
+            - name: categoryId
+              value: "{{ categoryId }}"
             - name: image
               value: ""
               type: file
@@ -423,9 +425,9 @@ collection:
           renderRequestBody: true
           encodeUrl: true
           followRedirects: global
-          cookies:
-            send: true
-            store: true
+        cookies:
+          send: true
+          store: true
           rebuildPath: true
       - url: "{{ baseURL }}/products"
         name: List products
@@ -473,6 +475,7 @@ collection:
           text: |-
             {
               "commissionPercentage": 50
+              ,"categoryId": "{{ categoryId }}"
             }
         headers:
           - name: Content-Type
@@ -540,6 +543,100 @@ collection:
           sortKey: -1751331396301
         method: DELETE
         headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+          store: true
+          rebuildPath: true
+  - name: Categories
+    meta:
+      id: fld_c70c0d5d234b4c1d8dff8f0a5d111111
+      created: 1751331396302
+      modified: 1751331396302
+      sortKey: -1751331396302
+      description: ""
+    children:
+      - url: "{{ baseURL }}/categories"
+        name: Create category
+        meta:
+          id: req_a0b0c0d0e0f011111111111111111111
+          created: 1751331396302
+          modified: 1751331396302
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396302
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "Hair"
+            }
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        scripts:
+          afterResponse: |-
+            let response = insomnia.response.json();
+            if(response && response.id){
+              insomnia.environment.set("categoryId", response.id);
+              console.log("categoryId salvo com sucesso!");
+            } else {
+              console.warn("Categoria nao cadastrada");
+            }
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/categories"
+        name: List categories
+        meta:
+          id: req_list_categories_01
+          created: 1751331396302
+          modified: 1751331396302
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396302
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/categories/{id}"
+        name: Update category
+        meta:
+          id: req_b0b0c0d0e0f022222222222222222222
+          created: 1751331396302
+          modified: 1751331396302
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396302
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "New name"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
           - name: Authorization
             value: Bearer {{ token }}
         settings:
@@ -1093,10 +1190,14 @@ collection:
                   "quantity": 1,
                   "barberId": "{{ _.barberId }}"
                 },
-            		{
+                {
                   "productId": "{{ _.productId }}",
                   "quantity": 1,
                   "barberId": "{{ _.barberId }}"
+                },
+                {
+                  "planId": "{{ _.planId }}",
+                  "quantity": 1
                 }
               ],
               "clientId": "{{ _.clientId }}",
@@ -1136,7 +1237,12 @@ collection:
                 {
                   "serviceId": "{{ _.serviceId }}",
                   "quantity": 1,
-                  "barberId": "{{ _.barberId }}"
+                  "barberId": "{{ _.barberId }}",
+                  "price": 50
+                },
+                {
+                  "planId": "{{ _.planId }}",
+                  "quantity": 1
                 }
               ],
               "removeItemIds": []
@@ -2306,3 +2412,5 @@ environments:
     barberId: 7311c934-ab51-42c2-9357-135cebc9e7f8
     clientId: 8790fa17-beca-44a3-a3da-5dfd9ace2c7b
     tokenBarber: ""
+    planId: ""
+    categoryId: ""

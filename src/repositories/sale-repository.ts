@@ -12,6 +12,7 @@ import {
   Transaction,
   DiscountType,
   Appointment,
+  Discount,
 } from '@prisma/client'
 import { DetailedAppointment } from './appointment-repository'
 
@@ -27,6 +28,7 @@ export type DetailedSaleItem = SaleItem & {
   price: number
   discount: number | null
   discountType: DiscountType | null
+  discounts: Discount[]
   porcentagemBarbeiro: number | null
 }
 

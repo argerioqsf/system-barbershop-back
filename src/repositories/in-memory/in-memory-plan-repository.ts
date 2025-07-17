@@ -33,8 +33,9 @@ export class InMemoryPlanRepository implements PlanRepository {
       id: randomUUID(),
       price: data.price as number,
       name: data.name as string,
-      typeRecurrenceId: (data.typeRecurrence as { connect: { id: string } })
-        .connect!.id,
+      typeRecurrenceId: (
+        data.typeRecurrence as { connect?: { id: string } } | undefined
+      )?.connect?.id as string,
     }
     this.plans.push(plan)
     return plan

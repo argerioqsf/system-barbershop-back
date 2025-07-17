@@ -37,8 +37,6 @@ export class ListUserPendingCommissionsService {
         { appointmentId: { not: null } },
         { serviceId: { not: null } },
         { productId: { not: null } },
-        // TODO: retirar esse OR de planId a baixo
-        { planId: { not: null } },
       ],
     })
 

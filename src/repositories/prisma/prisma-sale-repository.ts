@@ -1,8 +1,25 @@
 import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
-import { SaleRepository, DetailedSale } from '../sale-repository'
+import { computeDiscountInfo } from '@/services/sale/utils/discount'
+import {
+  SaleRepository,
+  DetailedSale,
+  DetailedSaleItem,
+} from '../sale-repository'
 
 export class PrismaSaleRepository implements SaleRepository {
+  private addDiscountInfo(sales: DetailedSale | DetailedSale[]): void {
+    const list = Array.isArray(sales) ? sales : [sales]
+    for (const sale of list) {
+      for (const item of sale.items) {
+        const info = computeDiscountInfo(item.price, item.discounts)
+        const typedItem = item as DetailedSaleItem
+        typedItem.discount = info.discount
+        typedItem.discountType = info.discountType
+      }
+    }
+  }
+
   async create(data: Prisma.SaleCreateInput): Promise<DetailedSale> {
     const sale = await prisma.sale.create({
       data,
@@ -17,6 +34,7 @@ export class PrismaSaleRepository implements SaleRepository {
             appointment: {
               include: { services: { include: { service: true } } },
             },
+            discounts: true,
           },
         },
         user: { include: { profile: true } },
@@ -26,7 +44,9 @@ export class PrismaSaleRepository implements SaleRepository {
         transactions: true,
       },
     })
-    return sale as unknown as DetailedSale
+    const detailed = sale as DetailedSale
+    this.addDiscountInfo(detailed)
+    return detailed
   }
 
   async findMany(where: Prisma.SaleWhereInput = {}): Promise<DetailedSale[]> {
@@ -46,6 +66,7 @@ export class PrismaSaleRepository implements SaleRepository {
             appointment: {
               include: { services: { include: { service: true } } },
             },
+            discounts: true,
           },
         },
         user: { include: { profile: true } },
@@ -55,7 +76,9 @@ export class PrismaSaleRepository implements SaleRepository {
         transactions: true,
       },
     })
-    return sales as unknown as DetailedSale[]
+    const detailed = sales as DetailedSale[]
+    this.addDiscountInfo(detailed)
+    return detailed
   }
 
   async findById(id: string): Promise<DetailedSale | null> {
@@ -72,6 +95,7 @@ export class PrismaSaleRepository implements SaleRepository {
             appointment: {
               include: { services: { include: { service: true } } },
             },
+            discounts: true,
           },
         },
         user: { include: { profile: true } },
@@ -81,7 +105,9 @@ export class PrismaSaleRepository implements SaleRepository {
         transactions: true,
       },
     })
-    return sale as unknown as DetailedSale | null
+    const detailed = sale as DetailedSale | null
+    if (detailed) this.addDiscountInfo(detailed)
+    return detailed
   }
 
   async update(
@@ -102,6 +128,7 @@ export class PrismaSaleRepository implements SaleRepository {
             appointment: {
               include: { services: { include: { service: true } } },
             },
+            discounts: true,
           },
         },
         user: { include: { profile: true } },
@@ -111,7 +138,9 @@ export class PrismaSaleRepository implements SaleRepository {
         transactions: true,
       },
     })
-    return sale as unknown as DetailedSale
+    const detailed = sale as DetailedSale
+    this.addDiscountInfo(detailed)
+    return detailed
   }
 
   async findManyByDateRange(start: Date, end: Date): Promise<DetailedSale[]> {
@@ -128,6 +157,7 @@ export class PrismaSaleRepository implements SaleRepository {
             appointment: {
               include: { services: { include: { service: true } } },
             },
+            discounts: true,
           },
         },
         user: { include: { profile: true } },
@@ -137,7 +167,9 @@ export class PrismaSaleRepository implements SaleRepository {
         transactions: true,
       },
     })
-    return sales as unknown as DetailedSale[]
+    const detailed = sales as DetailedSale[]
+    this.addDiscountInfo(detailed)
+    return detailed
   }
 
   async findManyByUser(userId: string): Promise<DetailedSale[]> {
@@ -154,6 +186,7 @@ export class PrismaSaleRepository implements SaleRepository {
             appointment: {
               include: { services: { include: { service: true } } },
             },
+            discounts: true,
           },
         },
         user: { include: { profile: true } },
@@ -163,7 +196,9 @@ export class PrismaSaleRepository implements SaleRepository {
         transactions: true,
       },
     })
-    return sales as unknown as DetailedSale[]
+    const detailed = sales as DetailedSale[]
+    this.addDiscountInfo(detailed)
+    return detailed
   }
 
   async findManyByBarber(
@@ -183,6 +218,7 @@ export class PrismaSaleRepository implements SaleRepository {
             appointment: {
               include: { services: { include: { service: true } } },
             },
+            discounts: true,
           },
         },
         user: { include: { profile: true } },
@@ -192,7 +228,9 @@ export class PrismaSaleRepository implements SaleRepository {
         transactions: true,
       },
     })
-    return sales as unknown as DetailedSale[]
+    const detailed = sales as DetailedSale[]
+    this.addDiscountInfo(detailed)
+    return detailed
   }
 
   async findManyBySession(sessionId: string): Promise<DetailedSale[]> {
@@ -209,6 +247,7 @@ export class PrismaSaleRepository implements SaleRepository {
             appointment: {
               include: { services: { include: { service: true } } },
             },
+            discounts: true,
           },
         },
         user: { include: { profile: true } },
@@ -218,6 +257,8 @@ export class PrismaSaleRepository implements SaleRepository {
         transactions: true,
       },
     })
-    return sales as unknown as DetailedSale[]
+    const detailed = sales as DetailedSale[]
+    this.addDiscountInfo(detailed)
+    return detailed
   }
 }
