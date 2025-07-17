@@ -22,7 +22,7 @@ Este projeto usa Node.js 20 e TypeScript com Fastify e Prisma. Os testes são ex
 
 ## Manutenção de artefatos
 - Caso o código modifique dados iniciais, atualize `src/repositories/prisma/seed.ts`.
-- Sincronize a coleção de requisições `insominia-barbershop.json` quando necessário.
+- Sincronize a coleção de requisições `insominia-barbershop.yaml` quando necessário.
 - Atualize os testes dos arquivos modificados e crie testes para novos módulos.
 - Ao alterar `prisma/schema.prisma`, gere novas migrations.
 

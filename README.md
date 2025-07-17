@@ -85,6 +85,6 @@ npm test
 
 ## Coleção Insomnia
 
-O arquivo `insominia-barbershop.json` contém todas as requisições para testar as rotas.
+O arquivo `insominia-barbershop.yaml` contém todas as requisições para testar as rotas.
 Importe-o no Insomnia e defina a variável `baseURL` para o endereço onde a aplicação está rodando (ex.: `http://localhost:3333`).
 

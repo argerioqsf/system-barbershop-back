@@ -550,6 +550,103 @@ collection:
             send: true
             store: true
           rebuildPath: true
+  - name: Categories
+    meta:
+      id: fld_68a98e45ca08435083f40ea66b16e59a
+      created: 1751331396301
+      modified: 1751331396301
+      sortKey: -1751331396301
+      description: ""
+    children:
+      - url: "{{ baseURL }}/categories"
+        name: Create category
+        meta:
+          id: req_d6f8d4102e7f4a3988fdd1ddfcdb6cee
+          created: 1751331396301
+          modified: 1751331396301
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396301
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "Categoria"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/categories"
+        name: List categories
+        meta:
+          id: req_702580b282554d13ad1c02609c7d5294
+          created: 1751331396301
+          modified: 1751331396301
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396301
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        scripts:
+          afterResponse: |-
+            let response = insomnia.response.json();
+            if (!response) console.warn("categorias nao encontradas");
+            if (response[0]) {
+                insomnia.environment.set("categoryId", response[0].id);
+                console.log("categoryId salvo com sucesso!");
+            } else {
+                console.warn("Categoria nao encontrada");
+            }
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/categories/{{ _.categoryId }}"
+        name: Update category
+        meta:
+          id: req_dec25271bd6542d4ba16c4068d7167f1
+          created: 1751331396301
+          modified: 1751331396301
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396301
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "Categoria atualizada"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
   - name: Appointments
     meta:
       id: fld_3a2662e345ee447ba802f552e3ca71b1
@@ -2306,3 +2403,4 @@ environments:
     barberId: 7311c934-ab51-42c2-9357-135cebc9e7f8
     clientId: 8790fa17-beca-44a3-a3da-5dfd9ace2c7b
     tokenBarber: ""
+    categoryId: 
