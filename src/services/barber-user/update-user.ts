@@ -169,8 +169,8 @@ export class UpdateUserService {
       request.newToken = newToken
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, ...userRest } = user
+    const userRest = { ...user }
+    delete (userRest as { password?: string }).password
     return { user: userRest, profile }
   }
 }
