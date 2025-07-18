@@ -77,10 +77,7 @@ export function mapErrorToStatus(error: Error): number {
   return 500
 }
 
-export function handleControllerError(error: unknown, reply: FastifyReply) {
-  if (error instanceof Error) {
-    const status = mapErrorToStatus(error)
-    return reply.status(status).send({ message: error.message })
-  }
-  return reply.status(500).send({ message: 'Internal server error' })
+export function handleControllerError(error: Error, reply: FastifyReply) {
+  const status = mapErrorToStatus(error)
+  return reply.status(status).send({ message: error.message })
 }

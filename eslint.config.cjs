@@ -1,1 +1,6 @@
-module.exports = require('@rocketseat/eslint-config/node')
+const config = require('@rocketseat/eslint-config/node')
+
+module.exports = {
+  ...config,
+  ignores: ['node_modules/**', 'build/**'],
+}

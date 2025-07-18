@@ -1,21 +1,31 @@
 import { ProductRepository } from '@/repositories/product-repository'
+import { Prisma } from '@prisma/client'
 
 export function mapToSaleItems(
   tempItems: import('../types').TempItems[],
-): import('../types').SaleItemTemp[] {
-  return tempItems.map((temp) => ({
-    coupon: temp.data.coupon,
-    quantity: temp.data.quantity,
-    service: temp.data.service,
-    product: temp.data.product,
-    plan: temp.data.plan,
-    barber: temp.data.barber,
-    price: temp.price,
-    discount: temp.discount,
-    discountType: temp.discountType,
-    appointment: temp.data.appointment,
-    commissionPaid: false,
-  }))
+): Prisma.SaleItemCreateWithoutSaleInput[] {
+  return tempItems.map((temp) => {
+    const discounts = temp.discounts ?? []
+    return {
+      coupon: temp.data.coupon,
+      quantity: temp.data.quantity,
+      service: temp.data.service,
+      product: temp.data.product,
+      plan: temp.data.plan,
+      barber: temp.data.barber,
+      price: temp.price,
+      discounts: {
+        create: discounts.map((d) => ({
+          amount: d.amount,
+          type: d.type,
+          origin: d.origin,
+          order: d.order,
+        })),
+      },
+      appointment: temp.data.appointment,
+      commissionPaid: false,
+    }
+  })
 }
 
 export function calculateTotal(

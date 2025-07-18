@@ -13,18 +13,27 @@ describe('sale utilities', () => {
         discount: 10,
         discountType: 'VALUE',
         ownDiscount: true,
-        data: { quantity: 1, service: { connect: { id: 's1' } }, barber: { connect: { id: 'b1' } }, coupon: { connect: { id: 'c1' } } },
+        discounts: [],
+        data: {
+          quantity: 1,
+          service: { connect: { id: 's1' } },
+          barber: { connect: { id: 'b1' } },
+          coupon: { connect: { id: 'c1' } },
+        },
       },
     ] as any)
 
     expect(result[0]).toEqual(
       expect.objectContaining({
         price: 90,
-        discount: 10,
-        discountType: 'VALUE',
         commissionPaid: false,
       }),
     )
+    // discount fields are no longer returned
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((result[0] as any).discount).toBeUndefined()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((result[0] as any).discountType).toBeUndefined()
   })
 
   it('calculates total', () => {

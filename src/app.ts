@@ -28,6 +28,7 @@ import { organizationRoute } from './http/controllers/organization/route'
 import { unitRoute } from './http/controllers/unit/route'
 import { sessionRoute } from './http/controllers/session/route'
 import { unitOpeningHourRoute } from './http/controllers/unit-opening-hour/route'
+import { categoryRoute } from './http/controllers/category/route'
 
 export const app = fastify()
 
@@ -137,6 +138,7 @@ app.register(sessionRoute)
 app.register(profileRoute)
 app.register(profileHoursRoute)
 app.register(productRoute)
+app.register(categoryRoute)
 app.register(barberShopServiceRoute)
 app.register(appointmentRoute)
 app.register(barberUserRoute)

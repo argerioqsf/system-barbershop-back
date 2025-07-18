@@ -69,11 +69,24 @@ export interface ConnectRelation {
 
 export type DataItem = {
   quantity: number
-  service?: { connect: { id?: string } }
-  product?: { connect: { id?: string } }
+  service?: { connect: { id: string } }
+  product?: { connect: { id: string } }
   appointment?: { connect: { id: string } }
   plan?: { connect: { id: string } }
-  categoryId?: string | null
+  categoryId: string | null
+}
+
+export enum DiscountOrigin {
+  COUPON = 'COUPON',
+  PLAN = 'PLAN',
+  VALUE = 'VALUE',
+}
+
+export type ItemDiscount = {
+  amount: number
+  type: DiscountType
+  origin: DiscountOrigin
+  order: number
 }
 
 export type TempItems = {
@@ -83,6 +96,7 @@ export type TempItems = {
   discountType: DiscountType | null
   porcentagemBarbeiro?: number
   ownDiscount: boolean
+  discounts: ItemDiscount[]
   coupon?: { connect: { id: string | null } }
   data: DataItem & {
     barber?: { connect: { id: string } }
@@ -99,6 +113,7 @@ export type SaleItemTemp = Omit<
     barber?: { connect: { id: string } }
     appointment?: { connect: { id: string } }
     plan?: { connect: { id: string } }
+    discounts?: { create: ItemDiscount[] }
   },
   | 'id'
   | 'saleId'

@@ -350,12 +350,17 @@ async function main() {
     },
   })
 
+  const defaultCategory = await prisma.category.create({
+    data: { name: 'Default', unit: { connect: { id: mainUnit.id } } },
+  })
+
   const haircut = await prisma.service.create({
     data: {
       name: 'Haircut',
       description: 'Basic haircut',
       cost: 10,
       price: 30,
+      category: { connect: { id: defaultCategory.id } },
       unit: { connect: { id: mainUnit.id } },
       commissionPercentage: 50,
     },
@@ -377,6 +382,7 @@ async function main() {
       cost: 5,
       price: 15,
       quantity: 10,
+      category: { connect: { id: defaultCategory.id } },
       unit: { connect: { id: mainUnit.id } },
       commissionPercentage: 50,
     },

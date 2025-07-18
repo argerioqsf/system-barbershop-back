@@ -6,6 +6,7 @@ import {
   PaymentStatus,
   PermissionName,
   PlanProfileStatus,
+  Prisma,
 } from '@prisma/client'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { CashRegisterRepository } from '@/repositories/cash-register-repository'
@@ -37,6 +38,7 @@ import { AppointmentServiceRepository } from '@/repositories/appointment-service
 import { SaleItemRepository } from '@/repositories/sale-item-repository'
 import { PlanRepository } from '@/repositories/plan-repository'
 import { PlanProfileRepository } from '@/repositories/plan-profile-repository'
+import { PlanAlreadyLinkedError } from '../@errors/plan/plan-already-linked-error'
 
 export class CreateSaleService {
   constructor(
@@ -110,13 +112,6 @@ export class CreateSaleService {
 
     const clientProfile = await this.profileRepository.findByUserId(clientId)
     if (clientProfile) {
-      // TODO: verificar se a logica de applyPlanDiscounts nao esta conflitando com a de applyCouponToItems
-      // pois em applyPlanDiscounts ele apenas adicionar valor no campo discount do item
-      // mas nao sabe qual o discountType setado antes no applyCouponToItems, entao, se o applyPlanDiscounts
-      // adicionar 10 reais a mais no discount, e em applyCouponToItems o discount for aplicado como
-      // porcentagem ira gerar um grande erro de logica, corrigir esse erro
-      // o usuario tem que poder usar cupons e tbm ter o seu beneficio do plano do cliente aplicado
-      // eles devem se somar, mas cada um respeitando o seu discountType, porcentage ou value
       await applyPlanDiscounts(
         tempItems,
         clientProfile.id,
@@ -180,20 +175,20 @@ export class CreateSaleService {
         }
       }
 
-      // TODO: aproveitar a query de clientProfile a cima, se não tiver possibilidade
-      // de divergencia de ids da sale entre as duas consultas
-      const clientProfileAtPayment =
-        await this.profileRepository.findByUserId(clientId)
+      const clientProfileAtPayment = clientProfile
 
-      // TODO: verificar se nao esta duplicando o vinculo do plano com o cliente
-      // o cliente não pode ter dois vinculos com o mesmo plano
-      // só pode ter vinculo com o mesmo plano se o outro vinculo estiver cancelado
-      // se tentar vincular um plano no usuario que ja esta vinculado a ele, verificar se
-      // o plano ja inculado esta CANCELED, se nao estiver CANCELED ele nao pode ser vinculado ( retornar um erro )
-      // se estiver CANCELED pode vinculalo novanemnte,
       if (clientProfileAtPayment) {
         for (const item of sale.items) {
           if (item.planId) {
+            const where: Prisma.PlanProfileWhereInput = {
+              planId: item.planId,
+              profileId: clientProfileAtPayment.id,
+              NOT: { status: 'CANCELED' },
+            }
+            const existing = await this.planProfileRepository.findMany(where)
+            if (existing.length > 0) {
+              throw new PlanAlreadyLinkedError()
+            }
             await this.planProfileRepository.create({
               saleItemId: item.id,
               planId: item.planId,

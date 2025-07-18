@@ -18,6 +18,7 @@ describe('Create service service', () => {
       imageUrl: null,
       cost: 10,
       price: 20,
+      categoryId: 'cat-1',
       unitId: 'unit-1',
     })
     expect(result.service.name).toBe('Cut')

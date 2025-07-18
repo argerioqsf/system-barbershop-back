@@ -17,9 +17,7 @@ export class InMemoryProductRepository implements ProductRepository {
         (data.commissionPercentage as number | null) ?? null,
       price: data.price as number,
       unitId: (data.unit as { connect: { id: string } }).connect.id,
-      categoryId:
-        (data.category as { connect: { id: string } } | undefined)?.connect
-          .id ?? null,
+      categoryId: (data.category as { connect: { id: string } }).connect.id,
     }
     this.products.push({
       ...product,

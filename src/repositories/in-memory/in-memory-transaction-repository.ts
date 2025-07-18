@@ -46,7 +46,7 @@ export class InMemoryTransactionRepository implements TransactionRepository {
         null,
     }
     this.transactions.push({
-      ...(tr as unknown as TransactionFull),
+      ...(tr as TransactionFull),
       unit: {
         id: tr.unitId,
         name: '',

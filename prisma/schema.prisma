@@ -82,6 +82,12 @@ enum DiscountType {
   VALUE
 }
 
+enum DiscountOrigin {
+  COUPON
+  PLAN
+  VALUE
+}
+
 enum PaymentStatus {
   PAID
   PENDING
@@ -220,8 +226,8 @@ model Service {
   defaultTime          Int?
   commissionPercentage Float?
   unitId               String
-  categoryId           String?
-  category             Category?          @relation(fields: [categoryId], references: [id])
+  categoryId           String
+  category             Category            @relation(fields: [categoryId], references: [id])
   benefitLinks         BenefitService[]
   appointmentServices  AppointmentService[]
   saleItems            SaleItem[]
@@ -278,17 +284,17 @@ model AppointmentService {
 }
 
 model Product {
-  id                   String            @id @default(uuid())
+  id                   String           @id @default(uuid())
   name                 String
   description          String?
   imageUrl             String?
-  quantity             Int               @default(0)
+  quantity             Int              @default(0)
   cost                 Float
   commissionPercentage Float?
   price                Float
   unitId               String
-  categoryId           String?
-  category             Category?          @relation(fields: [categoryId], references: [id])
+  categoryId           String
+  category             Category        @relation(fields: [categoryId], references: [id])
   benefitLinks         BenefitProduct[]
   saleItems            SaleItem[]
   barberProducts       BarberProduct[]
@@ -353,20 +359,19 @@ model Sale {
 }
 
 model SaleItem {
-  id                  String        @id @default(uuid())
+  id                  String     @id @default(uuid())
   saleId              String
   serviceId           String?
   productId           String?
-  quantity            Int           @default(1)
+  quantity            Int        @default(1)
   barberId            String?
-  appointmentId       String?       @unique
+  appointmentId       String?    @unique
   couponId            String?
   planId              String?
   price               Float
-  discount            Float?
-  discountType        DiscountType?
+  discounts           Discount[]
   porcentagemBarbeiro Float?
-  commissionPaid      Boolean       @default(false)
+  commissionPaid      Boolean    @default(false)
 
   transactions Transaction[]
   planProfiles PlanProfile[]
@@ -380,6 +385,20 @@ model SaleItem {
   plan        Plan?        @relation(fields: [planId], references: [id])
 
   @@map("sale_items")
+}
+
+model Discount {
+  id         String         @id @default(uuid())
+  amount     Float
+  type       DiscountType
+  origin     DiscountOrigin
+  order      Int
+  saleItemId String
+
+  saleItem SaleItem @relation(fields: [saleItemId], references: [id])
+
+  @@index([saleItemId])
+  @@map("discounts")
 }
 
 model CashRegisterSession {

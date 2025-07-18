@@ -1,4 +1,10 @@
-import { Prisma, AppointmentStatus, Appointment, Service } from '@prisma/client'
+import {
+  Prisma,
+  AppointmentStatus,
+  Appointment,
+  Service,
+  SaleItem,
+} from '@prisma/client'
 import {
   AppointmentRepository,
   DetailedAppointment,
@@ -29,7 +35,7 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
             imageUrl: null,
             cost: 0,
             price: 0,
-            categoryId: null,
+            categoryId: 'cat-1',
             defaultTime: null,
             commissionPercentage: null,
             unitId: (data.unit as { connect: { id: string } }).connect.id,
@@ -131,9 +137,9 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
         where.unit &&
         'organizationId' in (where.unit as { organizationId: string })
       ) {
+        const appt = a as Appointment & { unit?: { organizationId: string } }
         return (
-          (a as unknown as { unit?: { organizationId: string } }).unit
-            ?.organizationId ===
+          appt.unit?.organizationId ===
           (where.unit as { organizationId: string }).organizationId
         )
       }
@@ -159,8 +165,7 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
     }
     if (data.saleItem && 'connect' in data.saleItem) {
       const sid = (data.saleItem as { connect: { id: string } }).connect.id
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      appointment.saleItem = { id: sid } as any
+      appointment.saleItem = { id: sid } as SaleItem
     }
     return appointment
   }

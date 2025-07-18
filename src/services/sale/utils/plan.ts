@@ -4,7 +4,7 @@ import {
   PlanWithBenefits,
 } from '@/repositories/plan-repository'
 import { PlanProfileRepository } from '@/repositories/plan-profile-repository'
-import { TempItems } from '../types'
+import { TempItems, DiscountOrigin } from '../types'
 
 function applyBenefitOnItem(
   item: TempItems,
@@ -21,25 +21,31 @@ function applyBenefitOnItem(
   const matchProduct =
     productId && benefit.products.some((p) => p.productId === productId)
   if (!matchCategory && !matchService && !matchProduct) return
+  if (item.price <= 0) return
 
-  // TODO: adicionar um if para verificar se o item.price ja é zero
-  // se for nao aplicar mais descontos
   const discount = benefit.discount ?? 0
-  // TODO: trocar o nome da variavel value para valueDiscount
-  let value = 0
+  let valueDiscount = 0
   if (benefit.discountType === DiscountType.PERCENTAGE) {
-    value = (item.price * discount) / 100
+    valueDiscount = (item.price * discount) / 100
   } else if (benefit.discountType === DiscountType.VALUE) {
-    value = discount
+    valueDiscount = discount
   }
-  if (value <= 0) return
-  if (item.price - value < 0) {
-    item.discount += item.price
+  if (valueDiscount <= 0) return
+  if (item.price - valueDiscount < 0) {
+    valueDiscount = item.price
     item.price = 0
   } else {
-    item.price -= value
-    item.discount += value
+    item.price -= valueDiscount
   }
+  item.discounts.push({
+    amount:
+      benefit.discountType === DiscountType.PERCENTAGE
+        ? benefit.discount ?? 0
+        : valueDiscount,
+    type: (benefit.discountType ?? DiscountType.VALUE) as DiscountType,
+    origin: DiscountOrigin.PLAN,
+    order: item.discounts.length + 1,
+  })
 }
 
 export async function applyPlanDiscounts(
@@ -48,8 +54,7 @@ export async function applyPlanDiscounts(
   planProfileRepo: PlanProfileRepository,
   planRepo: PlanRepository,
 ): Promise<void> {
-  // TODO: troca o nome da variavel profiles a baixo para planProfiles
-  const profiles = await planProfileRepo.findMany({
+  const planProfiles = await planProfileRepo.findMany({
     profileId,
     status: PlanProfileStatus.PAID,
   })
@@ -57,7 +62,7 @@ export async function applyPlanDiscounts(
     string,
     PlanWithBenefits['benefits'][number]['benefit']
   > = {}
-  for (const pp of profiles) {
+  for (const pp of planProfiles) {
     const plan = await planRepo.findByIdWithBenefits(pp.planId)
     if (!plan) continue
     for (const pb of plan.benefits) {
