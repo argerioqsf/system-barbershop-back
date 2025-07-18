@@ -73,8 +73,9 @@ export class BarberBalanceService {
       sale: { items: { some: { barberId } } },
       unit: { organizationId: barber?.unit?.organizationId },
     })
-    const transactionsBarber =
-      await this.transactionRepository.findManyByUser(barberId)
+    const transactionsBarber = await this.transactionRepository.findManyByUser(
+      barberId,
+    )
     const transactions = Array.from(
       new Map(
         [...transactionsSales, ...transactionsBarber].map((tx) => [tx.id, tx]),

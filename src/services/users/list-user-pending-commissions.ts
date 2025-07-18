@@ -46,8 +46,9 @@ export class ListUserPendingCommissionsService {
       fullyPaid: false,
     })
 
-    const { totalCommission, saleItemsRecords } =
-      await calculateCommissions(saleItems)
+    const { totalCommission, saleItemsRecords } = await calculateCommissions(
+      saleItems,
+    )
 
     const outstanding = loans.reduce((sum, loan) => {
       const paid = loan.transactions.reduce(

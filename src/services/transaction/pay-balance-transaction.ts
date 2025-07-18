@@ -119,8 +119,8 @@ export class PayBalanceTransactionService {
     const typeForPayment = data.amount
       ? 'forAmmount'
       : data.saleItemIds || data.appointmentServiceIds
-        ? 'ForListIds'
-        : null
+      ? 'ForListIds'
+      : null
     if (typeForPayment === null) {
       throw new Error(
         'It is mandatory to pass at least one of the fields amount, saleItemIds, appointment ServiceIds',
