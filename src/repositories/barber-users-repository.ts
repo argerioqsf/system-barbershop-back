@@ -12,7 +12,7 @@ import {
 } from '@prisma/client'
 
 export type UserFindById =
-  | (User & {
+  | (Omit<User, 'password'> & {
       profile:
         | (Profile & {
             role: Role
@@ -32,7 +32,7 @@ export interface BarberUsersRepository {
     data: Prisma.UserCreateInput,
     profile: Omit<Prisma.ProfileUncheckedCreateInput, 'userId'>,
     permissionIds?: string[],
-  ): Promise<{ user: User; profile: Profile }>
+  ): Promise<{ user: Omit<User, 'password'>; profile: Profile }>
   update(
     id: string,
     userData: Prisma.UserUpdateInput,
@@ -54,7 +54,7 @@ export interface BarberUsersRepository {
   >
   findById(id: string): Promise<UserFindById>
   findByEmail(email: string): Promise<
-    | (User & {
+    | (Omit<User, 'password'> & {
         profile:
           | (Profile & {
               role: Role

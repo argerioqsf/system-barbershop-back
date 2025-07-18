@@ -32,7 +32,7 @@ import { AppointmentServiceRepository } from '@/repositories/appointment-service
 import { SaleItemRepository } from '@/repositories/sale-item-repository'
 
 type FullUser =
-  | (User & {
+  | (Omit<User, 'password'> & {
       profile:
         | (Profile & {
             role: Role

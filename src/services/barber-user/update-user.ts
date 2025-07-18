@@ -28,7 +28,7 @@ interface UpdateUserRequest {
 }
 
 type OldUser =
-  | (User & {
+  | (Omit<User, 'password'> & {
       profile: (Profile & { role: Role; permissions: Permission[] }) | null
       unit: Unit | null
     })

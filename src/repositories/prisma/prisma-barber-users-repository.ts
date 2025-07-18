@@ -27,7 +27,7 @@ export class PrismaBarberUsersRepository implements BarberUsersRepository {
     data: Prisma.UserCreateInput,
     profileData: Omit<Prisma.ProfileUncheckedCreateInput, 'userId'>,
     permissionIds?: string[],
-  ): Promise<{ user: User; profile: Profile }> {
+  ): Promise<{ user: Omit<User, 'password'>; profile: Profile }> {
     const user = await prisma.user.create({ data })
     const profile = await prisma.profile.create({
       data: {
@@ -38,7 +38,7 @@ export class PrismaBarberUsersRepository implements BarberUsersRepository {
         }),
       },
     })
-    return { user, profile }
+    return { user: this.sanitizeUser(user), profile }
   }
 
   async update(
@@ -126,7 +126,7 @@ export class PrismaBarberUsersRepository implements BarberUsersRepository {
   }
 
   async findById(id: string): Promise<UserFindById> {
-    return prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id },
       include: {
         profile: {
@@ -142,10 +142,11 @@ export class PrismaBarberUsersRepository implements BarberUsersRepository {
         unit: true,
       },
     })
+    return user ? this.sanitizeUser(user) : null
   }
 
   async findByEmail(email: string): Promise<
-    | (User & {
+    | (Omit<User, 'password'> & {
         profile:
           | (Profile & {
               role: Role
@@ -157,7 +158,7 @@ export class PrismaBarberUsersRepository implements BarberUsersRepository {
       })
     | null
   > {
-    return prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { email },
       include: {
         profile: {
@@ -170,6 +171,7 @@ export class PrismaBarberUsersRepository implements BarberUsersRepository {
         },
       },
     })
+    return user ? this.sanitizeUser(user) : null
   }
 
   async delete(id: string): Promise<void> {
