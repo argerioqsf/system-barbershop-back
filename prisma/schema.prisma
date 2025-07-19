@@ -192,7 +192,7 @@ model Profile {
   createdAt            DateTime             @default(now())
   workHours            ProfileWorkHour[]
   blockedHours         ProfileBlockedHour[]
-  planProfiles         PlanProfile[]
+  plans                PlanProfile[]
 
   @@map("profiles")
 }
