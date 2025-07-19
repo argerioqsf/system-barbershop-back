@@ -57,4 +57,8 @@ export class InMemoryPlanRepository implements PlanRepository {
   async findMany() {
     return this.plans
   }
+
+  async delete(id: string): Promise<void> {
+    this.plans = this.plans.filter((p) => p.id !== id)
+  }
 }

@@ -42,4 +42,8 @@ export class PrismaPlanRepository implements PlanRepository {
   findMany(where: Prisma.PlanWhereInput = {}) {
     return prisma.plan.findMany({ where })
   }
+
+  async delete(id: string): Promise<void> {
+    await prisma.plan.delete({ where: { id } })
+  }
 }

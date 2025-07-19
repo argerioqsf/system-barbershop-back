@@ -108,4 +108,6 @@ export { InMemorySaleItemRepository as FakeSaleItemRepository } from '../../src/
 export { InMemoryPlanRepository as FakePlanRepository } from '../../src/repositories/in-memory/in-memory-plan-repository'
 export { InMemoryPlanProfileRepository as FakePlanProfileRepository } from '../../src/repositories/in-memory/in-memory-plan-profile-repository'
 export { InMemoryDebtRepository as FakeDebtRepository } from '../../src/repositories/in-memory/in-memory-debt-repository'
+export { InMemoryBenefitRepository as FakeBenefitRepository } from '../../src/repositories/in-memory/in-memory-benefit-repository'
+export { InMemoryTypeRecurrenceRepository as FakeTypeRecurrenceRepository } from '../../src/repositories/in-memory/in-memory-type-recurrence-repository'
 

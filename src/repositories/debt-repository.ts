@@ -5,4 +5,5 @@ export interface DebtRepository {
   update(id: string, data: Prisma.DebtUncheckedUpdateInput): Promise<Debt>
   findById(id: string): Promise<Debt | null>
   findMany(where?: Prisma.DebtWhereInput): Promise<Debt[]>
+  delete(id: string): Promise<void>
 }

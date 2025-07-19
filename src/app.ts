@@ -29,6 +29,10 @@ import { unitRoute } from './http/controllers/unit/route'
 import { sessionRoute } from './http/controllers/session/route'
 import { unitOpeningHourRoute } from './http/controllers/unit-opening-hour/route'
 import { categoryRoute } from './http/controllers/category/route'
+import { planRoute } from './http/controllers/plan/route'
+import { debtRoute } from './http/controllers/debt/route'
+import { benefitRoute } from './http/controllers/benefit/route'
+import { typeRecurrenceRoute } from './http/controllers/type-recurrence/route'
 
 export const app = fastify()
 
@@ -151,6 +155,10 @@ app.register(roleRoute)
 app.register(organizationRoute)
 app.register(unitRoute)
 app.register(unitOpeningHourRoute)
+app.register(planRoute)
+app.register(debtRoute)
+app.register(benefitRoute)
+app.register(typeRecurrenceRoute)
 app.register(saleRoute)
 app.register(reportRoute)
 app.register(configRoute)

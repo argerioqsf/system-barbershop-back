@@ -18,4 +18,8 @@ export class PrismaDebtRepository implements DebtRepository {
   findMany(where: Prisma.DebtWhereInput = {}): Promise<Debt[]> {
     return prisma.debt.findMany({ where })
   }
+
+  async delete(id: string): Promise<void> {
+    await prisma.debt.delete({ where: { id } })
+  }
 }

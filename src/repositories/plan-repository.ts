@@ -27,4 +27,5 @@ export interface PlanRepository {
   create(data: Prisma.PlanCreateInput): Promise<Plan>
   update(id: string, data: Prisma.PlanUpdateInput): Promise<Plan>
   findMany(where?: Prisma.PlanWhereInput): Promise<Plan[]>
+  delete(id: string): Promise<void>
 }
