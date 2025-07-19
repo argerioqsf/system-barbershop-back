@@ -3,6 +3,9 @@ import {
   PrismaClient,
   TransactionType,
   DiscountType,
+  PaymentMethod,
+  PaymentStatus,
+  PlanProfileStatus,
   RoleName,
   PermissionName,
   PermissionCategory,
@@ -328,7 +331,7 @@ async function main() {
     },
   })
 
-  const client = await prisma.user.create({
+  const client: User & { profile: Profile | null } = await prisma.user.create({
     data: {
       name: 'Client',
       email: 'argerioaf@gmail.com',
@@ -347,6 +350,9 @@ async function main() {
         },
       },
       unit: { connect: { id: mainUnit.id } },
+    },
+    include: {
+      profile: true,
     },
   })
 
@@ -485,6 +491,65 @@ async function main() {
     },
   })
 
+  const recurrence = await prisma.typeRecurrence.create({ data: { period: 1 } })
+
+  const benefit = await prisma.benefit.create({
+    data: {
+      name: 'Welcome Discount',
+      description: '10% off services',
+      discount: 10,
+      discountType: DiscountType.PERCENTAGE,
+    },
+  })
+
+  const plan = await prisma.plan.create({
+    data: {
+      name: 'Monthly Plan',
+      price: 80,
+      typeRecurrence: { connect: { id: recurrence.id } },
+      benefits: { create: [{ benefit: { connect: { id: benefit.id } } }] },
+    },
+    include: { benefits: true },
+  })
+
+  const sale = await prisma.sale.create({
+    data: {
+      user: { connect: { id: admin.id } },
+      client: { connect: { id: client.id } },
+      unit: { connect: { id: mainUnit.id } },
+      total: plan.price,
+      method: PaymentMethod.CASH,
+      paymentStatus: PaymentStatus.PAID,
+      items: {
+        create: [{ plan: { connect: { id: plan.id } }, price: plan.price }],
+      },
+    },
+    include: { items: true },
+  })
+
+  if (client.profile) {
+    await prisma.planProfile.create({
+      data: {
+        planStartDate: new Date(),
+        status: PlanProfileStatus.PAID,
+        saleItemId: sale.items[0].id,
+        dueDateDebt: 28,
+        planId: plan.id,
+        profileId: client.profile.id,
+        debts: {
+          create: [
+            {
+              value: plan.price,
+              status: PaymentStatus.PAID,
+              planId: plan.id,
+              paymentDate: new Date(),
+            },
+          ],
+        },
+      },
+    })
+  }
+
   console.log({
     organization,
     organization2,
@@ -498,6 +563,9 @@ async function main() {
     owner,
     cashSession,
     itemCoupon,
+    plan,
+    benefit,
+    recurrence,
     manager,
     owner2,
     serviceBarber,
