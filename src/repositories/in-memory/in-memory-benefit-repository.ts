@@ -12,6 +12,7 @@ export class InMemoryBenefitRepository implements BenefitRepository {
       description: (data.description as string | null) ?? null,
       discount: (data.discount as number | null) ?? null,
       discountType: (data.discountType as DiscountType | null) ?? null,
+      unitId: (data.unit as { connect: { id: string } }).connect.id,
     }
     this.benefits.push(benefit)
     return benefit
@@ -26,6 +27,9 @@ export class InMemoryBenefitRepository implements BenefitRepository {
     if ('discount' in data) benefit.discount = data.discount as number | null
     if ('discountType' in data)
       benefit.discountType = data.discountType as DiscountType | null
+    if (data.unit && 'connect' in data.unit) {
+      benefit.unitId = (data.unit as { connect: { id: string } }).connect.id
+    }
     return benefit
   }
 
@@ -36,6 +40,7 @@ export class InMemoryBenefitRepository implements BenefitRepository {
   async findMany(where: Prisma.BenefitWhereInput = {}): Promise<Benefit[]> {
     return this.benefits.filter((b) => {
       if (where.name && b.name !== where.name) return false
+      if (where.unitId && b.unitId !== where.unitId) return false
       return true
     })
   }

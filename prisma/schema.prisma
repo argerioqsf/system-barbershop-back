@@ -227,7 +227,7 @@ model Service {
   commissionPercentage Float?
   unitId               String
   categoryId           String
-  category             Category            @relation(fields: [categoryId], references: [id])
+  category             Category             @relation(fields: [categoryId], references: [id])
   benefitLinks         BenefitService[]
   appointmentServices  AppointmentService[]
   saleItems            SaleItem[]
@@ -294,7 +294,7 @@ model Product {
   price                Float
   unitId               String
   categoryId           String
-  category             Category        @relation(fields: [categoryId], references: [id])
+  category             Category         @relation(fields: [categoryId], references: [id])
   benefitLinks         BenefitProduct[]
   saleItems            SaleItem[]
   barberProducts       BarberProduct[]
@@ -503,6 +503,7 @@ model Unit {
   categories                 Category[]
   roles                      Role[]
   openingHours               UnitOpeningHour[]
+  benefits                   Benefit[]
 
   organization Organization @relation(fields: [organizationId], references: [id])
   Coupon       Coupon[]
@@ -560,6 +561,8 @@ model Benefit {
   description  String?
   discount     Float?
   discountType DiscountType?
+  unitId       String
+  unit         Unit              @relation(fields: [unitId], references: [id])
   categories   BenefitCategory[]
   services     BenefitService[]
   products     BenefitProduct[]

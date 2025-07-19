@@ -6,6 +6,7 @@ interface CreateBenefitRequest {
   description?: string | null
   discount?: number | null
   discountType?: DiscountType | null
+  unitId: string
 }
 
 interface CreateBenefitResponse {
@@ -21,6 +22,7 @@ export class CreateBenefitService {
       description: data.description ?? null,
       discount: data.discount ?? null,
       discountType: data.discountType ?? null,
+      unit: { connect: { id: data.unitId } },
     })
     return { benefit }
   }
