@@ -499,6 +499,7 @@ async function main() {
       description: '10% off services',
       discount: 10,
       discountType: DiscountType.PERCENTAGE,
+      services: { create: [{ service: { connect: { id: haircut.id } } }] },
     },
   })
 
