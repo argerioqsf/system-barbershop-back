@@ -3,6 +3,7 @@ import {
   PaymentMethod,
   PaymentStatus,
   SaleItem,
+  DiscountOrigin,
 } from '@prisma/client'
 import { DetailedSale } from '@/repositories/sale-repository'
 import { OrganizationRepository } from '@/repositories/organization-repository'
@@ -74,12 +75,6 @@ export type DataItem = {
   appointment?: { connect: { id: string } }
   plan?: { connect: { id: string } }
   categoryId: string | null
-}
-
-export enum DiscountOrigin {
-  COUPON = 'COUPON',
-  PLAN = 'PLAN',
-  VALUE = 'VALUE',
 }
 
 export type ItemDiscount = {

@@ -1,10 +1,10 @@
-import { DiscountType, PlanProfileStatus } from '@prisma/client'
+import { DiscountType, PlanProfileStatus, DiscountOrigin } from '@prisma/client'
 import {
   PlanRepository,
   PlanWithBenefits,
 } from '@/repositories/plan-repository'
 import { PlanProfileRepository } from '@/repositories/plan-profile-repository'
-import { TempItems, DiscountOrigin } from '../types'
+import { TempItems } from '../types'
 
 function applyBenefitOnItem(
   item: TempItems,

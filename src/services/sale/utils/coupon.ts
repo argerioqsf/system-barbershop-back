@@ -1,6 +1,6 @@
 import { CouponRepository } from '@/repositories/coupon-repository'
-import { CreateSaleItem, ItemDiscount, DiscountOrigin } from '../types'
-import { DiscountType } from '@prisma/client'
+import { CreateSaleItem, ItemDiscount } from '../types'
+import { DiscountType, DiscountOrigin } from '@prisma/client'
 import { CouponNotFoundError } from '../../@errors/coupon/coupon-not-found-error'
 import { CouponNotFromUserUnitError } from '../../@errors/coupon/coupon-not-from-user-unit-error'
 import { CouponExhaustedError } from '../../@errors/coupon/coupon-exhausted-error'
