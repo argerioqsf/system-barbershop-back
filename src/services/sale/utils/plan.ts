@@ -54,7 +54,7 @@ export async function applyPlanDiscounts(
   planProfileRepo: PlanProfileRepository,
   planRepo: PlanRepository,
 ): Promise<void> {
-  const planProfiles = await planProfileRepo.findMany({
+  const profilePlans = await planProfileRepo.findMany({
     profileId,
     status: PlanProfileStatus.PAID,
   })
@@ -62,7 +62,7 @@ export async function applyPlanDiscounts(
     string,
     PlanWithBenefits['benefits'][number]['benefit']
   > = {}
-  for (const pp of planProfiles) {
+  for (const pp of profilePlans) {
     const plan = await planRepo.findByIdWithBenefits(pp.planId)
     if (!plan) continue
     for (const pb of plan.benefits) {
