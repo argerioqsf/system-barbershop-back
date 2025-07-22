@@ -10,7 +10,6 @@ import {
   Profile,
   CashRegisterSession,
   Transaction,
-  DiscountType,
   Appointment,
   Discount,
 } from '@prisma/client'
@@ -26,8 +25,6 @@ export type DetailedSaleItem = SaleItem & {
     | (Appointment & { services?: DetailedAppointment['services'] })
     | null
   price: number
-  discount: number | null
-  discountType: DiscountType | null
   discounts: Discount[]
   porcentagemBarbeiro: number | null
 }
@@ -45,7 +42,11 @@ export interface SaleRepository {
   create(data: Prisma.SaleCreateInput): Promise<DetailedSale>
   findMany(where?: Prisma.SaleWhereInput): Promise<DetailedSale[]>
   findById(id: string): Promise<DetailedSale | null>
-  update(id: string, data: Prisma.SaleUpdateInput): Promise<DetailedSale>
+  update(
+    id: string,
+    data: Prisma.SaleUpdateInput,
+    tx?: Prisma.TransactionClient,
+  ): Promise<DetailedSale>
   findManyByDateRange(start: Date, end: Date): Promise<DetailedSale[]>
   findManyByUser(userId: string): Promise<DetailedSale[]>
   findManyByBarber(

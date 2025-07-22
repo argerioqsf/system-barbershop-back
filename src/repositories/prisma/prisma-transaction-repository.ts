@@ -30,8 +30,12 @@ export type TransactionFull = Prisma.TransactionGetPayload<{
   }
 }>
 export class PrismaTransactionRepository implements TransactionRepository {
-  async create(data: Prisma.TransactionCreateInput): Promise<Transaction> {
-    return prisma.transaction.create({ data })
+  async create(
+    data: Prisma.TransactionCreateInput,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Transaction> {
+    const prismaClient = tx || prisma
+    return prismaClient.transaction.create({ data })
   }
 
   async findManyByUser(userId: string): Promise<TransactionFull[]> {

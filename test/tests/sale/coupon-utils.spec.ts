@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { applyCouponToSale, applyCouponToItems } from '../../../src/services/sale/utils/coupon'
+import {
+  applyCouponSaleItem,
+  applyCouponSale,
+} from '../../../src/services/sale/utils/coupon'
 import { FakeCouponRepository } from '../../helpers/fake-repositories'
 import { makeCoupon } from '../../helpers/default-values'
 
@@ -14,7 +17,7 @@ describe('coupon utilities', () => {
     const coupon = makeCoupon('c1', 'OFF10', 10, 'VALUE')
     repo.coupons.push(coupon)
 
-    const result = await applyCouponToSale(
+    const result = await applyCouponSaleItem(
       { serviceId: 's1', quantity: 1, couponCode: coupon.code },
       100,
       100,
@@ -40,7 +43,7 @@ describe('coupon utilities', () => {
       { price: 50, ownDiscount: false },
     ]
 
-    await applyCouponToItems(items as any, coupon.code, repo, 'unit-1')
+    await applyCouponSale(items as any, coupon.code, repo, 'unit-1')
 
     expect(items[0].price).toBeCloseTo(100 - (100 / 150) * 20)
     expect(items[1].price).toBeCloseTo(50 - (50 / 150) * 20)

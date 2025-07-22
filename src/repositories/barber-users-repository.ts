@@ -9,6 +9,7 @@ import {
   User,
   BarberService,
   BarberProduct,
+  PlanProfile,
 } from '@prisma/client'
 
 export type UserFindById =
@@ -21,6 +22,7 @@ export type UserFindById =
             blockedHours: ProfileBlockedHour[]
             barberServices: BarberService[]
             barberProducts: BarberProduct[]
+            plans: PlanProfile[]
           })
         | null
       unit: Unit | null

@@ -18,12 +18,20 @@ export type PlanWithBenefits = Plan & {
   })[]
 }
 
+export type PlanWithRecurrence = Plan & {
+  typeRecurrence: { period: number }
+}
+
+export type PlanWithBenefitsAndRecurrence = PlanWithBenefits &
+  PlanWithRecurrence
+
 export interface PlanRepository {
   findById(id: string): Promise<Plan | null>
   findByIdWithBenefits(id: string): Promise<PlanWithBenefits | null>
-  findByIdWithRecurrence(
+  findByIdWithBenefitsAndRecurrence(
     id: string,
-  ): Promise<(Plan & { typeRecurrence: { period: number } }) | null>
+  ): Promise<PlanWithBenefitsAndRecurrence | null>
+  findByIdWithRecurrence(id: string): Promise<PlanWithRecurrence | null>
   create(data: Prisma.PlanCreateInput): Promise<Plan>
   update(id: string, data: Prisma.PlanUpdateInput): Promise<Plan>
   findMany(where?: Prisma.PlanWhereInput): Promise<Plan[]>

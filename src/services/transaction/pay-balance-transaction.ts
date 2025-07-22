@@ -241,7 +241,7 @@ export class PayBalanceTransactionService {
       })
 
       if (totalPaidLoan > 0) {
-        const { transactions: transactionsPay } =
+        const { transactions: transactionsPayUserCommission } =
           await payUserCommissionService.execute({
             valueToPay: totalPaidLoan,
             affectedUser,
@@ -249,7 +249,7 @@ export class PayBalanceTransactionService {
             totalToPay: totalCommission,
             paymentItems: [...saleItemsRecords],
           })
-        transactions.push(...transactionsPay)
+        transactions.push(...transactionsPayUserCommission)
       }
 
       transactions.push(...transactionsLoan)

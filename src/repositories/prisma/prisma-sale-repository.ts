@@ -1,25 +1,8 @@
 import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
-import { computeDiscountInfo } from '@/services/sale/utils/discount'
-import {
-  SaleRepository,
-  DetailedSale,
-  DetailedSaleItem,
-} from '../sale-repository'
+import { SaleRepository, DetailedSale } from '../sale-repository'
 
 export class PrismaSaleRepository implements SaleRepository {
-  private addDiscountInfo(sales: DetailedSale | DetailedSale[]): void {
-    const list = Array.isArray(sales) ? sales : [sales]
-    for (const sale of list) {
-      for (const item of sale.items) {
-        const info = computeDiscountInfo(item.price, item.discounts)
-        const typedItem = item as DetailedSaleItem
-        typedItem.discount = info.discount
-        typedItem.discountType = info.discountType
-      }
-    }
-  }
-
   async create(data: Prisma.SaleCreateInput): Promise<DetailedSale> {
     const sale = await prisma.sale.create({
       data,
@@ -45,7 +28,6 @@ export class PrismaSaleRepository implements SaleRepository {
       },
     })
     const detailed = sale as DetailedSale
-    this.addDiscountInfo(detailed)
     return detailed
   }
 
@@ -77,7 +59,6 @@ export class PrismaSaleRepository implements SaleRepository {
       },
     })
     const detailed = sales as DetailedSale[]
-    this.addDiscountInfo(detailed)
     return detailed
   }
 
@@ -106,15 +87,16 @@ export class PrismaSaleRepository implements SaleRepository {
       },
     })
     const detailed = sale as DetailedSale | null
-    if (detailed) this.addDiscountInfo(detailed)
     return detailed
   }
 
   async update(
     id: string,
     data: Prisma.SaleUpdateInput,
+    tx?: Prisma.TransactionClient,
   ): Promise<DetailedSale> {
-    const sale = await prisma.sale.update({
+    const prismaClient = tx || prisma
+    const sale = await prismaClient.sale.update({
       where: { id },
       data,
       include: {
@@ -139,7 +121,6 @@ export class PrismaSaleRepository implements SaleRepository {
       },
     })
     const detailed = sale as DetailedSale
-    this.addDiscountInfo(detailed)
     return detailed
   }
 
@@ -168,7 +149,6 @@ export class PrismaSaleRepository implements SaleRepository {
       },
     })
     const detailed = sales as DetailedSale[]
-    this.addDiscountInfo(detailed)
     return detailed
   }
 
@@ -197,7 +177,6 @@ export class PrismaSaleRepository implements SaleRepository {
       },
     })
     const detailed = sales as DetailedSale[]
-    this.addDiscountInfo(detailed)
     return detailed
   }
 
@@ -229,7 +208,6 @@ export class PrismaSaleRepository implements SaleRepository {
       },
     })
     const detailed = sales as DetailedSale[]
-    this.addDiscountInfo(detailed)
     return detailed
   }
 
@@ -258,7 +236,6 @@ export class PrismaSaleRepository implements SaleRepository {
       },
     })
     const detailed = sales as DetailedSale[]
-    this.addDiscountInfo(detailed)
     return detailed
   }
 }

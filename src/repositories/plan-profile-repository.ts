@@ -7,6 +7,7 @@ export interface PlanProfileRepository {
     data: Prisma.PlanProfileUncheckedCreateInput & {
       debts?: Prisma.DebtUncheckedCreateWithoutPlanProfileInput[]
     },
+    tx?: Prisma.TransactionClient,
   ): Promise<PlanProfileWithDebts>
   findMany(
     where?: Prisma.PlanProfileWhereInput,

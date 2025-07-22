@@ -8,8 +8,10 @@ export class PrismaSaleItemRepository implements SaleItemRepository {
   async update(
     id: string,
     data: Prisma.SaleItemUpdateInput,
+    tx?: Prisma.TransactionClient,
   ): Promise<SaleItem> {
-    return prisma.saleItem.update({ where: { id }, data })
+    const prismaClient = tx || prisma
+    return prismaClient.saleItem.update({ where: { id }, data })
   }
 
   async findById(id: string): Promise<DetailedSaleItemFindMany | null> {

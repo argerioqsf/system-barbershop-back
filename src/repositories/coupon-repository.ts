@@ -5,6 +5,10 @@ export interface CouponRepository {
   findMany(where?: Prisma.CouponWhereInput): Promise<Coupon[]>
   findById(id: string): Promise<Coupon | null>
   findByCode(code: string): Promise<Coupon | null>
-  update(id: string, data: Prisma.CouponUpdateInput): Promise<Coupon>
+  update(
+    id: string,
+    data: Prisma.CouponUpdateInput,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Coupon>
   delete(id: string): Promise<void>
 }

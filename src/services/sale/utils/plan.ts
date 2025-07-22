@@ -4,15 +4,20 @@ import {
   PlanWithBenefits,
 } from '@/repositories/plan-repository'
 import { PlanProfileRepository } from '@/repositories/plan-profile-repository'
-import { TempItems } from '../types'
+import { ReturnBuildItemData } from './item'
 
 function applyBenefitOnItem(
-  item: TempItems,
+  item: ReturnBuildItemData,
   benefit: PlanWithBenefits['benefits'][number]['benefit'],
 ) {
-  const serviceId = item.data.service?.connect?.id
-  const productId = item.data.product?.connect?.id
-  const categoryId = item.data.categoryId
+  if (!item.service && !item.product) return item
+
+  const serviceId = item.service?.id
+  const productId = item.product?.id
+  const categoryId = item.service
+    ? item.service.categoryId
+    : item.product?.categoryId
+
   const matchCategory = benefit.categories.some(
     (c) => c.categoryId === categoryId,
   )
@@ -30,6 +35,7 @@ function applyBenefitOnItem(
   } else if (benefit.discountType === DiscountType.VALUE) {
     valueDiscount = discount
   }
+
   if (valueDiscount <= 0) return
   if (item.price - valueDiscount < 0) {
     valueDiscount = item.price
@@ -46,16 +52,18 @@ function applyBenefitOnItem(
     origin: DiscountOrigin.PLAN,
     order: item.discounts.length + 1,
   })
+
+  return item
 }
 
 export async function applyPlanDiscounts(
-  items: TempItems[],
-  profileId: string,
+  saleItems: ReturnBuildItemData[],
+  userId: string,
   planProfileRepo: PlanProfileRepository,
   planRepo: PlanRepository,
-): Promise<void> {
+): Promise<ReturnBuildItemData[]> {
   const profilePlans = await planProfileRepo.findMany({
-    profileId,
+    profile: { userId },
     status: PlanProfileStatus.PAID,
   })
   const benefitsMap: Record<
@@ -70,10 +78,13 @@ export async function applyPlanDiscounts(
     }
   }
   const benefits = Object.values(benefitsMap)
-  for (const benefit of benefits) {
-    for (const item of items) {
-      if (item.price <= 0) continue
+
+  for (const item of saleItems) {
+    if (item.price <= 0) continue
+    for (const benefit of benefits) {
       applyBenefitOnItem(item, benefit)
     }
   }
+
+  return saleItems
 }

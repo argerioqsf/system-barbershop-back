@@ -1,5 +1,5 @@
 import { UnitRepository } from '@/repositories/unit-repository'
-import { Transaction, TransactionType, Unit } from '@prisma/client'
+import { Prisma, Transaction, TransactionType, Unit } from '@prisma/client'
 import { makeCreateTransaction } from '../@factories/transaction/make-create-transaction'
 
 interface IncrementBalanceUnitResponse {
@@ -17,6 +17,7 @@ export class IncrementBalanceUnitService {
     saleId?: string,
     isLoan?: boolean,
     loanId?: string,
+    tx?: Prisma.TransactionClient,
   ): Promise<IncrementBalanceUnitResponse> {
     const createTransactionService = makeCreateTransaction()
     try {
@@ -32,6 +33,7 @@ export class IncrementBalanceUnitService {
         saleId,
         isLoan: isLoan ?? false,
         loanId,
+        tx,
       })
       return { unit, transaction: transaction.transaction }
     } catch (error) {

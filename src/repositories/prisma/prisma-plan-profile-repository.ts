@@ -10,8 +10,10 @@ export class PrismaPlanProfileRepository implements PlanProfileRepository {
     data: Prisma.PlanProfileUncheckedCreateInput & {
       debts?: Prisma.DebtUncheckedCreateWithoutPlanProfileInput[]
     },
+    tx?: Prisma.TransactionClient,
   ): Promise<PlanProfileWithDebts> {
-    return prisma.planProfile.create({
+    const prismaClient = tx || prisma
+    return prismaClient.planProfile.create({
       data: {
         planStartDate: data.planStartDate,
         status: data.status,

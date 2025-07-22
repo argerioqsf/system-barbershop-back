@@ -137,6 +137,7 @@ export class PrismaBarberUsersRepository implements BarberUsersRepository {
             blockedHours: true,
             barberServices: true,
             barberProducts: true,
+            plans: true,
           },
         },
         unit: true,

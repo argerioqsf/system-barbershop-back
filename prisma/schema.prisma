@@ -83,9 +83,10 @@ enum DiscountType {
 }
 
 enum DiscountOrigin {
-  COUPON
+  COUPON_SALE_ITEM
+  COUPON_SALE
   PLAN
-  VALUE
+  VALUE_SALE_ITEM
 }
 
 enum PaymentStatus {
@@ -369,6 +370,7 @@ model SaleItem {
   couponId            String?
   planId              String?
   price               Float
+  customPrice         Float?
   discounts           Discount[]
   porcentagemBarbeiro Float?
   commissionPaid      Boolean    @default(false)

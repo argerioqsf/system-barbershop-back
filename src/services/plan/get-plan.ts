@@ -13,7 +13,7 @@ export class GetPlanService {
   constructor(private repository: PlanRepository) {}
 
   async execute({ id }: GetPlanRequest): Promise<GetPlanResponse> {
-    const plan = await this.repository.findById(id)
+    const plan = await this.repository.findByIdWithBenefitsAndRecurrence(id)
     return { plan }
   }
 }

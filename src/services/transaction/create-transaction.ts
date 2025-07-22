@@ -18,6 +18,7 @@ interface CreateTransactionRequest {
   appointmentServiceId?: string
   isLoan?: boolean
   loanId?: string
+  tx?: Prisma.TransactionClient
 }
 
 interface CreateTransactionResponse {
@@ -74,7 +75,7 @@ export class CreateTransactionService {
         : undefined,
     }
 
-    const transaction = await this.repository.create(prismaData)
+    const transaction = await this.repository.create(prismaData, data.tx)
 
     return { transaction }
   }

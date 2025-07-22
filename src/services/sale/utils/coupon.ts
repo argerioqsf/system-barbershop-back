@@ -1,49 +1,69 @@
 import { CouponRepository } from '@/repositories/coupon-repository'
-import { CreateSaleItem, ItemDiscount } from '../types'
-import { DiscountType, DiscountOrigin } from '@prisma/client'
+import { CreateSaleItem } from '../types'
+import {
+  DiscountType,
+  DiscountOrigin,
+  Discount,
+  Prisma,
+  Coupon,
+} from '@prisma/client'
 import { CouponNotFoundError } from '../../@errors/coupon/coupon-not-found-error'
 import { CouponNotFromUserUnitError } from '../../@errors/coupon/coupon-not-from-user-unit-error'
 import { CouponExhaustedError } from '../../@errors/coupon/coupon-exhausted-error'
 import { ItemPriceGreaterError } from '../../@errors/sale/Item-price-greater-error'
+import { ReturnBuildItemData } from './item'
 
 export interface CouponItem {
   price: number
   ownDiscount: boolean
-  discounts: ItemDiscount[]
+  discounts: Omit<Discount, 'id' | 'saleItemId'>[]
 }
 
-export async function applyCouponToSale(
-  item: CreateSaleItem,
-  price: number,
-  basePrice: number,
-  discount: number,
-  discountType: DiscountType | null,
-  ownDiscount: boolean,
-  couponRepository: CouponRepository,
-  userUnitId?: string,
-  couponRel?: { connect: { id: string } },
-) {
-  const discounts: ItemDiscount[] = []
+export type NewDiscount = Omit<Discount, 'id' | 'saleItemId'>
+
+export type RequestApplyCouponSaleItem = {
+  saleItem: CreateSaleItem
+  basePrice: number
+  discount: number
+  discountType: DiscountType | null
+  ownDiscount: boolean
+  couponRepository: CouponRepository
+  userUnitId?: string
+}
+
+export async function applyCouponSaleItem({
+  saleItem,
+  basePrice,
+  discount,
+  discountType,
+  ownDiscount,
+  couponRepository,
+  userUnitId,
+}: RequestApplyCouponSaleItem) {
+  let price = basePrice
+  const discounts: NewDiscount[] = []
+  let coupon: Coupon | null = null
   let order = 1
-  if (typeof item.price === 'number') {
-    price = item.price
-    if (basePrice - price > 0) {
-      discount = basePrice - price
+  if (typeof saleItem.customPrice === 'number') {
+    const customPrice = saleItem.customPrice
+    price = customPrice
+    if (basePrice - customPrice > 0) {
+      discount = basePrice - customPrice
       discountType = DiscountType.VALUE
       ownDiscount = true
       discounts.push({
-        amount: basePrice - price,
+        amount: basePrice - customPrice,
         type: DiscountType.VALUE,
-        origin: DiscountOrigin.VALUE,
+        origin: DiscountOrigin.VALUE_SALE_ITEM,
         order: order++,
       })
-    } else if (basePrice - price < 0) {
+    } else if (basePrice - customPrice < 0) {
       throw new ItemPriceGreaterError()
     }
   }
 
-  if (item.couponCode) {
-    const coupon = await couponRepository.findByCode(item.couponCode)
+  if (saleItem.couponId) {
+    coupon = await couponRepository.findById(saleItem.couponId)
     if (!coupon) throw new CouponNotFoundError()
     if (userUnitId && coupon.unitId !== userUnitId) {
       throw new CouponNotFromUserUnitError()
@@ -51,9 +71,9 @@ export async function applyCouponToSale(
     if (coupon.quantity <= 0) throw new CouponExhaustedError()
     const reduction =
       coupon.discountType === 'PERCENTAGE'
-        ? (price * coupon.discount) / 100
+        ? (basePrice * coupon.discount) / 100
         : coupon.discount
-    price = Math.max(price - reduction, 0)
+    price = Math.max(basePrice - reduction, 0)
     discount =
       coupon.discountType === 'PERCENTAGE' ? coupon.discount : reduction
     discountType = coupon.discountType
@@ -61,12 +81,8 @@ export async function applyCouponToSale(
     discounts.push({
       amount: coupon.discount,
       type: coupon.discountType,
-      origin: DiscountOrigin.COUPON,
+      origin: DiscountOrigin.COUPON_SALE_ITEM,
       order: order++,
-    })
-    couponRel = { connect: { id: coupon.id } }
-    await couponRepository.update(coupon.id, {
-      quantity: { decrement: 1 },
     })
   }
 
@@ -76,48 +92,62 @@ export async function applyCouponToSale(
     discountType,
     ownDiscount,
     discounts,
-    couponRel,
+    coupon,
   }
 }
 
-export async function applyCouponToItems(
-  items: CouponItem[],
-  couponCode: string,
+export type discountConnection =
+  | Prisma.DiscountCreateNestedManyWithoutSaleItemInput
+  | undefined
+
+export function getNextOrder(discounts: discountConnection): number {
+  if (!discounts) return 1
+  if (Array.isArray(discounts)) return discounts.length + 1
+  if ('create' in discounts && Array.isArray(discounts.create)) {
+    return discounts.create.length + 1
+  }
+  return 1
+}
+
+export async function applyCouponSale(
+  saleItems: ReturnBuildItemData[],
+  couponId: string,
   couponRepository: CouponRepository,
   userUnitId?: string,
+  considerOwnDiscount = true,
 ) {
-  const affectedTotal = items
-    .filter((i) => !i.ownDiscount)
-    .reduce((acc, i) => acc + i.price, 0)
-  const coupon = await couponRepository.findByCode(couponCode)
+  const affectedTotal = saleItems
+    .filter((saleItem) => saleItem.discounts.length === 0)
+    .reduce((acc, saleItem) => acc + saleItem.price, 0)
+
+  const coupon = await couponRepository.findById(couponId)
   if (!coupon) throw new CouponNotFoundError()
   if (userUnitId && coupon.unitId !== userUnitId) {
     throw new CouponNotFromUserUnitError()
   }
-  if (coupon.quantity <= 0) throw new CouponExhaustedError()
 
-  for (const temp of items) {
-    if (temp.ownDiscount) continue
-    if (!temp.discounts) temp.discounts = []
+  if (coupon.quantity <= 0) throw new CouponExhaustedError()
+  for (const saleItem of saleItems) {
+    const ownDiscount = false
+    if (ownDiscount && considerOwnDiscount) continue
     let reduction = 0
     if (coupon.discountType === 'PERCENTAGE') {
-      reduction = (temp.price * coupon.discount) / 100
+      reduction = (saleItem.price * coupon.discount) / 100
     } else if (affectedTotal > 0) {
-      reduction = (temp.price / affectedTotal) * coupon.discount
+      reduction = (saleItem.price / affectedTotal) * coupon.discount
     }
-    temp.price = Math.max(temp.price - reduction, 0)
-    temp.discounts.push({
-      amount:
-        coupon.discountType === 'PERCENTAGE' ? coupon.discount : reduction,
-      type: coupon.discountType,
-      origin: DiscountOrigin.COUPON,
-      order: temp.discounts.length + 1,
-    })
+    saleItem.price = Math.max(saleItem.price - reduction, 0)
+    saleItem.discounts = [
+      ...saleItem.discounts,
+      {
+        amount:
+          coupon.discountType === 'PERCENTAGE' ? coupon.discount : reduction,
+        type: coupon.discountType,
+        origin: DiscountOrigin.COUPON_SALE,
+        order: saleItem.discounts.length + 1,
+      },
+    ]
   }
 
-  await couponRepository.update(coupon.id, {
-    quantity: { decrement: 1 },
-  })
-
-  return { connect: { id: coupon.id } }
+  return { couponIdConnect: coupon.id, saleItems }
 }

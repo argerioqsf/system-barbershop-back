@@ -12,3 +12,5 @@ coverage
 
 /uploads
 /.yarn
+
+.DS_Store

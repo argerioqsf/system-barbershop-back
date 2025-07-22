@@ -24,7 +24,11 @@ export type DetailedSaleItemFindMany = SaleItem & {
 }
 
 export interface SaleItemRepository {
-  update(id: string, data: Prisma.SaleItemUpdateInput): Promise<SaleItem>
+  update(
+    id: string,
+    data: Prisma.SaleItemUpdateInput,
+    tx?: Prisma.TransactionClient,
+  ): Promise<SaleItem>
   findById(id: string): Promise<DetailedSaleItemFindMany | null>
   findMany(
     where?: Prisma.SaleItemWhereInput,
