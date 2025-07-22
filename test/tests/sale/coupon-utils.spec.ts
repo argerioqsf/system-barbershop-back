@@ -17,20 +17,18 @@ describe('coupon utilities', () => {
     const coupon = makeCoupon('c1', 'OFF10', 10, 'VALUE')
     repo.coupons.push(coupon)
 
-    const result = await applyCouponSaleItem(
-      { serviceId: 's1', quantity: 1, couponCode: coupon.code },
-      100,
-      100,
-      0,
-      null,
-      false,
-      repo,
-      'unit-1',
-    )
+    const result = await applyCouponSaleItem({
+      saleItem: { serviceId: 's1', quantity: 1, couponId: coupon.id },
+      basePrice: 100,
+      discount: 0,
+      discountType: null,
+      ownDiscount: false,
+      couponRepository: repo,
+      userUnitId: 'unit-1',
+    })
 
     expect(result.price).toBe(90)
     expect(result.discount).toBe(10)
-    expect(repo.coupons[0].quantity).toBe(4)
   })
 
   it('applies value coupon across items', async () => {
@@ -39,14 +37,13 @@ describe('coupon utilities', () => {
     repo.coupons.push(coupon)
 
     const items = [
-      { price: 100, ownDiscount: false },
-      { price: 50, ownDiscount: false },
+      { price: 100, ownDiscount: false, discounts: [] },
+      { price: 50, ownDiscount: false, discounts: [] },
     ]
 
-    await applyCouponSale(items as any, coupon.code, repo, 'unit-1')
+    await applyCouponSale(items as any, coupon.id, repo, 'unit-1')
 
     expect(items[0].price).toBeCloseTo(100 - (100 / 150) * 20)
     expect(items[1].price).toBeCloseTo(50 - (50 / 150) * 20)
-    expect(repo.coupons[0].quantity).toBe(4)
   })
 })

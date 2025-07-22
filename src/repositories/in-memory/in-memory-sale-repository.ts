@@ -6,7 +6,6 @@ import {
   Discount,
   DiscountOrigin,
 } from '@prisma/client'
-import { computeDiscountInfo } from '@/services/sale/utils/discount'
 import {
   SaleRepository,
   DetailedSale,
@@ -29,6 +28,7 @@ export class InMemorySaleRepository implements SaleRepository {
       coupon?: { connect: { id: string } }
       appointment?: { connect: { id: string } }
       price: number
+      customPrice?: number | null
       discounts: {
         create: {
           amount: number
@@ -39,7 +39,8 @@ export class InMemorySaleRepository implements SaleRepository {
       }
       porcentagemBarbeiro?: number | null
     }
-    const itemsData = (data.items as { create: SaleItemData[] }).create
+    const itemsData =
+      (data.items as { create: SaleItemData[] } | undefined)?.create ?? []
     const items: DetailedSaleItem[] = itemsData.map((it) => ({
       id: randomUUID(),
       saleId,
@@ -51,6 +52,7 @@ export class InMemorySaleRepository implements SaleRepository {
       couponId: it.coupon?.connect.id ?? null,
       planId: it.plan?.connect.id ?? null,
       price: it.price as number,
+      customPrice: it.customPrice ?? null,
       discounts: (it.discounts?.create ?? []).map((d) => ({
         id: randomUUID(),
         saleItemId: '',
@@ -59,8 +61,6 @@ export class InMemorySaleRepository implements SaleRepository {
         origin: d.origin as DiscountOrigin,
         order: d.order,
       })),
-      discount: null,
-      discountType: null,
       porcentagemBarbeiro: it.porcentagemBarbeiro ?? null,
       commissionPaid: false,
       appointment: it.appointment
@@ -154,11 +154,6 @@ export class InMemorySaleRepository implements SaleRepository {
         : null,
     }))
 
-    for (const item of items) {
-      const info = computeDiscountInfo(item.price, item.discounts as Discount[])
-      item.discount = info.discount
-      item.discountType = info.discountType
-    }
     const sale = {
       id: saleId,
       userId: (data.user as { connect: { id: string } }).connect.id,
@@ -336,6 +331,7 @@ export class InMemorySaleRepository implements SaleRepository {
               (it.coupon as { connect?: { id: string } } | undefined)?.connect
                 ?.id ?? null,
             price: it.price as number,
+            customPrice: it.customPrice ?? null,
             discounts: (
               (it.discounts as { create: Discount[] })?.create ?? []
             ).map((d) => ({
@@ -346,8 +342,6 @@ export class InMemorySaleRepository implements SaleRepository {
               origin: d.origin as DiscountOrigin,
               order: d.order,
             })),
-            discount: null,
-            discountType: null,
             porcentagemBarbeiro:
               (it.porcentagemBarbeiro as number | null) ?? null,
             commissionPaid: false,
@@ -445,12 +439,6 @@ export class InMemorySaleRepository implements SaleRepository {
                 }
               : null,
           }
-          const info = computeDiscountInfo(
-            newItem.price,
-            newItem.discounts as Discount[],
-          )
-          newItem.discount = info.discount
-          newItem.discountType = info.discountType
           sale.items.push(newItem)
         }
       }

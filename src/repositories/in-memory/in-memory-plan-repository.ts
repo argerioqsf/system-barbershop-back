@@ -1,5 +1,9 @@
 import { Plan, Prisma } from '@prisma/client'
-import { PlanRepository, PlanWithBenefits } from '../plan-repository'
+import {
+  PlanRepository,
+  PlanWithBenefits,
+  PlanWithBenefitsAndRecurrence,
+} from '../plan-repository'
 import { randomUUID } from 'crypto'
 
 export class InMemoryPlanRepository implements PlanRepository {
@@ -13,6 +17,14 @@ export class InMemoryPlanRepository implements PlanRepository {
     const plan = this.plans.find((p) => p.id === id)
     if (!plan) return null
     return plan as PlanWithBenefits
+  }
+
+  async findByIdWithBenefitsAndRecurrence(
+    id: string,
+  ): Promise<PlanWithBenefitsAndRecurrence | null> {
+    const plan = await this.findByIdWithBenefits(id)
+    if (!plan) return null
+    return { ...(plan as PlanWithBenefits), typeRecurrence: { period: 1 } }
   }
 
   async findByIdWithRecurrence(

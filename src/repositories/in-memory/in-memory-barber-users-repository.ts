@@ -11,6 +11,7 @@ import {
   User,
   BarberService,
   BarberProduct,
+  PlanProfile,
 } from '@prisma/client'
 import { BarberUsersRepository } from '../barber-users-repository'
 import { randomUUID } from 'crypto'
@@ -26,6 +27,7 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
             blockedHours: ProfileBlockedHour[]
             barberServices: BarberService[]
             barberProducts: BarberProduct[]
+            plans: PlanProfile[]
           })
         | null
       unit?: Unit | null
@@ -57,6 +59,7 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
       blockedHours: ProfileBlockedHour[]
       barberServices: BarberService[]
       barberProducts: BarberProduct[]
+      plans: PlanProfile[]
     } = {
       id: randomUUID(),
       userId: user.id,
@@ -87,6 +90,7 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
       blockedHours: [],
       barberServices: [],
       barberProducts: [],
+      plans: [],
     }
     this.users.push({
       ...user,
@@ -226,6 +230,7 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
               blockedHours: ProfileBlockedHour[]
               barberServices: BarberService[]
               barberProducts: BarberProduct[]
+              plans: PlanProfile[]
             })
           | null
         unit: Unit | null
