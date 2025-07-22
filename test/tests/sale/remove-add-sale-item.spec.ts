@@ -1,0 +1,118 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { RemoveAddSaleItemService } from '../../../src/services/sale/remove-add-sale-item'
+import {
+  FakeSaleRepository,
+  FakeServiceRepository,
+  FakeProductRepository,
+  FakeAppointmentRepository,
+  FakeCouponRepository,
+  FakeBarberUsersRepository,
+  FakeSaleItemRepository,
+  FakePlanRepository,
+  FakePlanProfileRepository,
+} from '../../helpers/fake-repositories'
+import {
+  makeSaleWithBarber,
+  makeService,
+  makeProduct,
+  defaultUnit,
+  defaultOrganization,
+  defaultUser,
+  defaultProfile,
+  barberUser,
+  barberProfile,
+} from '../../helpers/default-values'
+import { prisma } from '../../../src/lib/prisma'
+
+let saleRepo: FakeSaleRepository
+let serviceRepo: FakeServiceRepository
+let productRepo: FakeProductRepository
+let appointmentRepo: FakeAppointmentRepository
+let couponRepo: FakeCouponRepository
+let barberRepo: FakeBarberUsersRepository
+let saleItemRepo: FakeSaleItemRepository
+let planRepo: FakePlanRepository
+let planProfileRepo: FakePlanProfileRepository
+let service: RemoveAddSaleItemService
+
+beforeEach(() => {
+  saleRepo = new FakeSaleRepository()
+  serviceRepo = new FakeServiceRepository()
+  productRepo = new FakeProductRepository()
+  appointmentRepo = new FakeAppointmentRepository()
+  couponRepo = new FakeCouponRepository()
+  barberRepo = new FakeBarberUsersRepository()
+  saleItemRepo = new FakeSaleItemRepository(saleRepo)
+  planRepo = new FakePlanRepository()
+  planProfileRepo = new FakePlanProfileRepository()
+  const sale = makeSaleWithBarber()
+  const svc1 = makeService('svc1', 100)
+  sale.items[0].serviceId = svc1.id
+  sale.items[0].service = svc1 as any
+  saleRepo.sales.push(sale)
+  serviceRepo.services.push(svc1)
+  barberRepo.users.push(
+    {
+      ...defaultUser,
+      id: 'cashier',
+      organizationId: defaultOrganization.id,
+      unitId: defaultUnit.id,
+      unit: { ...defaultUnit, organizationId: defaultOrganization.id },
+      profile: defaultProfile,
+    },
+    { ...barberUser, profile: barberProfile },
+  )
+  service = new RemoveAddSaleItemService(
+    saleRepo,
+    serviceRepo,
+    productRepo,
+    appointmentRepo,
+    couponRepo,
+    barberRepo,
+    saleItemRepo,
+    planRepo,
+    planProfileRepo,
+  )
+  vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) =>
+    fn({
+      discount: { deleteMany: vi.fn() },
+      planProfile: { deleteMany: vi.fn() },
+    } as any),
+  )
+})
+
+describe('Remove add sale item service', () => {
+  it('adds new service item', async () => {
+    const svc2 = makeService('svc2', 50)
+    serviceRepo.services.push(svc2)
+
+    const result = await service.execute({
+      id: 'sale-1',
+      addItemsIds: [{ serviceId: svc2.id, quantity: 2 }],
+    })
+
+    expect(result.sale?.items).toHaveLength(2)
+    expect(result.sale?.total).toBe(200)
+  })
+
+  it('removes product item and restores stock', async () => {
+    const product = makeProduct('p1', 40, 5)
+    productRepo.products.push(product)
+    saleRepo.sales[0].items[0].serviceId = null
+    saleRepo.sales[0].items[0].service = null
+    saleRepo.sales[0].items[0].barberId = null
+    saleRepo.sales[0].items[0].barber = null as any
+    saleRepo.sales[0].items[0].productId = product.id
+    saleRepo.sales[0].items[0].product = product as any
+    saleRepo.sales[0].total = 40
+
+    const result = await service.execute({
+      id: 'sale-1',
+      removeItemIds: ['i1'],
+    })
+
+    expect(result.sale?.items).toHaveLength(0)
+    expect(result.sale?.total).toBe(40)
+    expect(productRepo.products[0].quantity).toBe(5)
+  })
+})

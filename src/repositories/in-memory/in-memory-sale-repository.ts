@@ -295,6 +295,26 @@ export class InMemorySaleRepository implements SaleRepository {
         unitId: 'unit-1',
         createdAt: new Date(),
       }
+    } else if ('couponId' in data && data.couponId === null) {
+      sale.couponId = null
+      sale.coupon = null
+    }
+    if (data.client && 'connect' in data.client) {
+      const cid = (data.client as { connect: { id: string } }).connect.id
+      sale.clientId = cid
+      sale.client = {
+        id: cid,
+        name: '',
+        email: '',
+        password: '',
+        active: true,
+        organizationId: 'org-1',
+        unitId: sale.unitId,
+        versionToken: 1,
+        versionTokenInvalidate: null,
+        createdAt: new Date(),
+        profile: null,
+      }
     }
     if (data.items) {
       const itemsData = data.items as {
