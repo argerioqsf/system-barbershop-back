@@ -1,8 +1,33 @@
 import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
-import { SaleRepository, DetailedSale } from '../sale-repository'
+import {
+  SaleRepository,
+  DetailedSale,
+  DetailedSaleItem,
+} from '../sale-repository'
 
 export class PrismaSaleRepository implements SaleRepository {
+  private sanitizeUser<T extends { password?: string }>(
+    user: T | null,
+  ): Omit<T, 'password'> | null {
+    if (!user) return null
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _password, ...rest } = user
+    return rest
+  }
+
+  private sanitizeSale(sale: DetailedSale): DetailedSale {
+    return {
+      ...sale,
+      user: this.sanitizeUser(sale.user) as DetailedSale['user'],
+      client: this.sanitizeUser(sale.client) as DetailedSale['client'],
+      items: sale.items.map((item) => ({
+        ...item,
+        barber: this.sanitizeUser(item.barber) as DetailedSaleItem['barber'],
+      })),
+    }
+  }
+
   async create(data: Prisma.SaleCreateInput): Promise<DetailedSale> {
     const sale = await prisma.sale.create({
       data,
@@ -28,7 +53,7 @@ export class PrismaSaleRepository implements SaleRepository {
       },
     })
     const detailed = sale as DetailedSale
-    return detailed
+    return this.sanitizeSale(detailed)
   }
 
   async findMany(where: Prisma.SaleWhereInput = {}): Promise<DetailedSale[]> {
@@ -59,7 +84,7 @@ export class PrismaSaleRepository implements SaleRepository {
       },
     })
     const detailed = sales as DetailedSale[]
-    return detailed
+    return detailed.map((sale) => this.sanitizeSale(sale))
   }
 
   async findById(id: string): Promise<DetailedSale | null> {
@@ -87,7 +112,7 @@ export class PrismaSaleRepository implements SaleRepository {
       },
     })
     const detailed = sale as DetailedSale | null
-    return detailed
+    return detailed ? this.sanitizeSale(detailed) : null
   }
 
   async update(
@@ -121,7 +146,7 @@ export class PrismaSaleRepository implements SaleRepository {
       },
     })
     const detailed = sale as DetailedSale
-    return detailed
+    return this.sanitizeSale(detailed)
   }
 
   async findManyByDateRange(start: Date, end: Date): Promise<DetailedSale[]> {
@@ -149,7 +174,7 @@ export class PrismaSaleRepository implements SaleRepository {
       },
     })
     const detailed = sales as DetailedSale[]
-    return detailed
+    return detailed.map((sale) => this.sanitizeSale(sale))
   }
 
   async findManyByUser(userId: string): Promise<DetailedSale[]> {
@@ -177,7 +202,7 @@ export class PrismaSaleRepository implements SaleRepository {
       },
     })
     const detailed = sales as DetailedSale[]
-    return detailed
+    return detailed.map((sale) => this.sanitizeSale(sale))
   }
 
   async findManyByBarber(
@@ -208,7 +233,7 @@ export class PrismaSaleRepository implements SaleRepository {
       },
     })
     const detailed = sales as DetailedSale[]
-    return detailed
+    return detailed.map((sale) => this.sanitizeSale(sale))
   }
 
   async findManyBySession(sessionId: string): Promise<DetailedSale[]> {
@@ -236,6 +261,6 @@ export class PrismaSaleRepository implements SaleRepository {
       },
     })
     const detailed = sales as DetailedSale[]
-    return detailed
+    return detailed.map((sale) => this.sanitizeSale(sale))
   }
 }

@@ -16,6 +16,27 @@ import { randomUUID } from 'crypto'
 export class InMemorySaleRepository implements SaleRepository {
   public sales: DetailedSale[] = []
 
+  private sanitizeUser<T extends { password?: string }>(
+    user: T | null,
+  ): Omit<T, 'password'> | null {
+    if (!user) return null
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _password, ...rest } = user
+    return rest
+  }
+
+  private sanitizeSale(sale: DetailedSale): DetailedSale {
+    return {
+      ...sale,
+      user: this.sanitizeUser(sale.user) as DetailedSale['user'],
+      client: this.sanitizeUser(sale.client) as DetailedSale['client'],
+      items: sale.items.map((item) => ({
+        ...item,
+        barber: this.sanitizeUser(item.barber) as DetailedSaleItem['barber'],
+      })),
+    }
+  }
+
   async create(data: Prisma.SaleCreateInput): Promise<DetailedSale> {
     const saleId = randomUUID()
     const unitId = (data.unit as { connect: { id: string } }).connect.id
@@ -225,29 +246,37 @@ export class InMemorySaleRepository implements SaleRepository {
       },
     } as DetailedSale & { unit: { organizationId: string } }
     this.sales.push(sale)
-    return sale
+    return this.sanitizeSale(sale)
   }
 
   async findMany(where: Prisma.SaleWhereInput = {}): Promise<DetailedSale[]> {
-    return this.sales.filter((s) => {
-      if (where.unitId && s.unitId !== where.unitId) return false
-      if (
-        where.unit &&
-        'organizationId' in (where.unit as { organizationId: string })
-      ) {
-        const orgId = (where.unit as { organizationId: string }).organizationId
-        const unitOrg =
-          (s as { unit?: { organizationId?: string }; organizationId?: string })
-            .unit?.organizationId ??
-          (s as { organizationId?: string }).organizationId
-        return unitOrg === orgId
-      }
-      return true
-    })
+    return this.sales
+      .filter((s) => {
+        if (where.unitId && s.unitId !== where.unitId) return false
+        if (
+          where.unit &&
+          'organizationId' in (where.unit as { organizationId: string })
+        ) {
+          const orgId = (where.unit as { organizationId: string })
+            .organizationId
+          const unitOrg =
+            (
+              s as {
+                unit?: { organizationId?: string }
+                organizationId?: string
+              }
+            ).unit?.organizationId ??
+            (s as { organizationId?: string }).organizationId
+          return unitOrg === orgId
+        }
+        return true
+      })
+      .map((sale) => this.sanitizeSale(sale))
   }
 
   async findById(id: string): Promise<DetailedSale | null> {
-    return this.sales.find((s) => s.id === id) ?? null
+    const sale = this.sales.find((s) => s.id === id) ?? null
+    return sale ? this.sanitizeSale(sale) : null
   }
 
   async update(
@@ -464,24 +493,30 @@ export class InMemorySaleRepository implements SaleRepository {
       }
     }
     sale.transactions = sale.transactions ?? []
-    return sale
+    return this.sanitizeSale(sale)
   }
 
   async findManyByDateRange(start: Date, end: Date): Promise<DetailedSale[]> {
-    return this.sales.filter((s) => s.createdAt >= start && s.createdAt <= end)
+    return this.sales
+      .filter((s) => s.createdAt >= start && s.createdAt <= end)
+      .map((sale) => this.sanitizeSale(sale))
   }
 
   async findManyByUser(userId: string): Promise<DetailedSale[]> {
-    return this.sales.filter((s) => s.userId === userId)
+    return this.sales
+      .filter((s) => s.userId === userId)
+      .map((sale) => this.sanitizeSale(sale))
   }
 
   async findManyByBarber(barberId: string): Promise<DetailedSale[]> {
-    return this.sales.filter((s) =>
-      s.items.some((i) => i.barberId === barberId),
-    )
+    return this.sales
+      .filter((s) => s.items.some((i) => i.barberId === barberId))
+      .map((sale) => this.sanitizeSale(sale))
   }
 
   async findManyBySession(sessionId: string): Promise<DetailedSale[]> {
-    return this.sales.filter((s) => s.sessionId === sessionId)
+    return this.sales
+      .filter((s) => s.sessionId === sessionId)
+      .map((sale) => this.sanitizeSale(sale))
   }
 }
