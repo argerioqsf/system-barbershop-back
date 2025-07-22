@@ -15,6 +15,7 @@ import {
   makeSaleWithBarber,
   makeService,
   makeProduct,
+  makeCoupon,
   defaultUnit,
   defaultOrganization,
   defaultUser,
@@ -22,6 +23,7 @@ import {
   barberUser,
   barberProfile,
 } from "../../helpers/default-values";
+import { DiscountOrigin, type Service } from "@prisma/client";
 import { prisma } from "../../../src/lib/prisma";
 
 let saleRepo: FakeSaleRepository;
@@ -34,6 +36,7 @@ let saleItemRepo: FakeSaleItemRepository;
 let planRepo: FakePlanRepository;
 let planProfileRepo: FakePlanProfileRepository;
 let service: RemoveAddSaleItemService;
+let svc1: Service;
 
 beforeEach(() => {
   saleRepo = new FakeSaleRepository();
@@ -46,9 +49,9 @@ beforeEach(() => {
   planRepo = new FakePlanRepository();
   planProfileRepo = new FakePlanProfileRepository();
   const sale = makeSaleWithBarber();
-  const svc1 = makeService("svc1", 100);
+  svc1 = makeService("svc1", 100);
   sale.items[0].serviceId = svc1.id;
-  sale.items[0].service = svc1 as any;
+  sale.items[0].service = svc1;
   saleRepo.sales.push(sale);
   serviceRepo.services.push(svc1);
   barberRepo.users.push(
@@ -137,6 +140,27 @@ describe("Remove add sale item service", () => {
     expect(result.sale?.items).toHaveLength(2);
     expect(result.sale?.total).toBe(130);
     expect(productRepo.products[0].quantity).toBe(4);
+  });
+
+  it("applies coupon discount when adding new item", async () => {
+    const coupon = makeCoupon("c3", "OFF", 20, "VALUE");
+    couponRepo.coupons.push(coupon);
+    saleRepo.sales[0].couponId = coupon.id;
+    saleRepo.sales[0].coupon = coupon;
+
+    const svc2 = makeService("svc2", 50);
+    serviceRepo.services.push(svc2);
+
+    const result = await service.execute({
+      id: "sale-1",
+      addItemsIds: [{ serviceId: svc2.id, quantity: 1 }],
+    });
+
+    const newItem = result.sale!.items[1];
+    expect(newItem.discounts[0]).toEqual(
+      expect.objectContaining({ origin: DiscountOrigin.COUPON_SALE }),
+    );
+    expect(newItem.discounts[0].amount).toBeCloseTo(6.67, 2);
   });
 
   it("throws when no item changes", async () => {

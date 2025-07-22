@@ -22,6 +22,7 @@ import {
   barberUser,
   barberProfile,
 } from "../../helpers/default-values";
+import { DiscountOrigin } from "@prisma/client";
 import { prisma } from "../../../src/lib/prisma";
 
 let saleRepo: FakeSaleRepository;
@@ -90,18 +91,36 @@ describe("Update coupon sale service", () => {
 
     expect(result.sale?.couponId).toBe(coupon.id);
     expect(result.sale?.total).toBe(80);
+    const item = result.sale!.items[0];
+    expect(item.discounts[0]).toEqual(
+      expect.objectContaining({ origin: DiscountOrigin.COUPON_SALE }),
+    );
+    expect(item.discounts[0].amount).toBe(20);
   });
 
   it("removes coupon from sale", async () => {
     const coupon = makeCoupon("c2", "OFF10", 10, "VALUE");
     couponRepo.coupons.push(coupon);
     saleRepo.sales[0].couponId = coupon.id;
-    saleRepo.sales[0].coupon = coupon as any;
+    saleRepo.sales[0].coupon = coupon;
+    saleRepo.sales[0].items[0].price = 90;
+    saleRepo.sales[0].items[0].discounts = [
+      {
+        amount: 10,
+        type: "VALUE",
+        origin: DiscountOrigin.COUPON_SALE,
+        order: 1,
+      },
+    ];
+    saleRepo.sales[0].total = 90;
 
     const result = await service.execute({ id: "sale-1", removeCoupon: true });
 
     expect(result.sale?.couponId).toBeNull();
     expect(saleRepo.sales[0].couponId).toBeNull();
+    const item = result.sale!.items[0];
+    expect(item.discounts).toHaveLength(0);
+    expect(item.price).toBe(100);
   });
   it("throws when no coupon changes", async () => {
     await expect(service.execute({ id: "sale-1" })).rejects.toThrow(

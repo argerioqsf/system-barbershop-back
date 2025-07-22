@@ -1,5 +1,13 @@
-import { Prisma, SaleItem, PaymentStatus } from '@prisma/client'
+import {
+  Prisma,
+  SaleItem,
+  PaymentStatus,
+  Discount,
+  DiscountOrigin,
+  DiscountType,
+} from '@prisma/client'
 import { DetailedSaleItem } from '../sale-repository'
+import crypto from 'node:crypto'
 import {
   DetailedSaleItemFindMany,
   DetailedAppointmentService,
@@ -17,6 +25,23 @@ export class InMemorySaleItemRepository implements SaleItemRepository {
     for (const sale of this.saleRepository.sales) {
       const item = sale.items.find((i) => i.id === id)
       if (item) {
+        if (data.price !== undefined) {
+          item.price = data.price as number
+        }
+        if (data.discounts) {
+          item.discounts = []
+          const create = (data.discounts as { create?: Discount[] }).create
+          if (create) {
+            item.discounts = create.map((d) => ({
+              id: crypto.randomUUID(),
+              saleItemId: id,
+              amount: d.amount,
+              type: d.type as DiscountType,
+              origin: d.origin as DiscountOrigin,
+              order: d.order,
+            }))
+          }
+        }
         if (data.porcentagemBarbeiro !== undefined) {
           item.porcentagemBarbeiro = data.porcentagemBarbeiro as number | null
         }
