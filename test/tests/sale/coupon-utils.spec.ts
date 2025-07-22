@@ -46,4 +46,34 @@ describe('coupon utilities', () => {
     expect(items[0].price).toBeCloseTo(100 - (100 / 150) * 20)
     expect(items[1].price).toBeCloseTo(50 - (50 / 150) * 20)
   })
+
+  it('applies custom price discount', async () => {
+    const { repo } = setup()
+    const result = await applyCouponSaleItem({
+      saleItem: { serviceId: 's1', quantity: 1, customPrice: 80 },
+      basePrice: 100,
+      discount: 0,
+      discountType: null,
+      ownDiscount: false,
+      couponRepository: repo,
+    })
+
+    expect(result.price).toBe(80)
+    expect(result.discount).toBe(20)
+    expect(result.discountType).toBe('VALUE')
+  })
+
+  it('throws when custom price greater than base price', async () => {
+    const { repo } = setup()
+    await expect(
+      applyCouponSaleItem({
+        saleItem: { serviceId: 's1', quantity: 1, customPrice: 120 },
+        basePrice: 100,
+        discount: 0,
+        discountType: null,
+        ownDiscount: false,
+        couponRepository: repo,
+      }),
+    ).rejects.toThrow('Item price greater than service price')
+  })
 })

@@ -1,7 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import { mapToSaleItems, calculateTotal, updateProductsStock } from '../../../src/services/sale/utils/sale'
-import { FakeProductRepository } from '../../helpers/fake-repositories'
-import { makeProduct } from '../../helpers/default-values'
+import {
+  mapToSaleItems,
+  calculateTotal,
+  updateProductsStock,
+  updateCouponsStock,
+} from '../../../src/services/sale/utils/sale'
+import { FakeProductRepository, FakeCouponRepository } from '../../helpers/fake-repositories'
+import { makeProduct, makeCoupon } from '../../helpers/default-values'
 
 
 describe('sale utilities', () => {
@@ -50,5 +55,11 @@ describe('sale utilities', () => {
     expect(repo.products[0].quantity).toBe(3)
     await updateProductsStock(repo, [{ id: 'p1', quantity: 1 }], 'increment')
     expect(repo.products[0].quantity).toBe(3)
+  })
+
+  it('updates coupon stock', async () => {
+    const repo = new FakeCouponRepository([makeCoupon('c1', 'OFF', 10, 'VALUE')])
+    await updateCouponsStock(repo, [{ couponId: 'c1', price: 100 } as any])
+    expect(repo.coupons[0].quantity).toBe(4)
   })
 })

@@ -27,9 +27,12 @@ import {
   makeSaleWithBarber,
   makeService,
   makeCoupon,
+  makeProduct,
+  makePlan,
   defaultClient,
   defaultProfile,
   makeBarberServiceRel,
+  makeBarberProductRel,
 } from '../../helpers/default-values'
 import { PaymentStatus } from '@prisma/client'
 import { prisma } from '../../../src/lib/prisma'
@@ -136,5 +139,57 @@ describe('Pay sale service', () => {
     })
 
     expect(result.sale.paymentStatus).toBe(PaymentStatus.PAID)
+  })
+
+  it('creates plan profile when paying sale with plan', async () => {
+    const plan = makePlan('pl1', 200)
+    saleRepo.sales[0].items[0].planId = plan.id
+    saleRepo.sales[0].items[0].plan = plan as any
+
+    const res = await service.execute({ saleId: 'sale-1', userId: 'cashier' })
+
+    expect(res.sale.paymentStatus).toBe(PaymentStatus.PAID)
+    expect(planProfileRepo.items).toHaveLength(1)
+    expect(planProfileRepo.items[0].planId).toBe(plan.id)
+    expect(planProfileRepo.items[0].profileId).toBe('profile-user')
+  })
+
+  it('throws when plan already linked to client', async () => {
+    const plan = makePlan('pl2', 150)
+    saleRepo.sales[0].items[0].planId = plan.id
+    saleRepo.sales[0].items[0].plan = plan as any
+    planProfileRepo.items.push({
+      id: 'pp1',
+      planStartDate: new Date(),
+      status: 'PAID',
+      saleItemId: 'old',
+      dueDateDebt: 1,
+      planId: plan.id,
+      profileId: 'profile-user',
+      debts: [],
+    })
+
+    await expect(
+      service.execute({ saleId: 'sale-1', userId: 'cashier' }),
+    ).rejects.toThrow('Client already linked to this plan')
+  })
+
+  it('updates coupon and product stock', async () => {
+    const product = makeProduct('i1', 50, 5)
+    const coupon = makeCoupon('c99', 'OFF', 5, 'VALUE')
+    productRepo.products.push(product)
+    couponRepo.coupons.push(coupon)
+    barberProductRepo.items.push(
+      makeBarberProductRel(barberProfile.id, product.id, 'PERCENTAGE_OF_USER'),
+    )
+    saleRepo.sales[0].items[0].productId = product.id
+    saleRepo.sales[0].items[0].product = product as any
+    saleRepo.sales[0].items[0].couponId = coupon.id
+    saleRepo.sales[0].items[0].coupon = coupon as any
+
+    await service.execute({ saleId: 'sale-1', userId: 'cashier' })
+
+    expect(productRepo.products[0].quantity).toBe(4)
+    expect(couponRepo.coupons[0].quantity).toBe(4)
   })
 })

@@ -2,6 +2,7 @@ import {
   DiscountType,
   Service,
   Product,
+  Plan,
   Coupon,
   Organization,
   Unit,
@@ -239,6 +240,19 @@ export function makeCoupon(
     quantity: 5,
     unitId: 'unit-1',
     createdAt: new Date(),
+  }
+}
+
+export function makePlan(
+  id: string,
+  price = 50,
+  typeRecurrenceId = 'rec-1',
+): Plan {
+  return {
+    id,
+    price,
+    name: `Plan ${id}`,
+    typeRecurrenceId,
   }
 }
 
