@@ -1,5 +1,4 @@
 import {
-  DiscountType,
   PaymentMethod,
   PaymentStatus,
   SaleItem,

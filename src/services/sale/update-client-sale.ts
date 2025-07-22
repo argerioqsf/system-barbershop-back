@@ -1,23 +1,9 @@
 import { SaleRepository, DetailedSale } from '@/repositories/sale-repository'
-import { ServiceRepository } from '@/repositories/service-repository'
-import { ProductRepository } from '@/repositories/product-repository'
-import { AppointmentRepository } from '@/repositories/appointment-repository'
-import { CouponRepository } from '@/repositories/coupon-repository'
-import {
-  BarberUsersRepository,
-  UserFindById,
-} from '@/repositories/barber-users-repository'
-import { BarberServiceRepository } from '@/repositories/barber-service-repository'
-import { BarberProductRepository } from '@/repositories/barber-product-repository'
-import { CashRegisterRepository } from '@/repositories/cash-register-repository'
-import { TransactionRepository } from '@/repositories/transaction-repository'
-import { OrganizationRepository } from '@/repositories/organization-repository'
+import { UserFindById } from '@/repositories/barber-users-repository'
 import {
   ProfilesRepository,
   ResponseFindByUserId,
 } from '@/repositories/profiles-repository'
-import { UnitRepository } from '@/repositories/unit-repository'
-import { AppointmentServiceRepository } from '@/repositories/appointment-service-repository'
 import { SaleItemRepository } from '@/repositories/sale-item-repository'
 import { PlanRepository } from '@/repositories/plan-repository'
 import { PlanProfileRepository } from '@/repositories/plan-profile-repository'
