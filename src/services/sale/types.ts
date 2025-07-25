@@ -63,6 +63,12 @@ export interface UpdateSaleRequest {
   removeCoupon?: boolean
 }
 
+export type SaleItemUpdateFields = Omit<Partial<CreateSaleItem>, 'id' | 'price'>
+
+export type UpdateSaleItemRequest = {
+  saleItemUpdateFields: SaleItemUpdateFields
+  id: string
+}
 export interface RemoveAddSaleItemRequest {
   id: string
   addItemsIds?: CreateSaleItem[]

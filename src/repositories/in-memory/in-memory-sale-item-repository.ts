@@ -12,11 +12,24 @@ import {
   DetailedSaleItemFindMany,
   DetailedAppointmentService,
   SaleItemRepository,
+  DetailedSaleItemFindById,
 } from '../sale-item-repository'
 import { InMemorySaleRepository } from './in-memory-sale-repository'
 
 export class InMemorySaleItemRepository implements SaleItemRepository {
   constructor(private saleRepository: InMemorySaleRepository) {}
+  async updateManyIndividually(
+    updates: { id: string; data: Prisma.SaleItemUpdateInput }[],
+  ): Promise<SaleItem[]> {
+    const updatedItems: SaleItem[] = []
+
+    for (const { id, data } of updates) {
+      const updatedItem = await this.update(id, data)
+      updatedItems.push(updatedItem)
+    }
+
+    return updatedItems
+  }
 
   async update(
     id: string,
@@ -55,11 +68,11 @@ export class InMemorySaleItemRepository implements SaleItemRepository {
     throw new Error('Sale item not found')
   }
 
-  async findById(id: string): Promise<DetailedSaleItemFindMany | null> {
+  async findById(id: string): Promise<DetailedSaleItemFindById | null> {
     for (const sale of this.saleRepository.sales) {
       const item = sale.items.find((i) => i.id === id)
       if (item) {
-        const result: DetailedSaleItemFindMany = {
+        const result: DetailedSaleItemFindById = {
           ...(item as DetailedSaleItem),
           sale,
           transactions: [],

@@ -161,16 +161,16 @@ async function ensureBarberPermissions(
 
 export type ReturnBuildItemData = {
   id?: string
-  coupon: Coupon | null
+  coupon?: Coupon | null
   quantity: number
-  service: Service | null
-  product: Product | null
-  plan: Plan | null
-  barber: UserFindById | null
+  service?: Service | null
+  product?: Product | null
+  plan?: Plan | null
+  barber?: UserFindById | null
   price: number
   customPrice?: number | null
   discounts: NewDiscount[]
-  appointment: Appointment | null
+  appointment?: Appointment | null
   commissionPaid: boolean
 }
 export async function buildItemData({

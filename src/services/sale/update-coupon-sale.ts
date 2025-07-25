@@ -141,6 +141,15 @@ export class UpdateCouponSaleService {
       couponConnect = { connect: { id: couponIdConnect } }
     }
 
+    if (removeCoupon) {
+      await applyPlanDiscounts(
+        currentSaleItems,
+        saleCurrent.clientId,
+        this.planProfileRepository,
+        this.planRepository,
+      )
+    }
+
     const totalCurrentSaleItems = calculateTotal(currentSaleItems)
 
     await prisma.$transaction(async (tx) => {
