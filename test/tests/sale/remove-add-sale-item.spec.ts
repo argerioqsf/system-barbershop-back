@@ -99,7 +99,7 @@ describe("Remove add sale item service", () => {
   });
 
   it("removes product item and restores stock", async () => {
-    const product = makeProduct("p1", 40, 5);
+    const product = makeProduct("p1", 40, 4);
     productRepo.products.push(product);
     saleRepo.sales[0].items[0].serviceId = null;
     saleRepo.sales[0].items[0].service = null;
@@ -115,7 +115,7 @@ describe("Remove add sale item service", () => {
     });
 
     expect(result.sale?.items).toHaveLength(0);
-    expect(result.sale?.total).toBe(40);
+    expect(result.sale?.total).toBe(0);
     expect(productRepo.products[0].quantity).toBe(5);
   });
   it("removes service item", async () => {
@@ -125,7 +125,7 @@ describe("Remove add sale item service", () => {
     });
 
     expect(result.sale?.items).toHaveLength(0);
-    expect(result.sale?.total).toBe(100);
+    expect(result.sale?.total).toBe(0);
   });
 
   it("adds product item and updates stock", async () => {

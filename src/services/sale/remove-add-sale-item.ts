@@ -122,7 +122,6 @@ export class RemoveAddSaleItemService {
     unitId: string,
   ): Promise<{
     currentItemsBuildRemovedItems: ReturnBuildItemData[]
-    productsToRestoreUp: { id: string; quantity: number }[]
   }> {
     for (const idToRemove of removeItemIds) {
       const found = saleCurrent.items.find((i) => i.id === idToRemove)
@@ -146,7 +145,6 @@ export class RemoveAddSaleItemService {
 
     return {
       currentItemsBuildRemovedItems,
-      productsToRestoreUp: productsToRestore,
     }
   }
 
@@ -251,14 +249,13 @@ export class RemoveAddSaleItemService {
     productsToRestore: ProductsToRestore,
     unitId: string,
   ) {
-    const { currentItemsBuildRemovedItems, productsToRestoreUp } =
+    const { currentItemsBuildRemovedItems } =
       await this.removeItemsFromSaleAndRebuild(
         removeItemIds,
         saleCurrent,
         productsToRestore,
         unitId,
       )
-    productsToRestore.push(...productsToRestoreUp)
     return { currentItemsBuildRemovedItems }
   }
 

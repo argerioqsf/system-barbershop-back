@@ -54,7 +54,7 @@ describe('sale utilities', () => {
     await updateProductsStock(repo, [{ id: 'p1', quantity: 2 }], 'decrement')
     expect(repo.products[0].quantity).toBe(3)
     await updateProductsStock(repo, [{ id: 'p1', quantity: 1 }], 'increment')
-    expect(repo.products[0].quantity).toBe(3)
+    expect(repo.products[0].quantity).toBe(4)
   })
 
   it('updates coupon stock', async () => {
