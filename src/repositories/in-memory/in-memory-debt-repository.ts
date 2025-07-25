@@ -56,4 +56,8 @@ export class InMemoryDebtRepository implements DebtRepository {
       return true
     })
   }
+
+  async delete(id: string): Promise<void> {
+    this.debts = this.debts.filter((d) => d.id !== id)
+  }
 }

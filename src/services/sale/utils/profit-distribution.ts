@@ -7,7 +7,12 @@ import { OrganizationNotFoundError } from '@/services/@errors/organization/organ
 import { BarberProfileNotFoundError } from '@/services/@errors/profile/barber-profile-not-found-error'
 import { IncrementBalanceProfileService } from '@/services/profile/increment-balance'
 import { IncrementBalanceUnitService } from '@/services/unit/increment-balance'
-import { BarberProduct, BarberService, Transaction } from '@prisma/client'
+import {
+  BarberProduct,
+  BarberService,
+  Prisma,
+  Transaction,
+} from '@prisma/client'
 import { DetailedAppointment } from '@/repositories/appointment-repository'
 import { calculateBarberCommission } from './barber-commission'
 import { AppointmentNotFoundError } from '@/services/@errors/appointment/appointment-not-found-error'
@@ -28,6 +33,7 @@ export async function distributeProfits(
     appointmentServiceRepository,
     saleItemRepository,
   }: DistributeProfitsDeps,
+  tx?: Prisma.TransactionClient,
 ): Promise<{ transactions: Transaction[] }> {
   const org = await organizationRepository.findById(organizationId)
   if (!org) throw new OrganizationNotFoundError()
@@ -155,6 +161,8 @@ export async function distributeProfits(
         amountToPay,
         sale.id,
         true,
+        undefined,
+        tx,
       )
       transactions.push(transactionUnit.transaction)
     }
@@ -164,16 +172,28 @@ export async function distributeProfits(
       sale.id,
       userBarber.profile.totalBalance < 0,
       undefined,
+      undefined,
+      undefined,
+      undefined,
+      tx,
     )
     transactions.push(transactionProfile.transaction)
     if (appointmentServiceId) {
-      await appointmentServiceRepository.update(appointmentServiceId, {
-        commissionPercentage: percentage,
-      })
+      await appointmentServiceRepository.update(
+        appointmentServiceId,
+        {
+          commissionPercentage: percentage,
+        },
+        tx,
+      )
     } else {
-      await saleItemRepository.update(saleItemId, {
-        porcentagemBarbeiro: percentage,
-      })
+      await saleItemRepository.update(
+        saleItemId,
+        {
+          porcentagemBarbeiro: percentage,
+        },
+        tx,
+      )
     }
   }
 
@@ -183,6 +203,8 @@ export async function distributeProfits(
     ownerShare,
     sale.id,
     false,
+    undefined,
+    tx,
   )
   transactions.push(transactionUnit.transaction)
 

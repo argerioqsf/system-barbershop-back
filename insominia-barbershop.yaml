@@ -329,8 +329,8 @@ collection:
               value: "10"
             - name: price
               value: "20"
-            - name: category
-              value: ""
+            - name: categoryId
+              value: "{{ _.categoryId }}"
             - name: defaultTime
               value: ""
             - name: commissionPercentage
@@ -413,6 +413,8 @@ collection:
               value: "5"
             - name: price
               value: "15"
+            - name: categoryId
+              value: "{{ _.categoryId }}"
             - name: image
               value: ""
               type: file
@@ -540,6 +542,103 @@ collection:
           sortKey: -1751331396301
         method: DELETE
         headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Categories
+    meta:
+      id: fld_68a98e45ca08435083f40ea66b16e59a
+      created: 1751331396301
+      modified: 1751331396301
+      sortKey: -1751331396301
+      description: ""
+    children:
+      - url: "{{ baseURL }}/categories"
+        name: Create category
+        meta:
+          id: req_d6f8d4102e7f4a3988fdd1ddfcdb6cee
+          created: 1751331396301
+          modified: 1751331396301
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396301
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "Categoria"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/categories"
+        name: List categories
+        meta:
+          id: req_702580b282554d13ad1c02609c7d5294
+          created: 1751331396301
+          modified: 1751331396301
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396301
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        scripts:
+          afterResponse: |-
+            let response = insomnia.response.json();
+            if (!response) console.warn("categorias nao encontradas");
+            if (response[0]) {
+                insomnia.environment.set("categoryId", response[0].id);
+                console.log("categoryId salvo com sucesso!");
+            } else {
+                console.warn("Categoria nao encontrada");
+            }
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/categories/{{ _.categoryId }}"
+        name: Update category
+        meta:
+          id: req_dec25271bd6542d4ba16c4068d7167f1
+          created: 1751331396301
+          modified: 1751331396301
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396301
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "Categoria atualizada"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
           - name: Authorization
             value: Bearer {{ token }}
         settings:
@@ -2285,6 +2384,361 @@ collection:
             send: true
             store: true
           rebuildPath: true
+  - name: Plans
+    meta:
+      id: fld_plans
+      created: 1751331396320
+      modified: 1751331396320
+      sortKey: -1751331396320
+      description: ""
+    children:
+      - url: "{{ baseURL }}/plans"
+        name: Create plan
+        meta:
+          id: req_create_plan
+          created: 1751331396320
+          modified: 1751331396320
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396320
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "Basic",
+              "price": 100,
+              "typeRecurrenceId": "{{ _.typeRecurrenceId }}"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+      - url: "{{ baseURL }}/plans"
+        name: List plans
+        meta:
+          id: req_list_plans
+          created: 1751331396320
+          modified: 1751331396320
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396320
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        scripts:
+          afterResponse: |-
+            let resp = insomnia.response.json();
+            if (resp && resp[0]) {
+              insomnia.environment.set("planId", resp[0].id);
+            }
+      - url: "{{ baseURL }}/plans/{{ _.planId }}"
+        name: Get plan
+        meta:
+          id: req_get_plan
+          created: 1751331396320
+          modified: 1751331396320
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396320
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+      - url: "{{ baseURL }}/plans/{{ _.planId }}"
+        name: Update plan
+        meta:
+          id: req_update_plan
+          created: 1751331396320
+          modified: 1751331396320
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396320
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "Updated Plan"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+      - url: "{{ baseURL }}/plans/{{ _.planId }}"
+        name: Delete plan
+        meta:
+          id: req_delete_plan
+          created: 1751331396320
+          modified: 1751331396320
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396320
+        method: DELETE
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+  - name: Debts
+    meta:
+      id: fld_debts
+      created: 1751331396321
+      modified: 1751331396321
+      sortKey: -1751331396321
+      description: ""
+    children:
+      - url: "{{ baseURL }}/debts"
+        name: Create debt
+        meta:
+          id: req_create_debt
+          created: 1751331396321
+          modified: 1751331396321
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396321
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "value": 10,
+              "planId": "{{ _.planId }}",
+              "planProfileId": "id",
+              "paymentDate": "2025-01-01T00:00:00Z"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+      - url: "{{ baseURL }}/debts"
+        name: List debts
+        meta:
+          id: req_list_debts
+          created: 1751331396321
+          modified: 1751331396321
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396321
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        scripts:
+          afterResponse: |-
+            let resp = insomnia.response.json();
+            if (resp && resp[0]) {
+              insomnia.environment.set("debtId", resp[0].id);
+            }
+      - url: "{{ baseURL }}/debts/{{ _.debtId }}"
+        name: Get debt
+        meta:
+          id: req_get_debt
+          created: 1751331396321
+          modified: 1751331396321
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396321
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+      - url: "{{ baseURL }}/debts/{{ _.debtId }}"
+        name: Update debt
+        meta:
+          id: req_update_debt
+          created: 1751331396321
+          modified: 1751331396321
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396321
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "value": 15
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+      - url: "{{ baseURL }}/debts/{{ _.debtId }}"
+        name: Delete debt
+        meta:
+          id: req_delete_debt
+          created: 1751331396321
+          modified: 1751331396321
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396321
+        method: DELETE
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+  - name: Benefits
+    meta:
+      id: fld_benefits
+      created: 1751331396322
+      modified: 1751331396322
+      sortKey: -1751331396322
+      description: ""
+    children:
+      - url: "{{ baseURL }}/benefits"
+        name: Create benefit
+        meta:
+          id: req_create_benefit
+          created: 1751331396322
+          modified: 1751331396322
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396322
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "Benefit"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+      - url: "{{ baseURL }}/benefits"
+        name: List benefits
+        meta:
+          id: req_list_benefits
+          created: 1751331396322
+          modified: 1751331396322
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396322
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        scripts:
+          afterResponse: |-
+            let resp = insomnia.response.json();
+            if (resp && resp[0]) insomnia.environment.set("benefitId", resp[0].id);
+      - url: "{{ baseURL }}/benefits/{{ _.benefitId }}"
+        name: Update benefit
+        meta:
+          id: req_update_benefit
+          created: 1751331396322
+          modified: 1751331396322
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396322
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "Benefit Updated"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+      - url: "{{ baseURL }}/benefits/{{ _.benefitId }}"
+        name: Delete benefit
+        meta:
+          id: req_delete_benefit
+          created: 1751331396322
+          modified: 1751331396322
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396322
+        method: DELETE
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+  - name: Type recurrences
+    meta:
+      id: fld_recurrences
+      created: 1751331396323
+      modified: 1751331396323
+      sortKey: -1751331396323
+      description: ""
+    children:
+      - url: "{{ baseURL }}/type-recurrences"
+        name: Create type recurrence
+        meta:
+          id: req_create_type_rec
+          created: 1751331396323
+          modified: 1751331396323
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396323
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "period": 1
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+      - url: "{{ baseURL }}/type-recurrences"
+        name: List type recurrences
+        meta:
+          id: req_list_type_rec
+          created: 1751331396323
+          modified: 1751331396323
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396323
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        scripts:
+          afterResponse: |-
+            let r = insomnia.response.json();
+            if (r && r[0]) insomnia.environment.set("typeRecurrenceId", r[0].id);
+      - url: "{{ baseURL }}/type-recurrences/{{ _.typeRecurrenceId }}"
+        name: Update type recurrence
+        meta:
+          id: req_update_type_rec
+          created: 1751331396323
+          modified: 1751331396323
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396323
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "period": 2
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+      - url: "{{ baseURL }}/type-recurrences/{{ _.typeRecurrenceId }}"
+        name: Delete type recurrence
+        meta:
+          id: req_delete_type_rec
+          created: 1751331396323
+          modified: 1751331396323
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396323
+        method: DELETE
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
 cookieJar:
   name: Default Jar
   meta:
@@ -2306,3 +2760,8 @@ environments:
     barberId: 7311c934-ab51-42c2-9357-135cebc9e7f8
     clientId: 8790fa17-beca-44a3-a3da-5dfd9ace2c7b
     tokenBarber: ""
+    categoryId:
+    planId:
+    debtId:
+    benefitId:
+    typeRecurrenceId:

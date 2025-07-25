@@ -21,7 +21,7 @@ interface GetUserRequest {
 
 interface GetUserResponse {
   user:
-    | ((User & {
+    | ((Omit<User, 'password'> & {
         profile:
           | (Profile & {
               role: Role

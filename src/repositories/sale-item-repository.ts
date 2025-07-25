@@ -1,6 +1,7 @@
 import {
   Appointment,
   AppointmentService,
+  Discount,
   Prisma,
   Sale,
   SaleItem,
@@ -23,9 +24,28 @@ export type DetailedSaleItemFindMany = SaleItem & {
     | null
 }
 
+export type DetailedSaleItemFindById = SaleItem & {
+  sale: Sale
+  transactions: Transaction[]
+  discounts: Discount[]
+  appointment?:
+    | (Appointment & {
+        services: DetailedAppointmentService[]
+      })
+    | null
+}
+
 export interface SaleItemRepository {
-  update(id: string, data: Prisma.SaleItemUpdateInput): Promise<SaleItem>
-  findById(id: string): Promise<DetailedSaleItemFindMany | null>
+  update(
+    id: string,
+    data: Prisma.SaleItemUpdateInput,
+    tx?: Prisma.TransactionClient,
+  ): Promise<SaleItem>
+  updateManyIndividually(
+    updates: { id: string; data: Prisma.SaleItemUpdateInput }[],
+    tx?: Prisma.TransactionClient,
+  ): Promise<SaleItem[]>
+  findById(id: string): Promise<DetailedSaleItemFindById | null>
   findMany(
     where?: Prisma.SaleItemWhereInput,
   ): Promise<DetailedSaleItemFindMany[]>

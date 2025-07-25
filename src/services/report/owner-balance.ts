@@ -58,8 +58,9 @@ export class OwnerBalanceService {
         isNot: null,
       },
     })
-    const transactionsOwner =
-      await this.transactionRepository.findManyByUser(ownerId)
+    const transactionsOwner = await this.transactionRepository.findManyByUser(
+      ownerId,
+    )
     const transactions = Array.from(
       new Map(
         [...transactionsSales, ...transactionsOwner].map((tx) => [tx.id, tx]),

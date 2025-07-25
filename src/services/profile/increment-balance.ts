@@ -1,5 +1,11 @@
 import { ProfilesRepository } from '@/repositories/profiles-repository'
-import { Profile, Transaction, TransactionType, User } from '@prisma/client'
+import {
+  Prisma,
+  Profile,
+  Transaction,
+  TransactionType,
+  User,
+} from '@prisma/client'
 import { makeCreateTransaction } from '../@factories/transaction/make-create-transaction'
 
 interface IncrementBalanceProfileResponse {
@@ -19,29 +25,25 @@ export class IncrementBalanceProfileService {
     saleItemId?: string,
     appointmentServiceId?: string,
     loanId?: string,
+    tx?: Prisma.TransactionClient,
   ): Promise<IncrementBalanceProfileResponse> {
     const createTransactionService = makeCreateTransaction()
-    try {
-      let profile: IncrementBalanceProfileResponse['profile'] = null
-      profile = await this.repository.incrementBalance(userId, amount)
-      const transaction = await createTransactionService.execute({
-        type:
-          amount < 0 ? TransactionType.WITHDRAWAL : TransactionType.ADDITION,
-        description: description ?? 'Increment Balance Profile',
-        amount: Math.abs(amount),
-        userId,
-        receiptUrl: undefined,
-        saleId,
-        saleItemId,
-        appointmentServiceId,
-        isLoan: isLoan ?? false,
-        affectedUserId: userId,
-        loanId,
-      })
-      return { profile, transaction: transaction.transaction }
-    } catch (error) {
-      await this.repository.incrementBalance(userId, -amount)
-      throw error
-    }
+    let profile: IncrementBalanceProfileResponse['profile'] = null
+    profile = await this.repository.incrementBalance(userId, amount, tx)
+    const transaction = await createTransactionService.execute({
+      type: amount < 0 ? TransactionType.WITHDRAWAL : TransactionType.ADDITION,
+      description: description ?? 'Increment Balance Profile',
+      amount: Math.abs(amount),
+      userId,
+      receiptUrl: undefined,
+      saleId,
+      saleItemId,
+      appointmentServiceId,
+      isLoan: isLoan ?? false,
+      affectedUserId: userId,
+      loanId,
+      tx,
+    })
+    return { profile, transaction: transaction.transaction }
   }
 }

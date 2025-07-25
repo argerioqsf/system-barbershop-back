@@ -46,7 +46,7 @@ describe('buildItemData util', () => {
     ctx.couponRepo.coupons.push(coupon)
 
     const item = await buildItemData({
-      item: { serviceId: service.id, quantity: 1, couponCode: coupon.code, barberId: barberUser.id },
+      saleItem: { serviceId: service.id, quantity: 1, couponId: coupon.id, barberId: barberUser.id },
       serviceRepository: ctx.serviceRepo,
       productRepository: ctx.productRepo,
       appointmentRepository: ctx.appointmentRepo,
@@ -56,9 +56,8 @@ describe('buildItemData util', () => {
     })
 
     expect(item.price).toBe(90)
-    expect(item.discount).toBe(10)
-    expect(item.data.service).toEqual({ connect: { id: service.id } })
-    expect(item.data.coupon).toEqual({ connect: { id: coupon.id } })
+    expect(item.coupon?.id).toBe(coupon.id)
+    expect(item.service?.id).toBe(service.id)
   })
 
   it('builds appointment item', async () => {
@@ -78,7 +77,7 @@ describe('buildItemData util', () => {
     const stored = ctx.appointmentRepo.appointments[0]
 
     const item = await buildItemData({
-      item: { appointmentId: appointment.id, quantity: 1 },
+      saleItem: { appointmentId: appointment.id, quantity: 1 },
       serviceRepository: ctx.serviceRepo,
       productRepository: ctx.productRepo,
       appointmentRepository: ctx.appointmentRepo,
@@ -87,8 +86,8 @@ describe('buildItemData util', () => {
       userUnitId: defaultUnit.id,
     })
 
-    expect(item.basePrice).toBe(50)
-    expect(item.data.appointment).toEqual({ connect: { id: appointment.id } })
-    expect(item.data.barber).toEqual({ connect: { id: stored.barberId } })
+    expect(item.price).toBe(50)
+    expect(item.appointment?.id).toBe(appointment.id)
+    expect(item.barber?.id).toBe(stored.barberId)
   })
 })

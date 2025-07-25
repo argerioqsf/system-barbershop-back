@@ -15,7 +15,7 @@ function makeService(id: string, price: number): Service {
     imageUrl: null,
     cost: 0,
     price,
-    categoryId: null,
+    categoryId: 'cat-1',
     defaultTime: null,
     commissionPercentage: null,
     unitId: 'unit-1',

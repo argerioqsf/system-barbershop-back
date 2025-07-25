@@ -1,18 +1,23 @@
-import { DiscountType, PlanProfileStatus } from '@prisma/client'
+import { DiscountType, PlanProfileStatus, DiscountOrigin } from '@prisma/client'
 import {
   PlanRepository,
   PlanWithBenefits,
 } from '@/repositories/plan-repository'
 import { PlanProfileRepository } from '@/repositories/plan-profile-repository'
-import { TempItems } from '../types'
+import { ReturnBuildItemData } from './item'
 
 function applyBenefitOnItem(
-  item: TempItems,
+  item: ReturnBuildItemData,
   benefit: PlanWithBenefits['benefits'][number]['benefit'],
 ) {
-  const serviceId = item.data.service?.connect?.id
-  const productId = item.data.product?.connect?.id
-  const categoryId = item.data.categoryId
+  if (!item.service && !item.product) return item
+
+  const serviceId = item.service?.id
+  const productId = item.product?.id
+  const categoryId = item.service
+    ? item.service.categoryId
+    : item.product?.categoryId
+
   const matchCategory = benefit.categories.some(
     (c) => c.categoryId === categoryId,
   )
@@ -21,43 +26,51 @@ function applyBenefitOnItem(
   const matchProduct =
     productId && benefit.products.some((p) => p.productId === productId)
   if (!matchCategory && !matchService && !matchProduct) return
+  if (item.price <= 0) return
 
-  // TODO: adicionar um if para verificar se o item.price ja é zero
-  // se for nao aplicar mais descontos
   const discount = benefit.discount ?? 0
-  // TODO: trocar o nome da variavel value para valueDiscount
-  let value = 0
+  let valueDiscount = 0
   if (benefit.discountType === DiscountType.PERCENTAGE) {
-    value = (item.price * discount) / 100
+    valueDiscount = (item.price * discount) / 100
   } else if (benefit.discountType === DiscountType.VALUE) {
-    value = discount
+    valueDiscount = discount
   }
-  if (value <= 0) return
-  if (item.price - value < 0) {
-    item.discount += item.price
+
+  if (valueDiscount <= 0) return
+  if (item.price - valueDiscount < 0) {
+    valueDiscount = item.price
     item.price = 0
   } else {
-    item.price -= value
-    item.discount += value
+    item.price -= valueDiscount
   }
+  item.discounts.push({
+    amount:
+      benefit.discountType === DiscountType.PERCENTAGE
+        ? benefit.discount ?? 0
+        : valueDiscount,
+    type: (benefit.discountType ?? DiscountType.VALUE) as DiscountType,
+    origin: DiscountOrigin.PLAN,
+    order: item.discounts.length + 1,
+  })
+
+  return item
 }
 
 export async function applyPlanDiscounts(
-  items: TempItems[],
-  profileId: string,
+  saleItems: ReturnBuildItemData[],
+  userId: string,
   planProfileRepo: PlanProfileRepository,
   planRepo: PlanRepository,
-): Promise<void> {
-  // TODO: troca o nome da variavel profiles a baixo para planProfiles
-  const profiles = await planProfileRepo.findMany({
-    profileId,
+): Promise<ReturnBuildItemData[]> {
+  const profilePlans = await planProfileRepo.findMany({
+    profile: { userId },
     status: PlanProfileStatus.PAID,
   })
   const benefitsMap: Record<
     string,
     PlanWithBenefits['benefits'][number]['benefit']
   > = {}
-  for (const pp of profiles) {
+  for (const pp of profilePlans) {
     const plan = await planRepo.findByIdWithBenefits(pp.planId)
     if (!plan) continue
     for (const pb of plan.benefits) {
@@ -65,10 +78,13 @@ export async function applyPlanDiscounts(
     }
   }
   const benefits = Object.values(benefitsMap)
-  for (const benefit of benefits) {
-    for (const item of items) {
-      if (item.price <= 0) continue
+
+  for (const item of saleItems) {
+    if (item.price <= 0) continue
+    for (const benefit of benefits) {
       applyBenefitOnItem(item, benefit)
     }
   }
+
+  return saleItems
 }

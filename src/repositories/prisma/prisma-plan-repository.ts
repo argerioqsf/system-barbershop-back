@@ -1,6 +1,11 @@
 import { prisma } from '@/lib/prisma'
-import { Prisma, Plan } from '@prisma/client'
-import { PlanRepository, PlanWithBenefits } from '../plan-repository'
+import { Prisma } from '@prisma/client'
+import {
+  PlanRepository,
+  PlanWithBenefits,
+  PlanWithBenefitsAndRecurrence,
+  PlanWithRecurrence,
+} from '../plan-repository'
 
 export class PrismaPlanRepository implements PlanRepository {
   findById(id: string) {
@@ -22,13 +27,29 @@ export class PrismaPlanRepository implements PlanRepository {
     }) as Promise<PlanWithBenefits | null>
   }
 
-  findByIdWithRecurrence(
+  findByIdWithBenefitsAndRecurrence(
     id: string,
-  ): Promise<(Plan & { typeRecurrence: { period: number } }) | null> {
+  ): Promise<PlanWithBenefitsAndRecurrence | null> {
+    return prisma.plan.findUnique({
+      where: { id },
+      include: {
+        benefits: {
+          include: {
+            benefit: {
+              include: { categories: true, services: true, products: true },
+            },
+          },
+        },
+        typeRecurrence: true,
+      },
+    })
+  }
+
+  findByIdWithRecurrence(id: string): Promise<PlanWithRecurrence | null> {
     return prisma.plan.findUnique({
       where: { id },
       include: { typeRecurrence: true },
-    }) as Promise<(Plan & { typeRecurrence: { period: number } }) | null>
+    })
   }
 
   create(data: Prisma.PlanCreateInput) {
@@ -41,5 +62,9 @@ export class PrismaPlanRepository implements PlanRepository {
 
   findMany(where: Prisma.PlanWhereInput = {}) {
     return prisma.plan.findMany({ where })
+  }
+
+  async delete(id: string): Promise<void> {
+    await prisma.plan.delete({ where: { id } })
   }
 }

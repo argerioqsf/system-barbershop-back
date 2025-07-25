@@ -2,6 +2,7 @@ import {
   DiscountType,
   Service,
   Product,
+  Plan,
   Coupon,
   Organization,
   Unit,
@@ -84,6 +85,7 @@ export const defaultSale: DetailedSale = {
       price: 100,
       discount: null,
       discountType: null,
+      discounts: [],
       porcentagemBarbeiro: 0,
       service: null,
       product: null,
@@ -155,7 +157,7 @@ export const barberUser = {
   profile: barberProfile,
 }
 
-export function makeService(id: string, price = 100): Service {
+export function makeService(id: string, price = 100, categoryId = 'cat-1'): Service {
   return {
     id,
     name: '',
@@ -163,7 +165,7 @@ export function makeService(id: string, price = 100): Service {
     imageUrl: null,
     cost: 0,
     price,
-    categoryId: null,
+    categoryId,
     defaultTime: null,
     commissionPercentage: null,
     unitId: 'unit-1',
@@ -202,7 +204,12 @@ export function makeBarberProductRel(
   }
 }
 
-export function makeProduct(id: string, price = 50, quantity = 5): Product {
+export function makeProduct(
+  id: string,
+  price = 50,
+  quantity = 5,
+  categoryId = 'cat-1',
+): Product {
   return {
     id,
     name: '',
@@ -213,7 +220,7 @@ export function makeProduct(id: string, price = 50, quantity = 5): Product {
     price,
     unitId: 'unit-1',
     commissionPercentage: 0,
-    categoryId: null,
+    categoryId,
   }
 }
 
@@ -233,6 +240,19 @@ export function makeCoupon(
     quantity: 5,
     unitId: 'unit-1',
     createdAt: new Date(),
+  }
+}
+
+export function makePlan(
+  id: string,
+  price = 50,
+  typeRecurrenceId = 'rec-1',
+): Plan {
+  return {
+    id,
+    price,
+    name: `Plan ${id}`,
+    typeRecurrenceId,
   }
 }
 
@@ -420,6 +440,7 @@ export function makeSaleWithBarber(): DetailedSale {
         price: 100,
         discount: null,
         discountType: null,
+        discounts: [],
         porcentagemBarbeiro: barberProfile.commissionPercentage,
         service: null,
         product: null,

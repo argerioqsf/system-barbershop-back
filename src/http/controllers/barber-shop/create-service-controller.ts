@@ -12,7 +12,7 @@ export const CreateServiceController = async (
     description: z.string().optional(),
     cost: z.coerce.number(),
     price: z.coerce.number(),
-    categoryId: z.string().optional(),
+    categoryId: z.string(),
     defaultTime: z.number().optional(),
     commissionPercentage: z.number().optional(),
   })

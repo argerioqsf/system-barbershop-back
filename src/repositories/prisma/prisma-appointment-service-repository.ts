@@ -8,7 +8,9 @@ export class PrismaAppointmentServiceRepository
   async update(
     id: string,
     data: Prisma.AppointmentServiceUpdateInput,
+    tx?: Prisma.TransactionClient,
   ): Promise<AppointmentService> {
-    return prisma.appointmentService.update({ where: { id }, data })
+    const prismaClient = tx || prisma
+    return prismaClient.appointmentService.update({ where: { id }, data })
   }
 }

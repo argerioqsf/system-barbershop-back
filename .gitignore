@@ -11,3 +11,6 @@ coverage
 .vercel
 
 /uploads
+/.yarn
+
+.DS_Store

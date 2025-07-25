@@ -21,8 +21,7 @@ export class InMemoryAppointmentServiceRepository
         }
         const extra = data as { commissionPaid?: boolean }
         if (extra.commissionPaid !== undefined) {
-          ;(service as unknown as { commissionPaid: boolean }).commissionPaid =
-            extra.commissionPaid
+          service.commissionPaid = extra.commissionPaid
         }
         return service as AppointmentService
       }

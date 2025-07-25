@@ -88,7 +88,7 @@ describe('List user pending commissions', () => {
             imageUrl: null,
             cost: 0,
             price: 50,
-            categoryId: null,
+            categoryId: 'cat-1',
             defaultTime: null,
             commissionPercentage: null,
             unitId: defaultUnit.id,

@@ -1,8 +1,8 @@
 import {
-  DiscountType,
   PaymentMethod,
   PaymentStatus,
   SaleItem,
+  Discount,
 } from '@prisma/client'
 import { DetailedSale } from '@/repositories/sale-repository'
 import { OrganizationRepository } from '@/repositories/organization-repository'
@@ -27,25 +27,27 @@ export interface DistributeProfitsDeps {
   saleItemRepository: SaleItemRepository
 }
 
-export interface CreateSaleItem {
-  serviceId?: string
-  productId?: string
-  appointmentId?: string
-  planId?: string
+export type CreateSaleItem = Partial<
+  Pick<
+    SaleItem,
+    | 'serviceId'
+    | 'productId'
+    | 'appointmentId'
+    | 'planId'
+    | 'barberId'
+    | 'couponId'
+    | 'price'
+    | 'customPrice'
+  >
+> & {
+  id?: string
   quantity: number
-  barberId?: string
-  couponCode?: string
-  price?: number
 }
 
 export interface CreateSaleRequest {
   userId: string
   method: PaymentMethod
-  items: CreateSaleItem[]
   clientId: string
-  couponCode?: string
-  paymentStatus?: PaymentStatus
-  appointmentId?: string
   observation?: string
 }
 
@@ -54,9 +56,23 @@ export interface UpdateSaleRequest {
   observation?: string
   method?: PaymentMethod
   paymentStatus?: PaymentStatus
-  items?: CreateSaleItem[]
+  addItemsIds?: CreateSaleItem[]
   removeItemIds?: string[]
-  couponCode?: string
+  couponId?: string
+  clientId?: string
+  removeCoupon?: boolean
+}
+
+export type SaleItemUpdateFields = Omit<Partial<CreateSaleItem>, 'id' | 'price'>
+
+export type UpdateSaleItemRequest = {
+  saleItemUpdateFields: SaleItemUpdateFields
+  id: string
+}
+export interface RemoveAddSaleItemRequest {
+  id: string
+  addItemsIds?: CreateSaleItem[]
+  removeItemIds?: string[]
 }
 
 export interface CreateSaleResponse {
@@ -69,26 +85,11 @@ export interface ConnectRelation {
 
 export type DataItem = {
   quantity: number
-  service?: { connect: { id?: string } }
-  product?: { connect: { id?: string } }
+  service?: { connect: { id: string } }
+  product?: { connect: { id: string } }
   appointment?: { connect: { id: string } }
   plan?: { connect: { id: string } }
-  categoryId?: string | null
-}
-
-export type TempItems = {
-  basePrice: number
-  price: number
-  discount: number
-  discountType: DiscountType | null
-  porcentagemBarbeiro?: number
-  ownDiscount: boolean
-  coupon?: { connect: { id: string | null } }
-  data: DataItem & {
-    barber?: { connect: { id: string } }
-    coupon?: { connect: { id: string } }
-    plan?: { connect: { id: string } }
-  }
+  categoryId: string | null
 }
 
 export type SaleItemTemp = Omit<
@@ -99,6 +100,7 @@ export type SaleItemTemp = Omit<
     barber?: { connect: { id: string } }
     appointment?: { connect: { id: string } }
     plan?: { connect: { id: string } }
+    discounts?: { create: Discount[] }
   },
   | 'id'
   | 'saleId'
@@ -128,7 +130,6 @@ export interface ListSalesResponse {
 export interface SetSaleStatusRequest {
   saleId: string
   userId: string
-  paymentStatus: PaymentStatus
 }
 
 export interface SetSaleStatusResponse {

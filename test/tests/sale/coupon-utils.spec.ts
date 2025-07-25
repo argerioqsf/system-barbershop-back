@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { applyCouponToSale, applyCouponToItems } from '../../../src/services/sale/utils/coupon'
+import {
+  applyCouponSaleItem,
+  applyCouponSale,
+} from '../../../src/services/sale/utils/coupon'
 import { FakeCouponRepository } from '../../helpers/fake-repositories'
 import { makeCoupon } from '../../helpers/default-values'
 
@@ -14,20 +17,18 @@ describe('coupon utilities', () => {
     const coupon = makeCoupon('c1', 'OFF10', 10, 'VALUE')
     repo.coupons.push(coupon)
 
-    const result = await applyCouponToSale(
-      { serviceId: 's1', quantity: 1, couponCode: coupon.code },
-      100,
-      100,
-      0,
-      null,
-      false,
-      repo,
-      'unit-1',
-    )
+    const result = await applyCouponSaleItem({
+      saleItem: { serviceId: 's1', quantity: 1, couponId: coupon.id },
+      basePrice: 100,
+      discount: 0,
+      discountType: null,
+      ownDiscount: false,
+      couponRepository: repo,
+      userUnitId: 'unit-1',
+    })
 
     expect(result.price).toBe(90)
     expect(result.discount).toBe(10)
-    expect(repo.coupons[0].quantity).toBe(4)
   })
 
   it('applies value coupon across items', async () => {
@@ -36,14 +37,43 @@ describe('coupon utilities', () => {
     repo.coupons.push(coupon)
 
     const items = [
-      { price: 100, ownDiscount: false },
-      { price: 50, ownDiscount: false },
+      { price: 100, ownDiscount: false, discounts: [] },
+      { price: 50, ownDiscount: false, discounts: [] },
     ]
 
-    await applyCouponToItems(items as any, coupon.code, repo, 'unit-1')
+    await applyCouponSale(items as any, coupon.id, repo, 'unit-1')
 
     expect(items[0].price).toBeCloseTo(100 - (100 / 150) * 20)
     expect(items[1].price).toBeCloseTo(50 - (50 / 150) * 20)
-    expect(repo.coupons[0].quantity).toBe(4)
+  })
+
+  it('applies custom price discount', async () => {
+    const { repo } = setup()
+    const result = await applyCouponSaleItem({
+      saleItem: { serviceId: 's1', quantity: 1, customPrice: 80 },
+      basePrice: 100,
+      discount: 0,
+      discountType: null,
+      ownDiscount: false,
+      couponRepository: repo,
+    })
+
+    expect(result.price).toBe(80)
+    expect(result.discount).toBe(20)
+    expect(result.discountType).toBe('VALUE')
+  })
+
+  it('throws when custom price greater than base price', async () => {
+    const { repo } = setup()
+    await expect(
+      applyCouponSaleItem({
+        saleItem: { serviceId: 's1', quantity: 1, customPrice: 120 },
+        basePrice: 100,
+        discount: 0,
+        discountType: null,
+        ownDiscount: false,
+        couponRepository: repo,
+      }),
+    ).rejects.toThrow('Item price greater than service price')
   })
 })

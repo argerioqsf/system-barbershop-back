@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { Prisma, SaleItem } from '@prisma/client'
 import {
+  DetailedSaleItemFindById,
   DetailedSaleItemFindMany,
   SaleItemRepository,
 } from '../sale-item-repository'
@@ -8,23 +9,42 @@ export class PrismaSaleItemRepository implements SaleItemRepository {
   async update(
     id: string,
     data: Prisma.SaleItemUpdateInput,
+    tx?: Prisma.TransactionClient,
   ): Promise<SaleItem> {
-    return prisma.saleItem.update({ where: { id }, data })
+    const prismaClient = tx || prisma
+    return prismaClient.saleItem.update({ where: { id }, data })
   }
 
-  async findById(id: string): Promise<DetailedSaleItemFindMany | null> {
+  async updateManyIndividually(
+    updates: { id: string; data: Prisma.SaleItemUpdateInput }[],
+    tx: Prisma.TransactionClient,
+  ): Promise<SaleItem[]> {
+    const prismaClient = tx
+
+    const updatePromises = updates.map(({ id, data }) =>
+      prismaClient.saleItem.update({
+        where: { id },
+        data,
+      }),
+    )
+
+    return Promise.all(updatePromises)
+  }
+
+  async findById(id: string): Promise<DetailedSaleItemFindById | null> {
     return prisma.saleItem.findUnique({
       where: { id },
       include: {
         sale: true,
         transactions: true,
+        discounts: true,
         appointment: {
           include: {
             services: { include: { service: true, transactions: true } },
           },
         },
       },
-    }) as Promise<DetailedSaleItemFindMany | null>
+    })
   }
 
   async findMany(
