@@ -116,9 +116,10 @@ export async function applyCouponSale(
   userUnitId?: string,
   considerOwnDiscount = true,
 ) {
-  const affectedTotal = saleItems
-    .filter((saleItem) => saleItem.discounts.length === 0)
-    .reduce((acc, saleItem) => acc + saleItem.price, 0)
+  const affectedTotal = saleItems.reduce(
+    (acc, saleItem) => acc + saleItem.price,
+    0,
+  )
 
   const coupon = await couponRepository.findById(couponId)
   if (!coupon) throw new CouponNotFoundError()
@@ -137,11 +138,12 @@ export async function applyCouponSale(
       reduction = (saleItem.price / affectedTotal) * coupon.discount
     }
     saleItem.price = Math.max(saleItem.price - reduction, 0)
+    const amount =
+      coupon.discountType === 'PERCENTAGE' ? coupon.discount : reduction
     saleItem.discounts = [
       ...saleItem.discounts,
       {
-        amount:
-          coupon.discountType === 'PERCENTAGE' ? coupon.discount : reduction,
+        amount,
         type: coupon.discountType,
         origin: DiscountOrigin.COUPON_SALE,
         order: saleItem.discounts.length + 1,

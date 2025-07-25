@@ -8,6 +8,7 @@ import { UpdateSaleController } from './update-sale-controller'
 import { RemoveAddSaleItemController } from './remove-add-sale-item-controler'
 import { UpdateCouponSaleController } from './update-coupon-sale-controller'
 import { UpdateClientSaleController } from './update-client-sale-controller'
+import { UpdateSaleItemController } from './update-sale-item-controler'
 
 export async function saleRoute(app: FastifyInstance) {
   app.addHook('onRequest', verifyJWT)
@@ -20,4 +21,5 @@ export async function saleRoute(app: FastifyInstance) {
   app.patch('/sales/:id/coupon', UpdateCouponSaleController)
   app.patch('/sales/:id/pay', PaySaleController)
   app.patch('/sales/:id/client', UpdateClientSaleController)
+  app.patch('/sales/saleItem/:id', UpdateSaleItemController)
 }

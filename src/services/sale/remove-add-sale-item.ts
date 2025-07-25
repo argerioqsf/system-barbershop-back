@@ -154,6 +154,7 @@ export class RemoveAddSaleItemService {
     saleCurrent: DetailedSale,
     currentSaleItemsModified: ReturnBuildItemData[],
   ): Promise<ReturnBuildItemData[]> {
+    // TODO: unificar essa logica de rebuild geral de saleItems
     let currentSaleItemsUpdated: ReturnBuildItemData[] =
       currentSaleItemsModified
 
@@ -249,7 +250,6 @@ export class RemoveAddSaleItemService {
     saleCurrent: DetailedSale,
     productsToRestore: ProductsToRestore,
     unitId: string,
-    generalSaleItems: ReturnBuildItemData[],
   ) {
     const { currentItemsBuildRemovedItems, productsToRestoreUp } =
       await this.removeItemsFromSaleAndRebuild(
@@ -258,10 +258,8 @@ export class RemoveAddSaleItemService {
         productsToRestore,
         unitId,
       )
-
-    generalSaleItems = []
-    generalSaleItems.push(...currentItemsBuildRemovedItems)
     productsToRestore.push(...productsToRestoreUp)
+    return { currentItemsBuildRemovedItems }
   }
 
   async execute({
@@ -274,20 +272,21 @@ export class RemoveAddSaleItemService {
     const productsToUpdate: ProductsToUpdate = []
     const productsToRestore: ProductsToRestore = []
 
-    const { saleCurrent, user, generalSaleItems } = await this.initVerify(
+    let { saleCurrent, user, generalSaleItems } = await this.initVerify(
       id,
       removeItemIds,
       addItemsIds,
     )
 
     if (removeItemIds) {
-      this.handleRemoveSaleItems(
-        removeItemIds,
-        saleCurrent,
-        productsToRestore,
-        user.unitId,
-        generalSaleItems,
-      )
+      const { currentItemsBuildRemovedItems } =
+        await this.handleRemoveSaleItems(
+          removeItemIds,
+          saleCurrent,
+          productsToRestore,
+          user.unitId,
+        )
+      generalSaleItems = currentItemsBuildRemovedItems
     }
 
     if (addItemsIds) {

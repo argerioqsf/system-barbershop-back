@@ -1,14 +1,35 @@
-import { Prisma, SaleItem, PaymentStatus } from '@prisma/client'
+import {
+  Prisma,
+  SaleItem,
+  PaymentStatus,
+  Discount,
+  DiscountOrigin,
+  DiscountType,
+} from '@prisma/client'
 import { DetailedSaleItem } from '../sale-repository'
+import crypto from 'node:crypto'
 import {
   DetailedSaleItemFindMany,
   DetailedAppointmentService,
   SaleItemRepository,
+  DetailedSaleItemFindById,
 } from '../sale-item-repository'
 import { InMemorySaleRepository } from './in-memory-sale-repository'
 
 export class InMemorySaleItemRepository implements SaleItemRepository {
   constructor(private saleRepository: InMemorySaleRepository) {}
+  async updateManyIndividually(
+    updates: { id: string; data: Prisma.SaleItemUpdateInput }[],
+  ): Promise<SaleItem[]> {
+    const updatedItems: SaleItem[] = []
+
+    for (const { id, data } of updates) {
+      const updatedItem = await this.update(id, data)
+      updatedItems.push(updatedItem)
+    }
+
+    return updatedItems
+  }
 
   async update(
     id: string,
@@ -17,6 +38,23 @@ export class InMemorySaleItemRepository implements SaleItemRepository {
     for (const sale of this.saleRepository.sales) {
       const item = sale.items.find((i) => i.id === id)
       if (item) {
+        if (data.price !== undefined) {
+          item.price = data.price as number
+        }
+        if (data.discounts) {
+          item.discounts = []
+          const create = (data.discounts as { create?: Discount[] }).create
+          if (create) {
+            item.discounts = create.map((d) => ({
+              id: crypto.randomUUID(),
+              saleItemId: id,
+              amount: d.amount,
+              type: d.type as DiscountType,
+              origin: d.origin as DiscountOrigin,
+              order: d.order,
+            }))
+          }
+        }
         if (data.porcentagemBarbeiro !== undefined) {
           item.porcentagemBarbeiro = data.porcentagemBarbeiro as number | null
         }
@@ -30,11 +68,11 @@ export class InMemorySaleItemRepository implements SaleItemRepository {
     throw new Error('Sale item not found')
   }
 
-  async findById(id: string): Promise<DetailedSaleItemFindMany | null> {
+  async findById(id: string): Promise<DetailedSaleItemFindById | null> {
     for (const sale of this.saleRepository.sales) {
       const item = sale.items.find((i) => i.id === id)
       if (item) {
-        const result: DetailedSaleItemFindMany = {
+        const result: DetailedSaleItemFindById = {
           ...(item as DetailedSaleItem),
           sale,
           transactions: [],
