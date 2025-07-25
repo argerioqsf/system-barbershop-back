@@ -2,7 +2,7 @@ import { PlanProfileRepository } from '@/repositories/plan-profile-repository'
 import { DebtRepository } from '@/repositories/debt-repository'
 import { PlanRepository } from '@/repositories/plan-repository'
 import { PaymentStatus, PlanProfileStatus } from '@prisma/client'
-import { differenceInCalendarDays, startOfDay } from 'date-fns'
+import { differenceInCalendarDays } from 'date-fns'
 
 export class GeneratePlanDebtsService {
   constructor(
@@ -27,14 +27,13 @@ export class GeneratePlanDebtsService {
       const plan = await this.planRepo.findByIdWithRecurrence(profile.planId)
       if (!plan) continue
       const nextDate = new Date(lastDebt.paymentDate)
-      nextDate.setMonth(nextDate.getMonth() + plan.typeRecurrence.period)
-      nextDate.setDate(profile.dueDateDebt)
-      nextDate.setHours(0, 0, 0, 0)
+      nextDate.setUTCMonth(nextDate.getUTCMonth() + plan.typeRecurrence.period)
+      nextDate.setUTCDate(profile.dueDateDebt)
+      nextDate.setUTCHours(0, 0, 0, 0)
 
-      const diff = differenceInCalendarDays(
-        startOfDay(nextDate),
-        startOfDay(date),
-      )
+      const utc = (d: Date) =>
+        new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()))
+      const diff = differenceInCalendarDays(utc(nextDate), utc(date))
       const exists = profile.debts.some(
         (d) => d.paymentDate.getTime() === nextDate.getTime(),
       )
