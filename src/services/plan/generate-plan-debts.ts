@@ -31,7 +31,10 @@ export class GeneratePlanDebtsService {
       nextDate.setDate(profile.dueDateDebt)
       nextDate.setHours(0, 0, 0, 0)
 
-      const diff = differenceInCalendarDays(startOfDay(nextDate), startOfDay(date))
+      const diff = differenceInCalendarDays(
+        startOfDay(nextDate),
+        startOfDay(date),
+      )
       const exists = profile.debts.some(
         (d) => d.paymentDate.getTime() === nextDate.getTime(),
       )
