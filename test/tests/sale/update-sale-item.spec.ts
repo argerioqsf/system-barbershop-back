@@ -189,7 +189,7 @@ describe("Update sale item service", () => {
   });
 
   it("restores stock when changing from product to service", async () => {
-    const prod = makeProduct("p2", 40, 5);
+    const prod = makeProduct("p2", 40, 4);
     const svc2 = makeService("svc2", 80);
     saleRepo.sales[0].items[0].serviceId = null;
     saleRepo.sales[0].items[0].service = null as any;
@@ -205,7 +205,7 @@ describe("Update sale item service", () => {
       saleItemUpdateFields: { serviceId: svc2.id, productId: null },
     });
 
-    const item = saleRepo.sales[0].items[0];
+    expect(productRepo.products[0].quantity).toBe(5);
     expect(result.sale?.total).toBe(80);
   });
 
