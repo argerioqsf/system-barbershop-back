@@ -99,7 +99,7 @@ describe("Remove add sale item service", () => {
   });
 
   it("removes product item and restores stock", async () => {
-    const product = makeProduct("p1", 40, 3);
+    const product = makeProduct("p1", 40, 4);
     productRepo.products.push(product);
     saleRepo.sales[0].items[0].serviceId = null;
     saleRepo.sales[0].items[0].service = null;
