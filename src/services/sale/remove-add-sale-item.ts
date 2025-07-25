@@ -14,8 +14,6 @@ import { PlanProfileRepository } from '@/repositories/plan-profile-repository'
 import { CreateSaleItem, RemoveAddSaleItemRequest } from './types'
 import { PaymentStatus, Prisma } from '@prisma/client'
 import { CannotEditPaidSaleError } from '../@errors/sale/cannot-edit-paid-sale-error'
-import { applyCouponSale } from './utils/coupon'
-import { applyPlanDiscounts } from './utils/plan'
 import {
   buildItemData,
   ReturnBuildItemData,
@@ -25,6 +23,7 @@ import {
   mapToSaleItems,
   calculateTotal,
   updateProductsStock,
+  rebuildSaleItems,
 } from './utils/sale'
 import { prisma } from '@/lib/prisma'
 
@@ -152,28 +151,13 @@ export class RemoveAddSaleItemService {
     saleCurrent: DetailedSale,
     currentSaleItemsModified: ReturnBuildItemData[],
   ): Promise<ReturnBuildItemData[]> {
-    // TODO: unificar essa logica de rebuild geral de saleItems
-    let currentSaleItemsUpdated: ReturnBuildItemData[] =
-      currentSaleItemsModified
-
-    if (saleCurrent.coupon?.code) {
-      const currentCouponId = saleCurrent.coupon.id
-      const { saleItems } = await applyCouponSale(
-        currentSaleItemsUpdated,
-        currentCouponId,
-        this.couponRepository,
-      )
-      currentSaleItemsUpdated = saleItems
-    }
-
-    const saleItemsApplyPlanDiscounts = await applyPlanDiscounts(
-      currentSaleItemsUpdated,
-      saleCurrent.clientId,
-      this.planProfileRepository,
-      this.planRepository,
-    )
-
-    return saleItemsApplyPlanDiscounts
+    return await rebuildSaleItems(currentSaleItemsModified, {
+      couponId: saleCurrent.coupon?.id,
+      clientId: saleCurrent.clientId,
+      planProfileRepository: this.planProfileRepository,
+      planRepository: this.planRepository,
+      couponRepository: this.couponRepository,
+    })
   }
 
   private async removingRelationshipsFromRemovedSaleItems(

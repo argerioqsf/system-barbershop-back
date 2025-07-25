@@ -1,8 +1,4 @@
-import {
-  SaleRepository,
-  DetailedSale,
-  DetailedSaleItem,
-} from '@/repositories/sale-repository'
+import { SaleRepository, DetailedSale } from '@/repositories/sale-repository'
 import { ServiceRepository } from '@/repositories/service-repository'
 import { ProductRepository } from '@/repositories/product-repository'
 import { AppointmentRepository } from '@/repositories/appointment-repository'
@@ -27,10 +23,13 @@ import {
   Prisma,
   SaleItem,
 } from '@prisma/client'
-import { applyCouponSale } from './utils/coupon'
 import { applyPlanDiscounts } from './utils/plan'
 import { buildItemData, ReturnBuildItemData } from './utils/item'
-import { mapToSaleItemsForUpdate, updateProductsStock } from './utils/sale'
+import {
+  mapToSaleItemsForUpdate,
+  updateProductsStock,
+  rebuildSaleItems,
+} from './utils/sale'
 import { prisma } from '@/lib/prisma'
 import { CannotEditPaidSaleItemError } from '../@errors/sale/cannot-edit-paid-sale-item-error'
 import { SaleNotFoundError } from '../@errors/sale/sale-not-found-error'
@@ -201,6 +200,47 @@ export class UpdateSaleItemService {
     }
   }
 
+  private async rebuildSaleIfNeeded(
+    saleItemCurrent: NonNullable<DetailedSaleItemFindById>,
+    saleItemUpdated: CreateSaleItem,
+    itemWithPlan: ReturnBuildItemData,
+  ): Promise<{ items: ReturnBuildItemData[]; total?: number }> {
+    let items = [itemWithPlan]
+    let total: number | undefined
+
+    if (itemWithPlan.price !== saleItemCurrent.price) {
+      const currentSale = await this.saleRepository.findById(
+        saleItemCurrent.saleId,
+      )
+      if (!currentSale) throw new SaleNotFoundError()
+
+      if (this.haveADiscountCouponSaleValue(saleItemCurrent)) {
+        const saleItemsWithUpdate = currentSale.items.map((saleItem) =>
+          saleItem.id === saleItemCurrent.id
+            ? { ...saleItem, ...saleItemUpdated }
+            : saleItem,
+        )
+
+        const { saleItemsBuild } = await this.getItemsBuild(
+          saleItemsWithUpdate,
+          currentSale.unitId,
+        )
+
+        items = await rebuildSaleItems(saleItemsBuild, {
+          couponId: currentSale.coupon?.id,
+          clientId: currentSale.clientId,
+          planProfileRepository: this.planProfileRepository,
+          planRepository: this.planRepository,
+          couponRepository: this.couponRepository,
+        })
+      }
+
+      total = currentSale.total + (itemWithPlan.price - saleItemCurrent.price)
+    }
+
+    return { items, total }
+  }
+
   async execute({
     id,
     saleItemUpdateFields,
@@ -209,7 +249,6 @@ export class UpdateSaleItemService {
     let salesItemsUpdate: SaleItem[] | undefined
     let productToUpdate: ProductToUpdate | undefined
     let productToRestore: ProductToRestore | undefined
-    let saleTotalUpdated: number | undefined
     let saleItemsToUpdate: ReturnBuildItemData[] = []
     const { saleItemCurrent } = await this.initVerify(id)
     const saleItemUpdated = this.mountSaleItemUpdate(
@@ -246,57 +285,13 @@ export class UpdateSaleItemService {
       }
     }
 
-    if (saleItemsApplyPlanDiscounts[0].price !== saleItemCurrent.price) {
-      const currentSale = await this.saleRepository.findById(
-        saleItemCurrent.saleId,
-      )
-      if (!currentSale) throw new SaleNotFoundError()
-      const saleHaveCouponTypeValue =
-        this.haveADiscountCouponSaleValue(saleItemCurrent)
-
-      if (saleHaveCouponTypeValue) {
-        const saleItemsWithSaleItemUpdated = currentSale.items.map(
-          (saleItem): DetailedSaleItem => {
-            if (saleItem.id === saleItemCurrent.id) {
-              return {
-                ...saleItem,
-                ...saleItemUpdated,
-              }
-            } else {
-              return saleItem
-            }
-          },
-        )
-
-        let { saleItemsBuild } = await this.getItemsBuild(
-          saleItemsWithSaleItemUpdated,
-          currentSale.unitId,
-        )
-
-        // TODO: unificar essa logica de rebuild geral de saleItems
-        if (currentSale.coupon?.code) {
-          const currentCouponId = currentSale.coupon.id
-          const { saleItems } = await applyCouponSale(
-            saleItemsBuild,
-            currentCouponId,
-            this.couponRepository,
-          )
-          saleItemsBuild = saleItems
-        }
-
-        const saleItemsApplyPlanDiscounts = await applyPlanDiscounts(
-          saleItemsBuild,
-          currentSale.clientId,
-          this.planProfileRepository,
-          this.planRepository,
-        )
-        saleItemsToUpdate = saleItemsApplyPlanDiscounts
-      }
-
-      saleTotalUpdated =
-        currentSale.total +
-        (saleItemsApplyPlanDiscounts[0].price - saleItemCurrent.price)
-    }
+    const rebuild = await this.rebuildSaleIfNeeded(
+      saleItemCurrent,
+      saleItemUpdated,
+      saleItemsApplyPlanDiscounts[0],
+    )
+    saleItemsToUpdate = rebuild.items
+    const saleTotalUpdated = rebuild.total
 
     const saleItemUpdatedBuildedMapped = mapToSaleItemsForUpdate(
       saleItemsToUpdate,

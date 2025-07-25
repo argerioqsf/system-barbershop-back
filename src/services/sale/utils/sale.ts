@@ -1,8 +1,12 @@
 import { CouponRepository } from '@/repositories/coupon-repository'
 import { ProductRepository } from '@/repositories/product-repository'
 import { DetailedSaleItem } from '@/repositories/sale-repository'
+import { PlanProfileRepository } from '@/repositories/plan-profile-repository'
+import { PlanRepository } from '@/repositories/plan-repository'
 import { Prisma } from '@prisma/client'
 import { ReturnBuildItemData } from './item'
+import { applyCouponSale } from './coupon'
+import { applyPlanDiscounts } from './plan'
 
 export function mapToSaleItem(
   saleItem: ReturnBuildItemData,
@@ -149,4 +153,43 @@ export async function updateCouponsStock(
       tx,
     )
   }
+}
+
+export interface RebuildSaleItemsOptions {
+  couponId?: string
+  clientId: string
+  planProfileRepository: PlanProfileRepository
+  planRepository: PlanRepository
+  couponRepository: CouponRepository
+}
+
+export async function rebuildSaleItems(
+  saleItems: ReturnBuildItemData[],
+  {
+    couponId,
+    clientId,
+    planProfileRepository,
+    planRepository,
+    couponRepository,
+  }: RebuildSaleItemsOptions,
+): Promise<ReturnBuildItemData[]> {
+  let updatedItems = saleItems
+
+  if (couponId) {
+    const { saleItems } = await applyCouponSale(
+      updatedItems,
+      couponId,
+      couponRepository,
+    )
+    updatedItems = saleItems
+  }
+
+  updatedItems = await applyPlanDiscounts(
+    updatedItems,
+    clientId,
+    planProfileRepository,
+    planRepository,
+  )
+
+  return updatedItems
 }
