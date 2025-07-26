@@ -1,5 +1,5 @@
 import { SaleRepository, DetailedSale } from '@/repositories/sale-repository'
-import { UserFindById } from '@/repositories/barber-users-repository'
+import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import {
   ProfilesRepository,
   ResponseFindByUserId,
@@ -7,14 +7,22 @@ import {
 import { SaleItemRepository } from '@/repositories/sale-item-repository'
 import { PlanRepository } from '@/repositories/plan-repository'
 import { PlanProfileRepository } from '@/repositories/plan-profile-repository'
-import { UpdateSaleRequest } from './types'
-import { DiscountOrigin, PaymentStatus, Prisma } from '@prisma/client'
+import { CreateSaleItem, UpdateSaleRequest } from './types'
+import { PaymentStatus, Prisma } from '@prisma/client'
 import { CannotEditPaidSaleError } from '../@errors/sale/cannot-edit-paid-sale-error'
 import { applyPlanDiscounts } from './utils/plan'
-import { ReturnBuildItemData, updateDiscountsOnSaleItem } from './utils/item'
+import {
+  buildItemData,
+  ReturnBuildItemData,
+  updateDiscountsOnSaleItem,
+} from './utils/item'
 import { calculateTotal } from './utils/sale'
 import { ProfileNotFoundError } from '../@errors/profile/profile-not-found-error'
 import { prisma } from '@/lib/prisma'
+import { ServiceRepository } from '@/repositories/service-repository'
+import { ProductRepository } from '@/repositories/product-repository'
+import { AppointmentRepository } from '@/repositories/appointment-repository'
+import { CouponRepository } from '@/repositories/coupon-repository'
 
 interface UpdateSaleResponse {
   sale?: DetailedSale
@@ -27,7 +35,37 @@ export class UpdateClientSaleService {
     private saleItemRepository: SaleItemRepository,
     private planRepository: PlanRepository,
     private planProfileRepository: PlanProfileRepository,
+    private serviceRepository: ServiceRepository,
+    private productRepository: ProductRepository,
+    private appointmentRepository: AppointmentRepository,
+    private couponRepository: CouponRepository,
+    private barberUserRepository: BarberUsersRepository,
   ) {}
+
+  private async getItemsBuild(
+    saleItems: CreateSaleItem[],
+    unitId: string,
+  ): Promise<ReturnBuildItemData[]> {
+    const saleItemsBuild: ReturnBuildItemData[] = []
+    const newAppointmentsToLink: string[] = []
+    for (const saleItem of saleItems) {
+      const temp = await buildItemData({
+        saleItem,
+        serviceRepository: this.serviceRepository,
+        productRepository: this.productRepository,
+        appointmentRepository: this.appointmentRepository,
+        couponRepository: this.couponRepository,
+        userUnitId: unitId,
+        productsToUpdate: [],
+        barberUserRepository: this.barberUserRepository,
+        planRepository: this.planRepository,
+      })
+      saleItemsBuild.push(temp)
+      if (saleItem.appointmentId)
+        newAppointmentsToLink.push(saleItem.appointmentId)
+    }
+    return saleItemsBuild
+  }
 
   private async initVerify(id: string): Promise<{
     saleCurrent: DetailedSale
@@ -41,50 +79,6 @@ export class UpdateClientSaleService {
     }
 
     return { saleCurrent }
-  }
-
-  private mountSaleItemsBuild(
-    saleCurrent: DetailedSale,
-  ): ReturnBuildItemData[] {
-    return saleCurrent.items.map((saleItem): ReturnBuildItemData => {
-      const {
-        appointment,
-        barber,
-        commissionPaid,
-        coupon,
-        discounts,
-        plan,
-        price,
-        product,
-        quantity,
-        service,
-        customPrice,
-        id,
-      } = saleItem
-      return {
-        appointment,
-        barber: barber as UserFindById,
-        commissionPaid,
-        coupon,
-        discounts,
-        plan,
-        price,
-        product,
-        quantity,
-        service,
-        customPrice,
-        id,
-      }
-    })
-  }
-
-  private removesDiscountsFromOldPlans(saleItems: ReturnBuildItemData[]) {
-    return saleItems.map((saleItem) => {
-      saleItem.discounts = saleItem.discounts.filter(
-        (discount) => discount.origin !== DiscountOrigin.PLAN,
-      )
-      return saleItem
-    })
   }
 
   private async updateSaleItems(
@@ -108,15 +102,15 @@ export class UpdateClientSaleService {
     if (!hasClientChange) throw new Error('No changes to the client')
 
     let saleUpdate: DetailedSale | undefined
-    let newClientProfile: ResponseFindByUserId | null =
+    const newClientProfile: ResponseFindByUserId | null =
       await this.profileRepository.findByUserId(clientId)
-    const saleItemsBuildOldPlans = this.mountSaleItemsBuild(saleCurrent)
-    const saleItemsBuild = this.removesDiscountsFromOldPlans(
-      saleItemsBuildOldPlans,
+    if (!newClientProfile) throw new ProfileNotFoundError()
+
+    const saleItemsBuild = await this.getItemsBuild(
+      saleCurrent.items,
+      saleCurrent.unitId,
     )
     const currentSaleItems: ReturnBuildItemData[] = saleItemsBuild
-    newClientProfile = await this.profileRepository.findByUserId(clientId)
-    if (!newClientProfile) throw new ProfileNotFoundError()
 
     await applyPlanDiscounts(
       currentSaleItems,

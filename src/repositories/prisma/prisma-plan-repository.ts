@@ -60,8 +60,19 @@ export class PrismaPlanRepository implements PlanRepository {
     return prisma.plan.update({ where: { id }, data })
   }
 
-  findMany(where: Prisma.PlanWhereInput = {}) {
-    return prisma.plan.findMany({ where })
+  findMany(where: Prisma.PlanWhereInput = {}): Promise<PlanWithBenefits[]> {
+    return prisma.plan.findMany({
+      where,
+      include: {
+        benefits: {
+          include: {
+            benefit: {
+              include: { categories: true, services: true, products: true },
+            },
+          },
+        },
+      },
+    })
   }
 
   async delete(id: string): Promise<void> {

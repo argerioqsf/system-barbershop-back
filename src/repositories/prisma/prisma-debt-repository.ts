@@ -7,8 +7,13 @@ export class PrismaDebtRepository implements DebtRepository {
     return prisma.debt.create({ data })
   }
 
-  update(id: string, data: Prisma.DebtUncheckedUpdateInput): Promise<Debt> {
-    return prisma.debt.update({ where: { id }, data })
+  update(
+    id: string,
+    data: Prisma.DebtUncheckedUpdateInput,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Debt> {
+    const prismaClient = tx || prisma
+    return prismaClient.debt.update({ where: { id }, data })
   }
 
   findById(id: string): Promise<Debt | null> {

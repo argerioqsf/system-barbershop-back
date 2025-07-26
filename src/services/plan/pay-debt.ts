@@ -2,8 +2,12 @@ import { DebtRepository } from '@/repositories/debt-repository'
 import { PlanProfileRepository } from '@/repositories/plan-profile-repository'
 import { SaleItemRepository } from '@/repositories/sale-item-repository'
 import { UnitRepository } from '@/repositories/unit-repository'
-import { IncrementBalanceUnitService } from '../unit/increment-balance'
+import {
+  IncrementBalanceUnitResponse,
+  IncrementBalanceUnitService,
+} from '../unit/increment-balance'
 import { PaymentStatus, Transaction } from '@prisma/client'
+import { prisma } from '@/lib/prisma'
 
 interface PayDebtRequest {
   debtId: string
@@ -11,7 +15,7 @@ interface PayDebtRequest {
 }
 
 interface PayDebtResponse {
-  transaction: Transaction
+  transaction?: Transaction
 }
 
 export class PayDebtService {
@@ -37,21 +41,34 @@ export class PayDebtService {
 
     const incUnit = new IncrementBalanceUnitService(this.unitRepo)
     const amountToCredit = debt.value
-    const { transaction } = await incUnit.execute(
-      saleItem.sale.unitId,
-      userId,
-      amountToCredit,
-      undefined,
-      false,
-      undefined,
-      'Pay plan debt',
-    )
+    let transactionIncrementUnit:
+      | IncrementBalanceUnitResponse['transaction']
+      | undefined
+    await prisma.$transaction(async (tx) => {
+      const { transaction } = await incUnit.execute(
+        saleItem.sale.unitId,
+        userId,
+        amountToCredit,
+        undefined,
+        false,
+        undefined,
+        'Pay plan debt',
+        tx,
+      )
+      transactionIncrementUnit = transaction
+      // TODO: verificar planProfile relacionado ao debito, depois que o debito for pago
+      //  e se ele estiver com o status DEFAULTED atualizar para PAID
 
-    await this.debtRepo.update(debt.id, {
-      status: PaymentStatus.PAID,
-      paymentDate: new Date(),
+      await this.debtRepo.update(
+        debt.id,
+        {
+          status: PaymentStatus.PAID,
+          paymentDate: new Date(),
+        },
+        tx,
+      )
     })
 
-    return { transaction }
+    return { transaction: transactionIncrementUnit }
   }
 }

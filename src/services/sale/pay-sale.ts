@@ -224,7 +224,12 @@ export class PaySaleService {
     updatedSale: DetailedSale,
     tx: Prisma.TransactionClient,
   ) {
-    const productsToUpdate = updatedSale.items.filter((item) => item.product)
+    const productsToUpdate = updatedSale.items
+      .filter((item) => item.product)
+      .map((saleItem) => ({
+        id: saleItem.productId as string,
+        quantity: saleItem.quantity,
+      }))
     await updateProductsStock(
       this.productRepository,
       productsToUpdate,
