@@ -1,5 +1,6 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { UpdatePlanService } from '../../../src/services/plan/update-plan'
+import { prisma } from '../../../src/lib/prisma'
 import { FakePlanRepository, FakePlanProfileRepository, FakeProfilesRepository } from '../../helpers/fake-repositories'
 import { RecalculateUserSalesService } from '../../../src/services/sale/recalculate-user-sales'
 import {
@@ -48,6 +49,9 @@ describe('Update plan service', () => {
       productRepo,
       appointmentRepo,
       barberRepo,
+    )
+    vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) =>
+      fn({} as any),
     )
     service = new UpdatePlanService(repo, planProfileRepo, profilesRepo, recalc)
   })

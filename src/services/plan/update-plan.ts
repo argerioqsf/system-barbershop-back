@@ -2,6 +2,7 @@ import { PlanRepository } from '@/repositories/plan-repository'
 import { PlanProfileRepository } from '@/repositories/plan-profile-repository'
 import { ProfilesRepository } from '@/repositories/profiles-repository'
 import { Plan, Prisma } from '@prisma/client'
+import { prisma } from '@/lib/prisma'
 import { RecalculateUserSalesService } from '../sale/recalculate-user-sales'
 import { findUserIdsLinkedToPlans } from './utils/find-user-ids-linked-to-plans'
 
@@ -28,25 +29,33 @@ export class UpdatePlanService {
     data,
     benefitIds,
   }: UpdatePlanRequest): Promise<UpdatePlanResponse> {
-    const plan = await this.repository.update(id, {
-      ...data,
-      ...(benefitIds && {
-        benefits: {
-          deleteMany: {},
-          create: benefitIds.map((bid) => ({
-            benefit: { connect: { id: bid } },
-          })),
+    let updated!: Plan
+    await prisma.$transaction(async (tx) => {
+      updated = await this.repository.update(
+        id,
+        {
+          ...data,
+          ...(benefitIds && {
+            benefits: {
+              deleteMany: {},
+              create: benefitIds.map((bid) => ({
+                benefit: { connect: { id: bid } },
+              })),
+            },
+          }),
         },
-      }),
+        tx,
+      )
+
+      const userIds = await findUserIdsLinkedToPlans(
+        [id],
+        this.planProfileRepository,
+        this.profilesRepository,
+      )
+
+      await this.recalcService.execute({ userIds }, tx)
     })
-    const userIds = await findUserIdsLinkedToPlans(
-      [id],
-      this.planProfileRepository,
-      this.profilesRepository,
-    )
 
-    await this.recalcService.execute({ userIds })
-
-    return { plan }
+    return { plan: updated }
   }
 }

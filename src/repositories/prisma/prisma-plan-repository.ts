@@ -56,8 +56,13 @@ export class PrismaPlanRepository implements PlanRepository {
     return prisma.plan.create({ data })
   }
 
-  update(id: string, data: Prisma.PlanUpdateInput) {
-    return prisma.plan.update({ where: { id }, data })
+  update(
+    id: string,
+    data: Prisma.PlanUpdateInput,
+    tx?: Prisma.TransactionClient,
+  ) {
+    const prismaClient = tx || prisma
+    return prismaClient.plan.update({ where: { id }, data })
   }
 
   findMany(where: Prisma.PlanWhereInput = {}): Promise<PlanWithBenefits[]> {

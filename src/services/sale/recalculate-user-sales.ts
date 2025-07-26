@@ -8,6 +8,7 @@ import { ProductRepository } from '@/repositories/product-repository'
 import { AppointmentRepository } from '@/repositories/appointment-repository'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { prisma } from '@/lib/prisma'
+import { Prisma } from '@prisma/client'
 import { rebuildSaleItems, calculateTotal } from './utils/sale'
 import {
   updateDiscountsOnSaleItem,
@@ -32,7 +33,10 @@ export class RecalculateUserSalesService {
     private barberUserRepository: BarberUsersRepository,
   ) {}
 
-  async execute({ userIds }: RecalculateUserSalesRequest): Promise<void> {
+  async execute(
+    { userIds }: RecalculateUserSalesRequest,
+    tx?: Prisma.TransactionClient,
+  ): Promise<void> {
     if (userIds.length === 0) return
     const sales = await this.saleRepository.findMany({
       clientId: { in: userIds },
@@ -81,21 +85,29 @@ export class RecalculateUserSalesService {
 
       const total = calculateTotal(rebuilt)
 
-      await prisma.$transaction(async (tx) => {
+      const run = async (trx: Prisma.TransactionClient) => {
         for (const item of rebuilt) {
           if (item.id) {
             await updateDiscountsOnSaleItem(
               item,
               item.id,
               this.saleItemRepository,
-              tx,
+              trx,
             )
           }
         }
         if (total !== sale.total) {
-          await this.saleRepository.update(sale.id, { total }, tx)
+          await this.saleRepository.update(sale.id, { total }, trx)
         }
-      })
+      }
+
+      if (tx) {
+        await run(tx)
+      } else {
+        await prisma.$transaction(async (trx) => {
+          await run(trx)
+        })
+      }
     }
   }
 }
