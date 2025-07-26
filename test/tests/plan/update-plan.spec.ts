@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { UpdatePlanService } from '../../../src/services/plan/update-plan'
-import { FakePlanRepository } from '../../helpers/fake-repositories'
+import { FakePlanRepository, FakePlanProfileRepository, FakeProfilesRepository } from '../../helpers/fake-repositories'
+import { RecalculateUserSalesService } from '../../../src/services/sale/recalculate-user-sales'
+import { FakeSaleRepository, FakeSaleItemRepository, FakeCouponRepository } from '../../helpers/fake-repositories'
 
 const plan = {
   id: 'p1',
@@ -12,11 +14,26 @@ const plan = {
 
 describe('Update plan service', () => {
   let repo: FakePlanRepository
+  let planProfileRepo: FakePlanProfileRepository
+  let profilesRepo: FakeProfilesRepository
+  let recalc: RecalculateUserSalesService
   let service: UpdatePlanService
 
   beforeEach(() => {
     repo = new FakePlanRepository([plan as any])
-    service = new UpdatePlanService(repo)
+    planProfileRepo = new FakePlanProfileRepository()
+    profilesRepo = new FakeProfilesRepository()
+    const saleRepo = new FakeSaleRepository()
+    const saleItemRepo = new FakeSaleItemRepository(saleRepo)
+    const couponRepo = new FakeCouponRepository()
+    recalc = new RecalculateUserSalesService(
+      saleRepo,
+      saleItemRepo,
+      repo,
+      planProfileRepo,
+      couponRepo,
+    )
+    service = new UpdatePlanService(repo, planProfileRepo, profilesRepo, recalc)
   })
 
   it('updates benefits list', async () => {

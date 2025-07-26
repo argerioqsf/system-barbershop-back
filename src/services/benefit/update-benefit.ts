@@ -1,5 +1,12 @@
 import { BenefitRepository } from '@/repositories/benefit-repository'
+import { PlanRepository } from '@/repositories/plan-repository'
+import {
+  PlanProfileRepository,
+  PlanProfileWithDebts,
+} from '@/repositories/plan-profile-repository'
+import { ProfilesRepository } from '@/repositories/profiles-repository'
 import { Benefit, Prisma } from '@prisma/client'
+import { RecalculateUserSalesService } from '../sale/recalculate-user-sales'
 
 interface UpdateBenefitRequest {
   id: string
@@ -15,7 +22,13 @@ interface UpdateBenefitResponse {
 }
 
 export class UpdateBenefitService {
-  constructor(private repository: BenefitRepository) {}
+  constructor(
+    private repository: BenefitRepository,
+    private planRepository: PlanRepository,
+    private planProfileRepository: PlanProfileRepository,
+    private profilesRepository: ProfilesRepository,
+    private recalcService: RecalculateUserSalesService,
+  ) {}
 
   async execute({
     id,
@@ -58,6 +71,26 @@ export class UpdateBenefitService {
         },
       }),
     })
+    const plansList = await this.planRepository.findMany({
+      benefits: { some: { benefitId: id } },
+    })
+    const planIds = plansList.map((p) => p.id)
+    let planProfiles: PlanProfileWithDebts[] = []
+    for (const pid of planIds) {
+      const profilesPart = await this.planProfileRepository.findMany({
+        planId: pid,
+      })
+      planProfiles = planProfiles.concat(profilesPart)
+    }
+    const profiles = await Promise.all(
+      planProfiles.map((pp) => this.profilesRepository.findById(pp.profileId)),
+    )
+    const userIds = profiles
+      .map((p) => p?.user.id)
+      .filter((u): u is string => !!u)
+
+    await this.recalcService.execute({ userIds })
+
     return { benefit }
   }
 }
