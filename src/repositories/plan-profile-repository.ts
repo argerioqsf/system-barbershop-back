@@ -11,6 +11,7 @@ export interface PlanProfileRepository {
   ): Promise<PlanProfileWithDebts>
   findMany(
     where?: Prisma.PlanProfileWhereInput,
+    tx?: Prisma.TransactionClient,
   ): Promise<PlanProfileWithDebts[]>
   findById(id: string): Promise<PlanProfileWithDebts | null>
   findByDebtId(id: string): Promise<PlanProfileWithDebts | null>

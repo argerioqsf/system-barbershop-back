@@ -40,6 +40,7 @@ export class InMemoryPlanProfileRepository implements PlanProfileRepository {
 
   async findMany(
     where: Prisma.PlanProfileWhereInput = {},
+    _tx?: Prisma.TransactionClient, // eslint-disable-line @typescript-eslint/no-unused-vars
   ): Promise<PlanProfileWithDebts[]> {
     if (!where || Object.keys(where).length === 0) return this.items
     return this.items.filter((p) => {

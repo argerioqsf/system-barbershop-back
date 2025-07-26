@@ -51,6 +51,7 @@ export class UpdatePlanService {
         [id],
         this.planProfileRepository,
         this.profilesRepository,
+        tx,
       )
 
       await this.recalcService.execute({ userIds }, tx)
