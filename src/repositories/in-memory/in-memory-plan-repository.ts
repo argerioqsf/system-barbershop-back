@@ -49,7 +49,13 @@ export class InMemoryPlanRepository implements PlanRepository {
         data.typeRecurrence as { connect?: { id: string } } | undefined
       )?.connect?.id as string,
     }
-    this.plans.push(plan)
+    const benefits = (data as any).benefits?.create?.map((b: any) => ({
+      id: randomUUID(),
+      planId: plan.id,
+      benefitId: b.benefit.connect.id,
+      benefit: { id: b.benefit.connect.id },
+    }))
+    this.plans.push({ ...(plan as any), benefits } as any)
     return plan
   }
 
@@ -62,6 +68,16 @@ export class InMemoryPlanRepository implements PlanRepository {
       plan.typeRecurrenceId = (
         data.typeRecurrence as { connect: { id: string } }
       ).connect.id
+    }
+    if (data.benefits) {
+      ;(plan as any).benefits = (data.benefits as any).create?.map(
+        (b: any) => ({
+          id: randomUUID(),
+          planId: plan.id,
+          benefitId: b.benefit.connect.id,
+          benefit: { id: b.benefit.connect.id },
+        }),
+      )
     }
     return plan
   }

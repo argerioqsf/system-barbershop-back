@@ -36,10 +36,11 @@ export class PayDebtService {
     if (!saleItem) throw new Error('Sale item not found')
 
     const incUnit = new IncrementBalanceUnitService(this.unitRepo)
+    const amountToCredit = saleItem.price ?? debt.value
     const { transaction } = await incUnit.execute(
       saleItem.sale.unitId,
       userId,
-      debt.value,
+      amountToCredit,
       undefined,
       false,
     )

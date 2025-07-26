@@ -11,6 +11,7 @@ export const UpdatePlanController = async (
     name: z.string().optional(),
     price: z.number().optional(),
     typeRecurrenceId: z.string().optional(),
+    benefitIds: z.array(z.string()).optional(),
   })
   const { id } = paramsSchema.parse(request.params)
   const data = bodySchema.parse(request.body)
@@ -24,6 +25,7 @@ export const UpdatePlanController = async (
         ? { connect: { id: data.typeRecurrenceId } }
         : undefined,
     },
+    benefitIds: data.benefitIds,
   })
   return reply.status(200).send(plan)
 }

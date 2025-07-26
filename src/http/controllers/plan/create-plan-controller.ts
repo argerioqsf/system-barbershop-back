@@ -10,6 +10,7 @@ export const CreatePlanController = async (
     name: z.string(),
     price: z.number(),
     typeRecurrenceId: z.string(),
+    benefitIds: z.array(z.string()).optional(),
   })
   const data = bodySchema.parse(request.body)
   const service = makeCreatePlanService()
