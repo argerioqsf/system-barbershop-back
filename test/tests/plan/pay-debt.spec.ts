@@ -77,7 +77,7 @@ it('increments unit balance when paying a debt', async () => {
   expect(debtRepo.debts[0].status).toBe('PAID')
 })
 
-it('credits discounted amount to the unit', async () => {
+it('credits debt value to the unit even with discounts', async () => {
   transactionRepo = new FakeTransactionRepository()
   barberRepo = new FakeBarberUsersRepository()
   cashRepo = new FakeCashRegisterRepository()
@@ -143,6 +143,6 @@ it('credits discounted amount to the unit', async () => {
   const service = new PayDebtService(debtRepo, profileRepo, itemRepo, unitRepo)
   await service.execute({ debtId: debt.id, userId: 'u1' })
 
-  expect(unitRepo.unit.totalBalance).toBe(80)
+  expect(unitRepo.unit.totalBalance).toBe(100)
   expect(debtRepo.debts[0].status).toBe('PAID')
 })
