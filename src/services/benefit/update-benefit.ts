@@ -1,12 +1,10 @@
 import { BenefitRepository } from '@/repositories/benefit-repository'
 import { PlanRepository } from '@/repositories/plan-repository'
-import {
-  PlanProfileRepository,
-  PlanProfileWithDebts,
-} from '@/repositories/plan-profile-repository'
+import { PlanProfileRepository } from '@/repositories/plan-profile-repository'
 import { ProfilesRepository } from '@/repositories/profiles-repository'
 import { Benefit, Prisma } from '@prisma/client'
 import { RecalculateUserSalesService } from '../sale/recalculate-user-sales'
+import { findUserIdsLinkedToPlans } from '../plan/utils/find-user-ids-linked-to-plans'
 
 interface UpdateBenefitRequest {
   id: string
@@ -75,22 +73,12 @@ export class UpdateBenefitService {
       benefits: { some: { benefitId: id } },
     })
     const planIds = plansList.map((p) => p.id)
-    let planProfiles: PlanProfileWithDebts[] = []
-    for (const pid of planIds) {
-      const profilesPart = await this.planProfileRepository.findMany({
-        planId: pid,
-      })
-      planProfiles = planProfiles.concat(profilesPart)
-    }
-    const uniqueProfileIds = Array.from(
-      new Set(planProfiles.map((pp) => pp.profileId)),
+
+    const userIds = await findUserIdsLinkedToPlans(
+      planIds,
+      this.planProfileRepository,
+      this.profilesRepository,
     )
-    const profiles = await Promise.all(
-      uniqueProfileIds.map((pid) => this.profilesRepository.findById(pid)),
-    )
-    const userIds = profiles
-      .map((p) => p?.user.id)
-      .filter((u): u is string => !!u)
 
     await this.recalcService.execute({ userIds })
 
