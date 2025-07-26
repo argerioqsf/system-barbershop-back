@@ -116,7 +116,10 @@ export class InMemoryPlanRepository implements PlanRepository {
     return plan
   }
 
-  async findMany(): Promise<PlanWithBenefits[]> {
+  async findMany(
+    _where: Prisma.PlanWhereInput = {}, // eslint-disable-line @typescript-eslint/no-unused-vars
+    _tx?: Prisma.TransactionClient, // eslint-disable-line @typescript-eslint/no-unused-vars
+  ): Promise<PlanWithBenefits[]> {
     return this.plans as PlanWithBenefits[]
   }
 

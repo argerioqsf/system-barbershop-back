@@ -76,9 +76,10 @@ export class UpdateBenefitService {
         },
         tx,
       )
-      const plansList = await this.planRepository.findMany({
-        benefits: { some: { benefitId: id } },
-      })
+      const plansList = await this.planRepository.findMany(
+        { benefits: { some: { benefitId: id } } },
+        tx,
+      )
       const planIds = plansList.map((p) => p.id)
 
       const userIds = await findUserIdsLinkedToPlans(

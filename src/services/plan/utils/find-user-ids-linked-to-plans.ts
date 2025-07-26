@@ -22,7 +22,7 @@ export async function findUserIdsLinkedToPlans(
   )
 
   const profiles = await Promise.all(
-    uniqueProfileIds.map((pid) => profilesRepository.findById(pid)),
+    uniqueProfileIds.map((pid) => profilesRepository.findById(pid, tx)),
   )
 
   return profiles.map((p) => p?.user.id).filter((u): u is string => !!u)

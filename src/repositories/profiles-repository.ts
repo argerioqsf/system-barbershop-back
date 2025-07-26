@@ -9,6 +9,7 @@ export type ResponseFindByUserId =
 export interface ProfilesRepository {
   findById(
     id: string,
+    tx?: Prisma.TransactionClient,
   ): Promise<(Profile & { user: Omit<User, 'password'> }) | null>
   create(
     data: Prisma.ProfileUncheckedCreateInput,

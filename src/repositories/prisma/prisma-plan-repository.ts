@@ -65,8 +65,12 @@ export class PrismaPlanRepository implements PlanRepository {
     return prismaClient.plan.update({ where: { id }, data })
   }
 
-  findMany(where: Prisma.PlanWhereInput = {}): Promise<PlanWithBenefits[]> {
-    return prisma.plan.findMany({
+  findMany(
+    where: Prisma.PlanWhereInput = {},
+    tx?: Prisma.TransactionClient,
+  ): Promise<PlanWithBenefits[]> {
+    const prismaClient = tx || prisma
+    return prismaClient.plan.findMany({
       where,
       include: {
         benefits: {

@@ -38,6 +38,9 @@ export interface PlanRepository {
     data: Prisma.PlanUpdateInput,
     tx?: Prisma.TransactionClient,
   ): Promise<Plan>
-  findMany(where?: Prisma.PlanWhereInput): Promise<PlanWithBenefits[]>
+  findMany(
+    where?: Prisma.PlanWhereInput,
+    tx?: Prisma.TransactionClient,
+  ): Promise<PlanWithBenefits[]>
   delete(id: string): Promise<void>
 }
