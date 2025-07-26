@@ -11,12 +11,26 @@ export const CreateBenefitController = async (
   const bodySchema = z.object({
     name: z.string(),
     description: z.string().optional(),
-    discount: z.number().optional(),
-    discountType: z.nativeEnum(DiscountType).optional(),
+    discount: z.number(),
+    discountType: z.nativeEnum(DiscountType),
+    categories: z.array(z.string()).optional(),
+    services: z.array(z.string()).optional(),
+    products: z.array(z.string()).optional(),
+    plans: z.array(z.string()).optional(),
   })
   const data = bodySchema.parse(request.body)
   const service = makeCreateBenefitService()
   const unitId = (request.user as UserToken).unitId
-  const { benefit } = await service.execute({ ...data, unitId })
+  const { benefit } = await service.execute({
+    name: data.name,
+    description: data.description,
+    discount: data.discount,
+    discountType: data.discountType,
+    categories: data.categories,
+    services: data.services,
+    products: data.products,
+    plans: data.plans,
+    unitId,
+  })
   return reply.status(201).send({ benefit })
 }

@@ -6,6 +6,11 @@ import {
   FakeSaleItemRepository,
   FakePlanRepository,
   FakePlanProfileRepository,
+  FakeServiceRepository,
+  FakeProductRepository,
+  FakeAppointmentRepository,
+  FakeCouponRepository,
+  FakeBarberUsersRepository,
 } from "../../helpers/fake-repositories";
 import {
   makeSale,
@@ -26,6 +31,11 @@ let profileRepo: FakeProfilesRepository;
 let saleItemRepo: FakeSaleItemRepository;
 let planRepo: FakePlanRepository;
 let planProfileRepo: FakePlanProfileRepository;
+let serviceRepo: FakeServiceRepository;
+let productRepo: FakeProductRepository;
+let appointmentRepo: FakeAppointmentRepository;
+let couponRepo: FakeCouponRepository;
+let barberRepo: FakeBarberUsersRepository;
 let service: UpdateClientSaleService;
 let svc: Service;
 
@@ -35,8 +45,14 @@ beforeEach(() => {
   saleItemRepo = new FakeSaleItemRepository(saleRepo);
   planRepo = new FakePlanRepository();
   planProfileRepo = new FakePlanProfileRepository();
+  serviceRepo = new FakeServiceRepository();
+  productRepo = new FakeProductRepository();
+  appointmentRepo = new FakeAppointmentRepository();
+  couponRepo = new FakeCouponRepository();
+  barberRepo = new FakeBarberUsersRepository();
   saleRepo.sales.push(makeSale("sale-1"));
   svc = makeService("svc1", 100);
+  serviceRepo.services.push(svc);
   saleRepo.sales[0].items.push({
     id: "i1",
     saleId: "sale-1",
@@ -67,6 +83,11 @@ beforeEach(() => {
     saleItemRepo,
     planRepo,
     planProfileRepo,
+    serviceRepo,
+    productRepo,
+    appointmentRepo,
+    couponRepo,
+    barberRepo,
   );
   vi.spyOn(prisma, "$transaction").mockImplementation(async (fn) =>
     fn({
@@ -147,7 +168,7 @@ describe("Update client sale service", () => {
     const result = await service.execute({ id: "sale-1", clientId: "c2" });
 
     expect(result.sale!.items[0].discounts).toHaveLength(0);
-    expect(result.sale!.items[0].price).toBe(90);
+    expect(result.sale!.items[0].price).toBe(100);
   });
 
   it("throws when no changes", async () => {

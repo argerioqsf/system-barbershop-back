@@ -1,4 +1,4 @@
-import { Plan, Prisma } from '@prisma/client'
+import { Plan, Prisma, DiscountType } from '@prisma/client'
 import {
   PlanRepository,
   PlanWithBenefits,
@@ -63,8 +63,8 @@ export class InMemoryPlanRepository implements PlanRepository {
         id: b.benefit.connect.id,
         name: '',
         description: null,
-        discount: null,
-        discountType: null,
+        discount: 0,
+        discountType: DiscountType.VALUE,
         unitId: '',
         categories: [],
         services: [],
@@ -100,8 +100,8 @@ export class InMemoryPlanRepository implements PlanRepository {
           id: b.benefit.connect.id,
           name: '',
           description: null,
-          discount: null,
-          discountType: null,
+          discount: 0,
+          discountType: DiscountType.VALUE,
           unitId: '',
           categories: [],
           services: [],
@@ -112,8 +112,8 @@ export class InMemoryPlanRepository implements PlanRepository {
     return plan
   }
 
-  async findMany() {
-    return this.plans
+  async findMany(): Promise<PlanWithBenefits[]> {
+    return this.plans as PlanWithBenefits[]
   }
 
   async delete(id: string): Promise<void> {

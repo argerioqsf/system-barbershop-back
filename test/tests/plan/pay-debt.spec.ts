@@ -12,6 +12,7 @@ import {
   FakeCashRegisterRepository,
 } from '../../helpers/fake-repositories'
 import { defaultUnit, defaultUser, makeCashSession } from '../../helpers/default-values'
+import { prisma } from '../../../src/lib/prisma'
 
 let transactionRepo: FakeTransactionRepository
 let barberRepo: FakeBarberUsersRepository
@@ -29,6 +30,9 @@ it('increments unit balance when paying a debt', async () => {
   transactionRepo = new FakeTransactionRepository()
   barberRepo = new FakeBarberUsersRepository()
   cashRepo = new FakeCashRegisterRepository()
+  vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) =>
+    fn({} as any),
+  )
 
   const saleRepo = new FakeSaleRepository()
   const sale = await saleRepo.create({
@@ -81,6 +85,9 @@ it('credits debt value to the unit even with discounts', async () => {
   transactionRepo = new FakeTransactionRepository()
   barberRepo = new FakeBarberUsersRepository()
   cashRepo = new FakeCashRegisterRepository()
+  vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) =>
+    fn({} as any),
+  )
 
   const saleRepo = new FakeSaleRepository()
   const sale = await saleRepo.create({

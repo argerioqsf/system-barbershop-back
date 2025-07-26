@@ -2,7 +2,7 @@ import { UnitRepository } from '@/repositories/unit-repository'
 import { Prisma, Transaction, TransactionType, Unit } from '@prisma/client'
 import { makeCreateTransaction } from '../@factories/transaction/make-create-transaction'
 
-interface IncrementBalanceUnitResponse {
+export interface IncrementBalanceUnitResponse {
   unit: Unit | null
   transaction: Transaction
 }
