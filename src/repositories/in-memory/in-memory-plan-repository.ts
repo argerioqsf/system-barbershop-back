@@ -49,13 +49,29 @@ export class InMemoryPlanRepository implements PlanRepository {
         data.typeRecurrence as { connect?: { id: string } } | undefined
       )?.connect?.id as string,
     }
-    const benefits = (data as any).benefits?.create?.map((b: any) => ({
+    const benefits = (
+      (
+        data as Prisma.PlanCreateInput & {
+          benefits?: { create: { benefit: { connect: { id: string } } }[] }
+        }
+      ).benefits?.create ?? []
+    ).map((b) => ({
       id: randomUUID(),
       planId: plan.id,
       benefitId: b.benefit.connect.id,
-      benefit: { id: b.benefit.connect.id },
+      benefit: {
+        id: b.benefit.connect.id,
+        name: '',
+        description: null,
+        discount: null,
+        discountType: null,
+        unitId: '',
+        categories: [],
+        services: [],
+        products: [],
+      },
     }))
-    this.plans.push({ ...(plan as any), benefits } as any)
+    this.plans.push({ ...(plan as Plan), benefits } as PlanWithBenefits)
     return plan
   }
 
@@ -70,14 +86,28 @@ export class InMemoryPlanRepository implements PlanRepository {
       ).connect.id
     }
     if (data.benefits) {
-      ;(plan as any).benefits = (data.benefits as any).create?.map(
-        (b: any) => ({
-          id: randomUUID(),
-          planId: plan.id,
-          benefitId: b.benefit.connect.id,
-          benefit: { id: b.benefit.connect.id },
-        }),
-      )
+      ;(plan as PlanWithBenefits).benefits = (
+        (
+          data as Prisma.PlanUpdateInput & {
+            benefits?: { create?: { benefit: { connect: { id: string } } }[] }
+          }
+        ).benefits?.create ?? []
+      ).map((b) => ({
+        id: randomUUID(),
+        planId: plan.id,
+        benefitId: b.benefit.connect.id,
+        benefit: {
+          id: b.benefit.connect.id,
+          name: '',
+          description: null,
+          discount: null,
+          discountType: null,
+          unitId: '',
+          categories: [],
+          services: [],
+          products: [],
+        },
+      }))
     }
     return plan
   }
