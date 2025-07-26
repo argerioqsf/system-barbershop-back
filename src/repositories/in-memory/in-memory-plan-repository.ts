@@ -112,8 +112,8 @@ export class InMemoryPlanRepository implements PlanRepository {
     return plan
   }
 
-  async findMany() {
-    return this.plans
+  async findMany(): Promise<PlanWithBenefits[]> {
+    return this.plans as PlanWithBenefits[]
   }
 
   async delete(id: string): Promise<void> {
