@@ -49,7 +49,29 @@ export class InMemoryPlanRepository implements PlanRepository {
         data.typeRecurrence as { connect?: { id: string } } | undefined
       )?.connect?.id as string,
     }
-    this.plans.push(plan)
+    const benefits = (
+      (
+        data as Prisma.PlanCreateInput & {
+          benefits?: { create: { benefit: { connect: { id: string } } }[] }
+        }
+      ).benefits?.create ?? []
+    ).map((b) => ({
+      id: randomUUID(),
+      planId: plan.id,
+      benefitId: b.benefit.connect.id,
+      benefit: {
+        id: b.benefit.connect.id,
+        name: '',
+        description: null,
+        discount: null,
+        discountType: null,
+        unitId: '',
+        categories: [],
+        services: [],
+        products: [],
+      },
+    }))
+    this.plans.push({ ...(plan as Plan), benefits } as PlanWithBenefits)
     return plan
   }
 
@@ -62,6 +84,30 @@ export class InMemoryPlanRepository implements PlanRepository {
       plan.typeRecurrenceId = (
         data.typeRecurrence as { connect: { id: string } }
       ).connect.id
+    }
+    if (data.benefits) {
+      ;(plan as PlanWithBenefits).benefits = (
+        (
+          data as Prisma.PlanUpdateInput & {
+            benefits?: { create?: { benefit: { connect: { id: string } } }[] }
+          }
+        ).benefits?.create ?? []
+      ).map((b) => ({
+        id: randomUUID(),
+        planId: plan.id,
+        benefitId: b.benefit.connect.id,
+        benefit: {
+          id: b.benefit.connect.id,
+          name: '',
+          description: null,
+          discount: null,
+          discountType: null,
+          unitId: '',
+          categories: [],
+          services: [],
+          products: [],
+        },
+      }))
     }
     return plan
   }

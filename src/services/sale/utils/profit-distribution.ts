@@ -162,6 +162,7 @@ export async function distributeProfits(
         sale.id,
         true,
         undefined,
+        undefined,
         tx,
       )
       transactions.push(transactionUnit.transaction)
@@ -203,6 +204,7 @@ export async function distributeProfits(
     ownerShare,
     sale.id,
     false,
+    undefined,
     undefined,
     tx,
   )

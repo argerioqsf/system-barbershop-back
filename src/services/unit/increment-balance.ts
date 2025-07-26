@@ -17,6 +17,7 @@ export class IncrementBalanceUnitService {
     saleId?: string,
     isLoan?: boolean,
     loanId?: string,
+    description?: string,
     tx?: Prisma.TransactionClient,
   ): Promise<IncrementBalanceUnitResponse> {
     const createTransactionService = makeCreateTransaction()
@@ -26,7 +27,7 @@ export class IncrementBalanceUnitService {
       const transaction = await createTransactionService.execute({
         type:
           amount < 0 ? TransactionType.WITHDRAWAL : TransactionType.ADDITION,
-        description: 'Increment Balance Unit',
+        description: description ?? 'Increment Balance Unit',
         amount: Math.abs(amount),
         userId,
         receiptUrl: undefined,
