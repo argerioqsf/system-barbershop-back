@@ -43,6 +43,8 @@ export class PayDebtService {
       amountToCredit,
       undefined,
       false,
+      undefined,
+      'Pay plan debt',
     )
 
     await this.debtRepo.update(debt.id, {
