@@ -10,8 +10,8 @@ export class InMemoryBenefitRepository implements BenefitRepository {
       id: randomUUID(),
       name: data.name,
       description: (data.description as string | null) ?? null,
-      discount: (data.discount as number | null) ?? null,
-      discountType: (data.discountType as DiscountType | null) ?? null,
+      discount: data.discount as number,
+      discountType: data.discountType as DiscountType,
       unitId: (data.unit as { connect: { id: string } }).connect.id,
     }
     this.benefits.push(benefit)
@@ -24,9 +24,9 @@ export class InMemoryBenefitRepository implements BenefitRepository {
     if (data.name) benefit.name = data.name as string
     if ('description' in data)
       benefit.description = data.description as string | null
-    if ('discount' in data) benefit.discount = data.discount as number | null
+    if ('discount' in data) benefit.discount = data.discount as number
     if ('discountType' in data)
-      benefit.discountType = data.discountType as DiscountType | null
+      benefit.discountType = data.discountType as DiscountType
     if (data.unit && 'connect' in data.unit) {
       benefit.unitId = (data.unit as { connect: { id: string } }).connect.id
     }

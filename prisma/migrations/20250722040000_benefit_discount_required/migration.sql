@@ -1,0 +1,2 @@
+ALTER TABLE `benefits` MODIFY `discount` DOUBLE NOT NULL;
+ALTER TABLE `benefits` MODIFY `discountType` ENUM('PERCENTAGE', 'VALUE') NOT NULL;

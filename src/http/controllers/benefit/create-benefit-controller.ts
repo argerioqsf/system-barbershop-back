@@ -11,8 +11,8 @@ export const CreateBenefitController = async (
   const bodySchema = z.object({
     name: z.string(),
     description: z.string().optional(),
-    discount: z.number().optional(),
-    discountType: z.nativeEnum(DiscountType).optional(),
+    discount: z.number(),
+    discountType: z.nativeEnum(DiscountType),
   })
   const data = bodySchema.parse(request.body)
   const service = makeCreateBenefitService()

@@ -11,8 +11,8 @@ export const UpdateBenefitController = async (
   const bodySchema = z.object({
     name: z.string().optional(),
     description: z.string().optional().nullable(),
-    discount: z.number().optional().nullable(),
-    discountType: z.nativeEnum(DiscountType).optional().nullable(),
+    discount: z.number().optional(),
+    discountType: z.nativeEnum(DiscountType).optional(),
   })
   const { id } = paramsSchema.parse(request.params)
   const data = bodySchema.parse(request.body)
