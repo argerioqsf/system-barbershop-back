@@ -4,6 +4,7 @@ import { UnitRepository } from '@/repositories/unit-repository'
 import { UserNotFoundError } from '@/services/@errors/user/user-not-found-error'
 import { UnitNotExistsError } from '@/services/@errors/unit/unit-not-exists-error'
 import { InvalidPermissionError } from '@/services/@errors/permission/invalid-permission-error'
+import { PermissionsNotAllowedError } from '@/services/@errors/permission/permissions-not-allowed-error'
 import { Permission, Profile, Role, Unit, User } from '@prisma/client'
 import { hasPermission } from '@/utils/permissions'
 import { UnauthorizedError } from '../@errors/auth/unauthorized-error'
@@ -27,7 +28,7 @@ interface UpdateUserRequest {
 }
 
 type OldUser =
-  | (User & {
+  | (Omit<User, 'password'> & {
       profile: (Profile & { role: Role; permissions: Permission[] }) | null
       unit: Unit | null
     })
@@ -104,9 +105,8 @@ export class UpdateUserService {
       if (!roleId) throw new InvalidPermissionError()
       const allowed = await this.permissionRepository.findManyByRole(roleId)
       const allowedIds = allowed.map((p) => p.id)
-      // TODO: criar um erro expecifico para o if a baixo e nao esse, criar que faça sentido
       if (!data.permissions.every((id) => allowedIds.includes(id))) {
-        throw new InvalidPermissionError()
+        throw new PermissionsNotAllowedError()
       }
       permissionIds = data.permissions
     } else if (
@@ -169,8 +169,8 @@ export class UpdateUserService {
       request.newToken = newToken
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, ...userRest } = user
+    const userRest = { ...user }
+    delete (userRest as { password?: string }).password
     return { user: userRest, profile }
   }
 }

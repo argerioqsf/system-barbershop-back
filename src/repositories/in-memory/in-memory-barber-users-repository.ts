@@ -11,6 +11,7 @@ import {
   User,
   BarberService,
   BarberProduct,
+  PlanProfile,
 } from '@prisma/client'
 import { BarberUsersRepository } from '../barber-users-repository'
 import { randomUUID } from 'crypto'
@@ -26,6 +27,7 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
             blockedHours: ProfileBlockedHour[]
             barberServices: BarberService[]
             barberProducts: BarberProduct[]
+            plans: PlanProfile[]
           })
         | null
       unit?: Unit | null
@@ -36,7 +38,7 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
     data: Prisma.UserCreateInput,
     profileData: Omit<Prisma.ProfileUncheckedCreateInput, 'userId'>,
     permissionIds?: string[],
-  ): Promise<{ user: User; profile: Profile }> {
+  ): Promise<{ user: Omit<User, 'password'>; profile: Profile }> {
     const user: User = {
       id: randomUUID(),
       name: data.name,
@@ -57,6 +59,7 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
       blockedHours: ProfileBlockedHour[]
       barberServices: BarberService[]
       barberProducts: BarberProduct[]
+      plans: PlanProfile[]
     } = {
       id: randomUUID(),
       userId: user.id,
@@ -87,6 +90,7 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
       blockedHours: [],
       barberServices: [],
       barberProducts: [],
+      plans: [],
     }
     this.users.push({
       ...user,
@@ -103,7 +107,9 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
         appointmentFutureLimitDays: 7,
       },
     })
-    return { user, profile }
+    const rest = { ...user }
+    delete (rest as { password?: string }).password
+    return { user: rest, profile }
   }
 
   async update(
@@ -166,7 +172,7 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
   }
 
   async findMany(where: Prisma.UserWhereInput = {}): Promise<
-    (User & {
+    (Omit<User, 'password'> & {
       profile:
         | (Profile & {
             permissions: Permission[]
@@ -177,39 +183,45 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
         | null
     })[]
   > {
-    return this.users.filter((u) => {
-      if (where.unitId && u.unit?.id !== where.unitId) return false
-      if (where.organizationId && u.organizationId !== where.organizationId)
-        return false
-      if (
-        where.unit &&
-        typeof where.unit === 'object' &&
-        'organizationId' in where.unit &&
-        u.unit?.organizationId !==
-          (where.unit as { organizationId: string }).organizationId
-      )
-        return false
-      if (
-        where.profile &&
-        typeof where.profile === 'object' &&
-        'permissions' in where.profile &&
-        (
-          where.profile as {
-            permissions?: { some?: { name?: PermissionName } }
-          }
-        ).permissions?.some?.name
-      ) {
-        const perm = (
-          where.profile as { permissions: { some: { name: PermissionName } } }
-        ).permissions.some.name
-        return u.profile?.permissions.some((p) => p.name === perm)
-      }
-      return true
-    })
+    return this.users
+      .filter((u) => {
+        if (where.unitId && u.unit?.id !== where.unitId) return false
+        if (where.organizationId && u.organizationId !== where.organizationId)
+          return false
+        if (
+          where.unit &&
+          typeof where.unit === 'object' &&
+          'organizationId' in where.unit &&
+          u.unit?.organizationId !==
+            (where.unit as { organizationId: string }).organizationId
+        )
+          return false
+        if (
+          where.profile &&
+          typeof where.profile === 'object' &&
+          'permissions' in where.profile &&
+          (
+            where.profile as {
+              permissions?: { some?: { name?: PermissionName } }
+            }
+          ).permissions?.some?.name
+        ) {
+          const perm = (
+            where.profile as { permissions: { some: { name: PermissionName } } }
+          ).permissions.some.name
+          return u.profile?.permissions.some((p) => p.name === perm)
+        }
+        return true
+      })
+      .map((u) => {
+        const rest = { ...u }
+        delete (rest as { password?: string }).password
+        return rest
+      })
   }
 
   async findById(id: string): Promise<
-    | (User & {
+    | (Omit<User, 'password'> & {
         profile:
           | (Profile & {
               role: Role
@@ -218,6 +230,7 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
               blockedHours: ProfileBlockedHour[]
               barberServices: BarberService[]
               barberProducts: BarberProduct[]
+              plans: PlanProfile[]
             })
           | null
         unit: Unit | null
@@ -226,11 +239,13 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
   > {
     const user = this.users.find((u) => u.id === id)
     if (!user) return null
-    return { ...user, unit: user.unit ?? null }
+    const rest = { ...user }
+    delete (rest as { password?: string }).password
+    return { ...rest, unit: user.unit ?? null }
   }
 
   async findByEmail(email: string): Promise<
-    | (User & {
+    | (Omit<User, 'password'> & {
         profile:
           | (Profile & {
               role: Role
@@ -243,7 +258,10 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
     | null
   > {
     const user = this.users.find((u) => u.email === email)
-    return user ?? null
+    if (!user) return null
+    const rest = { ...user }
+    delete (rest as { password?: string }).password
+    return rest
   }
 
   async delete(id: string): Promise<void> {

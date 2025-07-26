@@ -1,7 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import { mapToSaleItems, calculateTotal, updateProductsStock } from '../../../src/services/sale/utils/sale'
-import { FakeProductRepository } from '../../helpers/fake-repositories'
-import { makeProduct } from '../../helpers/default-values'
+import {
+  mapToSaleItems,
+  calculateTotal,
+  updateProductsStock,
+  updateCouponsStock,
+} from '../../../src/services/sale/utils/sale'
+import { FakeProductRepository, FakeCouponRepository } from '../../helpers/fake-repositories'
+import { makeProduct, makeCoupon } from '../../helpers/default-values'
 
 
 describe('sale utilities', () => {
@@ -13,18 +18,27 @@ describe('sale utilities', () => {
         discount: 10,
         discountType: 'VALUE',
         ownDiscount: true,
-        data: { quantity: 1, service: { connect: { id: 's1' } }, barber: { connect: { id: 'b1' } }, coupon: { connect: { id: 'c1' } } },
+        discounts: [],
+        data: {
+          quantity: 1,
+          service: { connect: { id: 's1' } },
+          barber: { connect: { id: 'b1' } },
+          coupon: { connect: { id: 'c1' } },
+        },
       },
     ] as any)
 
     expect(result[0]).toEqual(
       expect.objectContaining({
         price: 90,
-        discount: 10,
-        discountType: 'VALUE',
         commissionPaid: false,
       }),
     )
+    // discount fields are no longer returned
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((result[0] as any).discount).toBeUndefined()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((result[0] as any).discountType).toBeUndefined()
   })
 
   it('calculates total', () => {
@@ -40,6 +54,12 @@ describe('sale utilities', () => {
     await updateProductsStock(repo, [{ id: 'p1', quantity: 2 }], 'decrement')
     expect(repo.products[0].quantity).toBe(3)
     await updateProductsStock(repo, [{ id: 'p1', quantity: 1 }], 'increment')
-    expect(repo.products[0].quantity).toBe(3)
+    expect(repo.products[0].quantity).toBe(4)
+  })
+
+  it('updates coupon stock', async () => {
+    const repo = new FakeCouponRepository([makeCoupon('c1', 'OFF', 10, 'VALUE')])
+    await updateCouponsStock(repo, [{ couponId: 'c1', price: 100 } as any])
+    expect(repo.coupons[0].quantity).toBe(4)
   })
 })

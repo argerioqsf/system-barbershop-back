@@ -1,0 +1,29 @@
+import { PlanRepository } from '@/repositories/plan-repository'
+import { Plan } from '@prisma/client'
+
+interface CreatePlanRequest {
+  name: string
+  price: number
+  typeRecurrenceId: string
+}
+
+interface CreatePlanResponse {
+  plan: Plan
+}
+
+export class CreatePlanService {
+  constructor(private repository: PlanRepository) {}
+
+  async execute({
+    name,
+    price,
+    typeRecurrenceId,
+  }: CreatePlanRequest): Promise<CreatePlanResponse> {
+    const plan = await this.repository.create({
+      name,
+      price,
+      typeRecurrence: { connect: { id: typeRecurrenceId } },
+    })
+    return { plan }
+  }
+}

@@ -8,7 +8,18 @@ function makeSale(id: string): Sale {
 }
 
 function makeService(id: string, price: number): Service {
-  return { id, name: '', description: null, imageUrl: null, cost: 0, price, category: null, defaultTime: null, commissionPercentage: null, unitId: 'unit-1' }
+  return {
+    id,
+    name: '',
+    description: null,
+    imageUrl: null,
+    cost: 0,
+    price,
+    categoryId: 'cat-1',
+    defaultTime: null,
+    commissionPercentage: null,
+    unitId: 'unit-1',
+  }
 }
 
 function baseItem(id: string, sale: Sale): DetailedSaleItemFindMany {

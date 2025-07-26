@@ -18,6 +18,7 @@ describe('Create service service', () => {
       imageUrl: null,
       cost: 10,
       price: 20,
+      categoryId: 'cat-1',
       unitId: 'unit-1',
     })
     expect(result.service.name).toBe('Cut')
@@ -32,12 +33,12 @@ describe('Create service service', () => {
       imageUrl: null,
       cost: 15,
       price: 40,
-      category: 'hair',
+      categoryId: 'hair',
       defaultTime: 30,
       commissionPercentage: 80,
       unitId: 'unit-1',
     })
-    expect(result.service.category).toBe('hair')
+    expect(result.service.categoryId).toBe('hair')
     expect(result.service.defaultTime).toBe(30)
     expect(result.service.commissionPercentage).toBe(80)
     expect(repo.services[0].commissionPercentage).toBe(80)

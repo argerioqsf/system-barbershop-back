@@ -17,6 +17,7 @@ export class InMemoryProductRepository implements ProductRepository {
         (data.commissionPercentage as number | null) ?? null,
       price: data.price as number,
       unitId: (data.unit as { connect: { id: string } }).connect.id,
+      categoryId: (data.category as { connect: { id: string } }).connect.id,
     }
     this.products.push({
       ...product,
@@ -59,12 +60,13 @@ export class InMemoryProductRepository implements ProductRepository {
   async update(id: string, data: Prisma.ProductUpdateInput): Promise<Product> {
     const product = this.products.find((p) => p.id === id)
     if (!product) throw new Error('Product not found')
-    if (
-      data.quantity &&
-      typeof data.quantity === 'object' &&
-      'decrement' in data.quantity
-    ) {
-      product.quantity -= data.quantity.decrement as number
+    if (data.quantity && typeof data.quantity === 'object') {
+      if ('decrement' in data.quantity) {
+        product.quantity -= data.quantity.decrement as number
+      }
+      if ('increment' in data.quantity) {
+        product.quantity += data.quantity.increment as number
+      }
     }
     if (data.name) product.name = data.name as string
     if ('description' in data) {

@@ -4,5 +4,6 @@ export interface AppointmentServiceRepository {
   update(
     id: string,
     data: Prisma.AppointmentServiceUpdateInput,
+    tx?: Prisma.TransactionClient,
   ): Promise<AppointmentService>
 }

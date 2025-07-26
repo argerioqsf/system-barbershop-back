@@ -32,6 +32,12 @@ export type CompleteCashSession = CashRegisterSession & {
   transactions: Transaction[]
 }
 
+export type ResponseFindOpenByUnit =
+  | (CashRegisterSession & {
+      transactions: Transaction[]
+    })
+  | null
+
 export interface CashRegisterRepository {
   create(
     data: Prisma.CashRegisterSessionCreateInput,
@@ -45,8 +51,6 @@ export interface CashRegisterRepository {
   ): Promise<DetailedCashSession[]>
   findManyByUnit(unitId: string): Promise<DetailedCashSession[]>
   findOpenByUser(userId: string): Promise<CashRegisterSession | null>
-  findOpenByUnit(
-    unitId: string,
-  ): Promise<(CashRegisterSession & { transactions: Transaction[] }) | null>
+  findOpenByUnit(unitId: string): Promise<ResponseFindOpenByUnit>
   findById(id: string): Promise<CompleteCashSession | null>
 }

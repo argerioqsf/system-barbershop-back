@@ -8,11 +8,14 @@ import { PrismaUnitRepository } from '@/repositories/prisma/prisma-unit-reposito
 import { PrismaBarberServiceRepository } from '@/repositories/prisma/prisma-barber-service-repository'
 import { PrismaBarberProductRepository } from '@/repositories/prisma/prisma-barber-product-repository'
 import { PrismaAppointmentRepository } from '@/repositories/prisma/prisma-appointment-repository'
-import { SetSaleStatusService } from '@/services/sale/set-sale-status'
+import { PaySaleService } from '@/services/sale/pay-sale'
 import { PrismaAppointmentServiceRepository } from '@/repositories/prisma/prisma-appointment-service-repository'
 import { PrismaSaleItemRepository } from '@/repositories/prisma/prisma-sale-item-repository'
+import { PrismaPlanProfileRepository } from '@/repositories/prisma/prisma-plan-profile-repository'
+import { PrismaCouponRepository } from '@/repositories/prisma/prisma-coupon-repository'
+import { PrismaProductRepository } from '@/repositories/prisma/prisma-product-repository'
 
-export function makeSetSaleStatus() {
+export function makePaySale() {
   const saleRepository = new PrismaSaleRepository()
   const barberUserRepository = new PrismaBarberUsersRepository()
   const cashRegisterRepository = new PrismaCashRegisterRepository()
@@ -25,7 +28,10 @@ export function makeSetSaleStatus() {
   const appointmentRepository = new PrismaAppointmentRepository()
   const appointmentServiceRepository = new PrismaAppointmentServiceRepository()
   const saleItemRepository = new PrismaSaleItemRepository()
-  return new SetSaleStatusService(
+  const planProfileRepository = new PrismaPlanProfileRepository()
+  const couponRepository = new PrismaCouponRepository()
+  const productRepository = new PrismaProductRepository()
+  return new PaySaleService(
     saleRepository,
     barberUserRepository,
     barberServiceRepository,
@@ -38,5 +44,8 @@ export function makeSetSaleStatus() {
     unitRepository,
     appointmentServiceRepository,
     saleItemRepository,
+    planProfileRepository,
+    couponRepository,
+    productRepository,
   )
 }

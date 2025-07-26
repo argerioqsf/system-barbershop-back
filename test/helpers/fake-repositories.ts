@@ -7,6 +7,7 @@ export { InMemoryServiceRepository as FakeServiceRepository } from '../../src/re
 export { InMemoryBarberServiceRepository as FakeBarberServiceRelRepository } from '../../src/repositories/in-memory/in-memory-barber-service-repository'
 export { InMemoryBarberProductRepository as FakeBarberProductRepository } from '../../src/repositories/in-memory/in-memory-barber-product-repository'
 export { InMemoryProductRepository as FakeProductRepository } from '../../src/repositories/in-memory/in-memory-product-repository'
+export { InMemoryCategoryRepository as FakeCategoryRepository } from '../../src/repositories/in-memory/in-memory-category-repository'
 export { InMemoryCouponRepository as FakeCouponRepository } from '../../src/repositories/in-memory/in-memory-coupon-repository'
 export { InMemoryBarberUsersRepository } from '../../src/repositories/in-memory/in-memory-barber-users-repository'
 export { InMemoryBarberUsersRepository as FakeBarberUsersRepository } from '../../src/repositories/in-memory/in-memory-barber-users-repository'
@@ -104,3 +105,9 @@ export { InMemoryProfileWorkHourRepository as FakeProfileWorkHourRepository } fr
 export { InMemoryProfileBlockedHourRepository as FakeProfileBlockedHourRepository } from '../../src/repositories/in-memory/in-memory-profile-blocked-hour-repository'
 export { InMemoryAppointmentServiceRepository as FakeAppointmentServiceRepository } from '../../src/repositories/in-memory/in-memory-appointment-service-repository'
 export { InMemorySaleItemRepository as FakeSaleItemRepository } from '../../src/repositories/in-memory/in-memory-sale-item-repository'
+export { InMemoryPlanRepository as FakePlanRepository } from '../../src/repositories/in-memory/in-memory-plan-repository'
+export { InMemoryPlanProfileRepository as FakePlanProfileRepository } from '../../src/repositories/in-memory/in-memory-plan-profile-repository'
+export { InMemoryDebtRepository as FakeDebtRepository } from '../../src/repositories/in-memory/in-memory-debt-repository'
+export { InMemoryBenefitRepository as FakeBenefitRepository } from '../../src/repositories/in-memory/in-memory-benefit-repository'
+export { InMemoryTypeRecurrenceRepository as FakeTypeRecurrenceRepository } from '../../src/repositories/in-memory/in-memory-type-recurrence-repository'
+

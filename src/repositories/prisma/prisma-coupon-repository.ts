@@ -19,8 +19,13 @@ export class PrismaCouponRepository implements CouponRepository {
     return prisma.coupon.findUnique({ where: { code } })
   }
 
-  async update(id: string, data: Prisma.CouponUpdateInput): Promise<Coupon> {
-    return prisma.coupon.update({ where: { id }, data })
+  async update(
+    id: string,
+    data: Prisma.CouponUpdateInput,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Coupon> {
+    const prismaClient = tx || prisma
+    return prismaClient.coupon.update({ where: { id }, data })
   }
 
   async delete(id: string): Promise<void> {

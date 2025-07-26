@@ -28,7 +28,7 @@ interface RegisterUserRequest {
 }
 
 interface RegisterUserResponse {
-  user: User
+  user: Omit<User, 'password'>
   profile: Profile
 }
 

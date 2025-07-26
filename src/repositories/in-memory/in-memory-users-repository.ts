@@ -126,7 +126,7 @@ export class InMemoryUserRepository implements UsersRepository {
       }
       this.items[index] = {
         ...updated,
-        ...(data as unknown as Partial<User>),
+        ...(data as Partial<User>),
         profile: null,
       }
       const { ...rest } = this.items[index]

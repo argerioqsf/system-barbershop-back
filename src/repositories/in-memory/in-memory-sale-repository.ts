@@ -3,6 +3,8 @@ import {
   DiscountType,
   PaymentMethod,
   PaymentStatus,
+  Discount,
+  DiscountOrigin,
 } from '@prisma/client'
 import {
   SaleRepository,
@@ -14,22 +16,52 @@ import { randomUUID } from 'crypto'
 export class InMemorySaleRepository implements SaleRepository {
   public sales: DetailedSale[] = []
 
+  private sanitizeUser<T extends { password?: string }>(
+    user: T | null,
+  ): Omit<T, 'password'> | null {
+    if (!user) return null
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _password, ...rest } = user
+    return rest
+  }
+
+  private sanitizeSale(sale: DetailedSale): DetailedSale {
+    return {
+      ...sale,
+      user: this.sanitizeUser(sale.user) as DetailedSale['user'],
+      client: this.sanitizeUser(sale.client) as DetailedSale['client'],
+      items: sale.items.map((item) => ({
+        ...item,
+        barber: this.sanitizeUser(item.barber) as DetailedSaleItem['barber'],
+      })),
+    }
+  }
+
   async create(data: Prisma.SaleCreateInput): Promise<DetailedSale> {
     const saleId = randomUUID()
     const unitId = (data.unit as { connect: { id: string } }).connect.id
     type SaleItemData = {
       service?: { connect: { id: string } }
       product?: { connect: { id: string } }
+      plan?: { connect: { id: string } }
       quantity: number
       barber?: { connect: { id: string } }
       coupon?: { connect: { id: string } }
       appointment?: { connect: { id: string } }
       price: number
-      discount?: number | null
-      discountType?: DiscountType | null
+      customPrice?: number | null
+      discounts: {
+        create: {
+          amount: number
+          type: DiscountType
+          origin: string
+          order: number
+        }[]
+      }
       porcentagemBarbeiro?: number | null
     }
-    const itemsData = (data.items as { create: SaleItemData[] }).create
+    const itemsData =
+      (data.items as { create: SaleItemData[] } | undefined)?.create ?? []
     const items: DetailedSaleItem[] = itemsData.map((it) => ({
       id: randomUUID(),
       saleId,
@@ -39,12 +71,19 @@ export class InMemorySaleRepository implements SaleRepository {
       quantity: it.quantity,
       barberId: it.barber?.connect.id ?? null,
       couponId: it.coupon?.connect.id ?? null,
+      planId: it.plan?.connect.id ?? null,
       price: it.price as number,
-      discount: it.discount ?? null,
-      discountType: it.discountType ?? null,
+      customPrice: it.customPrice ?? null,
+      discounts: (it.discounts?.create ?? []).map((d) => ({
+        id: randomUUID(),
+        saleItemId: '',
+        amount: d.amount,
+        type: d.type,
+        origin: d.origin as DiscountOrigin,
+        order: d.order,
+      })),
       porcentagemBarbeiro: it.porcentagemBarbeiro ?? null,
       commissionPaid: false,
-      transactions: [],
       appointment: it.appointment
         ? {
             id: it.appointment.connect.id,
@@ -56,8 +95,6 @@ export class InMemorySaleRepository implements SaleRepository {
             status: 'SCHEDULED',
             durationService: null,
             observation: null,
-            discount: 0,
-            value: null,
           }
         : null,
       service: it.service
@@ -68,7 +105,7 @@ export class InMemorySaleRepository implements SaleRepository {
             imageUrl: null,
             cost: 0,
             price: 0,
-            category: null,
+            categoryId: 'cat-1',
             defaultTime: null,
             commissionPercentage: null,
             unitId: 'unit-1',
@@ -85,6 +122,15 @@ export class InMemorySaleRepository implements SaleRepository {
             commissionPercentage: null,
             price: 0,
             unitId: 'unit-1',
+            categoryId: 'cat-1',
+          }
+        : null,
+      plan: it.plan
+        ? {
+            id: it.plan.connect.id,
+            price: 0,
+            name: '',
+            typeRecurrenceId: '',
           }
         : null,
       barber: it.barber
@@ -128,6 +174,7 @@ export class InMemorySaleRepository implements SaleRepository {
           }
         : null,
     }))
+
     const sale = {
       id: saleId,
       userId: (data.user as { connect: { id: string } }).connect.id,
@@ -199,29 +246,37 @@ export class InMemorySaleRepository implements SaleRepository {
       },
     } as DetailedSale & { unit: { organizationId: string } }
     this.sales.push(sale)
-    return sale
+    return this.sanitizeSale(sale)
   }
 
   async findMany(where: Prisma.SaleWhereInput = {}): Promise<DetailedSale[]> {
-    return this.sales.filter((s) => {
-      if (where.unitId && s.unitId !== where.unitId) return false
-      if (
-        where.unit &&
-        'organizationId' in (where.unit as { organizationId: string })
-      ) {
-        const orgId = (where.unit as { organizationId: string }).organizationId
-        const unitOrg =
-          (s as { unit?: { organizationId?: string }; organizationId?: string })
-            .unit?.organizationId ??
-          (s as { organizationId?: string }).organizationId
-        return unitOrg === orgId
-      }
-      return true
-    })
+    return this.sales
+      .filter((s) => {
+        if (where.unitId && s.unitId !== where.unitId) return false
+        if (
+          where.unit &&
+          'organizationId' in (where.unit as { organizationId: string })
+        ) {
+          const orgId = (where.unit as { organizationId: string })
+            .organizationId
+          const unitOrg =
+            (
+              s as {
+                unit?: { organizationId?: string }
+                organizationId?: string
+              }
+            ).unit?.organizationId ??
+            (s as { organizationId?: string }).organizationId
+          return unitOrg === orgId
+        }
+        return true
+      })
+      .map((sale) => this.sanitizeSale(sale))
   }
 
   async findById(id: string): Promise<DetailedSale | null> {
-    return this.sales.find((s) => s.id === id) ?? null
+    const sale = this.sales.find((s) => s.id === id) ?? null
+    return sale ? this.sanitizeSale(sale) : null
   }
 
   async update(
@@ -269,6 +324,26 @@ export class InMemorySaleRepository implements SaleRepository {
         unitId: 'unit-1',
         createdAt: new Date(),
       }
+    } else if ('couponId' in data && data.couponId === null) {
+      sale.couponId = null
+      sale.coupon = null
+    }
+    if (data.client && 'connect' in data.client) {
+      const cid = (data.client as { connect: { id: string } }).connect.id
+      sale.clientId = cid
+      sale.client = {
+        id: cid,
+        name: '',
+        email: '',
+        password: '',
+        active: true,
+        organizationId: 'org-1',
+        unitId: sale.unitId,
+        versionToken: 1,
+        versionTokenInvalidate: null,
+        createdAt: new Date(),
+        profile: null,
+      }
     }
     if (data.items) {
       const itemsData = data.items as {
@@ -282,7 +357,7 @@ export class InMemorySaleRepository implements SaleRepository {
       }
       if (itemsData.create) {
         for (const it of itemsData.create) {
-          sale.items.push({
+          const newItem: DetailedSaleItem = {
             id: randomUUID(),
             saleId: sale.id,
             serviceId:
@@ -290,6 +365,9 @@ export class InMemorySaleRepository implements SaleRepository {
                 ?.id ?? null,
             productId:
               (it.product as { connect?: { id: string } } | undefined)?.connect
+                ?.id ?? null,
+            planId:
+              (it.plan as { connect?: { id: string } } | undefined)?.connect
                 ?.id ?? null,
             appointmentId:
               (it.appointment as { connect?: { id: string } } | undefined)
@@ -302,12 +380,20 @@ export class InMemorySaleRepository implements SaleRepository {
               (it.coupon as { connect?: { id: string } } | undefined)?.connect
                 ?.id ?? null,
             price: it.price as number,
-            discount: (it.discount as number | null) ?? null,
-            discountType: it.discountType ?? null,
+            customPrice: it.customPrice ?? null,
+            discounts: (
+              (it.discounts as { create: Discount[] })?.create ?? []
+            ).map((d) => ({
+              id: randomUUID(),
+              saleItemId: '',
+              amount: d.amount,
+              type: d.type,
+              origin: d.origin as DiscountOrigin,
+              order: d.order,
+            })),
             porcentagemBarbeiro:
               (it.porcentagemBarbeiro as number | null) ?? null,
             commissionPaid: false,
-            transactions: [],
             appointment: it.appointment
               ? {
                   id: (it.appointment as { connect: { id: string } }).connect
@@ -319,8 +405,6 @@ export class InMemorySaleRepository implements SaleRepository {
                   status: 'SCHEDULED',
                   durationService: null,
                   observation: null,
-                  discount: 0,
-                  value: null,
                   services: [],
                 }
               : null,
@@ -332,7 +416,7 @@ export class InMemorySaleRepository implements SaleRepository {
                   imageUrl: null,
                   cost: 0,
                   price: 0,
-                  category: null,
+                  categoryId: 'cat-1',
                   defaultTime: null,
                   commissionPercentage: null,
                   unitId: 'unit-1',
@@ -349,6 +433,15 @@ export class InMemorySaleRepository implements SaleRepository {
                   commissionPercentage: null,
                   price: 0,
                   unitId: 'unit-1',
+                  categoryId: 'cat-1',
+                }
+              : null,
+            plan: it.plan
+              ? {
+                  id: (it.plan as { connect: { id: string } }).connect.id,
+                  price: 0,
+                  name: '',
+                  typeRecurrenceId: '',
                 }
               : null,
             barber: it.barber
@@ -394,29 +487,36 @@ export class InMemorySaleRepository implements SaleRepository {
                   createdAt: new Date(),
                 }
               : null,
-          } as DetailedSaleItem)
+          }
+          sale.items.push(newItem)
         }
       }
     }
     sale.transactions = sale.transactions ?? []
-    return sale
+    return this.sanitizeSale(sale)
   }
 
   async findManyByDateRange(start: Date, end: Date): Promise<DetailedSale[]> {
-    return this.sales.filter((s) => s.createdAt >= start && s.createdAt <= end)
+    return this.sales
+      .filter((s) => s.createdAt >= start && s.createdAt <= end)
+      .map((sale) => this.sanitizeSale(sale))
   }
 
   async findManyByUser(userId: string): Promise<DetailedSale[]> {
-    return this.sales.filter((s) => s.userId === userId)
+    return this.sales
+      .filter((s) => s.userId === userId)
+      .map((sale) => this.sanitizeSale(sale))
   }
 
   async findManyByBarber(barberId: string): Promise<DetailedSale[]> {
-    return this.sales.filter((s) =>
-      s.items.some((i) => i.barberId === barberId),
-    )
+    return this.sales
+      .filter((s) => s.items.some((i) => i.barberId === barberId))
+      .map((sale) => this.sanitizeSale(sale))
   }
 
   async findManyBySession(sessionId: string): Promise<DetailedSale[]> {
-    return this.sales.filter((s) => s.sessionId === sessionId)
+    return this.sales
+      .filter((s) => s.sessionId === sessionId)
+      .map((sale) => this.sanitizeSale(sale))
   }
 }

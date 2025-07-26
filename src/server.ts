@@ -1,9 +1,12 @@
 import { app } from './app'
 import { env } from './env'
+import { startGeneratePlanDebtsJob } from './jobs/generate-plan-debts-job'
 
 app.get('/health', (req, res) => {
   res.status(200).send('health')
 })
+
+startGeneratePlanDebtsJob()
 
 app
   .listen({

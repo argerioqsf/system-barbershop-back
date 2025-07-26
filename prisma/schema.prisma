@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "darwin-arm64", "linux-arm64-openssl-3.0.x"]
 }
 
@@ -82,6 +82,13 @@ enum DiscountType {
   VALUE
 }
 
+enum DiscountOrigin {
+  COUPON_SALE_ITEM
+  COUPON_SALE
+  PLAN
+  VALUE_SALE_ITEM
+}
+
 enum PaymentStatus {
   PAID
   PENDING
@@ -110,6 +117,12 @@ enum LoanStatus {
   PAID
 }
 
+enum PlanProfileStatus {
+  PAID
+  CANCELED
+  DEFAULTED
+}
+
 model Role {
   id          String       @id @default(uuid())
   name        RoleName
@@ -122,38 +135,38 @@ model Role {
 }
 
 model Permission {
-  id       String              @id @default(uuid())
-  name     PermissionName      @unique
+  id       String             @id @default(uuid())
+  name     PermissionName     @unique
   category PermissionCategory
-  roles    Role[]              @relation("RolePermissions")
-  profiles  Profile[]            @relation("ProfilePermissions")
+  roles    Role[]             @relation("RolePermissions")
+  profiles Profile[]          @relation("ProfilePermissions")
 
   @@map("permissions")
 }
 
 model User {
-  id                   String                @id @default(uuid())
-  name                 String
-  email                String                @unique
-  password             String
-  active               Boolean               @default(false)
-  organizationId       String
-  unitId               String
-  profile              Profile?
-  appointments         Appointment[]         @relation("ClientAppointments")
-  barberAppointments   Appointment[]         @relation("BarberAppointments")
-  sales                Sale[]
-  clientSales          Sale[]                @relation("SaleClient")
-  saleItems            SaleItem[]
-  transactions         Transaction[]
-  affectedTransactions Transaction[]         @relation("AffectedUser")
-  sessions             CashRegisterSession[]
-  loans                Loan[]
-  updatedLoans         Loan[] @relation("LoanUpdatedBy")
-  passwordResetTokens  PasswordResetToken[]
-  versionToken         Int      @default(1)
+  id                     String                @id @default(uuid())
+  name                   String
+  email                  String                @unique
+  password               String
+  active                 Boolean               @default(false)
+  organizationId         String
+  unitId                 String
+  profile                Profile?
+  appointments           Appointment[]         @relation("ClientAppointments")
+  barberAppointments     Appointment[]         @relation("BarberAppointments")
+  sales                  Sale[]
+  clientSales            Sale[]                @relation("SaleClient")
+  saleItems              SaleItem[]
+  transactions           Transaction[]
+  affectedTransactions   Transaction[]         @relation("AffectedUser")
+  sessions               CashRegisterSession[]
+  loans                  Loan[]
+  updatedLoans           Loan[]                @relation("LoanUpdatedBy")
+  passwordResetTokens    PasswordResetToken[]
+  versionToken           Int                   @default(1)
   versionTokenInvalidate Int?
-  createdAt            DateTime              @default(now())
+  createdAt              DateTime              @default(now())
 
   organization Organization @relation(fields: [organizationId], references: [id])
   unit         Unit         @relation(fields: [unitId], references: [id])
@@ -162,61 +175,64 @@ model User {
 }
 
 model Profile {
-  id                   String   @id @default(uuid())
+  id                   String               @id @default(uuid())
   phone                String
   cpf                  String
   genre                String
   birthday             String
   pix                  String
-  permissions          Permission[] @relation("ProfilePermissions")
+  permissions          Permission[]         @relation("ProfilePermissions")
   roleId               String
-  role                 Role @relation(fields: [roleId], references: [id])
-  commissionPercentage Float    @default(0)
-  totalBalance         Float    @default(0)
+  role                 Role                 @relation(fields: [roleId], references: [id])
+  commissionPercentage Float                @default(0)
+  totalBalance         Float                @default(0)
   barberServices       BarberService[]
   barberProducts       BarberProduct[]
-  userId               String   @unique
-  user                 User     @relation(fields: [userId], references: [id])
-  createdAt            DateTime @default(now())
+  userId               String               @unique
+  user                 User                 @relation(fields: [userId], references: [id])
+  createdAt            DateTime             @default(now())
   workHours            ProfileWorkHour[]
   blockedHours         ProfileBlockedHour[]
+  plans                PlanProfile[]
 
   @@map("profiles")
 }
 
 model Appointment {
-  id        String   @id @default(uuid())
-  clientId  String
-  barberId  String
-  unitId    String
-  date      DateTime
-  status    AppointmentStatus @default(SCHEDULED)
+  id              String            @id @default(uuid())
+  clientId        String
+  barberId        String
+  unitId          String
+  date            DateTime
+  status          AppointmentStatus @default(SCHEDULED)
   durationService Int?
-  observation String?
-  saleItem   SaleItem?
+  observation     String?
+  saleItem        SaleItem?
 
-  client  User    @relation("ClientAppointments", fields: [clientId], references: [id])
-  barber  User    @relation("BarberAppointments", fields: [barberId], references: [id])
+  client   User                 @relation("ClientAppointments", fields: [clientId], references: [id])
+  barber   User                 @relation("BarberAppointments", fields: [barberId], references: [id])
   services AppointmentService[]
-  unit    Unit    @relation(fields: [unitId], references: [id])
+  unit     Unit                 @relation(fields: [unitId], references: [id])
 
   @@map("appointments")
 }
 
 model Service {
-  id           String        @id @default(uuid())
-  name         String
-  description  String?
-  imageUrl     String?
-  cost         Float
-  price        Float
-  category     String?
-  defaultTime  Int?
+  id                   String               @id @default(uuid())
+  name                 String
+  description          String?
+  imageUrl             String?
+  cost                 Float
+  price                Float
+  defaultTime          Int?
   commissionPercentage Float?
-  unitId       String
-  appointmentServices AppointmentService[]
-  saleItems    SaleItem[]
-  barberServices BarberService[]
+  unitId               String
+  categoryId           String
+  category             Category             @relation(fields: [categoryId], references: [id])
+  benefitLinks         BenefitService[]
+  appointmentServices  AppointmentService[]
+  saleItems            SaleItem[]
+  barberServices       BarberService[]
 
   unit Unit @relation(fields: [unitId], references: [id])
 
@@ -224,12 +240,12 @@ model Service {
 }
 
 model BarberService {
-  id        String            @id @default(uuid())
-  profileId String
-  serviceId String
-  time      Int?
+  id                   String             @id @default(uuid())
+  profileId            String
+  serviceId            String
+  time                 Int?
   commissionPercentage Float?
-  commissionType CommissionCalcType @default(PERCENTAGE_OF_ITEM)
+  commissionType       CommissionCalcType @default(PERCENTAGE_OF_ITEM)
 
   profile Profile @relation(fields: [profileId], references: [id])
   service Service @relation(fields: [serviceId], references: [id])
@@ -239,11 +255,11 @@ model BarberService {
 }
 
 model BarberProduct {
-  id        String            @id @default(uuid())
-  profileId String
-  productId String
+  id                   String             @id @default(uuid())
+  profileId            String
+  productId            String
   commissionPercentage Float?
-  commissionType CommissionCalcType @default(PERCENTAGE_OF_ITEM)
+  commissionType       CommissionCalcType @default(PERCENTAGE_OF_ITEM)
 
   profile Profile @relation(fields: [profileId], references: [id])
   product Product @relation(fields: [productId], references: [id])
@@ -253,11 +269,11 @@ model BarberProduct {
 }
 
 model AppointmentService {
-  id            String   @id @default(uuid())
-  appointmentId String
-  serviceId     String
+  id                   String  @id @default(uuid())
+  appointmentId        String
+  serviceId            String
   commissionPercentage Float?
-  commissionPaid Boolean @default(false)
+  commissionPaid       Boolean @default(false)
 
   transactions Transaction[]
 
@@ -269,17 +285,20 @@ model AppointmentService {
 }
 
 model Product {
-  id          String     @id @default(uuid())
-  name        String
-  description String?
-  imageUrl    String?
-  quantity    Int        @default(0)
-  cost        Float
+  id                   String           @id @default(uuid())
+  name                 String
+  description          String?
+  imageUrl             String?
+  quantity             Int              @default(0)
+  cost                 Float
   commissionPercentage Float?
-  price       Float
-  unitId      String
-  saleItems   SaleItem[]
-  barberProducts BarberProduct[]
+  price                Float
+  unitId               String
+  categoryId           String
+  category             Category         @relation(fields: [categoryId], references: [id])
+  benefitLinks         BenefitProduct[]
+  saleItems            SaleItem[]
+  barberProducts       BarberProduct[]
 
   unit Unit @relation(fields: [unitId], references: [id])
 
@@ -295,18 +314,18 @@ model Transaction {
   type                  TransactionType
   description           String
   amount                Float
-  isLoan                Boolean       @default(false)
+  isLoan                Boolean         @default(false)
   receiptUrl            String?
   createdAt             DateTime        @default(now())
 
-  saleId String?
-  sale   Sale?          @relation(fields: [saleId], references: [id])
-  saleItemId String?
-  saleItem   SaleItem?  @relation(fields: [saleItemId], references: [id])
+  saleId               String?
+  sale                 Sale?               @relation(fields: [saleId], references: [id])
+  saleItemId           String?
+  saleItem             SaleItem?           @relation(fields: [saleItemId], references: [id])
   appointmentServiceId String?
-  appointmentService AppointmentService? @relation(fields: [appointmentServiceId], references: [id])
-  loanId String?
-  loan Loan? @relation(fields: [loanId], references: [id])
+  appointmentService   AppointmentService? @relation(fields: [appointmentServiceId], references: [id])
+  loanId               String?
+  loan                 Loan?               @relation(fields: [loanId], references: [id])
 
   user         User                 @relation(fields: [userId], references: [id])
   affectedUser User?                @relation("AffectedUser", fields: [affectedUserId], references: [id])
@@ -341,30 +360,47 @@ model Sale {
 }
 
 model SaleItem {
-  id                  String        @id @default(uuid())
+  id                  String     @id @default(uuid())
   saleId              String
   serviceId           String?
   productId           String?
-  quantity            Int           @default(1)
+  quantity            Int        @default(1)
   barberId            String?
-  appointmentId       String? @unique
+  appointmentId       String?    @unique
   couponId            String?
+  planId              String?
   price               Float
-  discount            Float?
-  discountType        DiscountType?
+  customPrice         Float?
+  discounts           Discount[]
   porcentagemBarbeiro Float?
-  commissionPaid      Boolean       @default(false)
+  commissionPaid      Boolean    @default(false)
 
-  transactions        Transaction[]
+  transactions Transaction[]
+  planProfiles PlanProfile[]
 
-  sale    Sale     @relation(fields: [saleId], references: [id])
-  service Service? @relation(fields: [serviceId], references: [id])
-  product Product? @relation(fields: [productId], references: [id])
-  barber  User?    @relation(fields: [barberId], references: [id])
+  sale        Sale         @relation(fields: [saleId], references: [id])
+  service     Service?     @relation(fields: [serviceId], references: [id])
+  product     Product?     @relation(fields: [productId], references: [id])
+  barber      User?        @relation(fields: [barberId], references: [id])
   appointment Appointment? @relation(fields: [appointmentId], references: [id])
-  coupon  Coupon?  @relation(fields: [couponId], references: [id])
+  coupon      Coupon?      @relation(fields: [couponId], references: [id])
+  plan        Plan?        @relation(fields: [planId], references: [id])
 
   @@map("sale_items")
+}
+
+model Discount {
+  id         String         @id @default(uuid())
+  amount     Float
+  type       DiscountType
+  origin     DiscountOrigin
+  order      Int
+  saleItemId String
+
+  saleItem SaleItem @relation(fields: [saleItemId], references: [id])
+
+  @@index([saleItemId])
+  @@map("discounts")
 }
 
 model CashRegisterSession {
@@ -386,21 +422,21 @@ model CashRegisterSession {
 }
 
 model Loan {
-  id        String   @id @default(uuid())
-  userId    String
-  unitId    String
-  sessionId String
-  status    LoanStatus   @default(PENDING)
-  amount    Float
-  createdAt DateTime @default(now())
-  paidAt    DateTime?
-  fullyPaid Boolean  @default(false)
+  id          String     @id @default(uuid())
+  userId      String
+  unitId      String
+  sessionId   String
+  status      LoanStatus @default(PENDING)
+  amount      Float
+  createdAt   DateTime   @default(now())
+  paidAt      DateTime?
+  fullyPaid   Boolean    @default(false)
   updatedById String?
 
-  user    User   @relation(fields: [userId], references: [id])
-  unit    Unit   @relation(fields: [unitId], references: [id])
-  session CashRegisterSession @relation(fields: [sessionId], references: [id])
-  updatedBy User? @relation("LoanUpdatedBy", fields: [updatedById], references: [id])
+  user         User                @relation(fields: [userId], references: [id])
+  unit         Unit                @relation(fields: [unitId], references: [id])
+  session      CashRegisterSession @relation(fields: [sessionId], references: [id])
+  updatedBy    User?               @relation("LoanUpdatedBy", fields: [updatedById], references: [id])
   transactions Transaction[]
 
   @@map("loans")
@@ -449,25 +485,27 @@ model Organization {
 }
 
 model Unit {
-  id             String                @id @default(uuid())
-  name           String
-  slug           String                @unique
-  organizationId String
-  totalBalance   Float                 @default(0)
-  allowsLoan     Boolean               @default(false)
-  loanMonthlyLimit Float               @default(0)
-  slotDuration   Int                   @default(60)
-  appointmentFutureLimitDays Int       @default(7)
-  services       Service[]
-  products       Product[]
-  appointments   Appointment[]
-  sales          Sale[]
-  transactions   Transaction[]
-  sessions       CashRegisterSession[]
-  loans          Loan[]
-  users          User[]
-  roles          Role[]
-  openingHours       UnitOpeningHour[]
+  id                         String                @id @default(uuid())
+  name                       String
+  slug                       String                @unique
+  organizationId             String
+  totalBalance               Float                 @default(0)
+  allowsLoan                 Boolean               @default(false)
+  loanMonthlyLimit           Float                 @default(0)
+  slotDuration               Int                   @default(60)
+  appointmentFutureLimitDays Int                   @default(7)
+  services                   Service[]
+  products                   Product[]
+  appointments               Appointment[]
+  sales                      Sale[]
+  transactions               Transaction[]
+  sessions                   CashRegisterSession[]
+  loans                      Loan[]
+  users                      User[]
+  categories                 Category[]
+  roles                      Role[]
+  openingHours               UnitOpeningHour[]
+  benefits                   Benefit[]
 
   organization Organization @relation(fields: [organizationId], references: [id])
   Coupon       Coupon[]
@@ -475,9 +513,8 @@ model Unit {
   @@map("units")
 }
 
-
 model UnitOpeningHour {
-  id        String   @id @default(uuid())
+  id        String @id @default(uuid())
   unitId    String
   weekDay   Int
   startHour String
@@ -489,7 +526,7 @@ model UnitOpeningHour {
 }
 
 model ProfileWorkHour {
-  id        String   @id @default(uuid())
+  id        String @id @default(uuid())
   profileId String
   weekDay   Int
   startHour String
@@ -509,4 +546,137 @@ model ProfileBlockedHour {
   profile Profile @relation(fields: [profileId], references: [id])
 
   @@map("profile_blocked_hours")
+}
+
+model TypeRecurrence {
+  id     String @id @default(uuid())
+  period Int
+
+  plans Plan[]
+
+  @@map("type_recurrences")
+}
+
+model Benefit {
+  id           String            @id @default(uuid())
+  name         String
+  description  String?
+  discount     Float?
+  discountType DiscountType?
+  unitId       String
+  unit         Unit              @relation(fields: [unitId], references: [id])
+  categories   BenefitCategory[]
+  services     BenefitService[]
+  products     BenefitProduct[]
+  plans        BenefitPlan[]
+
+  @@map("benefits")
+}
+
+model BenefitPlan {
+  id        String @id @default(uuid())
+  planId    String
+  benefitId String
+
+  plan    Plan    @relation(fields: [planId], references: [id])
+  benefit Benefit @relation(fields: [benefitId], references: [id])
+
+  @@unique([planId, benefitId])
+  @@map("benefit_plans")
+}
+
+model Plan {
+  id               String        @id @default(uuid())
+  price            Float
+  name             String
+  typeRecurrenceId String
+  saleItems        SaleItem[]
+  benefits         BenefitPlan[]
+  planProfiles     PlanProfile[]
+  debts            Debt[]
+
+  typeRecurrence TypeRecurrence @relation(fields: [typeRecurrenceId], references: [id])
+
+  @@map("plans")
+}
+
+model Category {
+  id           String            @id @default(uuid())
+  name         String
+  unitId       String
+  services     Service[]
+  products     Product[]
+  benefitLinks BenefitCategory[]
+
+  unit Unit @relation(fields: [unitId], references: [id])
+
+  @@map("categories")
+}
+
+model BenefitCategory {
+  id         String @id @default(uuid())
+  benefitId  String
+  categoryId String
+
+  benefit  Benefit  @relation(fields: [benefitId], references: [id])
+  category Category @relation(fields: [categoryId], references: [id])
+
+  @@unique([benefitId, categoryId])
+  @@map("benefit_categories")
+}
+
+model BenefitService {
+  id        String @id @default(uuid())
+  benefitId String
+  serviceId String
+
+  benefit Benefit @relation(fields: [benefitId], references: [id])
+  service Service @relation(fields: [serviceId], references: [id])
+
+  @@unique([benefitId, serviceId])
+  @@map("benefit_services")
+}
+
+model BenefitProduct {
+  id        String @id @default(uuid())
+  benefitId String
+  productId String
+
+  benefit Benefit @relation(fields: [benefitId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([benefitId, productId])
+  @@map("benefit_products")
+}
+
+model Debt {
+  id            String        @id @default(uuid())
+  value         Float
+  status        PaymentStatus @default(PAID)
+  planId        String
+  planProfileId String
+  paymentDate   DateTime
+  createdAt     DateTime      @default(now())
+
+  plan        Plan        @relation(fields: [planId], references: [id])
+  planProfile PlanProfile @relation(fields: [planProfileId], references: [id])
+
+  @@map("debts")
+}
+
+model PlanProfile {
+  id            String            @id @default(uuid())
+  planStartDate DateTime
+  status        PlanProfileStatus @default(PAID)
+  saleItemId    String
+  dueDateDebt   Int
+  planId        String
+  profileId     String
+  debts         Debt[]
+
+  saleItem SaleItem @relation(fields: [saleItemId], references: [id])
+  plan     Plan     @relation(fields: [planId], references: [id])
+  profile  Profile  @relation(fields: [profileId], references: [id])
+
+  @@map("plan_profiles")
 }

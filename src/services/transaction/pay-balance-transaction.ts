@@ -119,8 +119,8 @@ export class PayBalanceTransactionService {
     const typeForPayment = data.amount
       ? 'forAmmount'
       : data.saleItemIds || data.appointmentServiceIds
-        ? 'ForListIds'
-        : null
+      ? 'ForListIds'
+      : null
     if (typeForPayment === null) {
       throw new Error(
         'It is mandatory to pass at least one of the fields amount, saleItemIds, appointment ServiceIds',
@@ -241,7 +241,7 @@ export class PayBalanceTransactionService {
       })
 
       if (totalPaidLoan > 0) {
-        const { transactions: transactionsPay } =
+        const { transactions: transactionsPayUserCommission } =
           await payUserCommissionService.execute({
             valueToPay: totalPaidLoan,
             affectedUser,
@@ -249,7 +249,7 @@ export class PayBalanceTransactionService {
             totalToPay: totalCommission,
             paymentItems: [...saleItemsRecords],
           })
-        transactions.push(...transactionsPay)
+        transactions.push(...transactionsPayUserCommission)
       }
 
       transactions.push(...transactionsLoan)

@@ -15,7 +15,7 @@ import {
   IntervalsFormatted,
 } from './time'
 
-export type BarberWithHours = User & {
+export type BarberWithHours = Omit<User, 'password'> & {
   profile:
     | (Profile & {
         workHours: ProfileWorkHour[]
