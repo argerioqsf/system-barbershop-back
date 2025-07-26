@@ -6,6 +6,10 @@ interface CreateBenefitRequest {
   description?: string | null
   discount: number
   discountType: DiscountType
+  categories?: string[]
+  services?: string[]
+  products?: string[]
+  plans?: string[]
   unitId: string
 }
 
@@ -23,6 +27,34 @@ export class CreateBenefitService {
       discount: data.discount,
       discountType: data.discountType,
       unit: { connect: { id: data.unitId } },
+      ...(data.categories && {
+        categories: {
+          create: data.categories.map((id) => ({
+            category: { connect: { id } },
+          })),
+        },
+      }),
+      ...(data.services && {
+        services: {
+          create: data.services.map((id) => ({
+            service: { connect: { id } },
+          })),
+        },
+      }),
+      ...(data.products && {
+        products: {
+          create: data.products.map((id) => ({
+            product: { connect: { id } },
+          })),
+        },
+      }),
+      ...(data.plans && {
+        plans: {
+          create: data.plans.map((id) => ({
+            plan: { connect: { id } },
+          })),
+        },
+      }),
     })
     return { benefit }
   }
