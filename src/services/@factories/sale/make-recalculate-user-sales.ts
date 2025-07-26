@@ -3,6 +3,10 @@ import { PrismaSaleItemRepository } from '@/repositories/prisma/prisma-sale-item
 import { PrismaPlanRepository } from '@/repositories/prisma/prisma-plan-repository'
 import { PrismaPlanProfileRepository } from '@/repositories/prisma/prisma-plan-profile-repository'
 import { PrismaCouponRepository } from '@/repositories/prisma/prisma-coupon-repository'
+import { PrismaServiceRepository } from '@/repositories/prisma/prisma-service-repository'
+import { PrismaProductRepository } from '@/repositories/prisma/prisma-product-repository'
+import { PrismaAppointmentRepository } from '@/repositories/prisma/prisma-appointment-repository'
+import { PrismaBarberUsersRepository } from '@/repositories/prisma/prisma-barber-users-repository'
 import { RecalculateUserSalesService } from '@/services/sale/recalculate-user-sales'
 
 export function makeRecalculateUserSalesService() {
@@ -11,6 +15,10 @@ export function makeRecalculateUserSalesService() {
   const planRepository = new PrismaPlanRepository()
   const planProfileRepository = new PrismaPlanProfileRepository()
   const couponRepository = new PrismaCouponRepository()
+  const serviceRepository = new PrismaServiceRepository()
+  const productRepository = new PrismaProductRepository()
+  const appointmentRepository = new PrismaAppointmentRepository()
+  const barberRepository = new PrismaBarberUsersRepository()
 
   return new RecalculateUserSalesService(
     saleRepository,
@@ -18,5 +26,9 @@ export function makeRecalculateUserSalesService() {
     planRepository,
     planProfileRepository,
     couponRepository,
+    serviceRepository,
+    productRepository,
+    appointmentRepository,
+    barberRepository,
   )
 }

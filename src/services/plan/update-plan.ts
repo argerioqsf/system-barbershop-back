@@ -41,8 +41,11 @@ export class UpdatePlanService {
     const planProfiles = await this.planProfileRepository.findMany({
       planId: id,
     })
+    const uniqueProfileIds = Array.from(
+      new Set(planProfiles.map((pp) => pp.profileId)),
+    )
     const profiles = await Promise.all(
-      planProfiles.map((pp) => this.profilesRepository.findById(pp.profileId)),
+      uniqueProfileIds.map((pid) => this.profilesRepository.findById(pid)),
     )
     const userIds = profiles
       .map((p) => p?.user.id)

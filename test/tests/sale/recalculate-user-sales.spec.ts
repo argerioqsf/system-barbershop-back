@@ -6,8 +6,12 @@ import {
   FakePlanRepository,
   FakePlanProfileRepository,
   FakeCouponRepository,
+  FakeServiceRepository,
+  FakeProductRepository,
+  FakeAppointmentRepository,
+  FakeBarberUsersRepository,
 } from '../../helpers/fake-repositories'
-import { makeSaleWithBarber, makePlan, makeService } from '../../helpers/default-values'
+import { makeSaleWithBarber, makePlan, makeService, barberUser } from '../../helpers/default-values'
 import { PlanProfileStatus } from '@prisma/client'
 import { prisma } from '../../../src/lib/prisma'
 
@@ -17,6 +21,10 @@ describe('Recalculate user sales service', () => {
   let planRepo: FakePlanRepository
   let planProfileRepo: FakePlanProfileRepository
   let couponRepo: FakeCouponRepository
+  let serviceRepo: FakeServiceRepository
+  let productRepo: FakeProductRepository
+  let appointmentRepo: FakeAppointmentRepository
+  let barberRepo: FakeBarberUsersRepository
   let service: RecalculateUserSalesService
 
   beforeEach(() => {
@@ -25,12 +33,21 @@ describe('Recalculate user sales service', () => {
     planRepo = new FakePlanRepository()
     planProfileRepo = new FakePlanProfileRepository()
     couponRepo = new FakeCouponRepository()
+    serviceRepo = new FakeServiceRepository()
+    productRepo = new FakeProductRepository()
+    appointmentRepo = new FakeAppointmentRepository()
+    barberRepo = new FakeBarberUsersRepository()
+    ;(barberRepo.users as any).push(barberUser as any)
     service = new RecalculateUserSalesService(
       saleRepo,
       saleItemRepo,
       planRepo,
       planProfileRepo,
       couponRepo,
+      serviceRepo,
+      productRepo,
+      appointmentRepo,
+      barberRepo,
     )
     vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) => fn({} as any))
   })
@@ -75,7 +92,10 @@ describe('Recalculate user sales service', () => {
     const sale = makeSaleWithBarber()
     sale.clientId = 'client-1'
     sale.items[0].id = 'sitem1'
-    sale.items[0].service = makeService('svc1', 100)
+    const svc = makeService('svc1', 100)
+    sale.items[0].service = svc
+    sale.items[0].serviceId = svc.id
+    serviceRepo.services.push(svc as any)
     sale.items[0].price = 90
     sale.items[0].discounts = [
       { amount: 10, type: 'VALUE', origin: 'PLAN', order: 1 },

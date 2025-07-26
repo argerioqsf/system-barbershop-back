@@ -2,7 +2,15 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { UpdatePlanService } from '../../../src/services/plan/update-plan'
 import { FakePlanRepository, FakePlanProfileRepository, FakeProfilesRepository } from '../../helpers/fake-repositories'
 import { RecalculateUserSalesService } from '../../../src/services/sale/recalculate-user-sales'
-import { FakeSaleRepository, FakeSaleItemRepository, FakeCouponRepository } from '../../helpers/fake-repositories'
+import {
+  FakeSaleRepository,
+  FakeSaleItemRepository,
+  FakeCouponRepository,
+  FakeServiceRepository,
+  FakeProductRepository,
+  FakeAppointmentRepository,
+  FakeBarberUsersRepository,
+} from '../../helpers/fake-repositories'
 
 const plan = {
   id: 'p1',
@@ -26,12 +34,20 @@ describe('Update plan service', () => {
     const saleRepo = new FakeSaleRepository()
     const saleItemRepo = new FakeSaleItemRepository(saleRepo)
     const couponRepo = new FakeCouponRepository()
+    const serviceRepo = new FakeServiceRepository()
+    const productRepo = new FakeProductRepository()
+    const appointmentRepo = new FakeAppointmentRepository()
+    const barberRepo = new FakeBarberUsersRepository()
     recalc = new RecalculateUserSalesService(
       saleRepo,
       saleItemRepo,
       repo,
       planProfileRepo,
       couponRepo,
+      serviceRepo,
+      productRepo,
+      appointmentRepo,
+      barberRepo,
     )
     service = new UpdatePlanService(repo, planProfileRepo, profilesRepo, recalc)
   })
