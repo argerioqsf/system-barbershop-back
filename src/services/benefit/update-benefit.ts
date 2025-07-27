@@ -29,55 +29,10 @@ export class UpdateBenefitService {
     private recalcService: RecalculateUserSalesService,
   ) {}
 
-  async execute({
-    id,
-    data,
-    categories,
-    services,
-    products,
-    plans,
-  }: UpdateBenefitRequest): Promise<UpdateBenefitResponse> {
-    let updated!: Benefit
+  private async checkIfNeedToUpdateSales(benefitId: string) {
     await prisma.$transaction(async (tx) => {
-      updated = await this.repository.update(
-        id,
-        {
-          ...data,
-          ...(categories && {
-            categories: {
-              deleteMany: {},
-              create: categories.map((cid) => ({
-                category: { connect: { id: cid } },
-              })),
-            },
-          }),
-          ...(services && {
-            services: {
-              deleteMany: {},
-              create: services.map((sid) => ({
-                service: { connect: { id: sid } },
-              })),
-            },
-          }),
-          ...(products && {
-            products: {
-              deleteMany: {},
-              create: products.map((pid) => ({
-                product: { connect: { id: pid } },
-              })),
-            },
-          }),
-          ...(plans && {
-            plans: {
-              deleteMany: {},
-              create: plans.map((pid) => ({ plan: { connect: { id: pid } } })),
-            },
-          }),
-        },
-        tx,
-      )
       const plansList = await this.planRepository.findMany(
-        { benefits: { some: { benefitId: id } } },
+        { benefits: { some: { benefitId } } },
         tx,
       )
       const planIds = plansList.map((p) => p.id)
@@ -91,6 +46,51 @@ export class UpdateBenefitService {
 
       await this.recalcService.execute({ userIds }, tx)
     })
+  }
+
+  async execute({
+    id,
+    data,
+    categories,
+    services,
+    products,
+    plans,
+  }: UpdateBenefitRequest): Promise<UpdateBenefitResponse> {
+    const updated: Benefit = await this.repository.update(id, {
+      ...data,
+      ...(categories && {
+        categories: {
+          deleteMany: {},
+          create: categories.map((cid) => ({
+            category: { connect: { id: cid } },
+          })),
+        },
+      }),
+      ...(services && {
+        services: {
+          deleteMany: {},
+          create: services.map((sid) => ({
+            service: { connect: { id: sid } },
+          })),
+        },
+      }),
+      ...(products && {
+        products: {
+          deleteMany: {},
+          create: products.map((pid) => ({
+            product: { connect: { id: pid } },
+          })),
+        },
+      }),
+      ...(plans && {
+        plans: {
+          deleteMany: {},
+          create: plans.map((pid) => ({ plan: { connect: { id: pid } } })),
+        },
+      }),
+    })
+
+    await this.checkIfNeedToUpdateSales(id)
 
     return { benefit: updated }
   }
