@@ -8,7 +8,7 @@ import { ProductRepository } from '@/repositories/product-repository'
 import { AppointmentRepository } from '@/repositories/appointment-repository'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { prisma } from '@/lib/prisma'
-import { Prisma } from '@prisma/client'
+import { PaymentStatus, Prisma } from '@prisma/client'
 import { rebuildSaleItems, calculateTotal } from './utils/sale'
 import {
   updateDiscountsOnSaleItem,
@@ -40,6 +40,7 @@ export class RecalculateUserSalesService {
     if (userIds.length === 0) return
     const sales = await this.saleRepository.findMany({
       clientId: { in: userIds },
+      paymentStatus: { not: PaymentStatus.PAID },
     })
 
     for (const sale of sales) {
@@ -67,12 +68,6 @@ export class RecalculateUserSalesService {
           barberUserRepository: this.barberUserRepository,
           planRepository: this.planRepository,
         })
-        build.discounts = item.discounts.map((d) => ({
-          amount: d.amount,
-          type: d.type,
-          origin: d.origin,
-          order: d.order,
-        }))
         itemsBuild.push(build)
       }
       const rebuilt = await rebuildSaleItems(itemsBuild, {

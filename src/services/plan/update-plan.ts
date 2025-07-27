@@ -29,24 +29,19 @@ export class UpdatePlanService {
     data,
     benefitIds,
   }: UpdatePlanRequest): Promise<UpdatePlanResponse> {
-    let updated!: Plan
-    await prisma.$transaction(async (tx) => {
-      updated = await this.repository.update(
-        id,
-        {
-          ...data,
-          ...(benefitIds && {
-            benefits: {
-              deleteMany: {},
-              create: benefitIds.map((bid) => ({
-                benefit: { connect: { id: bid } },
-              })),
-            },
-          }),
+    const updated: Plan = await this.repository.update(id, {
+      ...data,
+      ...(benefitIds && {
+        benefits: {
+          deleteMany: {},
+          create: benefitIds.map((bid) => ({
+            benefit: { connect: { id: bid } },
+          })),
         },
-        tx,
-      )
+      }),
+    })
 
+    await prisma.$transaction(async (tx) => {
       const userIds = await findUserIdsLinkedToPlans(
         [id],
         this.planProfileRepository,
