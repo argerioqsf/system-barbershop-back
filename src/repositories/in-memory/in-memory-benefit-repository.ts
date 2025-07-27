@@ -18,7 +18,11 @@ export class InMemoryBenefitRepository implements BenefitRepository {
     return benefit
   }
 
-  async update(id: string, data: Prisma.BenefitUpdateInput): Promise<Benefit> {
+  async update(
+    id: string,
+    data: Prisma.BenefitUpdateInput,
+    _tx?: Prisma.TransactionClient, // eslint-disable-line @typescript-eslint/no-unused-vars
+  ): Promise<Benefit> {
     const benefit = this.benefits.find((b) => b.id === id)
     if (!benefit) throw new Error('Benefit not found')
     if (data.name) benefit.name = data.name as string

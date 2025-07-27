@@ -7,8 +7,13 @@ export class PrismaBenefitRepository implements BenefitRepository {
     return prisma.benefit.create({ data })
   }
 
-  update(id: string, data: Prisma.BenefitUpdateInput): Promise<Benefit> {
-    return prisma.benefit.update({ where: { id }, data })
+  update(
+    id: string,
+    data: Prisma.BenefitUpdateInput,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Benefit> {
+    const prismaClient = tx || prisma
+    return prismaClient.benefit.update({ where: { id }, data })
   }
 
   findById(id: string): Promise<Benefit | null> {

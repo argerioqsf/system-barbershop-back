@@ -53,7 +53,10 @@ export class InMemoryProfilesRepository implements ProfilesRepository {
     return profile
   }
 
-  async findById(id: string): Promise<
+  async findById(
+    id: string,
+    _tx?: Prisma.TransactionClient, // eslint-disable-line @typescript-eslint/no-unused-vars
+  ): Promise<
     | (Profile & {
         user: Omit<User, 'password'>
         permissions: { id: string; name: string }[]

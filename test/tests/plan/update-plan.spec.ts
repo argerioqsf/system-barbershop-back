@@ -1,6 +1,17 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { UpdatePlanService } from '../../../src/services/plan/update-plan'
-import { FakePlanRepository } from '../../helpers/fake-repositories'
+import { prisma } from '../../../src/lib/prisma'
+import { FakePlanRepository, FakePlanProfileRepository, FakeProfilesRepository } from '../../helpers/fake-repositories'
+import { RecalculateUserSalesService } from '../../../src/services/sale/recalculate-user-sales'
+import {
+  FakeSaleRepository,
+  FakeSaleItemRepository,
+  FakeCouponRepository,
+  FakeServiceRepository,
+  FakeProductRepository,
+  FakeAppointmentRepository,
+  FakeBarberUsersRepository,
+} from '../../helpers/fake-repositories'
 
 const plan = {
   id: 'p1',
@@ -12,11 +23,37 @@ const plan = {
 
 describe('Update plan service', () => {
   let repo: FakePlanRepository
+  let planProfileRepo: FakePlanProfileRepository
+  let profilesRepo: FakeProfilesRepository
+  let recalc: RecalculateUserSalesService
   let service: UpdatePlanService
 
   beforeEach(() => {
     repo = new FakePlanRepository([plan as any])
-    service = new UpdatePlanService(repo)
+    planProfileRepo = new FakePlanProfileRepository()
+    profilesRepo = new FakeProfilesRepository()
+    const saleRepo = new FakeSaleRepository()
+    const saleItemRepo = new FakeSaleItemRepository(saleRepo)
+    const couponRepo = new FakeCouponRepository()
+    const serviceRepo = new FakeServiceRepository()
+    const productRepo = new FakeProductRepository()
+    const appointmentRepo = new FakeAppointmentRepository()
+    const barberRepo = new FakeBarberUsersRepository()
+    recalc = new RecalculateUserSalesService(
+      saleRepo,
+      saleItemRepo,
+      repo,
+      planProfileRepo,
+      couponRepo,
+      serviceRepo,
+      productRepo,
+      appointmentRepo,
+      barberRepo,
+    )
+    vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) =>
+      fn({} as any),
+    )
+    service = new UpdatePlanService(repo, planProfileRepo, profilesRepo, recalc)
   })
 
   it('updates benefits list', async () => {

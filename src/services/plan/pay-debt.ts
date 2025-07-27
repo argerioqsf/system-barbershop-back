@@ -6,7 +6,7 @@ import {
   IncrementBalanceUnitResponse,
   IncrementBalanceUnitService,
 } from '../unit/increment-balance'
-import { PaymentStatus, Transaction } from '@prisma/client'
+import { PaymentStatus, Transaction, PlanProfileStatus } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 
 interface PayDebtRequest {
@@ -31,12 +31,10 @@ export class PayDebtService {
     if (!debt) throw new Error('Debt not found')
     if (debt.status === PaymentStatus.PAID) throw new Error('Debt already paid')
 
-    const profile = await this.planProfileRepo.findById(debt.planProfileId)
-    if (!profile) throw new Error('Plan profile not found')
+    const planProfile = await this.planProfileRepo.findById(debt.planProfileId)
+    if (!planProfile) throw new Error('Plan profile not found')
 
-    const saleItem = (
-      await this.saleItemRepo.findMany({ id: profile.saleItemId })
-    )[0]
+    const saleItem = await this.saleItemRepo.findById(planProfile.saleItemId)
     if (!saleItem) throw new Error('Sale item not found')
 
     const incUnit = new IncrementBalanceUnitService(this.unitRepo)
@@ -56,8 +54,6 @@ export class PayDebtService {
         tx,
       )
       transactionIncrementUnit = transaction
-      // TODO: verificar planProfile relacionado ao debito, depois que o debito for pago
-      //  e se ele estiver com o status DEFAULTED atualizar para PAID
 
       await this.debtRepo.update(
         debt.id,
@@ -67,6 +63,26 @@ export class PayDebtService {
         },
         tx,
       )
+
+      if (planProfile.status === PlanProfileStatus.DEFAULTED) {
+        const today = new Date()
+        today.setUTCHours(0, 0, 0, 0)
+        const debts = await this.debtRepo.findMany({
+          planProfileId: planProfile.id,
+        })
+        const hasOverdue = debts.some(
+          (d) =>
+            d.status !== PaymentStatus.PAID &&
+            d.paymentDate.getTime() < today.getTime(),
+        )
+        if (!hasOverdue) {
+          await this.planProfileRepo.update(
+            planProfile.id,
+            { status: PlanProfileStatus.PAID },
+            tx,
+          )
+        }
+      }
     })
 
     return { transaction: transactionIncrementUnit }

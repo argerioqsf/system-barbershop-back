@@ -168,33 +168,36 @@ export class UpdateSaleItemService {
     return {
       id: saleItemCurrent.id,
       price: saleItemCurrent.price,
-      quantity: saleItemUpdateFields.quantity ?? saleItemCurrent.quantity,
+      quantity:
+        saleItemUpdateFields.quantity !== undefined
+          ? saleItemUpdateFields.quantity
+          : saleItemCurrent.quantity,
       appointmentId:
-        'appointmentId' in saleItemUpdateFields
+        saleItemUpdateFields.appointmentId !== undefined
           ? saleItemUpdateFields.appointmentId
           : saleItemCurrent.appointmentId,
       barberId:
-        'barberId' in saleItemUpdateFields
+        saleItemUpdateFields.barberId !== undefined
           ? saleItemUpdateFields.barberId
           : saleItemCurrent.barberId,
       couponId:
-        'couponId' in saleItemUpdateFields
+        saleItemUpdateFields.couponId !== undefined
           ? saleItemUpdateFields.couponId
           : saleItemCurrent.couponId,
       customPrice:
-        'customPrice' in saleItemUpdateFields
+        saleItemUpdateFields.customPrice !== undefined
           ? saleItemUpdateFields.customPrice
           : saleItemCurrent.customPrice,
       planId:
-        'planId' in saleItemUpdateFields
+        saleItemUpdateFields.planId !== undefined
           ? saleItemUpdateFields.planId
           : saleItemCurrent.planId,
       productId:
-        'productId' in saleItemUpdateFields
+        saleItemUpdateFields.productId !== undefined
           ? saleItemUpdateFields.productId
           : saleItemCurrent.productId,
       serviceId:
-        'serviceId' in saleItemUpdateFields
+        saleItemUpdateFields.serviceId !== undefined
           ? saleItemUpdateFields.serviceId
           : saleItemCurrent.serviceId,
     }

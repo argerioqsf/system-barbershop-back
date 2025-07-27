@@ -29,8 +29,13 @@ export class PrismaPlanProfileRepository implements PlanProfileRepository {
 
   async findMany(
     where: Prisma.PlanProfileWhereInput = {},
+    tx?: Prisma.TransactionClient,
   ): Promise<PlanProfileWithDebts[]> {
-    return prisma.planProfile.findMany({ where, include: { debts: true } })
+    const prismaClient = tx || prisma
+    return prismaClient.planProfile.findMany({
+      where,
+      include: { debts: true },
+    })
   }
 
   async findById(id: string): Promise<PlanProfileWithDebts | null> {
@@ -45,5 +50,14 @@ export class PrismaPlanProfileRepository implements PlanProfileRepository {
       where: { debts: { some: { id } } },
       include: { debts: true },
     })
+  }
+
+  async update(
+    id: string,
+    data: Prisma.PlanProfileUncheckedUpdateInput,
+    tx?: Prisma.TransactionClient,
+  ) {
+    const prismaClient = tx || prisma
+    return prismaClient.planProfile.update({ where: { id }, data })
   }
 }

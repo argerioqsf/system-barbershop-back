@@ -84,7 +84,6 @@ describe('List user sold products service', () => {
     repo.sales.push(sale1, sale2, sale3)
 
     const res = await service.execute({ userId: barberUser.id })
-    // TODO: verificar logica do teste se faz sentido
     expect(res.items).toHaveLength(1)
     expect(res.items[0].productId).toBe(product.id)
   })

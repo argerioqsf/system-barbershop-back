@@ -17,8 +17,10 @@ export class PrismaProfilesRepository implements ProfilesRepository {
 
   async findById(
     id: string,
+    tx?: Prisma.TransactionClient,
   ): Promise<(Profile & { user: Omit<User, 'password'> }) | null> {
-    const profile = await prisma.profile.findUnique({
+    const prismaClient = tx || prisma
+    const profile = await prismaClient.profile.findUnique({
       where: { id },
       include: {
         user: {

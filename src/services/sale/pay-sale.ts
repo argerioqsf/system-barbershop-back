@@ -120,7 +120,7 @@ export class PaySaleService {
         profileId: clientProfileId,
         NOT: { status: 'CANCELED' },
       }
-      const existing = await this.planProfileRepository.findMany(where)
+      const existing = await this.planProfileRepository.findMany(where, tx)
       if (existing.length > 0) {
         throw new PlanAlreadyLinkedError()
       }

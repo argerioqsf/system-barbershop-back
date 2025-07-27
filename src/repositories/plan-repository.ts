@@ -33,7 +33,14 @@ export interface PlanRepository {
   ): Promise<PlanWithBenefitsAndRecurrence | null>
   findByIdWithRecurrence(id: string): Promise<PlanWithRecurrence | null>
   create(data: Prisma.PlanCreateInput): Promise<Plan>
-  update(id: string, data: Prisma.PlanUpdateInput): Promise<Plan>
-  findMany(where?: Prisma.PlanWhereInput): Promise<PlanWithBenefits[]>
+  update(
+    id: string,
+    data: Prisma.PlanUpdateInput,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Plan>
+  findMany(
+    where?: Prisma.PlanWhereInput,
+    tx?: Prisma.TransactionClient,
+  ): Promise<PlanWithBenefits[]>
   delete(id: string): Promise<void>
 }

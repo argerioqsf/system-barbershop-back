@@ -75,7 +75,11 @@ export class InMemoryPlanRepository implements PlanRepository {
     return plan
   }
 
-  async update(id: string, data: Prisma.PlanUpdateInput) {
+  async update(
+    id: string,
+    data: Prisma.PlanUpdateInput,
+    _tx?: Prisma.TransactionClient, // eslint-disable-line @typescript-eslint/no-unused-vars
+  ) {
     const plan = await this.findById(id)
     if (!plan) throw new Error('Plan not found')
     if (data.price) plan.price = data.price as number
@@ -112,7 +116,10 @@ export class InMemoryPlanRepository implements PlanRepository {
     return plan
   }
 
-  async findMany(): Promise<PlanWithBenefits[]> {
+  async findMany(
+    _where: Prisma.PlanWhereInput = {}, // eslint-disable-line @typescript-eslint/no-unused-vars
+    _tx?: Prisma.TransactionClient, // eslint-disable-line @typescript-eslint/no-unused-vars
+  ): Promise<PlanWithBenefits[]> {
     return this.plans as PlanWithBenefits[]
   }
 
