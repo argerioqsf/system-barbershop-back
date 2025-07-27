@@ -1,14 +1,8 @@
 import { PlanProfileRepository } from '@/repositories/plan-profile-repository'
-import { ProfilesRepository } from '@/repositories/profiles-repository'
-import { RecalculateUserSalesService } from '../sale/recalculate-user-sales'
 import { PaymentStatus, PlanProfileStatus } from '@prisma/client'
 
 export class CancelOverduePlanProfilesService {
-  constructor(
-    private repo: PlanProfileRepository,
-    private profilesRepo: ProfilesRepository,
-    private recalcService: RecalculateUserSalesService,
-  ) {}
+  constructor(private repo: PlanProfileRepository) {}
 
   async execute(date: Date = new Date()): Promise<void> {
     const today = new Date(date)
@@ -32,11 +26,6 @@ export class CancelOverduePlanProfilesService {
         await this.repo.update(profile.id, {
           status: PlanProfileStatus.CANCELED,
         })
-        const prof = await this.profilesRepo.findById(profile.profileId)
-        const userId = prof?.user.id
-        if (userId) {
-          await this.recalcService.execute({ userIds: [userId] })
-        }
       }
     }
   }

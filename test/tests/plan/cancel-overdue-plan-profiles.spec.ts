@@ -1,7 +1,6 @@
 import { it, expect, vi } from 'vitest'
 import { CancelOverduePlanProfilesService } from '../../../src/services/plan/cancel-overdue-plan-profiles'
-import { FakePlanProfileRepository, FakeProfilesRepository } from '../../helpers/fake-repositories'
-import { makeProfile } from '../../helpers/default-values'
+import { FakePlanProfileRepository } from '../../helpers/fake-repositories'
 
 it('cancels plan profile when last debt is overdue more than a month', async () => {
   const repo = new FakePlanProfileRepository([
@@ -26,17 +25,8 @@ it('cancels plan profile when last debt is overdue more than a month', async () 
       ],
     },
   ])
-  const profilesRepo = new FakeProfilesRepository([
-    makeProfile('prof1', 'u1') as any,
-  ])
-  const recalc = { execute: vi.fn() }
-  const service = new CancelOverduePlanProfilesService(
-    repo,
-    profilesRepo,
-    recalc as any,
-  )
+  const service = new CancelOverduePlanProfilesService(repo)
   await service.execute(new Date('2024-06-05'))
 
   expect(repo.items[0].status).toBe('CANCELED')
-  expect(recalc.execute).toHaveBeenCalledWith({ userIds: ['u1'] })
 })
