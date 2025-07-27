@@ -56,8 +56,10 @@ export class PayDebtService {
         tx,
       )
       transactionIncrementUnit = transaction
-      // TODO: verificar planProfile relacionado ao debito, depois que o debito for pago
-      //  e se ele estiver com o status DEFAULTED atualizar para PAID
+      // TODO: Fazer um cron para verificar todos os planProfiles e verificar
+      //  se tem planprofile com debitos vencidos, se tiver, atualizar o status do planprofile para DEFAULTED.
+      // verificar o planProfile relacionado ao debito que esta sendo pago, depois que o debito for pago,
+      // se o planProfile estiver com o status DEFAULTED atualizar para PAID
 
       await this.debtRepo.update(
         debt.id,
