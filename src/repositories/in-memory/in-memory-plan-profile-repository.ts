@@ -58,4 +58,25 @@ export class InMemoryPlanProfileRepository implements PlanProfileRepository {
   async findByDebtId(id: string): Promise<PlanProfileWithDebts | null> {
     return this.items.find((p) => p.debts.some((d) => d.id === id)) ?? null
   }
+
+  async update(
+    id: string,
+    data: Prisma.PlanProfileUncheckedUpdateInput,
+    _tx?: Prisma.TransactionClient, // eslint-disable-line @typescript-eslint/no-unused-vars
+  ): Promise<PlanProfileWithDebts> {
+    const idx = this.items.findIndex((p) => p.id === id)
+    if (idx < 0) throw new Error('PlanProfile not found')
+    const current = this.items[idx]
+    const updated: PlanProfileWithDebts = {
+      ...current,
+      planStartDate: (data.planStartDate ?? current.planStartDate) as Date,
+      status: (data.status ?? current.status) as PlanProfileStatus,
+      saleItemId: (data.saleItemId ?? current.saleItemId) as string,
+      dueDateDebt: (data.dueDateDebt ?? current.dueDateDebt) as number,
+      planId: (data.planId ?? current.planId) as string,
+      profileId: (data.profileId ?? current.profileId) as string,
+    }
+    this.items[idx] = updated
+    return updated
+  }
 }

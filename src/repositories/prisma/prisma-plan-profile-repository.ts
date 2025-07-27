@@ -51,4 +51,13 @@ export class PrismaPlanProfileRepository implements PlanProfileRepository {
       include: { debts: true },
     })
   }
+
+  async update(
+    id: string,
+    data: Prisma.PlanProfileUncheckedUpdateInput,
+    tx?: Prisma.TransactionClient,
+  ) {
+    const prismaClient = tx || prisma
+    return prismaClient.planProfile.update({ where: { id }, data })
+  }
 }
