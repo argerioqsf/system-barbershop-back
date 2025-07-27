@@ -64,13 +64,24 @@ export async function applyPlanDiscounts(
 ): Promise<ReturnBuildItemData[]> {
   const profilePlans = await planProfileRepo.findMany({
     profile: { userId },
-    status: PlanProfileStatus.PAID,
+    status: { in: [PlanProfileStatus.PAID, PlanProfileStatus.CANCELED] },
+  })
+  const today = new Date()
+  today.setUTCHours(0, 0, 0, 0)
+  const validProfiles = profilePlans.filter((pp) => {
+    if (pp.status !== PlanProfileStatus.CANCELED) return true
+    if (pp.debts.length === 0) return false
+    const sorted = [...pp.debts].sort(
+      (a, b) => b.paymentDate.getTime() - a.paymentDate.getTime(),
+    )
+    const lastDebt = sorted[0]
+    return today.getTime() <= lastDebt.paymentDate.getTime()
   })
   const benefitsMap: Record<
     string,
     PlanWithBenefits['benefits'][number]['benefit']
   > = {}
-  for (const pp of profilePlans) {
+  for (const pp of validProfiles) {
     const plan = await planRepo.findByIdWithBenefits(pp.planId)
     if (!plan) continue
     for (const pb of plan.benefits) {

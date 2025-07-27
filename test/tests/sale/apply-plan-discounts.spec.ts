@@ -1,0 +1,80 @@
+import { it, expect } from 'vitest'
+import { applyPlanDiscounts } from '../../../src/services/sale/utils/plan'
+import {
+  FakePlanRepository,
+  FakePlanProfileRepository,
+} from '../../helpers/fake-repositories'
+import { makePlan, makeService } from '../../helpers/default-values'
+import { DiscountType, PaymentStatus, PlanProfileStatus } from '@prisma/client'
+
+it('applies plan discount when canceled plan is still valid', async () => {
+  const service = makeService('svc1', 100)
+  const plan = makePlan('pl1', 100)
+  const planRepo = new FakePlanRepository([
+    {
+      ...plan,
+      benefits: [
+        {
+          id: 'pb1',
+          planId: plan.id,
+          benefitId: 'b1',
+          benefit: {
+            id: 'b1',
+            name: '',
+            description: null,
+            discount: 10,
+            discountType: DiscountType.VALUE,
+            unitId: service.unitId,
+            categories: [],
+            services: [{ id: 'bs1', benefitId: 'b1', serviceId: service.id }],
+            products: [],
+            plans: [],
+          },
+        },
+      ],
+    } as any,
+  ])
+  const tomorrow = new Date()
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  const planProfileRepo = new FakePlanProfileRepository([
+    {
+      id: 'pp1',
+      planStartDate: new Date(),
+      status: PlanProfileStatus.CANCELED,
+      saleItemId: 'i1',
+      dueDateDebt: 1,
+      planId: plan.id,
+      profileId: 'p1',
+      debts: [
+        {
+          id: 'd1',
+          value: 100,
+          status: PaymentStatus.PENDING,
+          planId: plan.id,
+          planProfileId: 'pp1',
+          paymentDate: tomorrow,
+          createdAt: new Date(),
+        },
+      ],
+    },
+  ])
+  const items = [
+    {
+      price: 100,
+      quantity: 1,
+      discounts: [],
+      service,
+      product: null,
+      plan: null,
+      barber: null,
+      commissionPaid: false,
+    },
+  ]
+
+  await applyPlanDiscounts(items as any, 'u1', planProfileRepo, planRepo)
+
+  expect(items[0].price).toBe(90)
+  expect(items[0].discounts[0]).toEqual(
+    expect.objectContaining({ origin: 'PLAN' }),
+  )
+})
