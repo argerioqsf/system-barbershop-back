@@ -1,6 +1,7 @@
-import { it, expect } from 'vitest'
+import { it, expect, vi } from 'vitest'
 import { UpdatePlanProfilesStatusService } from '../../../src/services/plan/update-plan-profiles-status'
-import { FakePlanProfileRepository } from '../../helpers/fake-repositories'
+import { FakePlanProfileRepository, FakeProfilesRepository } from '../../helpers/fake-repositories'
+import { makeProfile } from '../../helpers/default-values'
 
 it('marks plan profile as DEFAULTED if there is overdue debt', async () => {
   const repo = new FakePlanProfileRepository([
@@ -25,11 +26,13 @@ it('marks plan profile as DEFAULTED if there is overdue debt', async () => {
       ],
     },
   ])
-
-  const service = new UpdatePlanProfilesStatusService(repo)
+  const profilesRepo = new FakeProfilesRepository([makeProfile('prof1', 'u1') as any])
+  const recalc = { execute: vi.fn() }
+  const service = new UpdatePlanProfilesStatusService(repo, profilesRepo, recalc as any)
   await service.execute(new Date('2024-06-10'))
 
   expect(repo.items[0].status).toBe('DEFAULTED')
+  expect(recalc.execute).toHaveBeenCalledWith({ userIds: ['u1'] })
 })
 
 it('does not change status when plan profile is canceled', async () => {
@@ -55,9 +58,11 @@ it('does not change status when plan profile is canceled', async () => {
       ],
     },
   ])
-
-  const service = new UpdatePlanProfilesStatusService(repo)
+  const profilesRepo = new FakeProfilesRepository([makeProfile('prof1', 'u1') as any])
+  const recalc = { execute: vi.fn() }
+  const service = new UpdatePlanProfilesStatusService(repo, profilesRepo, recalc as any)
   await service.execute(new Date('2024-06-10'))
 
   expect(repo.items[0].status).toBe('CANCELED')
+  expect(recalc.execute).not.toHaveBeenCalled()
 })
