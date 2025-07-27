@@ -153,3 +153,55 @@ it('credits debt value to the unit even with discounts', async () => {
   expect(unitRepo.unit.totalBalance).toBe(100)
   expect(debtRepo.debts[0].status).toBe('PAID')
 })
+
+it('updates plan profile status to PAID when overdue debt is settled', async () => {
+  transactionRepo = new FakeTransactionRepository()
+  barberRepo = new FakeBarberUsersRepository()
+  cashRepo = new FakeCashRegisterRepository()
+  vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) => fn({} as any))
+
+  const saleRepo = new FakeSaleRepository()
+  const sale = await saleRepo.create({
+    total: 50,
+    method: 'CASH',
+    paymentStatus: 'PAID',
+    user: { connect: { id: 'u1' } },
+    client: { connect: { id: 'c1' } },
+    unit: { connect: { id: 'unit-1' } },
+    items: { create: [{ plan: { connect: { id: 'plan1' } }, quantity: 1, price: 50 }] },
+  } as any)
+  const item = sale.items[0]
+
+  const debt = {
+    id: 'd2',
+    value: 50,
+    status: 'PENDING' as const,
+    planId: 'plan1',
+    planProfileId: 'pp2',
+    paymentDate: new Date('2024-06-05'),
+    createdAt: new Date(),
+  }
+  const debtRepo = new FakeDebtRepository([debt])
+  const profileRepo = new FakePlanProfileRepository([
+    {
+      id: 'pp2',
+      planStartDate: new Date(),
+      status: 'DEFAULTED',
+      saleItemId: item.id,
+      dueDateDebt: 5,
+      planId: 'plan1',
+      profileId: 'p1',
+      debts: [debt],
+    },
+  ])
+  const itemRepo = new FakeSaleItemRepository(saleRepo)
+  const unitRepo = new FakeUnitRepository({ ...defaultUnit, id: 'unit-1', totalBalance: 0 })
+  const user = { ...defaultUser, id: 'u1', unitId: 'unit-1' }
+  barberRepo.users.push(user)
+  cashRepo.session = { ...makeCashSession('session-1', user.unitId), user }
+
+  const service = new PayDebtService(debtRepo, profileRepo, itemRepo, unitRepo)
+  await service.execute({ debtId: debt.id, userId: 'u1' })
+
+  expect(profileRepo.items[0].status).toBe('PAID')
+})
