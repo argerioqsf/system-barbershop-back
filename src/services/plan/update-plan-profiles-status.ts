@@ -16,10 +16,7 @@ export class UpdatePlanProfilesStatusService {
           d.paymentDate.getTime() < today.getTime(),
       )
 
-      if (
-        hasOverdueDebt &&
-        planProfile.status !== PlanProfileStatus.DEFAULTED
-      ) {
+      if (hasOverdueDebt && planProfile.status === PlanProfileStatus.PAID) {
         await this.planProfileRepo.update(planProfile.id, {
           status: PlanProfileStatus.DEFAULTED,
         })
