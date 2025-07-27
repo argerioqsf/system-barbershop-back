@@ -1,4 +1,9 @@
-import { DiscountType, PlanProfileStatus, DiscountOrigin } from '@prisma/client'
+import {
+  DiscountType,
+  PlanProfileStatus,
+  DiscountOrigin,
+  PaymentStatus,
+} from '@prisma/client'
 import {
   PlanRepository,
   PlanWithBenefits,
@@ -71,11 +76,11 @@ export async function applyPlanDiscounts(
   const validProfiles = profilePlans.filter((pp) => {
     if (pp.status !== PlanProfileStatus.CANCELED) return true
     if (pp.debts.length === 0) return false
-    const sorted = [...pp.debts].sort(
-      (a, b) => b.paymentDate.getTime() - a.paymentDate.getTime(),
-    )
-    const lastDebt = sorted[0]
-    return today.getTime() <= lastDebt.paymentDate.getTime()
+    const lastPaid = [...pp.debts]
+      .filter((d) => d.status === PaymentStatus.PAID)
+      .sort((a, b) => b.paymentDate.getTime() - a.paymentDate.getTime())[0]
+    if (!lastPaid) return false
+    return today.getTime() <= lastPaid.paymentDate.getTime()
   })
   const benefitsMap: Record<
     string,

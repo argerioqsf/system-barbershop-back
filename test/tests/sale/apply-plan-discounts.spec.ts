@@ -49,7 +49,7 @@ it('applies plan discount when canceled plan is still valid', async () => {
         {
           id: 'd1',
           value: 100,
-          status: PaymentStatus.PENDING,
+          status: PaymentStatus.PAID,
           planId: plan.id,
           planProfileId: 'pp1',
           paymentDate: tomorrow,
