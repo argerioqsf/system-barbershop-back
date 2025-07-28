@@ -40,7 +40,7 @@ it('does not change status when plan profile is canceled', async () => {
     {
       id: 'pp2',
       planStartDate: new Date('2024-06-01'),
-      status: 'CANCELED',
+      status: 'CANCELED_EXPIRED',
       saleItemId: 'si1',
       dueDateDebt: 5,
       planId: 'plan1',
@@ -63,6 +63,38 @@ it('does not change status when plan profile is canceled', async () => {
   const service = new UpdatePlanProfilesStatusService(repo, profilesRepo, recalc as any)
   await service.execute(new Date('2024-06-10'))
 
-  expect(repo.items[0].status).toBe('CANCELED')
+  expect(repo.items[0].status).toBe('CANCELED_EXPIRED')
+  expect(recalc.execute).not.toHaveBeenCalled()
+})
+
+it('marks CANCELED_ACTIVE plan as CANCELED_EXPIRED when last debt expired', async () => {
+  const repo = new FakePlanProfileRepository([
+    {
+      id: 'pp3',
+      planStartDate: new Date('2024-06-01'),
+      status: 'CANCELED_ACTIVE',
+      saleItemId: 'si1',
+      dueDateDebt: 5,
+      planId: 'plan1',
+      profileId: 'prof1',
+      debts: [
+        {
+          id: 'd1',
+          value: 80,
+          status: 'PAID',
+          planId: 'plan1',
+          planProfileId: 'pp3',
+          paymentDate: new Date('2024-06-05'),
+          createdAt: new Date('2024-06-01'),
+        },
+      ],
+    },
+  ])
+  const profilesRepo = new FakeProfilesRepository([makeProfile('prof1', 'u1') as any])
+  const recalc = { execute: vi.fn() }
+  const service = new UpdatePlanProfilesStatusService(repo, profilesRepo, recalc as any)
+  await service.execute(new Date('2024-06-10'))
+
+  expect(repo.items[0].status).toBe('CANCELED_EXPIRED')
   expect(recalc.execute).not.toHaveBeenCalled()
 })

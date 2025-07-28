@@ -64,7 +64,7 @@ export class PayDebtService {
         tx,
       )
 
-      if (planProfile.status === PlanProfileStatus.EXPIRED) {
+      if (planProfile.status === PlanProfileStatus.DEFAULTED) {
         const today = new Date()
         today.setUTCHours(0, 0, 0, 0)
         const debts = await this.debtRepo.findMany({

@@ -119,7 +119,8 @@ enum LoanStatus {
 
 enum PlanProfileStatus {
   PAID
-  CANCELED
+  CANCELED_ACTIVE
+  CANCELED_EXPIRED
   DEFAULTED
   EXPIRED
 }

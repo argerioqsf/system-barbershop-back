@@ -118,7 +118,14 @@ export class PaySaleService {
       const where: Prisma.PlanProfileWhereInput = {
         planId: item.planId,
         profileId: clientProfileId,
-        NOT: { status: 'CANCELED' },
+        NOT: {
+          status: {
+            in: [
+              PlanProfileStatus.CANCELED_ACTIVE,
+              PlanProfileStatus.CANCELED_EXPIRED,
+            ],
+          },
+        },
       }
       const existing = await this.planProfileRepository.findMany(where, tx)
       if (existing.length > 0) {

@@ -24,14 +24,14 @@ export class CancelPlanProfileService {
     const planProfile = await this.repo.findById(id)
     if (!planProfile) throw new Error('Plan profile not found')
 
-    if (planProfile.status === PlanProfileStatus.CANCELED) {
+    if (
+      planProfile.status === PlanProfileStatus.CANCELED_ACTIVE ||
+      planProfile.status === PlanProfileStatus.CANCELED_EXPIRED
+    ) {
       return { planProfile }
     }
 
-    const updated = await this.repo.update(id, {
-      status: PlanProfileStatus.CANCELED,
-    })
-
+    let status: PlanProfileStatus = PlanProfileStatus.CANCELED_EXPIRED
     if (planProfile.debts.length > 0) {
       const sorted = [...planProfile.debts].sort(
         (a, b) => b.paymentDate.getTime() - a.paymentDate.getTime(),
@@ -40,15 +40,21 @@ export class CancelPlanProfileService {
       if (lastDebt.status === PaymentStatus.PAID) {
         const today = new Date()
         today.setUTCHours(0, 0, 0, 0)
-        if (today.getTime() > lastDebt.paymentDate.getTime()) {
-          const profile = await this.profilesRepo.findById(
-            planProfile.profileId,
-          )
-          const userId = profile?.user.id
-          if (userId) {
-            await this.recalcService.execute({ userIds: [userId] })
-          }
+        if (today.getTime() <= lastDebt.paymentDate.getTime()) {
+          status = PlanProfileStatus.CANCELED_ACTIVE
         }
+      }
+    }
+
+    const updated = await this.repo.update(id, {
+      status,
+    })
+
+    if (status === PlanProfileStatus.CANCELED_EXPIRED) {
+      const profile = await this.profilesRepo.findById(planProfile.profileId)
+      const userId = profile?.user.id
+      if (userId) {
+        await this.recalcService.execute({ userIds: [userId] })
       }
     }
 

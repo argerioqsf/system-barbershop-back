@@ -186,7 +186,7 @@ it('updates plan profile status to PAID when overdue debt is settled', async () 
     {
       id: 'pp2',
       planStartDate: new Date(),
-      status: 'EXPIRED',
+      status: 'DEFAULTED',
       saleItemId: item.id,
       dueDateDebt: 5,
       planId: 'plan1',

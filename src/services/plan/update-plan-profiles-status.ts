@@ -22,6 +22,18 @@ export class UpdatePlanProfilesStatusService {
           d.paymentDate.getTime() < today.getTime(),
       )
 
+      if (planProfile.status === PlanProfileStatus.CANCELED_ACTIVE) {
+        const paid = [...planProfile.debts]
+          .filter((d) => d.status === PaymentStatus.PAID)
+          .sort((a, b) => b.paymentDate.getTime() - a.paymentDate.getTime())[0]
+        if (!paid || today.getTime() > paid.paymentDate.getTime()) {
+          await this.planProfileRepo.update(planProfile.id, {
+            status: PlanProfileStatus.CANCELED_EXPIRED,
+          })
+        }
+        continue
+      }
+
       if (hasOverdueDebt && planProfile.status === PlanProfileStatus.PAID) {
         await this.planProfileRepo.update(planProfile.id, {
           status: PlanProfileStatus.EXPIRED,

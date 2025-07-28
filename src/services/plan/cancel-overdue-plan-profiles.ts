@@ -9,7 +9,12 @@ export class CancelOverduePlanProfilesService {
     today.setUTCHours(0, 0, 0, 0)
 
     const profiles = await this.repo.findMany({
-      status: { not: PlanProfileStatus.CANCELED },
+      status: {
+        notIn: [
+          PlanProfileStatus.CANCELED_ACTIVE,
+          PlanProfileStatus.CANCELED_EXPIRED,
+        ],
+      },
     })
 
     for (const profile of profiles) {
@@ -24,7 +29,7 @@ export class CancelOverduePlanProfilesService {
       limit.setUTCHours(0, 0, 0, 0)
       if (today.getTime() > limit.getTime()) {
         await this.repo.update(profile.id, {
-          status: PlanProfileStatus.CANCELED,
+          status: PlanProfileStatus.CANCELED_EXPIRED,
         })
       }
     }

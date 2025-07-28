@@ -28,5 +28,5 @@ it('cancels plan profile when last debt is overdue more than a month', async () 
   const service = new CancelOverduePlanProfilesService(repo)
   await service.execute(new Date('2024-06-05'))
 
-  expect(repo.items[0].status).toBe('CANCELED')
+  expect(repo.items[0].status).toBe('CANCELED_EXPIRED')
 })

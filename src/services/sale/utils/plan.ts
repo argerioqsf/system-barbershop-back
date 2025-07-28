@@ -1,9 +1,4 @@
-import {
-  DiscountType,
-  PlanProfileStatus,
-  DiscountOrigin,
-  PaymentStatus,
-} from '@prisma/client'
+import { DiscountType, PlanProfileStatus, DiscountOrigin } from '@prisma/client'
 import {
   PlanRepository,
   PlanWithBenefits,
@@ -69,24 +64,13 @@ export async function applyPlanDiscounts(
 ): Promise<ReturnBuildItemData[]> {
   const profilePlans = await planProfileRepo.findMany({
     profile: { userId },
-    status: { in: [PlanProfileStatus.PAID, PlanProfileStatus.CANCELED] },
-  })
-  const today = new Date()
-  today.setUTCHours(0, 0, 0, 0)
-  const validProfiles = profilePlans.filter((pp) => {
-    if (pp.status !== PlanProfileStatus.CANCELED) return true
-    if (pp.debts.length === 0) return false
-    const lastPaid = [...pp.debts]
-      .filter((d) => d.status === PaymentStatus.PAID)
-      .sort((a, b) => b.paymentDate.getTime() - a.paymentDate.getTime())[0]
-    if (!lastPaid) return false
-    return today.getTime() <= lastPaid.paymentDate.getTime()
+    status: { in: [PlanProfileStatus.PAID, PlanProfileStatus.CANCELED_ACTIVE] },
   })
   const benefitsMap: Record<
     string,
     PlanWithBenefits['benefits'][number]['benefit']
   > = {}
-  for (const pp of validProfiles) {
+  for (const pp of profilePlans) {
     const plan = await planRepo.findByIdWithBenefits(pp.planId)
     if (!plan) continue
     for (const pb of plan.benefits) {
