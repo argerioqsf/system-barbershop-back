@@ -1,0 +1,3 @@
+-- AlterEnum
+ALTER TABLE `plan_profiles`
+  MODIFY `status` ENUM('PAID', 'CANCELED', 'DEFAULTED', 'EXPIRED') NOT NULL DEFAULT 'PAID';

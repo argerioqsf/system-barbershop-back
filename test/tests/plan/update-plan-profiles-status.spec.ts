@@ -3,7 +3,7 @@ import { UpdatePlanProfilesStatusService } from '../../../src/services/plan/upda
 import { FakePlanProfileRepository, FakeProfilesRepository } from '../../helpers/fake-repositories'
 import { makeProfile } from '../../helpers/default-values'
 
-it('marks plan profile as DEFAULTED if there is overdue debt', async () => {
+it('marks plan profile as EXPIRED if there is overdue debt', async () => {
   const repo = new FakePlanProfileRepository([
     {
       id: 'pp1',
@@ -31,7 +31,7 @@ it('marks plan profile as DEFAULTED if there is overdue debt', async () => {
   const service = new UpdatePlanProfilesStatusService(repo, profilesRepo, recalc as any)
   await service.execute(new Date('2024-06-10'))
 
-  expect(repo.items[0].status).toBe('DEFAULTED')
+  expect(repo.items[0].status).toBe('EXPIRED')
   expect(recalc.execute).toHaveBeenCalledWith({ userIds: ['u1'] })
 })
 

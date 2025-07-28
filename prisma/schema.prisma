@@ -121,6 +121,7 @@ enum PlanProfileStatus {
   PAID
   CANCELED
   DEFAULTED
+  EXPIRED
 }
 
 model Role {

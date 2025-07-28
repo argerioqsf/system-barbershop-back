@@ -7,7 +7,7 @@ it('cancels plan profile when last debt is overdue more than a month', async () 
     {
       id: 'pp1',
       planStartDate: new Date('2024-04-01'),
-      status: 'DEFAULTED',
+      status: 'EXPIRED',
       saleItemId: 'si1',
       dueDateDebt: 1,
       planId: 'plan1',

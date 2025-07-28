@@ -186,7 +186,7 @@ it('updates plan profile status to PAID when overdue debt is settled', async () 
     {
       id: 'pp2',
       planStartDate: new Date(),
-      status: 'DEFAULTED',
+      status: 'EXPIRED',
       saleItemId: item.id,
       dueDateDebt: 5,
       planId: 'plan1',
@@ -348,7 +348,7 @@ it('throws if sale item is not found', async () => {
   ).rejects.toThrow('Sale item not found')
 })
 
-it('keeps plan profile DEFAULTED when other overdue debts exist', async () => {
+it('keeps plan profile EXPIRED when other overdue debts exist', async () => {
   transactionRepo = new FakeTransactionRepository()
   barberRepo = new FakeBarberUsersRepository()
   cashRepo = new FakeCashRegisterRepository()
@@ -389,7 +389,7 @@ it('keeps plan profile DEFAULTED when other overdue debts exist', async () => {
     {
       id: 'pp5',
       planStartDate: new Date(),
-      status: 'DEFAULTED',
+      status: 'EXPIRED',
       saleItemId: item.id,
       dueDateDebt: 1,
       planId: 'plan1',
@@ -406,7 +406,7 @@ it('keeps plan profile DEFAULTED when other overdue debts exist', async () => {
   const service = new PayDebtService(debtRepo, profileRepo, itemRepo, unitRepo)
   await service.execute({ debtId: debt1.id, userId: 'u1' })
 
-  expect(profileRepo.items[0].status).toBe('DEFAULTED')
+  expect(profileRepo.items[0].status).toBe('EXPIRED')
 })
 
 it('does not change profile status when it is already PAID', async () => {

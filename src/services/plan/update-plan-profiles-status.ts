@@ -24,7 +24,7 @@ export class UpdatePlanProfilesStatusService {
 
       if (hasOverdueDebt && planProfile.status === PlanProfileStatus.PAID) {
         await this.planProfileRepo.update(planProfile.id, {
-          status: PlanProfileStatus.DEFAULTED,
+          status: PlanProfileStatus.EXPIRED,
         })
         const profile = await this.profilesRepo.findById(planProfile.profileId)
         const userId = profile?.user.id
