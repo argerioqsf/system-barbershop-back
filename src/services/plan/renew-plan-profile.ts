@@ -29,7 +29,7 @@ export class RenewPlanProfileService {
     if (!planProfile) throw new Error('Plan profile not found')
 
     if (planProfile.status !== PlanProfileStatus.EXPIRED) {
-      return { planProfile }
+      throw new Error('Plan profile is not expired')
     }
 
     const plan = await this.planRepo.findById(planProfile.planId)

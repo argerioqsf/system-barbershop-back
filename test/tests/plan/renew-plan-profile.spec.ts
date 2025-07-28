@@ -54,7 +54,7 @@ it('renews expired plan profile and recalculates sales', async () => {
   expect(recalc.execute).toHaveBeenCalledWith({ userIds: ['u1'] })
 })
 
-it('does nothing when plan profile is not expired', async () => {
+it('throws when plan profile is not expired', async () => {
   const plan = makePlan('plan1', 40)
   const planRepo = new FakePlanRepository([plan as any])
   const profileRepo = new FakePlanProfileRepository([
@@ -80,9 +80,9 @@ it('does nothing when plan profile is not expired', async () => {
     recalc as any,
   )
 
-  const { planProfile } = await service.execute({ id: 'pp2' })
-
-  expect(planProfile.status).toBe(PlanProfileStatus.PAID)
+  await expect(service.execute({ id: 'pp2' })).rejects.toThrow(
+    'Plan profile is not expired',
+  )
   expect(debtRepo.debts).toHaveLength(0)
   expect(recalc.execute).not.toHaveBeenCalled()
 })
