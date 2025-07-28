@@ -120,10 +120,7 @@ export class PaySaleService {
         profileId: clientProfileId,
         NOT: {
           status: {
-            in: [
-              PlanProfileStatus.CANCELED_ACTIVE,
-              PlanProfileStatus.CANCELED_EXPIRED,
-            ],
+            in: [PlanProfileStatus.CANCELED_EXPIRED],
           },
         },
       }
