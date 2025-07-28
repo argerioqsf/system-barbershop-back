@@ -5,7 +5,10 @@ import { randomUUID } from 'crypto'
 export class InMemoryDebtRepository implements DebtRepository {
   constructor(public debts: Debt[] = []) {}
 
-  async create(data: Prisma.DebtUncheckedCreateInput): Promise<Debt> {
+  async create(
+    data: Prisma.DebtUncheckedCreateInput,
+    _tx?: Prisma.TransactionClient,
+  ): Promise<Debt> {
     const debt: Debt = {
       id: randomUUID(),
       value: data.value ?? 0,

@@ -1,4 +1,5 @@
 import { it, expect, vi } from 'vitest'
+import { prisma } from '../../../src/lib/prisma'
 import { RenewPlanProfileService } from '../../../src/services/plan/renew-plan-profile'
 import {
   FakePlanProfileRepository,
@@ -10,6 +11,7 @@ import { makePlan, makeProfile } from '../../helpers/default-values'
 import { PlanProfileStatus, PaymentStatus } from '@prisma/client'
 
 it('renews expired plan profile and recalculates sales', async () => {
+  vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) => fn({} as any))
   const plan = makePlan('plan1', 80)
   const planRepo = new FakePlanRepository([plan as any])
   const profileRepo = new FakePlanProfileRepository([
@@ -51,10 +53,14 @@ it('renews expired plan profile and recalculates sales', async () => {
 
   expect(planProfile.status).toBe(PlanProfileStatus.PAID)
   expect(debtRepo.debts).toHaveLength(1)
-  expect(recalc.execute).toHaveBeenCalledWith({ userIds: ['u1'] })
+  expect(recalc.execute).toHaveBeenCalledWith(
+    { userIds: ['u1'] },
+    expect.anything(),
+  )
 })
 
 it('throws when plan profile is not expired', async () => {
+  vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) => fn({} as any))
   const plan = makePlan('plan1', 40)
   const planRepo = new FakePlanRepository([plan as any])
   const profileRepo = new FakePlanProfileRepository([

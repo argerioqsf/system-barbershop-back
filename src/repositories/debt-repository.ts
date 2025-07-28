@@ -1,7 +1,10 @@
 import { Prisma, Debt } from '@prisma/client'
 
 export interface DebtRepository {
-  create(data: Prisma.DebtUncheckedCreateInput): Promise<Debt>
+  create(
+    data: Prisma.DebtUncheckedCreateInput,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Debt>
   update(
     id: string,
     data: Prisma.DebtUncheckedUpdateInput,
