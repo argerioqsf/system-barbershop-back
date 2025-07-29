@@ -1,7 +1,9 @@
 import { PlanProfile, Prisma, Debt } from '@prisma/client'
+import { PlanWithRecurrence } from './plan-repository'
 
 export type PlanProfileWithDebts = PlanProfile & { debts: Debt[] }
-
+export type PlanProfileWithPlan = PlanProfile & { plan: PlanWithRecurrence }
+export type PlanProfileFindById = PlanProfileWithDebts & PlanProfileWithPlan
 export interface PlanProfileRepository {
   create(
     data: Prisma.PlanProfileUncheckedCreateInput & {
@@ -18,6 +20,6 @@ export interface PlanProfileRepository {
     data: Prisma.PlanProfileUncheckedUpdateInput,
     tx?: Prisma.TransactionClient,
   ): Promise<PlanProfile>
-  findById(id: string): Promise<PlanProfileWithDebts | null>
+  findById(id: string): Promise<PlanProfileFindById | null>
   findByDebtId(id: string): Promise<PlanProfileWithDebts | null>
 }

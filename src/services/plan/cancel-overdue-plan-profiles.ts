@@ -25,7 +25,11 @@ export class CancelOverduePlanProfilesService {
       const lastDebt = sorted[0]
       if (lastDebt.status === PaymentStatus.PAID) continue
       const limit = new Date(lastDebt.paymentDate)
-      limit.setUTCMonth(limit.getUTCMonth() + 1)
+      // TODO: deixar com que cada unidade possa cofigurar seu maximumTimeOfDefaultedPlanInMonths
+      const maximumTimeOfDefaultedPlanInMonths = 1
+      limit.setUTCMonth(
+        limit.getUTCMonth() + maximumTimeOfDefaultedPlanInMonths,
+      )
       limit.setUTCHours(0, 0, 0, 0)
       if (today.getTime() > limit.getTime()) {
         await this.repo.update(profile.id, {

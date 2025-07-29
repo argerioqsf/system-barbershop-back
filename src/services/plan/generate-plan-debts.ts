@@ -37,7 +37,9 @@ export class GeneratePlanDebtsService {
       const exists = profile.debts.some(
         (d) => d.paymentDate.getTime() === nextDate.getTime(),
       )
-      if (diff <= 20 && diff >= 0 && !exists) {
+      // TODO: deixar com que cada unidade possa cofigurar sua daysBeforeDueDate
+      const daysBeforeDueDate = 20
+      if (diff <= daysBeforeDueDate && diff >= 0 && !exists) {
         await this.debtRepo.create({
           value: lastDebt.value,
           status: PaymentStatus.PENDING,

@@ -7,6 +7,7 @@ export class InMemoryDebtRepository implements DebtRepository {
 
   async create(
     data: Prisma.DebtUncheckedCreateInput,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _tx?: Prisma.TransactionClient,
   ): Promise<Debt> {
     const debt: Debt = {

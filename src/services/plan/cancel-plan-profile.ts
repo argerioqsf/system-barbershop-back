@@ -1,7 +1,7 @@
 import { PlanProfileRepository } from '@/repositories/plan-profile-repository'
 import { ProfilesRepository } from '@/repositories/profiles-repository'
 import { RecalculateUserSalesService } from '../sale/recalculate-user-sales'
-import { PaymentStatus, PlanProfile, PlanProfileStatus } from '@prisma/client'
+import { PlanProfile, PlanProfileStatus } from '@prisma/client'
 
 interface CancelPlanProfileRequest {
   id: string
@@ -31,19 +31,10 @@ export class CancelPlanProfileService {
       return { planProfile }
     }
 
-    let status: PlanProfileStatus = PlanProfileStatus.CANCELED_EXPIRED
-    if (planProfile.debts.length > 0) {
-      const sorted = [...planProfile.debts].sort(
-        (a, b) => b.paymentDate.getTime() - a.paymentDate.getTime(),
-      )
-      const lastDebt = sorted[0]
-      if (lastDebt.status === PaymentStatus.PAID) {
-        const today = new Date()
-        today.setUTCHours(0, 0, 0, 0)
-        if (today.getTime() <= lastDebt.paymentDate.getTime()) {
-          status = PlanProfileStatus.CANCELED_ACTIVE
-        }
-      }
+    let status: PlanProfileStatus = PlanProfileStatus.CANCELED_ACTIVE
+
+    if (planProfile.status === PlanProfileStatus.EXPIRED) {
+      status = PlanProfileStatus.CANCELED_EXPIRED
     }
 
     const updated = await this.repo.update(id, {

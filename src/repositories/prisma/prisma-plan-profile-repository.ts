@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
 import {
+  PlanProfileFindById,
   PlanProfileRepository,
   PlanProfileWithDebts,
 } from '../plan-profile-repository'
@@ -38,10 +39,17 @@ export class PrismaPlanProfileRepository implements PlanProfileRepository {
     })
   }
 
-  async findById(id: string): Promise<PlanProfileWithDebts | null> {
+  async findById(id: string): Promise<PlanProfileFindById | null> {
     return prisma.planProfile.findUnique({
       where: { id },
-      include: { debts: true },
+      include: {
+        debts: true,
+        plan: {
+          include: {
+            typeRecurrence: true,
+          },
+        },
+      },
     })
   }
 

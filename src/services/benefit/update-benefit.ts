@@ -37,45 +37,40 @@ export class UpdateBenefitService {
     products,
     plans,
   }: UpdateBenefitRequest): Promise<UpdateBenefitResponse> {
-    let updated!: Benefit
-    await prisma.$transaction(async (tx) => {
-      updated = await this.repository.update(
-        id,
-        {
-          ...data,
-          ...(categories && {
-            categories: {
-              deleteMany: {},
-              create: categories.map((cid) => ({
-                category: { connect: { id: cid } },
-              })),
-            },
-          }),
-          ...(services && {
-            services: {
-              deleteMany: {},
-              create: services.map((sid) => ({
-                service: { connect: { id: sid } },
-              })),
-            },
-          }),
-          ...(products && {
-            products: {
-              deleteMany: {},
-              create: products.map((pid) => ({
-                product: { connect: { id: pid } },
-              })),
-            },
-          }),
-          ...(plans && {
-            plans: {
-              deleteMany: {},
-              create: plans.map((pid) => ({ plan: { connect: { id: pid } } })),
-            },
-          }),
+    const updated: Benefit = await this.repository.update(id, {
+      ...data,
+      ...(categories && {
+        categories: {
+          deleteMany: {},
+          create: categories.map((cid) => ({
+            category: { connect: { id: cid } },
+          })),
         },
-        tx,
-      )
+      }),
+      ...(services && {
+        services: {
+          deleteMany: {},
+          create: services.map((sid) => ({
+            service: { connect: { id: sid } },
+          })),
+        },
+      }),
+      ...(products && {
+        products: {
+          deleteMany: {},
+          create: products.map((pid) => ({
+            product: { connect: { id: pid } },
+          })),
+        },
+      }),
+      ...(plans && {
+        plans: {
+          deleteMany: {},
+          create: plans.map((pid) => ({ plan: { connect: { id: pid } } })),
+        },
+      }),
+    })
+    await prisma.$transaction(async (tx) => {
       const plansList = await this.planRepository.findMany(
         { benefits: { some: { benefitId: id } } },
         tx,
