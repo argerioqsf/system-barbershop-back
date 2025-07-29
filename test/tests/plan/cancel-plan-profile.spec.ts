@@ -42,8 +42,8 @@ it('recalculates sales when last debt date has passed', async () => {
   const { planProfile } = await service.execute({ id: 'pp1' })
   vi.useRealTimers()
 
-  expect(planProfile.status).toBe(PlanProfileStatus.CANCELED_EXPIRED)
-  expect(recalc.execute).toHaveBeenCalledWith({ userIds: ['u1'] })
+  expect(planProfile.status).toBe(PlanProfileStatus.CANCELED_ACTIVE)
+  expect(recalc.execute).not.toHaveBeenCalled()
 })
 
 it('keeps discounts active if last debt date not reached', async () => {

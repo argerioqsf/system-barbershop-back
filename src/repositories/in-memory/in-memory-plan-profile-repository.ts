@@ -1,19 +1,39 @@
-import { PlanProfileStatus, PaymentStatus, Prisma } from '@prisma/client'
+import {
+  PlanProfileStatus,
+  PaymentStatus,
+  Prisma,
+  PlanProfile,
+} from '@prisma/client'
 import {
   PlanProfileRepository,
   PlanProfileWithDebts,
+  PlanProfileFindById,
 } from '../plan-profile-repository'
+import { PlanWithRecurrence } from '../plan-repository'
 import { randomUUID } from 'crypto'
 
 export class InMemoryPlanProfileRepository implements PlanProfileRepository {
-  constructor(public items: PlanProfileWithDebts[] = []) {}
+  constructor(
+    public items: (PlanProfileWithDebts & { plan?: PlanWithRecurrence })[] = [],
+  ) {
+    this.items = items.map((item) => ({
+      ...item,
+      plan: item.plan ?? {
+        id: item.planId,
+        name: '',
+        price: 0,
+        typeRecurrenceId: '',
+        typeRecurrence: { period: 1 },
+      },
+    }))
+  }
 
   async create(
     data: Prisma.PlanProfileUncheckedCreateInput & {
       debts?: Prisma.DebtUncheckedCreateWithoutPlanProfileInput[]
     },
   ): Promise<PlanProfileWithDebts> {
-    const planProfile: PlanProfileWithDebts = {
+    const planProfile: PlanProfileWithDebts & { plan: PlanWithRecurrence } = {
       id: randomUUID(),
       planStartDate: data.planStartDate as Date,
       status: (data.status as PlanProfileStatus) ?? PlanProfileStatus.PAID,
@@ -22,6 +42,13 @@ export class InMemoryPlanProfileRepository implements PlanProfileRepository {
       planId: data.planId,
       profileId: data.profileId,
       debts: [],
+      plan: {
+        id: data.planId,
+        name: '',
+        price: 0,
+        typeRecurrenceId: '',
+        typeRecurrence: { period: 1 },
+      },
     }
 
     planProfile.debts = (data.debts ?? []).map((d) => ({
@@ -51,8 +78,20 @@ export class InMemoryPlanProfileRepository implements PlanProfileRepository {
     })
   }
 
-  async findById(id: string): Promise<PlanProfileWithDebts | null> {
-    return this.items.find((p) => p.id === id) ?? null
+  async findById(id: string): Promise<PlanProfileFindById | null> {
+    const item = this.items.find((p) => p.id === id)
+    return item
+      ? ({
+          ...item,
+          plan: item.plan ?? {
+            id: item.planId,
+            name: '',
+            price: 0,
+            typeRecurrenceId: '',
+            typeRecurrence: { period: 1 },
+          },
+        } as PlanProfileFindById)
+      : null
   }
 
   async findByDebtId(id: string): Promise<PlanProfileWithDebts | null> {
@@ -63,7 +102,7 @@ export class InMemoryPlanProfileRepository implements PlanProfileRepository {
     id: string,
     data: Prisma.PlanProfileUncheckedUpdateInput,
     _tx?: Prisma.TransactionClient, // eslint-disable-line @typescript-eslint/no-unused-vars
-  ): Promise<PlanProfileWithDebts> {
+  ): Promise<PlanProfile> {
     const idx = this.items.findIndex((p) => p.id === id)
     if (idx < 0) throw new Error('PlanProfile not found')
     const current = this.items[idx]
