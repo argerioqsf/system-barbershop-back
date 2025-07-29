@@ -7,7 +7,7 @@ import {
 } from '../../helpers/fake-repositories'
 import { makeProfile, makePlan } from '../../helpers/default-values'
 
-it('marks plan profile as EXPIRED if there is overdue debt', async () => {
+it('marks plan profile as DEFAULTED if there is overdue debt', async () => {
   const repo = new FakePlanProfileRepository([
     {
       id: 'pp1',

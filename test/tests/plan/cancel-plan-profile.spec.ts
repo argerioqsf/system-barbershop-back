@@ -37,19 +37,17 @@ beforeEach(() => {
   service = new CancelPlanProfileService(repo, profilesRepo, recalc as any)
 })
 
-it('recalculates sales when last debt date has passed', async () => {
-  vi.useFakeTimers().setSystemTime(new Date('2024-03-05'))
-  const { planProfile } = await service.execute({ id: 'pp1' })
-  vi.useRealTimers()
+it('cancels expired plan profile and recalculates sales', async () => {
+  repo.items[0].status = PlanProfileStatus.EXPIRED
 
-  expect(planProfile.status).toBe(PlanProfileStatus.CANCELED_ACTIVE)
-  expect(recalc.execute).not.toHaveBeenCalled()
+  const { planProfile } = await service.execute({ id: 'pp1' })
+
+  expect(planProfile.status).toBe(PlanProfileStatus.CANCELED_EXPIRED)
+  expect(recalc.execute).toHaveBeenCalledWith({ userIds: ['u1'] })
 })
 
-it('keeps discounts active if last debt date not reached', async () => {
-  vi.useFakeTimers().setSystemTime(new Date('2024-01-15'))
+it('cancels active plan profile without recalculating sales', async () => {
   const { planProfile } = await service.execute({ id: 'pp1' })
-  vi.useRealTimers()
 
   expect(planProfile.status).toBe(PlanProfileStatus.CANCELED_ACTIVE)
   expect(recalc.execute).not.toHaveBeenCalled()
