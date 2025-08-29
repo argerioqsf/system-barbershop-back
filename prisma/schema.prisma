@@ -656,12 +656,13 @@ model Debt {
   value         Float
   status        PaymentStatus @default(PAID)
   planId        String
-  planProfileId String
-  paymentDate   DateTime
+  planProfileId  String
+  paymentDate   DateTime?
+  dueDate       DateTime
   createdAt     DateTime      @default(now())
 
-  plan        Plan        @relation(fields: [planId], references: [id])
-  planProfile PlanProfile @relation(fields: [planProfileId], references: [id])
+  plan          Plan        @relation(fields: [planId], references: [id])
+  planProfile    PlanProfile @relation(fields: [planProfileId], references: [id])
 
   @@map("debts")
 }
@@ -671,7 +672,7 @@ model PlanProfile {
   planStartDate DateTime
   status        PlanProfileStatus @default(PAID)
   saleItemId    String
-  dueDateDebt   Int
+  dueDayDebt   Int
   planId        String
   profileId     String
   debts         Debt[]

@@ -29,7 +29,7 @@ describe('Update plan service', () => {
   let service: UpdatePlanService
 
   beforeEach(() => {
-    repo = new FakePlanRepository([plan as any])
+    repo = new FakePlanRepository([plan])
     planProfileRepo = new FakePlanProfileRepository()
     profilesRepo = new FakeProfilesRepository()
     const saleRepo = new FakeSaleRepository()
@@ -51,15 +51,15 @@ describe('Update plan service', () => {
       barberRepo,
     )
     vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) =>
-      fn({} as any),
+      fn({} as unknown as import('@prisma/client').Prisma.TransactionClient),
     )
     service = new UpdatePlanService(repo, planProfileRepo, profilesRepo, recalc)
   })
 
   it('updates benefits list', async () => {
     await service.execute({ id: 'p1', data: {}, benefitIds: ['b1'] })
-    const stored = repo.plans[0] as any
-    expect(stored.benefits).toHaveLength(1)
-    expect(stored.benefits[0].benefitId).toBe('b1')
+    const stored = repo.plans[0]
+    expect((stored as any).benefits).toHaveLength(1)
+    expect((stored as any).benefits[0].benefitId).toBe('b1')
   })
 })

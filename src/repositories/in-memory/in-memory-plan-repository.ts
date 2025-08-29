@@ -3,6 +3,7 @@ import {
   PlanRepository,
   PlanWithBenefits,
   PlanWithBenefitsAndRecurrence,
+  PlanWithRecurrence,
 } from '../plan-repository'
 import { randomUUID } from 'crypto'
 
@@ -24,19 +25,20 @@ export class InMemoryPlanRepository implements PlanRepository {
   ): Promise<PlanWithBenefitsAndRecurrence | null> {
     const plan = await this.findByIdWithBenefits(id)
     if (!plan) return null
-    return { ...(plan as PlanWithBenefits), typeRecurrence: { period: 1 } }
+    return {
+      ...(plan as PlanWithBenefits),
+      typeRecurrence: { id: 'rec-default', period: 1 },
+    }
   }
 
-  async findByIdWithRecurrence(
-    id: string,
-  ): Promise<(Plan & { typeRecurrence: { period: number } }) | null> {
+  async findByIdWithRecurrence(id: string): Promise<PlanWithRecurrence | null> {
     const plan = this.plans.find((p) => p.id === id) as
-      | (Plan & { typeRecurrence?: { period: number } })
+      | (Plan & { typeRecurrence?: { id: string; period: number } })
       | undefined
     if (!plan) return null
     return {
       ...plan,
-      typeRecurrence: plan.typeRecurrence ?? { period: 1 },
+      typeRecurrence: plan.typeRecurrence ?? { id: 'rec-default', period: 1 },
     }
   }
 
