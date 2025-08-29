@@ -1,6 +1,10 @@
-import { it, expect, vi } from 'vitest'
+import { it, expect } from 'vitest'
 import { CancelOverduePlanProfilesService } from '../../../src/services/plan/cancel-overdue-plan-profiles'
-import { FakePlanProfileRepository } from '../../helpers/fake-repositories'
+import {
+  FakePlanProfileRepository,
+  FakePlanRepository,
+} from '../../helpers/fake-repositories'
+import { makePlan } from '../../helpers/default-values'
 
 it('cancels plan profile when last debt is overdue more than a month', async () => {
   const repo = new FakePlanProfileRepository([
@@ -9,23 +13,25 @@ it('cancels plan profile when last debt is overdue more than a month', async () 
       planStartDate: new Date('2024-04-01'),
       status: 'EXPIRED',
       saleItemId: 'si1',
-      dueDateDebt: 1,
+      dueDayDebt: 1,
       planId: 'plan1',
       profileId: 'prof1',
       debts: [
         {
-          id: 'd1',
+          id: 'dpaid',
           value: 80,
-          status: 'PENDING',
+          status: 'PAID',
           planId: 'plan1',
           planProfileId: 'pp1',
-          paymentDate: new Date('2024-04-01'),
-          createdAt: new Date('2024-04-01'),
+          paymentDate: new Date('2024-03-01'),
+          dueDate: new Date('2024-04-01'),
+          createdAt: new Date('2024-03-01'),
         },
       ],
     },
   ])
-  const service = new CancelOverduePlanProfilesService(repo)
+  const planRepo = new FakePlanRepository([makePlan('plan1', 80)])
+  const service = new CancelOverduePlanProfilesService(repo, planRepo)
   await service.execute(new Date('2024-06-05'))
 
   expect(repo.items[0].status).toBe('CANCELED_EXPIRED')

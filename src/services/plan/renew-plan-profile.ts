@@ -5,6 +5,8 @@ import { ProfilesRepository } from '@/repositories/profiles-repository'
 import { RecalculateUserSalesService } from '../sale/recalculate-user-sales'
 import { PaymentStatus, PlanProfileStatus, PlanProfile } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
+import { calculateNextDueDate, getLastDebtPaid } from './utils/helpers'
+import { UserNotFoundError } from '../@errors/user/user-not-found-error'
 
 interface RenewPlanProfileRequest {
   id: string
@@ -33,14 +35,20 @@ export class RenewPlanProfileService {
       throw new Error('Plan profile is not expired')
     }
 
-    const plan = await this.planRepo.findById(planProfile.planId)
+    const plan = await this.planRepo.findByIdWithRecurrence(planProfile.planId)
     if (!plan) throw new Error('Plan not found')
 
     const profile = await this.profilesRepo.findById(planProfile.profileId)
     const userId = profile?.user.id
+    if (!userId) throw new UserNotFoundError()
 
     const now = new Date()
     await prisma.$transaction(async (tx) => {
+      // TODO: verificar se ja não existe um debito para essa data
+      const lastDebtPaid = getLastDebtPaid(planProfile.debts)
+      if (!lastDebtPaid) throw new Error('Plan not found')
+      if (!lastDebtPaid.paymentDate) throw new Error('Payment date not found')
+
       await this.debtRepo.create(
         {
           value: plan.price,
@@ -48,6 +56,11 @@ export class RenewPlanProfileService {
           planId: plan.id,
           planProfileId: planProfile.id,
           paymentDate: now,
+          dueDate: calculateNextDueDate(
+            lastDebtPaid.paymentDate,
+            plan.typeRecurrence,
+            planProfile.dueDayDebt,
+          ),
         },
         tx,
       )
@@ -60,9 +73,7 @@ export class RenewPlanProfileService {
         tx,
       )
 
-      if (userId) {
-        await this.recalcService.execute({ userIds: [userId] }, tx)
-      }
+      await this.recalcService.execute({ userIds: [userId] }, tx)
     })
 
     const updated = await this.planProfileRepo.findById(planProfile.id)

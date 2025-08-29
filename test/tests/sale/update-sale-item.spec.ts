@@ -190,7 +190,7 @@ describe('Update sale item service', () => {
       planStartDate: new Date(),
       status: 'PAID',
       saleItemId: 'i1',
-      dueDateDebt: 1,
+      dueDayDebt: 1,
       planId: plan.id,
       profileId: 'p-c1',
       debts: [],

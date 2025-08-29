@@ -35,6 +35,8 @@ import { BarberCannotSellItemError } from '../../@errors/barber/barber-cannot-se
 import { hasPermission } from '@/utils/permissions'
 import { applyCouponSaleItem, NewDiscount } from './coupon'
 import { SaleItemRepository } from '@/repositories/sale-item-repository'
+import { RecalculateUserSalesService } from '../recalculate-user-sales'
+import { ProfilesRepository } from '@/repositories/profiles-repository'
 
 export interface BuildItemDataOptions {
   saleItem: CreateSaleItem
@@ -270,7 +272,6 @@ export async function buildItemData({
     commissionPaid: false,
   }
 }
-
 export async function updateDiscountsOnSaleItem(
   saleItem: ReturnBuildItemData,
   saleItemId: string,
@@ -298,4 +299,17 @@ export async function updateDiscountsOnSaleItem(
     },
     tx,
   )
+}
+
+export async function checkAndRecalculateAffectedSales(
+  profileId: string,
+  recalcService: RecalculateUserSalesService,
+  profilesRepo: ProfilesRepository,
+  tx?: Prisma.TransactionClient,
+) {
+  const profile = await profilesRepo.findById(profileId)
+  const userId = profile?.user.id
+  if (userId) {
+    await recalcService.execute({ userIds: [userId] }, tx)
+  }
 }

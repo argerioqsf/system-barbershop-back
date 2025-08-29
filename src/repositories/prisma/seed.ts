@@ -530,12 +530,18 @@ async function main() {
   })
 
   if (client.profile) {
+    const dateNow = new Date()
+    const dueDate = new Date(dateNow)
+    const dueDayDebt = 28
+    dueDate.setUTCMonth(dueDate.getUTCMonth() + recurrence.period)
+    dueDate.setUTCDate(dueDayDebt)
+    dueDate.setUTCHours(0, 0, 0, 0)
     await prisma.planProfile.create({
       data: {
-        planStartDate: new Date(),
+        planStartDate: dateNow,
         status: PlanProfileStatus.PAID,
         saleItemId: sale.items[0].id,
-        dueDateDebt: 28,
+        dueDayDebt,
         planId: plan.id,
         profileId: client.profile.id,
         debts: {
@@ -544,7 +550,8 @@ async function main() {
               value: plan.price,
               status: PaymentStatus.PAID,
               planId: plan.id,
-              paymentDate: new Date(),
+              paymentDate: dateNow,
+              dueDate,
             },
           ],
         },

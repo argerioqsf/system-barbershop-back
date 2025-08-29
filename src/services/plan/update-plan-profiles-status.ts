@@ -4,42 +4,27 @@ import {
 } from '@/repositories/plan-profile-repository'
 import { ProfilesRepository } from '@/repositories/profiles-repository'
 import { RecalculateUserSalesService } from '../sale/recalculate-user-sales'
-import { Debt, PaymentStatus, PlanProfileStatus } from '@prisma/client'
-import {
-  PlanRepository,
-  PlanWithRecurrence,
-} from '@/repositories/plan-repository'
+import { Debt, PlanProfileStatus } from '@prisma/client'
 import { isPlanExpired } from './utils/expired'
+import { getLastDebtPaid, hasPendingDebts } from './utils/helpers'
+import { checkAndRecalculateAffectedSales } from '../sale/utils/item'
+import { prisma } from '@/lib/prisma'
 
 export class UpdatePlanProfilesStatusService {
   constructor(
     private planProfileRepo: PlanProfileRepository,
     private profilesRepo: ProfilesRepository,
     private recalcService: RecalculateUserSalesService,
-    private planRepo: PlanRepository,
   ) {}
 
-  private async checkAndRecalculateAffectedSales(profileId: string) {
-    const profile = await this.profilesRepo.findById(profileId)
-    const userId = profile?.user.id
-    if (userId) {
-      await this.recalcService.execute({ userIds: [userId] })
-    }
-  }
-
   private async handleExpired(
-    debts: Debt[],
+    lastDebtPaid: Debt,
     today: Date,
     planProfileStatus: PlanProfileStatus,
-    plan: PlanWithRecurrence,
   ) {
     let newPlanProfileStatus: PlanProfileStatus | undefined
-    const lastDebtPaid = debts
-      .filter((d) => d.status === PaymentStatus.PAID)
-      .sort((a, b) => b.paymentDate.getTime() - a.paymentDate.getTime())[0]
 
-    const planTime = plan.typeRecurrence.period
-    const isExpired = isPlanExpired(lastDebtPaid, planTime, today)
+    const isExpired = isPlanExpired(lastDebtPaid, today)
 
     if (isExpired) {
       if (planProfileStatus === PlanProfileStatus.CANCELED_ACTIVE) {
@@ -53,44 +38,32 @@ export class UpdatePlanProfilesStatusService {
     return newPlanProfileStatus
   }
 
-  private handleOverdue(
-    debts: Debt[],
-    today: Date,
-    planProfileStatus: PlanProfileStatus,
-  ) {
+  private handleDefaulted(debts: Debt[], planProfileStatus: PlanProfileStatus) {
     let newPlanProfileStatus: PlanProfileStatus | undefined
-    const hasOverdueDebt = debts.some(
-      (d) =>
-        d.status !== PaymentStatus.PAID &&
-        d.paymentDate.getTime() < today.getTime(),
-    )
-    if (hasOverdueDebt) {
-      if (planProfileStatus === PlanProfileStatus.PAID) {
+    const hasDebtsPending = hasPendingDebts(debts)
+    if (hasDebtsPending) {
+      if (planProfileStatus === PlanProfileStatus.EXPIRED) {
         newPlanProfileStatus = PlanProfileStatus.DEFAULTED
       }
     }
     return newPlanProfileStatus
   }
 
-  private async handleChangePaymentStatus(
+  private async checksAndGetsNewPlanProfileStatus(
     planProfile: PlanProfileWithDebts,
-    plan: PlanWithRecurrence,
     today: Date,
   ) {
     let newPlanProfileStatus: PlanProfileStatus | undefined
-    newPlanProfileStatus = await this.handleExpired(
-      planProfile.debts,
-      today,
-      planProfile.status,
-      plan,
-    )
+    const debts = planProfile.debts
+    const status = planProfile.status
+
+    const lastDebtPaid = getLastDebtPaid(planProfile.debts)
+    if (!lastDebtPaid) return undefined
+
+    newPlanProfileStatus = await this.handleExpired(lastDebtPaid, today, status)
 
     if (!newPlanProfileStatus) {
-      newPlanProfileStatus = this.handleOverdue(
-        planProfile.debts,
-        today,
-        planProfile.status,
-      )
+      newPlanProfileStatus = this.handleDefaulted(debts, status)
     }
 
     return newPlanProfileStatus
@@ -101,21 +74,27 @@ export class UpdatePlanProfilesStatusService {
     const today = new Date(date)
     today.setUTCHours(0, 0, 0, 0)
 
-    for (const planProfile of planProfiles) {
-      const plan = await this.planRepo.findByIdWithRecurrence(
-        planProfile.planId,
-      )
-      if (!plan) return undefined
-      const newPlanProfileStatus: PlanProfileStatus | undefined =
-        await this.handleChangePaymentStatus(planProfile, plan, today)
+    await prisma.$transaction(async (tx) => {
+      for (const planProfile of planProfiles) {
+        const newPlanProfileStatus: PlanProfileStatus | undefined =
+          await this.checksAndGetsNewPlanProfileStatus(planProfile, today)
 
-      if (newPlanProfileStatus) {
-        await this.planProfileRepo.update(planProfile.id, {
-          status: newPlanProfileStatus,
-        })
+        if (newPlanProfileStatus) {
+          await this.planProfileRepo.update(
+            planProfile.id,
+            {
+              status: newPlanProfileStatus,
+            },
+            tx,
+          )
+          await checkAndRecalculateAffectedSales(
+            planProfile.profileId,
+            this.recalcService,
+            this.profilesRepo,
+            tx,
+          )
+        }
       }
-
-      this.checkAndRecalculateAffectedSales(planProfile.profileId)
-    }
+    })
   }
 }

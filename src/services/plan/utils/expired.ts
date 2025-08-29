@@ -1,21 +1,27 @@
 import { Debt } from '@prisma/client'
-
-function addMonths(date: Date, months: number): Date {
-  const result = new Date(date.getTime())
-  result.setUTCMonth(result.getUTCMonth() + months)
-  return result
-}
+import { addMonthsCustom } from './helpers'
 
 function getDateWithoutTime(date: Date): Date {
   return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
 }
 export function isPlanExpired(
   lastDebtPaid: Debt,
+  today: Date = new Date(),
+): boolean {
+  return getDateWithoutTime(today) > getDateWithoutTime(lastDebtPaid.dueDate)
+}
+
+export function isPlanExpiredOfTheLimit(
+  lastDebtPaid: Debt,
   planTime: number,
   today: Date = new Date(),
 ): boolean {
-  const limitPlan = addMonths(lastDebtPaid.paymentDate, planTime)
-  return lastDebtPaid
-    ? getDateWithoutTime(today) > getDateWithoutTime(limitPlan)
-    : false
+  // TODO: deixar com que cada unidade possa cofigurar seu maximumTimeOfDefaultedPlanInMonths
+  const maximumTimeOfDefaultedPlanInMonths = 1
+  const maximumDefaultPeriod = planTime + maximumTimeOfDefaultedPlanInMonths
+  const limitDefaultPeriodPlan = addMonthsCustom(
+    new Date(lastDebtPaid.dueDate),
+    maximumDefaultPeriod,
+  )
+  return getDateWithoutTime(today) > getDateWithoutTime(limitDefaultPeriodPlan)
 }

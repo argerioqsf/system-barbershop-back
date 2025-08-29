@@ -43,6 +43,8 @@ import { prisma } from '@/lib/prisma'
 import { updateCouponsStock, updateProductsStock } from './utils/sale'
 import { CouponRepository } from '@/repositories/coupon-repository'
 import { ProductRepository } from '@/repositories/product-repository'
+import { TypeRecurrenceRepository } from '@/repositories/type-recurrence-repository'
+import { calculateNextDueDate } from '../plan/utils/helpers'
 
 type FullUser =
   | (Omit<User, 'password'> & {
@@ -75,6 +77,7 @@ export class PaySaleService {
     private planProfileRepository: PlanProfileRepository,
     private couponRepository: CouponRepository,
     private productRepository: ProductRepository,
+    private typeRecurrenceRepository: TypeRecurrenceRepository,
   ) {}
 
   private async verifyCommissionUser(
@@ -129,13 +132,22 @@ export class PaySaleService {
         throw new PlanAlreadyLinkedError()
       }
       const currentDate = new Date()
+      const dueDayDebt = currentDate.getDate()
+      if (!item.plan) throw new Error('Plan not found')
+
+      const recurrence = await this.typeRecurrenceRepository.findById(
+        item.plan.typeRecurrenceId,
+      )
+      if (!recurrence) throw new Error('Recurrence not found')
+
+      const dueDate = calculateNextDueDate(currentDate, recurrence, dueDayDebt)
       await this.planProfileRepository.create(
         {
           saleItemId: item.id,
           planId: item.planId,
           profileId: clientProfileId,
           planStartDate: currentDate,
-          dueDateDebt: currentDate.getDate(),
+          dueDayDebt,
           status: PlanProfileStatus.PAID,
           debts: [
             {
@@ -143,6 +155,7 @@ export class PaySaleService {
               status: PaymentStatus.PAID,
               planId: item.planId,
               paymentDate: currentDate,
+              dueDate,
             },
           ],
         },

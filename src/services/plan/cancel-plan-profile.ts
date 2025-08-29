@@ -36,7 +36,7 @@ export class CancelPlanProfileService {
     if (planProfile.status === PlanProfileStatus.EXPIRED) {
       status = PlanProfileStatus.CANCELED_EXPIRED
     }
-
+    // TODO: utilizar transaction para englobar todas as consultas no banco
     const updated = await this.repo.update(id, {
       status,
     })

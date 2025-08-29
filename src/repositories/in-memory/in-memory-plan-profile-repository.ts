@@ -23,7 +23,7 @@ export class InMemoryPlanProfileRepository implements PlanProfileRepository {
         name: '',
         price: 0,
         typeRecurrenceId: '',
-        typeRecurrence: { period: 1 },
+        typeRecurrence: { id: 'rec-default', period: 1 },
       },
     }))
   }
@@ -38,7 +38,7 @@ export class InMemoryPlanProfileRepository implements PlanProfileRepository {
       planStartDate: data.planStartDate as Date,
       status: (data.status as PlanProfileStatus) ?? PlanProfileStatus.PAID,
       saleItemId: data.saleItemId,
-      dueDateDebt: data.dueDateDebt,
+      dueDayDebt: data.dueDayDebt,
       planId: data.planId,
       profileId: data.profileId,
       debts: [],
@@ -47,7 +47,7 @@ export class InMemoryPlanProfileRepository implements PlanProfileRepository {
         name: '',
         price: 0,
         typeRecurrenceId: '',
-        typeRecurrence: { period: 1 },
+        typeRecurrence: { id: 'rec-default', period: 1 },
       },
     }
 
@@ -57,7 +57,8 @@ export class InMemoryPlanProfileRepository implements PlanProfileRepository {
       status: (d.status as PaymentStatus) ?? PaymentStatus.PAID,
       planId: planProfile.planId,
       planProfileId: planProfile.id,
-      paymentDate: d.paymentDate as Date,
+      paymentDate: (d.paymentDate as Date | null | undefined) ?? null,
+      dueDate: d.dueDate as Date,
       createdAt: (d.createdAt as Date) ?? new Date(),
     }))
 
@@ -111,7 +112,7 @@ export class InMemoryPlanProfileRepository implements PlanProfileRepository {
       planStartDate: (data.planStartDate ?? current.planStartDate) as Date,
       status: (data.status ?? current.status) as PlanProfileStatus,
       saleItemId: (data.saleItemId ?? current.saleItemId) as string,
-      dueDateDebt: (data.dueDateDebt ?? current.dueDateDebt) as number,
+      dueDayDebt: (data.dueDayDebt ?? current.dueDayDebt) as number,
       planId: (data.planId ?? current.planId) as string,
       profileId: (data.profileId ?? current.profileId) as string,
     }

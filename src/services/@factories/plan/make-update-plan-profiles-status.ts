@@ -2,17 +2,10 @@ import { PrismaPlanProfileRepository } from '@/repositories/prisma/prisma-plan-p
 import { PrismaProfilesRepository } from '@/repositories/prisma/prisma-profile-repository'
 import { UpdatePlanProfilesStatusService } from '@/services/plan/update-plan-profiles-status'
 import { makeRecalculateUserSalesService } from '@/services/@factories/sale/make-recalculate-user-sales'
-import { PrismaPlanRepository } from '@/repositories/prisma/prisma-plan-repository'
 
 export function makeUpdatePlanProfilesStatus() {
   const repo = new PrismaPlanProfileRepository()
   const profilesRepo = new PrismaProfilesRepository()
-  const planRepo = new PrismaPlanRepository()
   const recalcService = makeRecalculateUserSalesService()
-  return new UpdatePlanProfilesStatusService(
-    repo,
-    profilesRepo,
-    recalcService,
-    planRepo,
-  )
+  return new UpdatePlanProfilesStatusService(repo, profilesRepo, recalcService)
 }

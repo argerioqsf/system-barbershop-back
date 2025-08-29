@@ -1,20 +1,17 @@
 import { it, expect, vi } from 'vitest'
 import { UpdatePlanProfilesStatusService } from '../../../src/services/plan/update-plan-profiles-status'
-import {
-  FakePlanProfileRepository,
-  FakeProfilesRepository,
-  FakePlanRepository,
-} from '../../helpers/fake-repositories'
-import { makeProfile, makePlan } from '../../helpers/default-values'
+import { prisma } from '../../../src/lib/prisma'
+import { FakePlanProfileRepository, FakeProfilesRepository } from '../../helpers/fake-repositories'
+import { makeProfile } from '../../helpers/default-values'
 
-it('marks plan profile as DEFAULTED if there is overdue debt', async () => {
+it('marks plan profile as EXPIRED if there is overdue debt', async () => {
   const repo = new FakePlanProfileRepository([
     {
       id: 'pp1',
       planStartDate: new Date('2024-06-01'),
       status: 'PAID',
       saleItemId: 'si1',
-      dueDateDebt: 5,
+      dueDayDebt: 5,
       planId: 'plan1',
       profileId: 'prof1',
       debts: [
@@ -25,6 +22,7 @@ it('marks plan profile as DEFAULTED if there is overdue debt', async () => {
           planId: 'plan1',
           planProfileId: 'pp1',
           paymentDate: new Date('2024-06-01'),
+          dueDate: new Date('2024-06-05'),
           createdAt: new Date('2024-06-01'),
         },
         {
@@ -33,25 +31,32 @@ it('marks plan profile as DEFAULTED if there is overdue debt', async () => {
           status: 'PENDING',
           planId: 'plan1',
           planProfileId: 'pp1',
-          paymentDate: new Date('2024-06-05'),
+          paymentDate: null as any,
+          dueDate: new Date('2024-06-05'),
           createdAt: new Date('2024-06-01'),
         },
       ],
     },
   ])
-  const profilesRepo = new FakeProfilesRepository([makeProfile('prof1', 'u1') as any])
+  const profilesRepo = new FakeProfilesRepository([
+    makeProfile('prof1', 'u1'),
+  ])
   const recalc = { execute: vi.fn() }
-  const planRepo = new FakePlanRepository([makePlan('plan1') as any])
   const service = new UpdatePlanProfilesStatusService(
     repo,
     profilesRepo,
-    recalc as any,
-    planRepo,
+    (recalc as unknown as import('../../../src/services/sale/recalculate-user-sales').RecalculateUserSalesService),
+  )
+  vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) =>
+    fn({} as unknown as import('@prisma/client').Prisma.TransactionClient),
   )
   await service.execute(new Date('2024-06-10'))
 
-  expect(repo.items[0].status).toBe('DEFAULTED')
-  expect(recalc.execute).toHaveBeenCalledWith({ userIds: ['u1'] })
+  expect(repo.items[0].status).toBe('EXPIRED')
+  expect(recalc.execute).toHaveBeenCalledWith(
+    { userIds: ['u1'] },
+    expect.anything(),
+  )
 })
 
 it('does not change status when plan profile is canceled', async () => {
@@ -61,7 +66,7 @@ it('does not change status when plan profile is canceled', async () => {
       planStartDate: new Date('2024-06-01'),
       status: 'CANCELED_EXPIRED',
       saleItemId: 'si1',
-      dueDateDebt: 5,
+      dueDayDebt: 5,
       planId: 'plan1',
       profileId: 'prof1',
       debts: [
@@ -72,6 +77,7 @@ it('does not change status when plan profile is canceled', async () => {
           planId: 'plan1',
           planProfileId: 'pp2',
           paymentDate: new Date('2024-06-01'),
+          dueDate: new Date('2024-06-05'),
           createdAt: new Date('2024-06-01'),
         },
         {
@@ -80,25 +86,29 @@ it('does not change status when plan profile is canceled', async () => {
           status: 'PENDING',
           planId: 'plan1',
           planProfileId: 'pp2',
-          paymentDate: new Date('2024-06-05'),
+          paymentDate: null as any,
+          dueDate: new Date('2024-06-05'),
           createdAt: new Date('2024-06-01'),
         },
       ],
     },
   ])
-  const profilesRepo = new FakeProfilesRepository([makeProfile('prof1', 'u1') as any])
+  const profilesRepo = new FakeProfilesRepository([
+    makeProfile('prof1', 'u1'),
+  ])
   const recalc = { execute: vi.fn() }
-  const planRepo = new FakePlanRepository([makePlan('plan1') as any])
   const service = new UpdatePlanProfilesStatusService(
     repo,
     profilesRepo,
-    recalc as any,
-    planRepo,
+    (recalc as unknown as import('../../../src/services/sale/recalculate-user-sales').RecalculateUserSalesService),
+  )
+  vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) =>
+    fn({} as unknown as import('@prisma/client').Prisma.TransactionClient),
   )
   await service.execute(new Date('2024-06-10'))
 
   expect(repo.items[0].status).toBe('CANCELED_EXPIRED')
-  expect(recalc.execute).toHaveBeenCalledWith({ userIds: ['u1'] })
+  expect(recalc.execute).not.toHaveBeenCalled()
 })
 
 it('marks CANCELED_ACTIVE plan as CANCELED_EXPIRED when last debt expired', async () => {
@@ -108,7 +118,7 @@ it('marks CANCELED_ACTIVE plan as CANCELED_EXPIRED when last debt expired', asyn
       planStartDate: new Date('2024-06-01'),
       status: 'CANCELED_ACTIVE',
       saleItemId: 'si1',
-      dueDateDebt: 5,
+      dueDayDebt: 5,
       planId: 'plan1',
       profileId: 'prof1',
       debts: [
@@ -119,22 +129,29 @@ it('marks CANCELED_ACTIVE plan as CANCELED_EXPIRED when last debt expired', asyn
           planId: 'plan1',
           planProfileId: 'pp3',
           paymentDate: new Date('2024-05-05'),
+          dueDate: new Date('2024-06-05'),
           createdAt: new Date('2024-05-05'),
         },
       ],
     },
   ])
-  const profilesRepo = new FakeProfilesRepository([makeProfile('prof1', 'u1') as any])
+  const profilesRepo = new FakeProfilesRepository([
+    makeProfile('prof1', 'u1'),
+  ])
   const recalc = { execute: vi.fn() }
-  const planRepo = new FakePlanRepository([makePlan('plan1') as any])
   const service = new UpdatePlanProfilesStatusService(
     repo,
     profilesRepo,
-    recalc as any,
-    planRepo,
+    (recalc as unknown as import('../../../src/services/sale/recalculate-user-sales').RecalculateUserSalesService),
+  )
+  vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) =>
+    fn({} as unknown as import('@prisma/client').Prisma.TransactionClient),
   )
   await service.execute(new Date('2024-06-10'))
 
   expect(repo.items[0].status).toBe('CANCELED_EXPIRED')
-  expect(recalc.execute).toHaveBeenCalledWith({ userIds: ['u1'] })
+  expect(recalc.execute).toHaveBeenCalledWith(
+    { userIds: ['u1'] },
+    expect.anything(),
+  )
 })

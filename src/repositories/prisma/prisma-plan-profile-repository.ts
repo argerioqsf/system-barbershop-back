@@ -19,7 +19,7 @@ export class PrismaPlanProfileRepository implements PlanProfileRepository {
         planStartDate: data.planStartDate,
         status: data.status,
         saleItem: { connect: { id: data.saleItemId } },
-        dueDateDebt: data.dueDateDebt,
+        dueDayDebt: data.dueDayDebt,
         plan: { connect: { id: data.planId } },
         profile: { connect: { id: data.profileId } },
         debts: data.debts ? { create: data.debts } : undefined,

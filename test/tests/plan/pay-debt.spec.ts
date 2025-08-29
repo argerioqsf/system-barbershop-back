@@ -10,9 +10,16 @@ import {
   FakeTransactionRepository,
   FakeBarberUsersRepository,
   FakeCashRegisterRepository,
+  FakePlanRepository,
+  FakeProfilesRepository,
 } from '../../helpers/fake-repositories'
-import { defaultUnit, defaultUser, makeCashSession } from '../../helpers/default-values'
+import {
+  defaultUnit,
+  defaultUser,
+  makeCashSession,
+} from '../../helpers/default-values'
 import { prisma } from '../../../src/lib/prisma'
+import type { Profile, User } from '@prisma/client'
 
 let transactionRepo: FakeTransactionRepository
 let barberRepo: FakeBarberUsersRepository
@@ -26,12 +33,45 @@ vi.mock(
   }),
 )
 
+function makeProfileWithUser(
+  id: string,
+  user: typeof defaultUser,
+): (Profile & { user: Omit<User, 'password'>; permissions: { id: string; name: string }[] }) {
+  const userNoPwd: Omit<User, 'password'> = {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    active: user.active,
+    organizationId: user.organizationId,
+    unitId: user.unitId,
+    versionToken: user.versionToken,
+    versionTokenInvalidate: user.versionTokenInvalidate,
+    createdAt: user.createdAt,
+    profile: null,
+    unit: null,
+  }
+  const profile: Profile = {
+    id,
+    phone: '',
+    cpf: '',
+    genre: '',
+    birthday: '',
+    pix: '',
+    roleId: 'role-1',
+    commissionPercentage: 0,
+    totalBalance: 0,
+    userId: user.id,
+    createdAt: new Date(),
+  }
+  return { ...profile, user: userNoPwd, permissions: [] }
+}
+
 it('increments unit balance when paying a debt', async () => {
   transactionRepo = new FakeTransactionRepository()
   barberRepo = new FakeBarberUsersRepository()
   cashRepo = new FakeCashRegisterRepository()
   vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) =>
-    fn({} as any),
+    fn({} as unknown as import('@prisma/client').Prisma.TransactionClient),
   )
 
   const saleRepo = new FakeSaleRepository()
@@ -42,8 +82,10 @@ it('increments unit balance when paying a debt', async () => {
     user: { connect: { id: 'u1' } },
     client: { connect: { id: 'c1' } },
     unit: { connect: { id: 'unit-1' } },
-    items: { create: [{ plan: { connect: { id: 'plan1' } }, quantity: 1, price: 80 }] },
-  } as any)
+    items: {
+      create: [{ plan: { connect: { id: 'plan1' } }, quantity: 1, price: 80 }],
+    },
+  } as unknown as import('../../../src/repositories/sale-repository').DetailedSale)
   const item = sale.items[0]
 
   const debt = {
@@ -52,7 +94,8 @@ it('increments unit balance when paying a debt', async () => {
     status: 'PENDING' as const,
     planId: 'plan1',
     planProfileId: 'pp1',
-    paymentDate: new Date('2024-07-28'),
+    paymentDate: null as any,
+    dueDate: new Date('2024-07-28'),
     createdAt: new Date(),
   }
   const debtRepo = new FakeDebtRepository([debt])
@@ -62,19 +105,43 @@ it('increments unit balance when paying a debt', async () => {
       planStartDate: new Date(),
       status: 'PAID',
       saleItemId: item.id,
-      dueDateDebt: 28,
+      dueDayDebt: 28,
       planId: 'plan1',
       profileId: 'p1',
       debts: [debt],
     },
   ])
   const itemRepo = new FakeSaleItemRepository(saleRepo)
-  const unitRepo = new FakeUnitRepository({ ...defaultUnit, id: 'unit-1', totalBalance: 0 })
+  const unitRepo = new FakeUnitRepository({
+    ...defaultUnit,
+    id: 'unit-1',
+    totalBalance: 0,
+  })
   const user = { ...defaultUser, id: 'u1', unitId: 'unit-1' }
   barberRepo.users.push(user)
   cashRepo.session = { ...makeCashSession('session-1', user.unitId), user }
 
-  const service = new PayDebtService(debtRepo, profileRepo, itemRepo, unitRepo)
+  const planRepo = new FakePlanRepository([
+    {
+      id: 'plan1',
+      name: 'Plan',
+      price: 80,
+      typeRecurrenceId: 'rec1',
+      typeRecurrence: { id: 'rec1', period: 1 },
+      benefits: [],
+    } as any,
+  ])
+  const profilesRepo = new FakeProfilesRepository([makeProfileWithUser('p1', user)])
+  const recalc = { execute: vi.fn() }
+  const service = new PayDebtService(
+    debtRepo,
+    profileRepo,
+    itemRepo,
+    unitRepo,
+    planRepo,
+    recalc as any,
+    profilesRepo,
+  )
   await service.execute({ debtId: debt.id, userId: 'u1' })
 
   expect(unitRepo.unit.totalBalance).toBe(80)
@@ -86,7 +153,7 @@ it('credits debt value to the unit even with discounts', async () => {
   barberRepo = new FakeBarberUsersRepository()
   cashRepo = new FakeCashRegisterRepository()
   vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) =>
-    fn({} as any),
+    fn({} as unknown as import('@prisma/client').Prisma.TransactionClient),
   )
 
   const saleRepo = new FakeSaleRepository()
@@ -116,7 +183,7 @@ it('credits debt value to the unit even with discounts', async () => {
         },
       ],
     },
-  } as any)
+  } as unknown as import('../../../src/repositories/sale-repository').DetailedSale)
   const item = sale.items[0]
 
   const debt = {
@@ -125,7 +192,8 @@ it('credits debt value to the unit even with discounts', async () => {
     status: 'PENDING' as const,
     planId: 'plan1',
     planProfileId: 'pp1',
-    paymentDate: new Date('2024-07-28'),
+    paymentDate: null as any,
+    dueDate: new Date('2024-07-28'),
     createdAt: new Date(),
   }
   const debtRepo = new FakeDebtRepository([debt])
@@ -135,19 +203,43 @@ it('credits debt value to the unit even with discounts', async () => {
       planStartDate: new Date(),
       status: 'PAID',
       saleItemId: item.id,
-      dueDateDebt: 28,
+      dueDayDebt: 28,
       planId: 'plan1',
       profileId: 'p1',
       debts: [debt],
     },
   ])
   const itemRepo = new FakeSaleItemRepository(saleRepo)
-  const unitRepo = new FakeUnitRepository({ ...defaultUnit, id: 'unit-1', totalBalance: 0 })
+  const unitRepo = new FakeUnitRepository({
+    ...defaultUnit,
+    id: 'unit-1',
+    totalBalance: 0,
+  })
   const user = { ...defaultUser, id: 'u1', unitId: 'unit-1' }
   barberRepo.users.push(user)
   cashRepo.session = { ...makeCashSession('session-1', user.unitId), user }
 
-  const service = new PayDebtService(debtRepo, profileRepo, itemRepo, unitRepo)
+  const planRepo = new FakePlanRepository([
+    {
+      id: 'plan1',
+      name: 'Plan',
+      price: 100,
+      typeRecurrenceId: 'rec1',
+      typeRecurrence: { id: 'rec1', period: 1 },
+      benefits: [],
+    } as any,
+  ])
+  const profilesRepo = new FakeProfilesRepository([makeProfileWithUser('p1', user)])
+  const recalc = { execute: vi.fn() }
+  const service = new PayDebtService(
+    debtRepo,
+    profileRepo,
+    itemRepo,
+    unitRepo,
+    planRepo,
+    recalc as any,
+    profilesRepo,
+  )
   await service.execute({ debtId: debt.id, userId: 'u1' })
 
   expect(unitRepo.unit.totalBalance).toBe(100)
@@ -158,7 +250,9 @@ it('updates plan profile status to PAID when overdue debt is settled', async () 
   transactionRepo = new FakeTransactionRepository()
   barberRepo = new FakeBarberUsersRepository()
   cashRepo = new FakeCashRegisterRepository()
-  vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) => fn({} as any))
+  vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) =>
+    fn({} as unknown as import('@prisma/client').Prisma.TransactionClient),
+  )
 
   const saleRepo = new FakeSaleRepository()
   const sale = await saleRepo.create({
@@ -168,8 +262,10 @@ it('updates plan profile status to PAID when overdue debt is settled', async () 
     user: { connect: { id: 'u1' } },
     client: { connect: { id: 'c1' } },
     unit: { connect: { id: 'unit-1' } },
-    items: { create: [{ plan: { connect: { id: 'plan1' } }, quantity: 1, price: 50 }] },
-  } as any)
+    items: {
+      create: [{ plan: { connect: { id: 'plan1' } }, quantity: 1, price: 50 }],
+    },
+  } as unknown as import('../../../src/repositories/sale-repository').DetailedSale)
   const item = sale.items[0]
 
   const debt = {
@@ -178,7 +274,8 @@ it('updates plan profile status to PAID when overdue debt is settled', async () 
     status: 'PENDING' as const,
     planId: 'plan1',
     planProfileId: 'pp2',
-    paymentDate: new Date('2024-06-05'),
+    paymentDate: null as any,
+    dueDate: new Date('2024-06-05'),
     createdAt: new Date(),
   }
   const debtRepo = new FakeDebtRepository([debt])
@@ -188,19 +285,43 @@ it('updates plan profile status to PAID when overdue debt is settled', async () 
       planStartDate: new Date(),
       status: 'DEFAULTED',
       saleItemId: item.id,
-      dueDateDebt: 5,
+      dueDayDebt: 5,
       planId: 'plan1',
       profileId: 'p1',
       debts: [debt],
     },
   ])
   const itemRepo = new FakeSaleItemRepository(saleRepo)
-  const unitRepo = new FakeUnitRepository({ ...defaultUnit, id: 'unit-1', totalBalance: 0 })
+  const unitRepo = new FakeUnitRepository({
+    ...defaultUnit,
+    id: 'unit-1',
+    totalBalance: 0,
+  })
   const user = { ...defaultUser, id: 'u1', unitId: 'unit-1' }
   barberRepo.users.push(user)
   cashRepo.session = { ...makeCashSession('session-1', user.unitId), user }
 
-  const service = new PayDebtService(debtRepo, profileRepo, itemRepo, unitRepo)
+  const planRepo = new FakePlanRepository([
+    {
+      id: 'plan1',
+      name: 'Plan',
+      price: 50,
+      typeRecurrenceId: 'rec1',
+      typeRecurrence: { id: 'rec1', period: 1 },
+      benefits: [],
+    } as any,
+  ])
+  const profilesRepo = new FakeProfilesRepository([makeProfileWithUser('p1', user)])
+  const recalc = { execute: vi.fn() }
+  const service = new PayDebtService(
+    debtRepo,
+    profileRepo,
+    itemRepo,
+    unitRepo,
+    planRepo,
+    recalc as any,
+    profilesRepo,
+  )
   await service.execute({ debtId: debt.id, userId: 'u1' })
 
   expect(profileRepo.items[0].status).toBe('PAID')
@@ -210,7 +331,9 @@ it('throws if debt is not found', async () => {
   transactionRepo = new FakeTransactionRepository()
   barberRepo = new FakeBarberUsersRepository()
   cashRepo = new FakeCashRegisterRepository()
-  vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) => fn({} as any))
+  vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) =>
+    fn({} as unknown as import('@prisma/client').Prisma.TransactionClient),
+  )
 
   const saleRepo = new FakeSaleRepository()
   const debtRepo = new FakeDebtRepository()
@@ -218,7 +341,18 @@ it('throws if debt is not found', async () => {
   const itemRepo = new FakeSaleItemRepository(saleRepo)
   const unitRepo = new FakeUnitRepository({ ...defaultUnit })
 
-  const service = new PayDebtService(debtRepo, profileRepo, itemRepo, unitRepo)
+  const planRepoNF = new FakePlanRepository()
+  const profilesRepoNF = new FakeProfilesRepository()
+  const recalcNF = { execute: vi.fn() }
+  const service = new PayDebtService(
+    debtRepo,
+    profileRepo,
+    itemRepo,
+    unitRepo,
+    planRepoNF,
+    recalcNF as any,
+    profilesRepoNF,
+  )
   await expect(
     service.execute({ debtId: 'missing', userId: 'u1' }),
   ).rejects.toThrow('Debt not found')
@@ -228,7 +362,9 @@ it('throws if debt is already paid', async () => {
   transactionRepo = new FakeTransactionRepository()
   barberRepo = new FakeBarberUsersRepository()
   cashRepo = new FakeCashRegisterRepository()
-  vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) => fn({} as any))
+  vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) =>
+    fn({} as any),
+  )
 
   const saleRepo = new FakeSaleRepository()
   const sale = await saleRepo.create({
@@ -238,8 +374,10 @@ it('throws if debt is already paid', async () => {
     user: { connect: { id: 'u1' } },
     client: { connect: { id: 'c1' } },
     unit: { connect: { id: 'unit-1' } },
-    items: { create: [{ plan: { connect: { id: 'plan1' } }, quantity: 1, price: 20 }] },
-  } as any)
+    items: {
+      create: [{ plan: { connect: { id: 'plan1' } }, quantity: 1, price: 20 }],
+    },
+  } as unknown as import('../../../src/repositories/sale-repository').DetailedSale)
   const item = sale.items[0]
 
   const debt = {
@@ -249,6 +387,7 @@ it('throws if debt is already paid', async () => {
     planId: 'plan1',
     planProfileId: 'pppaid',
     paymentDate: new Date('2024-06-01'),
+    dueDate: new Date('2024-06-01'),
     createdAt: new Date(),
   }
   const debtRepo = new FakeDebtRepository([debt])
@@ -258,7 +397,7 @@ it('throws if debt is already paid', async () => {
       planStartDate: new Date(),
       status: 'PAID',
       saleItemId: item.id,
-      dueDateDebt: 1,
+      dueDayDebt: 1,
       planId: 'plan1',
       profileId: 'p1',
       debts: [debt],
@@ -267,7 +406,18 @@ it('throws if debt is already paid', async () => {
   const itemRepo = new FakeSaleItemRepository(saleRepo)
   const unitRepo = new FakeUnitRepository({ ...defaultUnit })
 
-  const service = new PayDebtService(debtRepo, profileRepo, itemRepo, unitRepo)
+  const planRepoPaid = new FakePlanRepository()
+  const profilesRepoPaid = new FakeProfilesRepository()
+  const recalcPaid = { execute: vi.fn() }
+  const service = new PayDebtService(
+    debtRepo,
+    profileRepo,
+    itemRepo,
+    unitRepo,
+    planRepoPaid,
+    recalcPaid as any,
+    profilesRepoPaid,
+  )
   await expect(
     service.execute({ debtId: debt.id, userId: 'u1' }),
   ).rejects.toThrow('Debt already paid')
@@ -277,7 +427,9 @@ it('throws if plan profile is missing', async () => {
   transactionRepo = new FakeTransactionRepository()
   barberRepo = new FakeBarberUsersRepository()
   cashRepo = new FakeCashRegisterRepository()
-  vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) => fn({} as any))
+  vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) =>
+    fn({} as unknown as import('@prisma/client').Prisma.TransactionClient),
+  )
 
   const saleRepo = new FakeSaleRepository()
   const debt = {
@@ -286,7 +438,8 @@ it('throws if plan profile is missing', async () => {
     status: 'PENDING' as const,
     planId: 'plan1',
     planProfileId: 'pp-missing',
-    paymentDate: new Date('2024-06-01'),
+    paymentDate: null as any,
+    dueDate: new Date('2024-06-01'),
     createdAt: new Date(),
   }
   const debtRepo = new FakeDebtRepository([debt])
@@ -294,7 +447,18 @@ it('throws if plan profile is missing', async () => {
   const itemRepo = new FakeSaleItemRepository(saleRepo)
   const unitRepo = new FakeUnitRepository({ ...defaultUnit })
 
-  const service = new PayDebtService(debtRepo, profileRepo, itemRepo, unitRepo)
+  const planRepoMissing = new FakePlanRepository()
+  const profilesRepoMissing = new FakeProfilesRepository()
+  const recalcMissing = { execute: vi.fn() }
+  const service = new PayDebtService(
+    debtRepo,
+    profileRepo,
+    itemRepo,
+    unitRepo,
+    planRepoMissing,
+    recalcMissing as any,
+    profilesRepoMissing,
+  )
   await expect(
     service.execute({ debtId: debt.id, userId: 'u1' }),
   ).rejects.toThrow('Plan profile not found')
@@ -304,7 +468,9 @@ it('throws if sale item is not found', async () => {
   transactionRepo = new FakeTransactionRepository()
   barberRepo = new FakeBarberUsersRepository()
   cashRepo = new FakeCashRegisterRepository()
-  vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) => fn({} as any))
+  vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) =>
+    fn({} as any),
+  )
 
   const saleRepo = new FakeSaleRepository()
   await saleRepo.create({
@@ -314,8 +480,10 @@ it('throws if sale item is not found', async () => {
     user: { connect: { id: 'u1' } },
     client: { connect: { id: 'c1' } },
     unit: { connect: { id: 'unit-1' } },
-    items: { create: [{ plan: { connect: { id: 'plan1' } }, quantity: 1, price: 10 }] },
-  } as any)
+    items: {
+      create: [{ plan: { connect: { id: 'plan1' } }, quantity: 1, price: 10 }],
+    },
+  } as unknown as import('../../../src/repositories/sale-repository').DetailedSale)
 
   const debt = {
     id: 'd4',
@@ -323,7 +491,8 @@ it('throws if sale item is not found', async () => {
     status: 'PENDING' as const,
     planId: 'plan1',
     planProfileId: 'pp4',
-    paymentDate: new Date('2024-06-01'),
+    paymentDate: null as any,
+    dueDate: new Date('2024-06-01'),
     createdAt: new Date(),
   }
   const debtRepo = new FakeDebtRepository([debt])
@@ -333,7 +502,7 @@ it('throws if sale item is not found', async () => {
       planStartDate: new Date(),
       status: 'PAID',
       saleItemId: 'missing-item',
-      dueDateDebt: 1,
+      dueDayDebt: 1,
       planId: 'plan1',
       profileId: 'p1',
       debts: [debt],
@@ -342,7 +511,18 @@ it('throws if sale item is not found', async () => {
   const itemRepo = new FakeSaleItemRepository(saleRepo)
   const unitRepo = new FakeUnitRepository({ ...defaultUnit })
 
-  const service = new PayDebtService(debtRepo, profileRepo, itemRepo, unitRepo)
+  const planRepoSI = new FakePlanRepository()
+  const profilesRepoSI = new FakeProfilesRepository()
+  const recalcSI = { execute: vi.fn() }
+  const service = new PayDebtService(
+    debtRepo,
+    profileRepo,
+    itemRepo,
+    unitRepo,
+    planRepoSI,
+    recalcSI as any,
+    profilesRepoSI,
+  )
   await expect(
     service.execute({ debtId: debt.id, userId: 'u1' }),
   ).rejects.toThrow('Sale item not found')
@@ -352,7 +532,9 @@ it('keeps plan profile EXPIRED when other overdue debts exist', async () => {
   transactionRepo = new FakeTransactionRepository()
   barberRepo = new FakeBarberUsersRepository()
   cashRepo = new FakeCashRegisterRepository()
-  vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) => fn({} as any))
+  vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) =>
+    fn({} as unknown as import('@prisma/client').Prisma.TransactionClient),
+  )
 
   const saleRepo = new FakeSaleRepository()
   const sale = await saleRepo.create({
@@ -362,8 +544,10 @@ it('keeps plan profile EXPIRED when other overdue debts exist', async () => {
     user: { connect: { id: 'u1' } },
     client: { connect: { id: 'c1' } },
     unit: { connect: { id: 'unit-1' } },
-    items: { create: [{ plan: { connect: { id: 'plan1' } }, quantity: 1, price: 40 }] },
-  } as any)
+    items: {
+      create: [{ plan: { connect: { id: 'plan1' } }, quantity: 1, price: 40 }],
+    },
+  } as unknown as import('../../../src/repositories/sale-repository').DetailedSale)
   const item = sale.items[0]
 
   const debt1 = {
@@ -372,7 +556,8 @@ it('keeps plan profile EXPIRED when other overdue debts exist', async () => {
     status: 'PENDING' as const,
     planId: 'plan1',
     planProfileId: 'pp5',
-    paymentDate: new Date('2023-01-01'),
+    paymentDate: null as any,
+    dueDate: new Date('2023-01-01'),
     createdAt: new Date(),
   }
   const debt2 = {
@@ -381,7 +566,8 @@ it('keeps plan profile EXPIRED when other overdue debts exist', async () => {
     status: 'PENDING' as const,
     planId: 'plan1',
     planProfileId: 'pp5',
-    paymentDate: new Date('2023-02-01'),
+    paymentDate: null as any,
+    dueDate: new Date('2023-02-01'),
     createdAt: new Date(),
   }
   const debtRepo = new FakeDebtRepository([debt1, debt2])
@@ -391,7 +577,7 @@ it('keeps plan profile EXPIRED when other overdue debts exist', async () => {
       planStartDate: new Date(),
       status: 'EXPIRED',
       saleItemId: item.id,
-      dueDateDebt: 1,
+      dueDayDebt: 1,
       planId: 'plan1',
       profileId: 'p1',
       debts: [debt1, debt2],
@@ -403,7 +589,20 @@ it('keeps plan profile EXPIRED when other overdue debts exist', async () => {
   barberRepo.users.push(user)
   cashRepo.session = { ...makeCashSession('session-1', user.unitId), user }
 
-  const service = new PayDebtService(debtRepo, profileRepo, itemRepo, unitRepo)
+  const planRepoExpired = new FakePlanRepository([
+    { id: 'plan1', price: 40, name: 'Plan', typeRecurrenceId: 'rec1' },
+  ])
+  const profilesRepoExpired = new FakeProfilesRepository([makeProfileWithUser('p1', user)])
+  const recalcExpired = { execute: vi.fn() }
+  const service = new PayDebtService(
+    debtRepo,
+    profileRepo,
+    itemRepo,
+    unitRepo,
+    planRepoExpired,
+    recalcExpired as any,
+    profilesRepoExpired,
+  )
   await service.execute({ debtId: debt1.id, userId: 'u1' })
 
   expect(profileRepo.items[0].status).toBe('EXPIRED')
@@ -413,7 +612,9 @@ it('does not change profile status when it is already PAID', async () => {
   transactionRepo = new FakeTransactionRepository()
   barberRepo = new FakeBarberUsersRepository()
   cashRepo = new FakeCashRegisterRepository()
-  vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) => fn({} as any))
+  vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) =>
+    fn({} as any),
+  )
 
   const saleRepo = new FakeSaleRepository()
   const sale = await saleRepo.create({
@@ -423,7 +624,9 @@ it('does not change profile status when it is already PAID', async () => {
     user: { connect: { id: 'u1' } },
     client: { connect: { id: 'c1' } },
     unit: { connect: { id: 'unit-1' } },
-    items: { create: [{ plan: { connect: { id: 'plan1' } }, quantity: 1, price: 30 }] },
+    items: {
+      create: [{ plan: { connect: { id: 'plan1' } }, quantity: 1, price: 30 }],
+    },
   } as any)
   const item = sale.items[0]
 
@@ -433,7 +636,8 @@ it('does not change profile status when it is already PAID', async () => {
     status: 'PENDING' as const,
     planId: 'plan1',
     planProfileId: 'pp7',
-    paymentDate: new Date('2024-06-01'),
+    paymentDate: null as any,
+    dueDate: new Date('2024-06-01'),
     createdAt: new Date(),
   }
   const debtRepo = new FakeDebtRepository([debt])
@@ -443,7 +647,7 @@ it('does not change profile status when it is already PAID', async () => {
       planStartDate: new Date(),
       status: 'PAID',
       saleItemId: item.id,
-      dueDateDebt: 1,
+      dueDayDebt: 1,
       planId: 'plan1',
       profileId: 'p1',
       debts: [debt],
@@ -455,7 +659,20 @@ it('does not change profile status when it is already PAID', async () => {
   barberRepo.users.push(user)
   cashRepo.session = { ...makeCashSession('session-1', user.unitId), user }
 
-  const service = new PayDebtService(debtRepo, profileRepo, itemRepo, unitRepo)
+  const planRepoPaid2 = new FakePlanRepository([
+    { id: 'plan1', price: 30, name: 'Plan', typeRecurrenceId: 'rec1' },
+  ])
+  const profilesRepoPaid2 = new FakeProfilesRepository([makeProfileWithUser('p1', user)])
+  const recalcPaid2 = { execute: vi.fn() }
+  const service = new PayDebtService(
+    debtRepo,
+    profileRepo,
+    itemRepo,
+    unitRepo,
+    planRepoPaid2,
+    recalcPaid2 as any,
+    profilesRepoPaid2,
+  )
   await service.execute({ debtId: debt.id, userId: 'u1' })
 
   expect(profileRepo.items[0].status).toBe('PAID')
