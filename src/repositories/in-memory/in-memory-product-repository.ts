@@ -53,6 +53,20 @@ export class InMemoryProductRepository implements ProductRepository {
     })
   }
 
+  async findManyPaginated(
+    where: Prisma.ProductWhereInput,
+    page: number,
+    perPage: number,
+  ): Promise<{ items: Product[]; count: number }> {
+    const all = await this.findMany(where)
+    const count = all.length
+    const items = all.slice(
+      (page - 1) * perPage,
+      (page - 1) * perPage + perPage,
+    )
+    return { items, count }
+  }
+
   async findById(id: string): Promise<Product | null> {
     return this.products.find((p) => p.id === id) ?? null
   }

@@ -72,7 +72,7 @@ export class InMemoryCashRegisterRepository implements CashRegisterRepository {
   async findMany(
     where: Prisma.CashRegisterSessionWhereInput = {},
   ): Promise<DetailedCashSession[]> {
-    return this.sessions.filter((s) => {
+    const filtered = this.sessions.filter((s) => {
       if (where.unitId && s.unitId !== where.unitId) return false
       if (
         where.unit &&
@@ -86,10 +86,13 @@ export class InMemoryCashRegisterRepository implements CashRegisterRepository {
       }
       return true
     })
+    return filtered.sort((a, b) => b.openedAt.getTime() - a.openedAt.getTime())
   }
 
   async findManyByUnit(unitId: string): Promise<DetailedCashSession[]> {
-    return this.sessions.filter((s) => s.unitId === unitId)
+    return this.sessions
+      .filter((s) => s.unitId === unitId)
+      .sort((a, b) => b.openedAt.getTime() - a.openedAt.getTime())
   }
 
   async findOpenByUser(userId: string): Promise<CashRegisterSession | null> {

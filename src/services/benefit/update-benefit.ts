@@ -29,6 +29,25 @@ export class UpdateBenefitService {
     private recalcService: RecalculateUserSalesService,
   ) {}
 
+  private async checkIfNeedToUpdateSales(benefitId: string) {
+    await prisma.$transaction(async (tx) => {
+      const plansList = await this.planRepository.findMany(
+        { benefits: { some: { benefitId } } },
+        tx,
+      )
+      const planIds = plansList.map((p) => p.id)
+
+      const userIds = await findUserIdsLinkedToPlans(
+        planIds,
+        this.planProfileRepository,
+        this.profilesRepository,
+        tx,
+      )
+
+      await this.recalcService.execute({ userIds }, tx)
+    })
+  }
+
   async execute({
     id,
     data,
@@ -70,22 +89,8 @@ export class UpdateBenefitService {
         },
       }),
     })
-    await prisma.$transaction(async (tx) => {
-      const plansList = await this.planRepository.findMany(
-        { benefits: { some: { benefitId: id } } },
-        tx,
-      )
-      const planIds = plansList.map((p) => p.id)
 
-      const userIds = await findUserIdsLinkedToPlans(
-        planIds,
-        this.planProfileRepository,
-        this.profilesRepository,
-        tx,
-      )
-
-      await this.recalcService.execute({ userIds }, tx)
-    })
+    await this.checkIfNeedToUpdateSales(id)
 
     return { benefit: updated }
   }

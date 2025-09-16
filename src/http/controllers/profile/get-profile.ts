@@ -1,6 +1,7 @@
 import { getProfileFromUserIdService } from '@/services/@factories/profile/get-profile-from-userId-service'
+import { makeListUnitOpeningHoursService } from '@/services/@factories/unit/make-list-unit-opening-hours-service'
 
-import { RoleName } from '@prisma/client'
+import { RoleName, UnitOpeningHour } from '@prisma/client'
 import { FastifyReply, FastifyRequest } from 'fastify'
 
 export const GetProfile = async (
@@ -12,8 +13,12 @@ export const GetProfile = async (
   const { profile } = await getProfileFromUserId.execute({ id: userId })
 
   const roles = Object.values(RoleName) as readonly RoleName[]
-  return replay.status(200).send({
-    profile,
-    roles,
-  })
+  let openingHours: UnitOpeningHour[] = []
+  if (profile?.user.unit?.id) {
+    const listOpeningHours = makeListUnitOpeningHoursService()
+    const res = await listOpeningHours.execute({ unitId: profile.user.unit.id })
+    openingHours = res.openingHours
+  }
+
+  return replay.status(200).send({ profile, roles, openingHours })
 }

@@ -5,4 +5,9 @@ export interface ServiceRepository {
   findManyByUnit(unitId: string): Promise<Service[]>
   findMany(where?: Prisma.ServiceWhereInput): Promise<Service[]>
   findById(id: string): Promise<Service | null>
+  findManyPaginated(
+    where: Prisma.ServiceWhereInput,
+    page: number,
+    perPage: number,
+  ): Promise<{ items: Service[]; count: number }>
 }

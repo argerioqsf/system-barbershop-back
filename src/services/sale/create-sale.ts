@@ -1,5 +1,5 @@
 import { SaleRepository } from '../../repositories/sale-repository'
-import { PaymentStatus, PermissionName } from '@prisma/client'
+import { PaymentMethod, PaymentStatus, PermissionName } from '@prisma/client'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { CreateSaleRequest, CreateSaleResponse } from './types'
 import { assertPermission } from '@/utils/permissions'
@@ -24,7 +24,8 @@ export class CreateSaleService {
 
     const sale = await this.saleRepository.create({
       total: 0,
-      method,
+      // TODO: nao receber mais esse campo method aqui, deixar para setar esse campo apenas no service de pagar a sale
+      method: method ?? PaymentMethod.CASH,
       paymentStatus: PaymentStatus.PENDING,
       user: { connect: { id: userId } },
       client: { connect: { id: clientId } },

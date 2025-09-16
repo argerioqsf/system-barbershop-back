@@ -24,6 +24,19 @@ export class UpdatePlanService {
     private recalcService: RecalculateUserSalesService,
   ) {}
 
+  private async checkIfNeedToUpdateSales(benefitId: string) {
+    await prisma.$transaction(async (tx) => {
+      const userIds = await findUserIdsLinkedToPlans(
+        [benefitId],
+        this.planProfileRepository,
+        this.profilesRepository,
+        tx,
+      )
+
+      await this.recalcService.execute({ userIds }, tx)
+    })
+  }
+
   async execute({
     id,
     data,
@@ -41,16 +54,7 @@ export class UpdatePlanService {
       }),
     })
 
-    await prisma.$transaction(async (tx) => {
-      const userIds = await findUserIdsLinkedToPlans(
-        [id],
-        this.planProfileRepository,
-        this.profilesRepository,
-        tx,
-      )
-
-      await this.recalcService.execute({ userIds }, tx)
-    })
+    await this.checkIfNeedToUpdateSales(id)
 
     return { plan: updated }
   }

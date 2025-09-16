@@ -59,6 +59,20 @@ export class InMemoryCouponRepository implements CouponRepository {
     return this.coupons.find((c) => c.code === code) ?? null
   }
 
+  async findManyPaginated(
+    where: Prisma.CouponWhereInput,
+    page: number,
+    perPage: number,
+  ): Promise<{ items: Coupon[]; count: number }> {
+    const all = await this.findMany(where)
+    const count = all.length
+    const items = all.slice(
+      (page - 1) * perPage,
+      (page - 1) * perPage + perPage,
+    )
+    return { items, count }
+  }
+
   async update(id: string, data: Prisma.CouponUpdateInput): Promise<Coupon> {
     const coupon = this.coupons.find((c) => c.id === id)
     if (!coupon) throw new Error('Coupon not found')

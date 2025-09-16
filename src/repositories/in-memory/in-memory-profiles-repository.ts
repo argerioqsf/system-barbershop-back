@@ -1,4 +1,11 @@
-import { Prisma, Profile, Unit, User } from '@prisma/client'
+import {
+  Prisma,
+  Profile,
+  Unit,
+  User,
+  ProfileWorkHour,
+  ProfileBlockedHour,
+} from '@prisma/client'
 import { ProfileNotFoundError } from '@/services/@errors/profile/profile-not-found-error'
 import crypto from 'node:crypto'
 import { ProfilesRepository } from '../profiles-repository'
@@ -7,13 +14,17 @@ export class InMemoryProfilesRepository implements ProfilesRepository {
   public items: (Profile & {
     user: Omit<User, 'password'> & { unit: Unit }
     permissions: { id: string; name: string }[]
+    workHours: ProfileWorkHour[]
+    blockedHours: ProfileBlockedHour[]
   })[] = []
 
   async create(
     data: Prisma.ProfileUncheckedCreateInput,
     permissionIds?: string[],
   ): Promise<Profile> {
-    const profile: Profile & { permissions: { id: string; name: string }[] } = {
+    const profile: Profile & {
+      permissions: { id: string; name: string }[]
+    } = {
       id: crypto.randomUUID(),
       phone: data.phone,
       cpf: data.cpf,
@@ -49,7 +60,12 @@ export class InMemoryProfilesRepository implements ProfilesRepository {
         totalBalance: 0,
       },
     }
-    this.items.push({ ...profile, user })
+    this.items.push({
+      ...profile,
+      user,
+      workHours: [],
+      blockedHours: [],
+    })
     return profile
   }
 
@@ -71,6 +87,8 @@ export class InMemoryProfilesRepository implements ProfilesRepository {
     | (Profile & {
         user: Omit<User, 'password'> & { unit: Unit }
         permissions: { id: string; name: string }[]
+        workHours: ProfileWorkHour[]
+        blockedHours: ProfileBlockedHour[]
       })
     | null
   > {

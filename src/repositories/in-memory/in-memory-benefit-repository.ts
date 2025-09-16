@@ -49,6 +49,20 @@ export class InMemoryBenefitRepository implements BenefitRepository {
     })
   }
 
+  async findManyPaginated(
+    where: Prisma.BenefitWhereInput,
+    page: number,
+    perPage: number,
+  ): Promise<{ items: Benefit[]; count: number }> {
+    const all = await this.findMany(where)
+    const count = all.length
+    const items = all.slice(
+      (page - 1) * perPage,
+      (page - 1) * perPage + perPage,
+    )
+    return { items, count }
+  }
+
   async delete(id: string): Promise<void> {
     this.benefits = this.benefits.filter((b) => b.id !== id)
   }

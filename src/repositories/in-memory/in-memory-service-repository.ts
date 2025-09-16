@@ -48,4 +48,18 @@ export class InMemoryServiceRepository implements ServiceRepository {
   async findById(id: string): Promise<Service | null> {
     return this.services.find((s) => s.id === id) ?? null
   }
+
+  async findManyPaginated(
+    where: Prisma.ServiceWhereInput,
+    page: number,
+    perPage: number,
+  ): Promise<{ items: Service[]; count: number }> {
+    const all = await this.findMany(where)
+    const count = all.length
+    const items = all.slice(
+      (page - 1) * perPage,
+      (page - 1) * perPage + perPage,
+    )
+    return { items, count }
+  }
 }

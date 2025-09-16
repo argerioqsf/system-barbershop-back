@@ -41,6 +41,11 @@ export type DetailedSale = Sale & {
 export interface SaleRepository {
   create(data: Prisma.SaleCreateInput): Promise<DetailedSale>
   findMany(where?: Prisma.SaleWhereInput): Promise<DetailedSale[]>
+  findManyPaginated(
+    where: Prisma.SaleWhereInput,
+    page: number,
+    perPage: number,
+  ): Promise<{ items: DetailedSale[]; count: number }>
   findById(id: string): Promise<DetailedSale | null>
   update(
     id: string,
