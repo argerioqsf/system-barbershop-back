@@ -1,5 +1,12 @@
 import { prisma } from '@/lib/prisma'
-import { Prisma, Profile, Unit, User } from '@prisma/client'
+import {
+  Prisma,
+  Profile,
+  Unit,
+  User,
+  ProfileWorkHour,
+  ProfileBlockedHour,
+} from '@prisma/client'
 import { ProfilesRepository } from '../profiles-repository'
 
 export class PrismaProfilesRepository implements ProfilesRepository {
@@ -43,6 +50,8 @@ export class PrismaProfilesRepository implements ProfilesRepository {
     | (Profile & {
         user: Omit<User, 'password'> & { unit: Unit }
         permissions: { id: string; name: string }[]
+        workHours: ProfileWorkHour[]
+        blockedHours: ProfileBlockedHour[]
       })
     | null
   > {
@@ -64,6 +73,8 @@ export class PrismaProfilesRepository implements ProfilesRepository {
           },
         },
         permissions: { select: { id: true, name: true } },
+        workHours: true,
+        blockedHours: true,
       },
     })
     return profile

@@ -36,6 +36,12 @@ import { hasPermission } from '@/utils/permissions'
 import { applyCouponSaleItem, NewDiscount } from './coupon'
 import { SaleItemRepository } from '@/repositories/sale-item-repository'
 
+export type ProductToUpdate = {
+  id: string
+  quantity: number
+  saleItemId: string
+}
+
 export interface BuildItemDataOptions {
   saleItem: CreateSaleItem
   serviceRepository: ServiceRepository
@@ -44,7 +50,7 @@ export interface BuildItemDataOptions {
   couponRepository: CouponRepository
   planRepository?: PlanRepository
   userUnitId?: string
-  productsToUpdate?: { id: string; quantity: number }[]
+  productsToUpdate?: ProductToUpdate[]
   barberUserRepository: BarberUsersRepository
   enforceSingleType?: boolean
 }
@@ -83,19 +89,21 @@ async function loadProduct(
   productId: string,
   quantity: number,
   repo: ProductRepository,
+  saleItemId?: string,
   userUnitId?: string,
-  productsToUpdate?: { id: string; quantity: number }[],
+  productsToUpdate?: ProductToUpdate[],
 ) {
   const product = await repo.findById(productId)
   if (!product) throw new ProductNotFoundError()
   if (userUnitId && product.unitId !== userUnitId) {
     throw new ServiceNotFromUserUnitError()
   }
-  if (typeof product.quantity === 'number' && product.quantity < quantity) {
-    throw new InsufficientStockError()
-  }
   if (productsToUpdate) {
-    productsToUpdate.push({ id: productId, quantity })
+    productsToUpdate.push({
+      id: productId,
+      quantity,
+      saleItemId: saleItemId ?? 'noHaveId',
+    })
   }
   const price = product.price
   return { product, price }
@@ -159,6 +167,27 @@ async function ensureBarberPermissions(
   }
 }
 
+export async function verifyStockProducts(
+  productRepository: ProductRepository,
+  productsToUpdate: ProductToUpdate[],
+) {
+  const productsToUpdateTemp = []
+  for (const product of productsToUpdate) {
+    const productFound = await productRepository.findById(product.id)
+    if (!productFound) throw new Error('Product not found')
+    if (productFound.quantity > product.quantity) {
+      productsToUpdateTemp.push({
+        id: product.id,
+        quantity: product.quantity,
+        saleItemId: product.saleItemId,
+      })
+    }
+    if (productFound.quantity < product.quantity) {
+      throw new InsufficientStockError()
+    }
+  }
+}
+
 export type ReturnBuildItemData = {
   id?: string
   coupon?: Coupon | null
@@ -213,6 +242,7 @@ export async function buildItemData({
       saleItem.productId,
       saleItem.quantity,
       productRepository,
+      saleItem.id,
       userUnitId,
       productsToUpdate,
     )

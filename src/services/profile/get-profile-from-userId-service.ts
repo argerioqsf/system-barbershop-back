@@ -1,5 +1,11 @@
 import { ProfilesRepository } from '@/repositories/profiles-repository'
-import { Profile, User } from '@prisma/client'
+import {
+  Profile,
+  User,
+  Unit,
+  ProfileWorkHour,
+  ProfileBlockedHour,
+} from '@prisma/client'
 import { ResourceNotFoundError } from '../@errors/common/resource-not-found-error'
 
 interface GetUserProfileServiceRequest {
@@ -9,8 +15,10 @@ interface GetUserProfileServiceRequest {
 interface GetUserProfileServiceResponse {
   profile:
     | (Profile & {
-        user: Omit<User, 'password'>
+        user: Omit<User, 'password'> & { unit: Unit }
         permissions: { id: string; name: string }[]
+        workHours: ProfileWorkHour[]
+        blockedHours: ProfileBlockedHour[]
       })
     | null
 }

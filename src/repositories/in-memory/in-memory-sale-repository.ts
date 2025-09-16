@@ -279,6 +279,20 @@ export class InMemorySaleRepository implements SaleRepository {
     return sale ? this.sanitizeSale(sale) : null
   }
 
+  async findManyPaginated(
+    where: Prisma.SaleWhereInput,
+    page: number,
+    perPage: number,
+  ): Promise<{ items: DetailedSale[]; count: number }> {
+    const all = await this.findMany(where)
+    const count = all.length
+    const items = all.slice(
+      (page - 1) * perPage,
+      (page - 1) * perPage + perPage,
+    )
+    return { items, count }
+  }
+
   async update(
     id: string,
     data: Prisma.SaleUpdateInput,

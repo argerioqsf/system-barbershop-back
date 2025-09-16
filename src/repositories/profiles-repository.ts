@@ -1,9 +1,18 @@
-import { Prisma, Profile, Unit, User } from '@prisma/client'
+import {
+  Prisma,
+  Profile,
+  Unit,
+  User,
+  ProfileWorkHour,
+  ProfileBlockedHour,
+} from '@prisma/client'
 
 export type ResponseFindByUserId =
   | (Profile & {
       user: Omit<User, 'password'> & { unit: Unit }
       permissions: { id: string; name: string }[]
+      workHours: ProfileWorkHour[]
+      blockedHours: ProfileBlockedHour[]
     })
   | null
 export interface ProfilesRepository {

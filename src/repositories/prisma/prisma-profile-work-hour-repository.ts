@@ -11,6 +11,10 @@ export class PrismaProfileWorkHourRepository
     return prisma.profileWorkHour.create({ data })
   }
 
+  async findById(id: string): Promise<ProfileWorkHour | null> {
+    return prisma.profileWorkHour.findUnique({ where: { id } })
+  }
+
   async findManyByProfile(
     profileId: string,
     weekDay?: number,

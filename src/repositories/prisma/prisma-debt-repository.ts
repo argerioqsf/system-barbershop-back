@@ -24,6 +24,22 @@ export class PrismaDebtRepository implements DebtRepository {
     return prisma.debt.findMany({ where })
   }
 
+  async findManyPaginated(
+    where: Prisma.DebtWhereInput,
+    page: number,
+    perPage: number,
+  ): Promise<{ items: Debt[]; count: number }> {
+    const [count, items] = await prisma.$transaction([
+      prisma.debt.count({ where }),
+      prisma.debt.findMany({
+        where,
+        skip: (page - 1) * perPage,
+        take: perPage,
+      }),
+    ])
+    return { items, count }
+  }
+
   async delete(id: string): Promise<void> {
     await prisma.debt.delete({ where: { id } })
   }

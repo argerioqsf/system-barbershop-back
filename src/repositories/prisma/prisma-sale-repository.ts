@@ -87,6 +87,44 @@ export class PrismaSaleRepository implements SaleRepository {
     return detailed.map((sale) => this.sanitizeSale(sale))
   }
 
+  async findManyPaginated(
+    where: Prisma.SaleWhereInput,
+    page: number,
+    perPage: number,
+  ): Promise<{ items: DetailedSale[]; count: number }> {
+    const [count, sales] = await prisma.$transaction([
+      prisma.sale.count({ where }),
+      prisma.sale.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          items: {
+            include: {
+              service: true,
+              product: true,
+              plan: true,
+              barber: { include: { profile: true } },
+              coupon: true,
+              appointment: {
+                include: { services: { include: { service: true } } },
+              },
+              discounts: true,
+            },
+          },
+          user: { include: { profile: true } },
+          client: { include: { profile: true } },
+          coupon: true,
+          session: true,
+          transactions: true,
+        },
+        skip: (page - 1) * perPage,
+        take: perPage,
+      }),
+    ])
+    const detailed = sales as DetailedSale[]
+    return { items: detailed.map((s) => this.sanitizeSale(s)), count }
+  }
+
   async findById(id: string): Promise<DetailedSale | null> {
     const sale = await prisma.sale.findUnique({
       where: { id },

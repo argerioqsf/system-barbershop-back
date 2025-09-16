@@ -43,6 +43,7 @@ import { prisma } from '@/lib/prisma'
 import { updateCouponsStock, updateProductsStock } from './utils/sale'
 import { CouponRepository } from '@/repositories/coupon-repository'
 import { ProductRepository } from '@/repositories/product-repository'
+import { ProductToUpdate } from './utils/item'
 
 type FullUser =
   | (Omit<User, 'password'> & {
@@ -224,11 +225,12 @@ export class PaySaleService {
     updatedSale: DetailedSale,
     tx: Prisma.TransactionClient,
   ) {
-    const productsToUpdate = updatedSale.items
+    const productsToUpdate: ProductToUpdate[] = updatedSale.items
       .filter((item) => item.product)
       .map((saleItem) => ({
         id: saleItem.productId as string,
         quantity: saleItem.quantity,
+        saleItemId: saleItem.id,
       }))
     await updateProductsStock(
       this.productRepository,

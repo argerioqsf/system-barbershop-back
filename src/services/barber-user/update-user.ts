@@ -129,10 +129,10 @@ export class UpdateUserService {
         }),
         ...(unit && { unit: { connect: { id: unit.id } } }),
         ...(changeCredentials && { versionToken: { increment: 1 } }),
-        ...(changeCredentials &&
-          userToken?.sub === data.id && {
-            versionTokenInvalidate: userToken.versionToken,
-          }),
+        // ...(changeCredentials &&
+        //   userToken?.sub === data.id && {
+        //     versionTokenInvalidate: userToken.versionToken,
+        //   }),
       },
       {
         phone: data.phone,

@@ -15,6 +15,7 @@ export const UpdateSaleItemController = async (
     quantity: z.number().optional(),
     barberId: z.string().optional().nullable(),
     couponId: z.string().optional().nullable(),
+    couponCode: z.string().optional().nullable(),
     customPrice: z.number().optional().nullable(),
   })
   const { id } = paramsSchema.parse(request.params)
@@ -26,6 +27,7 @@ export const UpdateSaleItemController = async (
     quantity,
     barberId,
     couponId,
+    couponCode,
     customPrice,
   } = bodySchema.parse(request.body)
   const service = makeUpdateSaleItem()
@@ -39,6 +41,7 @@ export const UpdateSaleItemController = async (
       quantity,
       barberId,
       couponId,
+      couponCode,
       customPrice,
     },
   })

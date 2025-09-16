@@ -57,6 +57,20 @@ export class InMemoryDebtRepository implements DebtRepository {
     })
   }
 
+  async findManyPaginated(
+    where: Prisma.DebtWhereInput,
+    page: number,
+    perPage: number,
+  ): Promise<{ items: Debt[]; count: number }> {
+    const all = await this.findMany(where)
+    const count = all.length
+    const items = all.slice(
+      (page - 1) * perPage,
+      (page - 1) * perPage + perPage,
+    )
+    return { items, count }
+  }
+
   async delete(id: string): Promise<void> {
     this.debts = this.debts.filter((d) => d.id !== id)
   }

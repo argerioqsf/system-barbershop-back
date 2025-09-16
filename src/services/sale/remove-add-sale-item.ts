@@ -16,8 +16,10 @@ import { PaymentStatus, Prisma } from '@prisma/client'
 import { CannotEditPaidSaleError } from '../@errors/sale/cannot-edit-paid-sale-error'
 import {
   buildItemData,
+  ProductToUpdate,
   ReturnBuildItemData,
   updateDiscountsOnSaleItem,
+  verifyStockProducts,
 } from './utils/item'
 import {
   mapToSaleItems,
@@ -32,14 +34,10 @@ interface UpdateSaleResponse {
 }
 
 type ProductsToRestore = { id: string; quantity: number }[]
-type ProductsToUpdate = {
-  id: string
-  quantity: number
-}[]
 
 type GetItemsBuildReturn = {
   saleItemsBuild: ReturnBuildItemData[]
-  productsToUpdate: ProductsToUpdate
+  productsToUpdate: ProductToUpdate[]
 }
 export class RemoveAddSaleItemService {
   constructor(
@@ -59,7 +57,7 @@ export class RemoveAddSaleItemService {
     unitId: string,
   ): Promise<GetItemsBuildReturn> {
     const saleItemsBuild: ReturnBuildItemData[] = []
-    const productsToUpdate: ProductsToUpdate = []
+    const productsToUpdate: ProductToUpdate[] = []
     for (const saleItem of saleItems) {
       const temp = await buildItemData({
         saleItem,
@@ -210,7 +208,7 @@ export class RemoveAddSaleItemService {
 
   private async updateStockProducts(
     productsToRestore: ProductsToRestore,
-    productsToUpdate: ProductsToUpdate,
+    productsToUpdate: ProductToUpdate[],
     tx: Prisma.TransactionClient,
   ) {
     await updateProductsStock(
@@ -250,7 +248,7 @@ export class RemoveAddSaleItemService {
   }: RemoveAddSaleItemRequest): Promise<UpdateSaleResponse> {
     let saleUpdate: DetailedSale | undefined
     let newSaleItems: ReturnBuildItemData[] = []
-    const productsToUpdate: ProductsToUpdate = []
+    const productsToUpdate: ProductToUpdate[] = []
     const productsToRestore: ProductsToRestore = []
 
     let { saleCurrent, user, generalSaleItems } = await this.initVerify(
@@ -272,6 +270,12 @@ export class RemoveAddSaleItemService {
 
     if (addItemsIds) {
       const newItemsBuild = await this.getItemsBuild(addItemsIds, user.unitId)
+      const hasProducts = newItemsBuild.productsToUpdate.length > 0
+      if (hasProducts)
+        await verifyStockProducts(
+          this.productRepository,
+          newItemsBuild.productsToUpdate,
+        )
       newSaleItems.push(...newItemsBuild.saleItemsBuild)
       productsToUpdate.push(...newItemsBuild.productsToUpdate)
       generalSaleItems.push(...newSaleItems)

@@ -11,6 +11,22 @@ export class PrismaCouponRepository implements CouponRepository {
     return prisma.coupon.findMany({ where })
   }
 
+  async findManyPaginated(
+    where: Prisma.CouponWhereInput,
+    page: number,
+    perPage: number,
+  ): Promise<{ items: Coupon[]; count: number }> {
+    const [count, items] = await prisma.$transaction([
+      prisma.coupon.count({ where }),
+      prisma.coupon.findMany({
+        where,
+        skip: (page - 1) * perPage,
+        take: perPage,
+      }),
+    ])
+    return { items, count }
+  }
+
   async findById(id: string): Promise<Coupon | null> {
     return prisma.coupon.findUnique({ where: { id } })
   }

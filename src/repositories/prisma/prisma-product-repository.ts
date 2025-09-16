@@ -11,6 +11,22 @@ export class PrismaProductRepository implements ProductRepository {
     return prisma.product.findMany({ where })
   }
 
+  async findManyPaginated(
+    where: Prisma.ProductWhereInput,
+    page: number,
+    perPage: number,
+  ): Promise<{ items: Product[]; count: number }> {
+    const [count, items] = await prisma.$transaction([
+      prisma.product.count({ where }),
+      prisma.product.findMany({
+        where,
+        skip: (page - 1) * perPage,
+        take: perPage,
+      }),
+    ])
+    return { items, count }
+  }
+
   async findById(id: string): Promise<Product | null> {
     return prisma.product.findUnique({ where: { id } })
   }

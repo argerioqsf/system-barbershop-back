@@ -24,6 +24,22 @@ export class PrismaBenefitRepository implements BenefitRepository {
     return prisma.benefit.findMany({ where })
   }
 
+  async findManyPaginated(
+    where: Prisma.BenefitWhereInput,
+    page: number,
+    perPage: number,
+  ): Promise<{ items: Benefit[]; count: number }> {
+    const [count, items] = await prisma.$transaction([
+      prisma.benefit.count({ where }),
+      prisma.benefit.findMany({
+        where,
+        skip: (page - 1) * perPage,
+        take: perPage,
+      }),
+    ])
+    return { items, count }
+  }
+
   async delete(id: string): Promise<void> {
     await prisma.benefit.delete({ where: { id } })
   }

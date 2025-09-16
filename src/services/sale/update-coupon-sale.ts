@@ -16,6 +16,7 @@ import { CannotEditPaidSaleError } from '../@errors/sale/cannot-edit-paid-sale-e
 import { applyCouponSale } from './utils/coupon'
 import {
   buildItemData,
+  ProductToUpdate,
   ReturnBuildItemData,
   updateDiscountsOnSaleItem,
 } from './utils/item'
@@ -27,15 +28,10 @@ interface UpdateSaleResponse {
   sale?: DetailedSale
 }
 
-type ProductsToUpdate = {
-  id: string
-  quantity: number
-}
-
 type GetItemsBuildReturn = {
   saleItemsBuild: ReturnBuildItemData[]
   newAppointmentsToLink: string[]
-  productsToUpdate: ProductsToUpdate[]
+  productsToUpdate: ProductToUpdate[]
 }
 
 export class UpdateCouponSaleService {
@@ -57,7 +53,7 @@ export class UpdateCouponSaleService {
   ): Promise<GetItemsBuildReturn> {
     const saleItemsBuild: ReturnBuildItemData[] = []
     const newAppointmentsToLink: string[] = []
-    const productsToUpdate: ProductsToUpdate[] = []
+    const productsToUpdate: ProductToUpdate[] = []
     for (const saleItem of saleItems) {
       const temp = await buildItemData({
         saleItem,

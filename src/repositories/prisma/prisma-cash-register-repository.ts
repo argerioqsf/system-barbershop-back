@@ -25,6 +25,7 @@ export class PrismaCashRegisterRepository implements CashRegisterRepository {
   ): Promise<DetailedCashSession[]> {
     return prisma.cashRegisterSession.findMany({
       where,
+      orderBy: { openedAt: 'desc' },
       include: { user: true, sales: true, transactions: true },
     })
   }
@@ -32,6 +33,7 @@ export class PrismaCashRegisterRepository implements CashRegisterRepository {
   async findManyByUnit(unitId: string): Promise<DetailedCashSession[]> {
     return prisma.cashRegisterSession.findMany({
       where: { unitId },
+      orderBy: { openedAt: 'desc' },
       include: { user: true, sales: true, transactions: true },
     })
   }

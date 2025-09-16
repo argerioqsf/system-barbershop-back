@@ -47,7 +47,7 @@ describe('List sales service', () => {
       unitId: 'unit-1',
       organizationId: 'org-1',
     })
-    expect(res.sales).toHaveLength(1)
+    expect(res.items).toHaveLength(1)
   })
 
   it('filters by organization for owner', async () => {
@@ -57,8 +57,8 @@ describe('List sales service', () => {
       unitId: 'unit-1',
       organizationId: 'org-1',
     })
-    expect(res.sales).toHaveLength(1)
-    expect(res.sales[0].id).toBe('s1')
+    expect(res.items).toHaveLength(1)
+    expect(res.items[0].id).toBe('s1')
   })
 
   it('filters by unit for others', async () => {
@@ -68,8 +68,8 @@ describe('List sales service', () => {
       unitId: 'unit-2',
       organizationId: 'org-2',
     })
-    expect(res.sales).toHaveLength(1)
-    expect(res.sales[0].id).toBe('s2')
+    expect(res.items).toHaveLength(1)
+    expect(res.items[0].id).toBe('s2')
   })
 
   it('throws if user not found', async () => {

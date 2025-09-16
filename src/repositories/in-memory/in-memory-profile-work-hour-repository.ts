@@ -21,6 +21,10 @@ export class InMemoryProfileWorkHourRepository
     return item
   }
 
+  async findById(id: string): Promise<ProfileWorkHour | null> {
+    return this.items.find((i) => i.id === id) ?? null
+  }
+
   async findManyByProfile(
     profileId: string,
     weekDay?: number,

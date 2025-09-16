@@ -30,7 +30,7 @@ describe('List coupons service', () => {
       unitId: 'unit-1',
       organizationId: 'org-1',
     })
-    expect(res.coupons).toHaveLength(2)
+    expect(res.items).toHaveLength(2)
   })
 
   it('filters by organization for owner', async () => {
@@ -40,8 +40,8 @@ describe('List coupons service', () => {
       unitId: 'unit-1',
       organizationId: 'org-1',
     })
-    expect(res.coupons).toHaveLength(1)
-    expect(res.coupons[0].id).toBe('c1')
+    expect(res.items).toHaveLength(1)
+    expect(res.items[0].id).toBe('c1')
   })
 
   it('filters by unit for others', async () => {
@@ -51,8 +51,8 @@ describe('List coupons service', () => {
       unitId: 'unit-2',
       organizationId: 'org-2',
     })
-    expect(res.coupons).toHaveLength(1)
-    expect(res.coupons[0].id).toBe('c2')
+    expect(res.items).toHaveLength(1)
+    expect(res.items[0].id).toBe('c2')
   })
 
   it('throws if user not found', async () => {

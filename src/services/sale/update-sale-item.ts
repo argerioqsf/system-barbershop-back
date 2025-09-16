@@ -24,7 +24,12 @@ import {
   SaleItem,
 } from '@prisma/client'
 import { applyPlanDiscounts } from './utils/plan'
-import { buildItemData, ReturnBuildItemData } from './utils/item'
+import {
+  buildItemData,
+  ProductToUpdate,
+  ReturnBuildItemData,
+  verifyStockProducts,
+} from './utils/item'
 import {
   mapToSaleItemsForUpdate,
   updateProductsStock,
@@ -41,10 +46,6 @@ interface UpdateSaleResponse {
 }
 
 type ProductToRestore = { id: string; quantity: number }
-type ProductToUpdate = {
-  id: string
-  quantity: number
-}
 
 type GetItemsBuildReturn = {
   saleItemsBuild: ReturnBuildItemData[]
@@ -65,9 +66,12 @@ export class UpdateSaleItemService {
   private async getItemBuild(
     saleItem: CreateSaleItem,
     unitId: string,
-  ): Promise<ReturnBuildItemData> {
+  ): Promise<{
+    saleItemsBuild: ReturnBuildItemData
+    productsToUpdate: ProductToUpdate[]
+  }> {
     const productsToUpdate: ProductToUpdate[] = []
-    return await buildItemData({
+    const saleItemsBuild = await buildItemData({
       saleItem,
       serviceRepository: this.serviceRepository,
       productRepository: this.productRepository,
@@ -78,6 +82,7 @@ export class UpdateSaleItemService {
       barberUserRepository: this.barberUserRepository,
       planRepository: this.planRepository,
     })
+    return { saleItemsBuild, productsToUpdate }
   }
 
   private async getItemsBuild(
@@ -86,15 +91,24 @@ export class UpdateSaleItemService {
   ): Promise<GetItemsBuildReturn> {
     const saleItemsBuild: ReturnBuildItemData[] = []
     for (const saleItem of saleItems) {
-      const temp = await this.getItemBuild(saleItem, unitId)
-      saleItemsBuild.push(temp)
+      const { saleItemsBuild: saleItemsBuild_ } = await this.getItemBuild(
+        saleItem,
+        unitId,
+      )
+      saleItemsBuild.push(saleItemsBuild_)
     }
     return { saleItemsBuild }
   }
 
-  private async initVerify(id: string): Promise<{
+  private async initVerify(
+    id: string,
+    saleItemUpdateFields: SaleItemUpdateFields,
+  ): Promise<{
     saleItemCurrent: NonNullable<DetailedSaleItemFindById>
   }> {
+    if (saleItemUpdateFields.quantity === 0) {
+      throw new Error('The quantity must be greater than 0')
+    }
     if (!id) throw new Error('SaleItem ID is required')
 
     const saleItemCurrent = await this.repository.findById(id)
@@ -253,16 +267,44 @@ export class UpdateSaleItemService {
     let productToUpdate: ProductToUpdate | undefined
     let productToRestore: ProductToRestore | undefined
     let saleItemsToUpdate: ReturnBuildItemData[] = []
-    const { saleItemCurrent } = await this.initVerify(id)
+
+    if (saleItemUpdateFields.couponCode) {
+      const coupon = await this.couponRepository.findByCode(
+        saleItemUpdateFields.couponCode,
+      )
+      if (coupon) {
+        saleItemUpdateFields.couponId = coupon.id
+      }
+    }
+
+    const { saleItemCurrent } = await this.initVerify(id, saleItemUpdateFields)
     const saleItemUpdated = this.mountSaleItemUpdate(
       saleItemUpdateFields,
       saleItemCurrent,
     )
 
-    const saleItemUpdatedBuilded = await this.getItemBuild(
+    const { saleItemsBuild: saleItemUpdatedBuilded } = await this.getItemBuild(
       saleItemUpdated,
       saleItemCurrent.sale.unitId,
     )
+    // TODO: deixar a logica do if a baixo mais facil de entender
+    if (saleItemUpdated.productId) {
+      const difQuantity = saleItemUpdated.quantity - saleItemCurrent.quantity
+
+      const productToUp: ProductToUpdate = {
+        id: saleItemUpdated.productId,
+        quantity: difQuantity,
+        saleItemId: saleItemCurrent.id,
+      }
+
+      if (difQuantity > 0) {
+        productToUpdate = productToUp
+        await verifyStockProducts(this.productRepository, [productToUp])
+      } else if (difQuantity < 0) {
+        productToUp.quantity = -productToUp.quantity
+        productToRestore = productToUp
+      }
+    }
 
     const saleItemsApplyPlanDiscounts = await applyPlanDiscounts(
       [saleItemUpdatedBuilded],
@@ -278,6 +320,7 @@ export class UpdateSaleItemService {
         productToUpdate = {
           id: saleItemUpdated.productId,
           quantity: saleItemUpdated.quantity,
+          saleItemId: saleItemUpdated.id ?? '',
         }
       }
       if (saleItemCurrent.productId) {

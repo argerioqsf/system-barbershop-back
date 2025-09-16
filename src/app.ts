@@ -33,6 +33,7 @@ import { planRoute } from './http/controllers/plan/route'
 import { debtRoute } from './http/controllers/debt/route'
 import { benefitRoute } from './http/controllers/benefit/route'
 import { typeRecurrenceRoute } from './http/controllers/type-recurrence/route'
+import { userRoute } from './http/controllers/user/route'
 
 export const app = fastify()
 
@@ -126,13 +127,7 @@ app.register(fastifyJwt, {
 
 app.addHook('onSend', async (request, reply, payload) => {
   if (request.newToken) {
-    try {
-      const parsed = JSON.parse(payload as string)
-      parsed.token = request.newToken
-      return JSON.stringify(parsed)
-    } catch {
-      reply.header('x-new-token', request.newToken)
-    }
+    reply.header('x-new-token', request.newToken)
   }
   return payload
 })
@@ -162,6 +157,7 @@ app.register(typeRecurrenceRoute)
 app.register(saleRoute)
 app.register(reportRoute)
 app.register(configRoute)
+app.register(userRoute)
 
 app.setErrorHandler((error, _, reply) => {
   if (error instanceof ZodError) {
