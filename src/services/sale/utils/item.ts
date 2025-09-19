@@ -19,7 +19,7 @@ import {
   Prisma,
 } from '@prisma/client'
 import { PlanRepository } from '@/repositories/plan-repository'
-import { CreateSaleItem } from '../types'
+import { CreateSaleItem, SaleItemUpdateFields } from '../types'
 import { ItemNeedsServiceOrProductOrAppointmentError } from '../../@errors/sale/item-needs-service-or-product-error'
 import { ServiceNotFoundError } from '../../@errors/service/service-not-found-error'
 import { ServiceNotFromUserUnitError } from '../../@errors/service/service-not-from-user-unit-error'
@@ -34,27 +34,20 @@ import { BarberNotFromUserUnitError } from '../../@errors/barber/barber-not-from
 import { BarberCannotSellItemError } from '../../@errors/barber/barber-cannot-sell-item'
 import { hasPermission } from '@/utils/permissions'
 import { applyCouponSaleItem, NewDiscount } from './coupon'
-import { SaleItemRepository } from '@/repositories/sale-item-repository'
+import {
+  DetailedSaleItemFindMany,
+  SaleItemRepository,
+} from '@/repositories/sale-item-repository'
 import { RecalculateUserSalesService } from '../recalculate-user-sales'
 import { ProfilesRepository } from '@/repositories/profiles-repository'
+import { applyPlanDiscounts } from './plan'
+import { SaleRepository } from '@/repositories/sale-repository'
+import { PlanProfileRepository } from '@/repositories/plan-profile-repository'
 
 export type ProductToUpdate = {
   id: string
   quantity: number
   saleItemId: string
-}
-
-export interface BuildItemDataOptions {
-  saleItem: CreateSaleItem
-  serviceRepository: ServiceRepository
-  productRepository: ProductRepository
-  appointmentRepository: AppointmentRepository
-  couponRepository: CouponRepository
-  planRepository?: PlanRepository
-  userUnitId?: string
-  productsToUpdate?: ProductToUpdate[]
-  barberUserRepository: BarberUsersRepository
-  enforceSingleType?: boolean
 }
 
 export function ensureSingleType(item: {
@@ -199,11 +192,31 @@ export type ReturnBuildItemData = {
   plan?: Plan | null
   barber?: UserFindById | null
   price: number
+  basePrice: number
   customPrice?: number | null
   discounts: NewDiscount[]
   appointment?: Appointment | null
   commissionPaid: boolean
 }
+
+export type SaleItemBuildItem = CreateSaleItem & {
+  saleId: string
+}
+export interface BuildItemDataOptions {
+  saleItem: SaleItemBuildItem
+  serviceRepository: ServiceRepository
+  productRepository: ProductRepository
+  appointmentRepository: AppointmentRepository
+  couponRepository: CouponRepository
+  planRepository: PlanRepository
+  userUnitId?: string
+  productsToUpdate?: ProductToUpdate[]
+  barberUserRepository: BarberUsersRepository
+  enforceSingleType?: boolean
+  saleRepository: SaleRepository
+  planProfileRepository: PlanProfileRepository
+}
+
 export async function buildItemData({
   saleItem,
   serviceRepository,
@@ -214,6 +227,8 @@ export async function buildItemData({
   productsToUpdate,
   barberUserRepository,
   planRepository,
+  saleRepository,
+  planProfileRepository,
 }: BuildItemDataOptions): Promise<ReturnBuildItemData> {
   ensureSingleType({
     serviceId: saleItem.serviceId,
@@ -277,12 +292,44 @@ export async function buildItemData({
     )
   }
 
-  const { coupon, price, discounts } = await applyCouponSaleItem({
-    saleItem,
+  const saleItemForApplyPlanDiscounts: ReturnBuildItemData = {
+    ...saleItem,
+    quantity,
+    service,
+    product,
+    plan,
+    barber,
+    price: basePrice,
     basePrice,
-    discount: 0,
-    discountType: null,
-    ownDiscount: false,
+    customPrice: saleItem.customPrice,
+    discounts: [],
+    appointment,
+    commissionPaid: false,
+  }
+
+  const sale = await saleRepository?.findById(saleItem.saleId)
+  if (!sale) throw new Error('Sale not found')
+
+  const saleItemsWithDiscountPlan = await applyPlanDiscounts(
+    [saleItemForApplyPlanDiscounts],
+    sale.clientId,
+    planProfileRepository,
+    planRepository,
+  )
+
+  const saleItemWithDiscountPlan: SaleItemBuildItem & {
+    discounts: NewDiscount[]
+  } = {
+    ...saleItemsWithDiscountPlan[0],
+    saleId: saleItem.saleId,
+  }
+
+  const { coupon, discounts } = await applyCouponSaleItem({
+    saleItem: {
+      ...saleItemWithDiscountPlan,
+      discounts: saleItemWithDiscountPlan.discounts,
+    },
+    basePrice,
     couponRepository,
     userUnitId,
   })
@@ -295,7 +342,8 @@ export async function buildItemData({
     product,
     plan,
     barber,
-    price,
+    price: basePrice,
+    basePrice,
     customPrice: saleItem.customPrice,
     discounts,
     appointment,
@@ -312,7 +360,7 @@ export async function updateDiscountsOnSaleItem(
   await saleItemRepository.update(
     saleItemId,
     {
-      price: saleItem.price,
+      // price: saleItem.price,
       ...(newDiscounts
         ? {
             discounts: {
@@ -341,5 +389,69 @@ export async function checkAndRecalculateAffectedSales(
   const userId = profile?.user.id
   if (userId) {
     await recalcService.execute({ userIds: [userId] }, tx)
+  }
+}
+
+export function calculateRealValueSaleItem(
+  price: number,
+  discounts: NewDiscount[],
+) {
+  const realValue = price
+  const discountsOrder = discounts?.sort((a, b) => a.order - b.order) ?? []
+  const realValueWithDiscounts = discountsOrder.reduce((acc, discount) => {
+    if (discount.type === 'VALUE') {
+      const discountValue = discount.amount
+      console.log('- ', discountValue)
+      return acc - discountValue
+    }
+    if (discount.type === 'PERCENTAGE') {
+      const discountValue = (acc * discount.amount) / 100
+      console.log('- ', discountValue)
+      return acc - discountValue
+    }
+    return acc
+  }, realValue)
+  return realValueWithDiscounts >= 0 ? realValueWithDiscounts : 0
+}
+
+export function mountSaleItemUpdate(
+  saleItemUpdateFields: SaleItemUpdateFields,
+  saleItemCurrent: NonNullable<DetailedSaleItemFindMany>,
+): CreateSaleItem {
+  return {
+    id: saleItemCurrent.id,
+    price: saleItemCurrent.price,
+    quantity:
+      saleItemUpdateFields.quantity !== undefined
+        ? saleItemUpdateFields.quantity
+        : saleItemCurrent.quantity,
+    appointmentId:
+      saleItemUpdateFields.appointmentId !== undefined
+        ? saleItemUpdateFields.appointmentId
+        : saleItemCurrent.appointmentId,
+    barberId:
+      saleItemUpdateFields.barberId !== undefined
+        ? saleItemUpdateFields.barberId
+        : saleItemCurrent.barberId,
+    couponId:
+      saleItemUpdateFields.couponId !== undefined
+        ? saleItemUpdateFields.couponId
+        : saleItemCurrent.couponId,
+    customPrice:
+      saleItemUpdateFields.customPrice !== undefined
+        ? saleItemUpdateFields.customPrice
+        : saleItemCurrent.customPrice,
+    planId:
+      saleItemUpdateFields.planId !== undefined
+        ? saleItemUpdateFields.planId
+        : saleItemCurrent.planId,
+    productId:
+      saleItemUpdateFields.productId !== undefined
+        ? saleItemUpdateFields.productId
+        : saleItemCurrent.productId,
+    serviceId:
+      saleItemUpdateFields.serviceId !== undefined
+        ? saleItemUpdateFields.serviceId
+        : saleItemCurrent.serviceId,
   }
 }

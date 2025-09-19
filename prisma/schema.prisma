@@ -345,6 +345,7 @@ model Sale {
   sessionId     String?
   couponId      String?
   total         Float
+  gross_value   Float         @default(0)
   method        PaymentMethod
   paymentStatus PaymentStatus @default(PAID)
   createdAt     DateTime      @default(now())

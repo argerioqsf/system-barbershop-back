@@ -51,6 +51,11 @@ export class RenewPlanProfileService {
 
       await this.debtRepo.create(
         {
+          // TODO: verificar se ao renovar um planao nao sreia melhor pegar o valor que foi pago na sale
+          // e nao pegar o valor direto do plano, pois se ele teve algum desconto na venda do plano
+          // enquanto ele for renovando ele vai smepre renovar com o desconto que teve
+          // pode ser criado uma flag para a unidade se quer que o desconto na venda de planos seja recorrente
+          //  ou que se seja aplicado apenas no primeiro pagamento
           value: plan.price,
           status: PaymentStatus.PAID,
           planId: plan.id,

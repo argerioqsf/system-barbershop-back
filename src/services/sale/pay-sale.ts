@@ -45,7 +45,7 @@ import { CouponRepository } from '@/repositories/coupon-repository'
 import { ProductRepository } from '@/repositories/product-repository'
 import { TypeRecurrenceRepository } from '@/repositories/type-recurrence-repository'
 import { calculateNextDueDate } from '../plan/utils/helpers'
-import { ProductToUpdate } from './utils/item'
+import { calculateRealValueSaleItem, ProductToUpdate } from './utils/item'
 
 type FullUser =
   | (Omit<User, 'password'> & {
@@ -142,6 +142,10 @@ export class PaySaleService {
       if (!recurrence) throw new Error('Recurrence not found')
 
       const dueDate = calculateNextDueDate(currentDate, recurrence, dueDayDebt)
+      const realValueItem = calculateRealValueSaleItem(
+        item.price,
+        item.discounts,
+      )
       await this.planProfileRepository.create(
         {
           saleItemId: item.id,
@@ -152,7 +156,7 @@ export class PaySaleService {
           status: PlanProfileStatus.PAID,
           debts: [
             {
-              value: item.price,
+              value: realValueItem,
               status: PaymentStatus.PAID,
               planId: item.planId,
               paymentDate: currentDate,

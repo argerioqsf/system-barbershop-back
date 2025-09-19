@@ -62,6 +62,7 @@ export class PrismaSaleItemRepository implements SaleItemRepository {
             },
           },
         },
+        discounts: true,
       },
     })
   }
@@ -83,6 +84,7 @@ export class PrismaSaleItemRepository implements SaleItemRepository {
             },
           },
         },
+        discounts: true,
       },
     })
   }

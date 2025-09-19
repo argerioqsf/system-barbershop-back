@@ -16,6 +16,7 @@ export type TransactionFull = Prisma.TransactionGetPayload<{
                 profile: true
               }
             }
+            discounts: true
             coupon: true
           }
           price: true
@@ -53,6 +54,7 @@ export class PrismaTransactionRepository implements TransactionRepository {
                     profile: true,
                   },
                 },
+                discounts: true,
                 coupon: true,
               },
             },
@@ -84,6 +86,7 @@ export class PrismaTransactionRepository implements TransactionRepository {
                     profile: true,
                   },
                 },
+                discounts: true,
                 coupon: true,
               },
             },

@@ -18,6 +18,7 @@ import {
   buildItemData,
   ProductToUpdate,
   ReturnBuildItemData,
+  SaleItemBuildItem,
   updateDiscountsOnSaleItem,
   verifyStockProducts,
 } from './utils/item'
@@ -25,9 +26,10 @@ import {
   mapToSaleItems,
   calculateTotal,
   updateProductsStock,
-  rebuildSaleItems,
+  calculateGrossTotal,
 } from './utils/sale'
 import { prisma } from '@/lib/prisma'
+import { applyCouponSale } from './utils/coupon'
 
 interface UpdateSaleResponse {
   sale?: DetailedSale
@@ -53,7 +55,7 @@ export class RemoveAddSaleItemService {
   ) {}
 
   private async getItemsBuild(
-    saleItems: CreateSaleItem[],
+    saleItems: SaleItemBuildItem[],
     unitId: string,
   ): Promise<GetItemsBuildReturn> {
     const saleItemsBuild: ReturnBuildItemData[] = []
@@ -69,6 +71,8 @@ export class RemoveAddSaleItemService {
         productsToUpdate,
         barberUserRepository: this.barberUserRepository,
         planRepository: this.planRepository,
+        saleRepository: this.repository,
+        planProfileRepository: this.planProfileRepository,
       })
       saleItemsBuild.push(temp)
     }
@@ -149,13 +153,15 @@ export class RemoveAddSaleItemService {
     saleCurrent: DetailedSale,
     currentSaleItemsModified: ReturnBuildItemData[],
   ): Promise<ReturnBuildItemData[]> {
-    return await rebuildSaleItems(currentSaleItemsModified, {
-      couponId: saleCurrent.coupon?.id,
-      clientId: saleCurrent.clientId,
-      planProfileRepository: this.planProfileRepository,
-      planRepository: this.planRepository,
-      couponRepository: this.couponRepository,
-    })
+    if (saleCurrent.coupon?.id) {
+      const { saleItems } = await applyCouponSale(
+        currentSaleItemsModified,
+        saleCurrent.coupon?.id,
+        this.couponRepository,
+      )
+      return saleItems
+    }
+    return currentSaleItemsModified
   }
 
   private async removingRelationshipsFromRemovedSaleItems(
@@ -188,6 +194,7 @@ export class RemoveAddSaleItemService {
   private async updateSale(
     saleId: string,
     newTotal: number,
+    newGrossTotal: number, // Add this line
     currentTotal: number,
     newSaleItemsMapped: Prisma.SaleItemCreateWithoutSaleInput[],
     tx: Prisma.TransactionClient,
@@ -197,6 +204,7 @@ export class RemoveAddSaleItemService {
       saleId,
       {
         ...(newTotal !== currentTotal ? { total: newTotal } : {}),
+        gross_value: newGrossTotal, // Add this line
         items: {
           create: newSaleItemsMapped,
           deleteMany: removeSaleItemIds?.map((rid) => ({ id: rid })),
@@ -269,7 +277,16 @@ export class RemoveAddSaleItemService {
     }
 
     if (addItemsIds) {
-      const newItemsBuild = await this.getItemsBuild(addItemsIds, user.unitId)
+      const addItemsFormatted: SaleItemBuildItem[] = addItemsIds.map(
+        (item) => ({
+          ...item,
+          saleId: id,
+        }),
+      )
+      const newItemsBuild = await this.getItemsBuild(
+        addItemsFormatted,
+        user.unitId,
+      )
       const hasProducts = newItemsBuild.productsToUpdate.length > 0
       if (hasProducts)
         await verifyStockProducts(
@@ -281,10 +298,16 @@ export class RemoveAddSaleItemService {
       generalSaleItems.push(...newSaleItems)
     }
 
-    const currentSaleItemsRebuild = await this.rebuildCurrentSaleItems(
-      saleCurrent,
-      generalSaleItems,
-    )
+    let currentSaleItemsRebuild = generalSaleItems
+
+    if (saleCurrent.coupon?.id) {
+      const { saleItems } = await applyCouponSale(
+        generalSaleItems,
+        saleCurrent.coupon?.id,
+        this.couponRepository,
+      )
+      currentSaleItemsRebuild = saleItems
+    }
 
     newSaleItems = currentSaleItemsRebuild.filter((saleItem) => !saleItem.id)
     const generalSaleItemsWithId = currentSaleItemsRebuild.filter(
@@ -294,6 +317,9 @@ export class RemoveAddSaleItemService {
     const newSaleItemsMapped = mapToSaleItems(newSaleItems)
 
     const totalSaleItemsRebuild = calculateTotal(currentSaleItemsRebuild)
+    const grossTotalSaleItemsRebuild = calculateGrossTotal(
+      currentSaleItemsRebuild,
+    )
 
     await prisma.$transaction(async (tx) => {
       if (removeItemIds) {
@@ -308,6 +334,7 @@ export class RemoveAddSaleItemService {
       saleUpdate = await this.updateSale(
         id,
         totalSaleItemsRebuild,
+        grossTotalSaleItemsRebuild, // Add this line
         saleCurrent.total,
         newSaleItemsMapped,
         tx,

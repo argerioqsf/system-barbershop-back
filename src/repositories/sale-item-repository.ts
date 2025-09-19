@@ -22,6 +22,7 @@ export type DetailedSaleItemFindMany = SaleItem & {
         services: DetailedAppointmentService[]
       })
     | null
+  discounts: Discount[]
 }
 
 export type DetailedSaleItemFindById = SaleItem & {

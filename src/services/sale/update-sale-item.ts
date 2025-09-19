@@ -16,29 +16,27 @@ import {
   SaleItemUpdateFields,
   UpdateSaleItemRequest,
 } from './types'
-import {
-  DiscountOrigin,
-  DiscountType,
-  PaymentStatus,
-  Prisma,
-  SaleItem,
-} from '@prisma/client'
-import { applyPlanDiscounts } from './utils/plan'
+import { PaymentStatus, Prisma, SaleItem } from '@prisma/client'
 import {
   buildItemData,
+  calculateRealValueSaleItem,
   ProductToUpdate,
   ReturnBuildItemData,
+  SaleItemBuildItem,
   verifyStockProducts,
 } from './utils/item'
 import {
   mapToSaleItemsForUpdate,
   updateProductsStock,
-  rebuildSaleItems,
+  calculateTotal,
+  calculateGrossTotal,
 } from './utils/sale'
 import { prisma } from '@/lib/prisma'
 import { CannotEditPaidSaleItemError } from '../@errors/sale/cannot-edit-paid-sale-item-error'
 import { SaleNotFoundError } from '../@errors/sale/sale-not-found-error'
 import { CannotEditPaidSaleError } from '../@errors/sale/cannot-edit-paid-sale-error'
+import { CouponNotFoundError } from '../@errors/coupon/coupon-not-found-error'
+import { applyCouponSale } from './utils/coupon'
 
 interface UpdateSaleResponse {
   sale?: DetailedSale
@@ -64,14 +62,14 @@ export class UpdateSaleItemService {
   ) {}
 
   private async getItemBuild(
-    saleItem: CreateSaleItem,
+    saleItem: SaleItemBuildItem,
     unitId: string,
   ): Promise<{
-    saleItemsBuild: ReturnBuildItemData
+    saleItemBuild: ReturnBuildItemData
     productsToUpdate: ProductToUpdate[]
   }> {
     const productsToUpdate: ProductToUpdate[] = []
-    const saleItemsBuild = await buildItemData({
+    const saleItemBuild = await buildItemData({
       saleItem,
       serviceRepository: this.serviceRepository,
       productRepository: this.productRepository,
@@ -81,17 +79,19 @@ export class UpdateSaleItemService {
       productsToUpdate,
       barberUserRepository: this.barberUserRepository,
       planRepository: this.planRepository,
+      saleRepository: this.saleRepository,
+      planProfileRepository: this.planProfileRepository,
     })
-    return { saleItemsBuild, productsToUpdate }
+    return { saleItemBuild, productsToUpdate }
   }
 
   private async getItemsBuild(
-    saleItems: CreateSaleItem[],
+    saleItems: SaleItemBuildItem[],
     unitId: string,
   ): Promise<GetItemsBuildReturn> {
     const saleItemsBuild: ReturnBuildItemData[] = []
     for (const saleItem of saleItems) {
-      const { saleItemsBuild: saleItemsBuild_ } = await this.getItemBuild(
+      const { saleItemBuild: saleItemsBuild_ } = await this.getItemBuild(
         saleItem,
         unitId,
       )
@@ -106,6 +106,14 @@ export class UpdateSaleItemService {
   ): Promise<{
     saleItemCurrent: NonNullable<DetailedSaleItemFindById>
   }> {
+    if (saleItemUpdateFields.couponCode) {
+      const coupon = await this.couponRepository.findByCode(
+        saleItemUpdateFields.couponCode,
+      )
+      if (!coupon) throw CouponNotFoundError
+      saleItemUpdateFields.couponId = coupon.id
+    }
+
     if (saleItemUpdateFields.quantity === 0) {
       throw new Error('The quantity must be greater than 0')
     }
@@ -136,12 +144,14 @@ export class UpdateSaleItemService {
   private async updateSaleTotal(
     saleId: string,
     total: number,
+    gross_total: number,
     tx: Prisma.TransactionClient,
   ) {
     return await this.saleRepository.update(
       saleId,
       {
         total,
+        gross_value: gross_total,
       },
       tx,
     )
@@ -164,15 +174,6 @@ export class UpdateSaleItemService {
       'increment',
       tx,
     )
-  }
-
-  private haveADiscountCouponSaleValue(saleItem: ReturnBuildItemData) {
-    const discountsCouponSaleTypeValue = saleItem.discounts.filter(
-      (discount) =>
-        discount.origin === DiscountOrigin.COUPON_SALE &&
-        discount.type === DiscountType.VALUE,
-    )
-    return discountsCouponSaleTypeValue.length > 0
   }
 
   private mountSaleItemUpdate(
@@ -217,127 +218,181 @@ export class UpdateSaleItemService {
     }
   }
 
+  private getRealPriceItem(
+    saleItemUpdated:
+      | ReturnBuildItemData
+      | NonNullable<DetailedSaleItemFindById>,
+  ): number {
+    return calculateRealValueSaleItem(
+      saleItemUpdated.price,
+      saleItemUpdated.discounts,
+    )
+  }
+
   private async rebuildSaleIfNeeded(
     saleItemCurrent: NonNullable<DetailedSaleItemFindById>,
     saleItemUpdated: CreateSaleItem,
-    itemWithPlan: ReturnBuildItemData,
-  ): Promise<{ items: ReturnBuildItemData[]; total?: number }> {
-    let items = [itemWithPlan]
-    let total: number | undefined
+  ): Promise<{
+    itemsForUpdate: ReturnBuildItemData[]
+    totalSale: number
+    grossTotalSale: number
+  }> {
+    const { saleItemBuild: saleItemUpdatedBuilded } = await this.getItemBuild(
+      {
+        ...saleItemUpdated,
+        saleId: saleItemCurrent.saleId,
+      },
+      saleItemCurrent.sale.unitId,
+    )
+    let itemsForUpdate = [saleItemUpdatedBuilded]
+    const priceSaleItemWithAllDiscounts = this.getRealPriceItem(
+      saleItemUpdatedBuilded,
+    )
+    console.log('saleItemUpdatedBuilded: ', saleItemUpdatedBuilded)
 
-    if (itemWithPlan.price !== saleItemCurrent.price) {
-      const currentSale = await this.saleRepository.findById(
-        saleItemCurrent.saleId,
-      )
-      if (!currentSale) throw new SaleNotFoundError()
+    const currentSale = await this.saleRepository.findById(
+      saleItemCurrent.saleId,
+    )
+    const { saleItemBuild: saleItemCurrentBuilded } = await this.getItemBuild(
+      {
+        ...saleItemCurrent,
+        saleId: saleItemCurrent.saleId,
+      },
+      saleItemCurrent.sale.unitId,
+    )
+    const priceSaleItemCurrent = this.getRealPriceItem(saleItemCurrentBuilded)
+    console.log('saleItemCurrentBuilded: ', saleItemCurrentBuilded)
+    console.log('saleItemCurrent: ', saleItemCurrent)
 
-      if (this.haveADiscountCouponSaleValue(saleItemCurrent)) {
-        const saleItemsWithUpdate = currentSale.items.map((saleItem) =>
-          saleItem.id === saleItemCurrent.id
-            ? { ...saleItem, ...saleItemUpdated }
-            : saleItem,
+    if (!currentSale) throw new SaleNotFoundError()
+    let totalSale = currentSale.total
+    let grossTotalSale = currentSale.gross_value
+
+    // 3.1) Verifica se foi alterado o valor da sale alterada
+    if (priceSaleItemWithAllDiscounts !== priceSaleItemCurrent) {
+      console.log('Rebuild sale com cupom')
+      if (currentSale.couponId) {
+        console.log('Sale com cupom, rebuild de todos os items')
+        // console.log('currentSaleItem couponId: ', currentSale.items[0].couponId)
+        // console.log('saleItemUpdated couponId: ', saleItemUpdated)
+        const saleItemsWithUpdate: SaleItemBuildItem[] = currentSale.items.map(
+          (saleItem) =>
+            saleItem.id === saleItemCurrent.id
+              ? {
+                  ...saleItem,
+                  ...saleItemUpdated,
+                  saleId: currentSale.id,
+                  discounts: [],
+                }
+              : { ...saleItem, saleId: currentSale.id, discounts: [] },
         )
 
-        const { saleItemsBuild } = await this.getItemsBuild(
+        const { saleItemsBuild: saleItemsRebuild } = await this.getItemsBuild(
           saleItemsWithUpdate,
           currentSale.unitId,
         )
-
-        items = await rebuildSaleItems(saleItemsBuild, {
-          couponId: currentSale.coupon?.id,
-          clientId: currentSale.clientId,
-          planProfileRepository: this.planProfileRepository,
-          planRepository: this.planRepository,
-          couponRepository: this.couponRepository,
-        })
+        const { saleItems: saleItemsWithCouponSale } = await applyCouponSale(
+          saleItemsRebuild,
+          currentSale.couponId,
+          this.couponRepository,
+        )
+        console.log('saleItemsWithCouponSale 2: ', saleItemsWithCouponSale[0])
+        // console.log('saleItemsWithCouponSale: ', saleItemsWithCouponSale)
+        itemsForUpdate = saleItemsWithCouponSale
+        totalSale = calculateTotal(saleItemsWithCouponSale)
+        grossTotalSale = calculateGrossTotal(saleItemsWithCouponSale)
+      } else {
+        totalSale =
+          currentSale.total +
+          (priceSaleItemWithAllDiscounts - priceSaleItemCurrent)
+        grossTotalSale =
+          currentSale.gross_value +
+          (saleItemUpdatedBuilded.basePrice - saleItemCurrent.price)
       }
-
-      total = currentSale.total + (itemWithPlan.price - saleItemCurrent.price)
     }
 
-    return { items, total }
+    return { itemsForUpdate, totalSale, grossTotalSale }
   }
 
+  private async handlerProductStock(
+    saleItemUpdated: CreateSaleItem,
+    saleItemCurrent: NonNullable<DetailedSaleItemFindById>,
+  ): Promise<{
+    productToRestoreUp: ProductToRestore | null
+    productToUpdateUp: ProductToUpdate | null
+  }> {
+    let productToUpdate: ProductToUpdate | null = null
+    let productToRestore: ProductToRestore | null = null
+
+    if (saleItemUpdated.productId) {
+      if (saleItemUpdated.productId !== saleItemCurrent.productId) {
+        if (saleItemUpdated.productId) {
+          productToUpdate = {
+            id: saleItemUpdated.productId,
+            quantity: saleItemUpdated.quantity,
+            saleItemId: saleItemUpdated.id ?? '',
+          }
+        }
+        if (saleItemCurrent.productId) {
+          productToRestore = {
+            id: saleItemCurrent.productId,
+            quantity: saleItemCurrent.quantity,
+          }
+        }
+      } else {
+        const difQuantity = saleItemUpdated.quantity - saleItemCurrent.quantity
+        const productToUp: ProductToUpdate = {
+          id: saleItemUpdated.productId,
+          quantity: difQuantity,
+          saleItemId: saleItemCurrent.id,
+        }
+        if (difQuantity > 0) {
+          productToUpdate = productToUp
+          await verifyStockProducts(this.productRepository, [productToUp])
+        } else if (difQuantity < 0) {
+          productToUp.quantity = -productToUp.quantity
+          productToRestore = productToUp
+        }
+      }
+    }
+    return {
+      productToRestoreUp: productToRestore,
+      productToUpdateUp: productToUpdate,
+    }
+  }
+
+  // TODO: separar essa rota de update e varias rotas de pequenos updates, para simplificar a manutencao
+  // ja iniciei, agora precisar terminar
   async execute({
     id,
     saleItemUpdateFields,
   }: UpdateSaleItemRequest): Promise<UpdateSaleResponse> {
     let saleUpdate: DetailedSale | undefined
     let salesItemsUpdate: SaleItem[] | undefined
-    let productToUpdate: ProductToUpdate | undefined
-    let productToRestore: ProductToRestore | undefined
     let saleItemsToUpdate: ReturnBuildItemData[] = []
 
-    if (saleItemUpdateFields.couponCode) {
-      const coupon = await this.couponRepository.findByCode(
-        saleItemUpdateFields.couponCode,
-      )
-      if (coupon) {
-        saleItemUpdateFields.couponId = coupon.id
-      }
-    }
-
+    // 1) Veirificações iniciais
     const { saleItemCurrent } = await this.initVerify(id, saleItemUpdateFields)
     const saleItemUpdated = this.mountSaleItemUpdate(
       saleItemUpdateFields,
       saleItemCurrent,
     )
 
-    const { saleItemsBuild: saleItemUpdatedBuilded } = await this.getItemBuild(
-      saleItemUpdated,
-      saleItemCurrent.sale.unitId,
-    )
-    // TODO: deixar a logica do if a baixo mais facil de entender
-    if (saleItemUpdated.productId) {
-      const difQuantity = saleItemUpdated.quantity - saleItemCurrent.quantity
-
-      const productToUp: ProductToUpdate = {
-        id: saleItemUpdated.productId,
-        quantity: difQuantity,
-        saleItemId: saleItemCurrent.id,
-      }
-
-      if (difQuantity > 0) {
-        productToUpdate = productToUp
-        await verifyStockProducts(this.productRepository, [productToUp])
-      } else if (difQuantity < 0) {
-        productToUp.quantity = -productToUp.quantity
-        productToRestore = productToUp
-      }
-    }
-
-    const saleItemsApplyPlanDiscounts = await applyPlanDiscounts(
-      [saleItemUpdatedBuilded],
-      saleItemCurrent.sale.clientId,
-      this.planProfileRepository,
-      this.planRepository,
-    )
-
-    saleItemsToUpdate = saleItemsApplyPlanDiscounts
-
-    if (saleItemUpdated.productId !== saleItemCurrent.productId) {
-      if (saleItemUpdated.productId) {
-        productToUpdate = {
-          id: saleItemUpdated.productId,
-          quantity: saleItemUpdated.quantity,
-          saleItemId: saleItemUpdated.id ?? '',
-        }
-      }
-      if (saleItemCurrent.productId) {
-        productToRestore = {
-          id: saleItemCurrent.productId,
-          quantity: saleItemUpdated.quantity,
-        }
-      }
-    }
-
+    // 3) analisa se teve alteracao de valor na sale, e recalcula o cupom da sale se precisar
     const rebuild = await this.rebuildSaleIfNeeded(
       saleItemCurrent,
       saleItemUpdated,
-      saleItemsApplyPlanDiscounts[0],
     )
-    saleItemsToUpdate = rebuild.items
-    const saleTotalUpdated = rebuild.total
+
+    // 4) analisa se teve alteração de produto ou quantidade de produto, para fazer o controle de estoque
+    const { productToRestoreUp, productToUpdateUp } =
+      await this.handlerProductStock(saleItemUpdated, saleItemCurrent)
+    const productToUpdate: ProductToUpdate | null = productToUpdateUp
+    const productToRestore: ProductToRestore | null = productToRestoreUp
+
+    saleItemsToUpdate = rebuild.itemsForUpdate
+    const saleTotalUpdated = rebuild.totalSale
+    const saleGrossTotalUpdated = rebuild.grossTotalSale
 
     const saleItemUpdatedBuildedMapped = mapToSaleItemsForUpdate(
       saleItemsToUpdate,
@@ -365,6 +420,7 @@ export class UpdateSaleItemService {
         saleUpdate = await this.updateSaleTotal(
           saleItemCurrent.saleId,
           saleTotalUpdated,
+          saleGrossTotalUpdated ?? 0,
           tx,
         )
       }

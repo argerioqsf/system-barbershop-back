@@ -1,6 +1,7 @@
 import { TransactionRepository } from '@/repositories/transaction-repository'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { OwnerNotFoundError } from '../@errors/organization/owner-not-found-error'
+import { calculateRealValueSaleItem } from '../sale/utils/item'
 
 interface OwnerBalanceRequest {
   ownerId: string
@@ -72,7 +73,11 @@ export class OwnerBalanceService {
         if (transaction.sale) {
           const totals = transaction.sale.items.reduce(
             (t, item) => {
-              let value = item.price
+              const realValueItem = calculateRealValueSaleItem(
+                item.price,
+                item.discounts,
+              )
+              let value = realValueItem
               let percentageOwner = 100
 
               if (item.productId) t.product += value ?? 0
@@ -87,7 +92,7 @@ export class OwnerBalanceService {
                 t.service += value
               }
               setHistory(
-                Number((item.price ?? 0).toFixed(2)),
+                Number((realValueItem ?? 0).toFixed(2)),
                 Number(percentageOwner.toFixed(2)),
                 Number(value.toFixed(2)),
                 item.service?.name ?? item.product?.name ?? '',

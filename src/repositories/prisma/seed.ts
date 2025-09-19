@@ -524,6 +524,7 @@ async function main() {
       client: { connect: { id: client.id } },
       unit: { connect: { id: mainUnit.id } },
       total: plan.price,
+      gross_value: plan.price,
       method: PaymentMethod.CASH,
       paymentStatus: PaymentStatus.PAID,
       items: {

@@ -4,10 +4,11 @@ import {
   PlanWithBenefits,
 } from '@/repositories/plan-repository'
 import { PlanProfileRepository } from '@/repositories/plan-profile-repository'
-import { ReturnBuildItemData } from './item'
+import { calculateRealValueSaleItem, ReturnBuildItemData } from './item'
 
 function applyBenefitOnItem(
   item: ReturnBuildItemData,
+  realPriceItem: number,
   benefit: PlanWithBenefits['benefits'][number]['benefit'],
 ) {
   if (!item.service && !item.product) return item
@@ -26,22 +27,22 @@ function applyBenefitOnItem(
   const matchProduct =
     productId && benefit.products.some((p) => p.productId === productId)
   if (!matchCategory && !matchService && !matchProduct) return
-  if (item.price <= 0) return
+  if (realPriceItem <= 0) return
 
   const discount = benefit.discount ?? 0
   let valueDiscount = 0
   if (benefit.discountType === DiscountType.PERCENTAGE) {
-    valueDiscount = (item.price * discount) / 100
+    valueDiscount = (realPriceItem * discount) / 100
   } else if (benefit.discountType === DiscountType.VALUE) {
     valueDiscount = discount
   }
 
   if (valueDiscount <= 0) return
-  if (item.price - valueDiscount < 0) {
-    valueDiscount = item.price
-    item.price = 0
+  if (realPriceItem - valueDiscount < 0) {
+    valueDiscount = realPriceItem
+    // item.price = 0
   } else {
-    item.price -= valueDiscount
+    // item.price -= valueDiscount
   }
   item.discounts.push({
     amount:
@@ -58,12 +59,12 @@ function applyBenefitOnItem(
 
 export async function applyPlanDiscounts(
   saleItems: ReturnBuildItemData[],
-  userId: string,
+  clientId: string,
   planProfileRepo: PlanProfileRepository,
   planRepo: PlanRepository,
 ): Promise<ReturnBuildItemData[]> {
   const profilePlans = await planProfileRepo.findMany({
-    profile: { userId },
+    profile: { userId: clientId },
     status: { in: [PlanProfileStatus.PAID, PlanProfileStatus.CANCELED_ACTIVE] },
   })
   const benefitsMap: Record<
@@ -80,9 +81,10 @@ export async function applyPlanDiscounts(
   const benefits = Object.values(benefitsMap)
 
   for (const item of saleItems) {
-    if (item.price <= 0) continue
+    const realPriceItem = calculateRealValueSaleItem(item.price, item.discounts)
+    if (realPriceItem <= 0) continue
     for (const benefit of benefits) {
-      applyBenefitOnItem(item, benefit)
+      applyBenefitOnItem(item, realPriceItem, benefit)
     }
   }
 
