@@ -1,5 +1,6 @@
 import { DetailedAppointmentService } from '@/repositories/appointment-repository'
 import { DetailedSaleItemFindMany } from '@/repositories/sale-item-repository'
+import { calculateRealValueSaleItem } from '@/services/sale/utils/item'
 import { Sale, Service } from '@prisma/client'
 
 type Transaction = { amount: number }
@@ -50,7 +51,8 @@ export function calculateCommissions(
 // Processa itens de venda direta (produto ou serviço)
 function processSaleItem(item: DetailedSaleItemFindMany): PaymentItems | null {
   const rate = item.porcentagemBarbeiro ?? 0
-  const baseValue = item.price ?? 0
+  const realPriceItem = calculateRealValueSaleItem(item.price, item.discounts)
+  const baseValue = realPriceItem ?? 0
   const totalPaid = sumTransactions(item.transactions)
   const commissionValue = calculateCommission(baseValue, rate)
   const remaining = commissionValue - totalPaid

@@ -7,13 +7,14 @@ import {
 import { SaleItemRepository } from '@/repositories/sale-item-repository'
 import { PlanRepository } from '@/repositories/plan-repository'
 import { PlanProfileRepository } from '@/repositories/plan-profile-repository'
-import { CreateSaleItem, UpdateSaleRequest } from './types'
+import { UpdateSaleRequest } from './types'
 import { PaymentStatus, Prisma } from '@prisma/client'
 import { CannotEditPaidSaleError } from '../@errors/sale/cannot-edit-paid-sale-error'
 import { applyPlanDiscounts } from './utils/plan'
 import {
   buildItemData,
   ReturnBuildItemData,
+  SaleItemBuildItem,
   updateDiscountsOnSaleItem,
 } from './utils/item'
 import { calculateTotal } from './utils/sale'
@@ -23,6 +24,7 @@ import { ServiceRepository } from '@/repositories/service-repository'
 import { ProductRepository } from '@/repositories/product-repository'
 import { AppointmentRepository } from '@/repositories/appointment-repository'
 import { CouponRepository } from '@/repositories/coupon-repository'
+import { makeGetItemBuildService } from '../@factories/sale/make-get-item-build'
 
 interface UpdateSaleResponse {
   sale?: DetailedSale
@@ -41,31 +43,6 @@ export class UpdateClientSaleService {
     private couponRepository: CouponRepository,
     private barberUserRepository: BarberUsersRepository,
   ) {}
-
-  private async getItemsBuild(
-    saleItems: CreateSaleItem[],
-    unitId: string,
-  ): Promise<ReturnBuildItemData[]> {
-    const saleItemsBuild: ReturnBuildItemData[] = []
-    const newAppointmentsToLink: string[] = []
-    for (const saleItem of saleItems) {
-      const temp = await buildItemData({
-        saleItem,
-        serviceRepository: this.serviceRepository,
-        productRepository: this.productRepository,
-        appointmentRepository: this.appointmentRepository,
-        couponRepository: this.couponRepository,
-        userUnitId: unitId,
-        productsToUpdate: [],
-        barberUserRepository: this.barberUserRepository,
-        planRepository: this.planRepository,
-      })
-      saleItemsBuild.push(temp)
-      if (saleItem.appointmentId)
-        newAppointmentsToLink.push(saleItem.appointmentId)
-    }
-    return saleItemsBuild
-  }
 
   private async initVerify(id: string): Promise<{
     saleCurrent: DetailedSale
@@ -105,11 +82,11 @@ export class UpdateClientSaleService {
     const newClientProfile: ResponseFindByUserId | null =
       await this.profileRepository.findByUserId(clientId)
     if (!newClientProfile) throw new ProfileNotFoundError()
-
-    const saleItemsBuild = await this.getItemsBuild(
-      saleCurrent.items,
-      saleCurrent.unitId,
-    )
+    const getItemsBuild = makeGetItemBuildService()
+    const saleItemsBuild = await getItemsBuild.execute({
+      saleItems: saleCurrent.items,
+      unitId: saleCurrent.unitId,
+    })
     const currentSaleItems: ReturnBuildItemData[] = saleItemsBuild
 
     await applyPlanDiscounts(

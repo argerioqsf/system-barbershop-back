@@ -11,7 +11,12 @@ import {
   FakeAppointmentRepository,
   FakeBarberUsersRepository,
 } from '../../helpers/fake-repositories'
-import { makeSaleWithBarber, makePlan, makeService, barberUser } from '../../helpers/default-values'
+import {
+  makeSaleWithBarber,
+  makePlan,
+  makeService,
+  barberUser,
+} from '../../helpers/default-values'
 import { PlanProfileStatus } from '@prisma/client'
 import { prisma } from '../../../src/lib/prisma'
 
@@ -49,7 +54,9 @@ describe('Recalculate user sales service', () => {
       appointmentRepo,
       barberRepo,
     )
-    vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) => fn({} as any))
+    vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) =>
+      fn({} as any),
+    )
   })
 
   it('updates sale totals when plan discounts change', async () => {
@@ -68,9 +75,7 @@ describe('Recalculate user sales service', () => {
             discount: 10,
             discountType: 'PERCENTAGE',
             unitId: 'unit-1',
-            categories: [
-              { id: 'bc1', benefitId: 'b1', categoryId: 'cat-1' },
-            ],
+            categories: [{ id: 'bc1', benefitId: 'b1', categoryId: 'cat-1' }],
             services: [],
             products: [],
           },
@@ -83,7 +88,7 @@ describe('Recalculate user sales service', () => {
       planStartDate: new Date(),
       status: PlanProfileStatus.PAID,
       saleItemId: 'sitem1',
-      dueDateDebt: 0,
+      dueDayDebt: 0,
       planId: plan.id,
       profileId: 'profile-1',
       debts: [],

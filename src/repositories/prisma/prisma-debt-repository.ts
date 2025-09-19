@@ -3,8 +3,12 @@ import { Prisma, Debt } from '@prisma/client'
 import { DebtRepository } from '../debt-repository'
 
 export class PrismaDebtRepository implements DebtRepository {
-  create(data: Prisma.DebtUncheckedCreateInput): Promise<Debt> {
-    return prisma.debt.create({ data })
+  create(
+    data: Prisma.DebtUncheckedCreateInput,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Debt> {
+    const prismaClient = tx || prisma
+    return prismaClient.debt.create({ data })
   }
 
   update(

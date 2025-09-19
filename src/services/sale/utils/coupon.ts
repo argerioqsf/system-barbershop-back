@@ -1,5 +1,4 @@
 import { CouponRepository } from '@/repositories/coupon-repository'
-import { CreateSaleItem } from '../types'
 import {
   DiscountType,
   DiscountOrigin,
@@ -11,7 +10,11 @@ import { CouponNotFoundError } from '../../@errors/coupon/coupon-not-found-error
 import { CouponNotFromUserUnitError } from '../../@errors/coupon/coupon-not-from-user-unit-error'
 import { CouponExhaustedError } from '../../@errors/coupon/coupon-exhausted-error'
 import { ItemPriceGreaterError } from '../../@errors/sale/Item-price-greater-error'
-import { ReturnBuildItemData } from './item'
+import {
+  calculateRealValueSaleItem,
+  ReturnBuildItemData,
+  SaleItemBuildItem,
+} from './item'
 
 export interface CouponItem {
   price: number
@@ -22,11 +25,8 @@ export interface CouponItem {
 export type NewDiscount = Omit<Discount, 'id' | 'saleItemId'>
 
 export type RequestApplyCouponSaleItem = {
-  saleItem: CreateSaleItem
+  saleItem: SaleItemBuildItem & { discounts: NewDiscount[] }
   basePrice: number
-  discount: number
-  discountType: DiscountType | null
-  ownDiscount: boolean
   couponRepository: CouponRepository
   userUnitId?: string
 }
@@ -34,30 +34,26 @@ export type RequestApplyCouponSaleItem = {
 export async function applyCouponSaleItem({
   saleItem,
   basePrice,
-  discount,
-  discountType,
-  ownDiscount,
   couponRepository,
   userUnitId,
 }: RequestApplyCouponSaleItem) {
-  let price = basePrice
-  const discounts: NewDiscount[] = []
+  let priceSaleItemTotal = basePrice
+  const discounts: NewDiscount[] = saleItem.discounts ?? []
   let coupon: Coupon | null = null
-  let order = 1
+  let order = discounts.length + 1
+  let customPrice = null
   if (typeof saleItem.customPrice === 'number') {
-    const customPrice = saleItem.customPrice
-    price = customPrice
-    if (basePrice - customPrice > 0) {
-      discount = basePrice - customPrice
-      discountType = DiscountType.VALUE
-      ownDiscount = true
+    customPrice = saleItem.customPrice
+    priceSaleItemTotal = customPrice * saleItem.quantity
+    const verifyPrice = basePrice / saleItem.quantity - customPrice
+    if (verifyPrice > 0) {
       discounts.push({
-        amount: basePrice - customPrice,
+        amount: basePrice - priceSaleItemTotal,
         type: DiscountType.VALUE,
         origin: DiscountOrigin.VALUE_SALE_ITEM,
         order: order++,
       })
-    } else if (basePrice - customPrice < 0) {
+    } else if (verifyPrice < 0) {
       throw new ItemPriceGreaterError()
     }
   }
@@ -69,15 +65,14 @@ export async function applyCouponSaleItem({
       throw new CouponNotFromUserUnitError()
     }
     if (coupon.quantity <= 0) throw new CouponExhaustedError()
+    console.log('priceSaleItemTotal', priceSaleItemTotal)
+    console.log('coupon.discount', coupon.discount)
     const reduction =
       coupon.discountType === 'PERCENTAGE'
-        ? (basePrice * coupon.discount) / 100
+        ? (priceSaleItemTotal * coupon.discount) / 100
         : coupon.discount
-    price = Math.max(basePrice - reduction, 0)
-    discount =
-      coupon.discountType === 'PERCENTAGE' ? coupon.discount : reduction
-    discountType = coupon.discountType
-    ownDiscount = true
+    console.log('reduction', reduction)
+    priceSaleItemTotal = Math.max(priceSaleItemTotal - reduction, 0)
     discounts.push({
       amount: coupon.discount,
       type: coupon.discountType,
@@ -87,10 +82,6 @@ export async function applyCouponSaleItem({
   }
 
   return {
-    price,
-    discount,
-    discountType,
-    ownDiscount,
     discounts,
     coupon,
   }
@@ -114,12 +105,14 @@ export async function applyCouponSale(
   couponId: string,
   couponRepository: CouponRepository,
   userUnitId?: string,
-  considerOwnDiscount = true,
 ) {
-  const affectedTotal = saleItems.reduce(
-    (acc, saleItem) => acc + saleItem.price,
-    0,
-  )
+  const affectedTotal = saleItems.reduce((acc, saleItem) => {
+    const realPrice = calculateRealValueSaleItem(
+      saleItem.price,
+      saleItem.discounts,
+    )
+    return acc + realPrice
+  }, 0)
 
   const coupon = await couponRepository.findById(couponId)
   if (!coupon) throw new CouponNotFoundError()
@@ -128,16 +121,19 @@ export async function applyCouponSale(
   }
 
   if (coupon.quantity <= 0) throw new CouponExhaustedError()
+
   for (const saleItem of saleItems) {
-    const ownDiscount = false
-    if (ownDiscount && considerOwnDiscount) continue
+    const realPrice = calculateRealValueSaleItem(
+      saleItem.price,
+      saleItem.discounts,
+    )
     let reduction = 0
     if (coupon.discountType === 'PERCENTAGE') {
-      reduction = (saleItem.price * coupon.discount) / 100
+      reduction = (realPrice * coupon.discount) / 100
     } else if (affectedTotal > 0) {
-      reduction = (saleItem.price / affectedTotal) * coupon.discount
+      reduction = (realPrice / affectedTotal) * coupon.discount
     }
-    saleItem.price = Math.max(saleItem.price - reduction, 0)
+    // saleItem.price = Math.max(realPrice - reduction, 0)
     const amount =
       coupon.discountType === 'PERCENTAGE' ? coupon.discount : reduction
     saleItem.discounts = [

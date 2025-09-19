@@ -187,6 +187,7 @@ export class InMemorySaleRepository implements SaleRepository {
         (data.coupon as { connect: { id: string } } | undefined)?.connect.id ??
         null,
       total: data.total as number,
+      gross_value: (data.gross_value as number) ?? 0,
       method: data.method as PaymentMethod,
       paymentStatus: data.paymentStatus as PaymentStatus,
       createdAt: new Date(),
@@ -323,6 +324,9 @@ export class InMemorySaleRepository implements SaleRepository {
     }
     if (data.total !== undefined) {
       sale.total = data.total as number
+    }
+    if (data.gross_value !== undefined) {
+      sale.gross_value = data.gross_value as number
     }
     if (data.coupon && 'connect' in data.coupon) {
       const cid = (data.coupon as { connect: { id: string } }).connect.id

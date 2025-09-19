@@ -5,8 +5,9 @@ interface CreateDebtRequest {
   value: number
   planId: string
   planProfileId: string
-  paymentDate: Date
+  paymentDate?: Date
   status?: PaymentStatus
+  dueDate: Date
 }
 
 interface CreateDebtResponse {
@@ -22,6 +23,7 @@ export class CreateDebtService {
     planProfileId,
     paymentDate,
     status = PaymentStatus.PENDING,
+    dueDate,
   }: CreateDebtRequest): Promise<CreateDebtResponse> {
     const debt = await this.repository.create({
       value,
@@ -29,6 +31,7 @@ export class CreateDebtService {
       planProfileId,
       paymentDate,
       status,
+      dueDate,
     })
     return { debt }
   }

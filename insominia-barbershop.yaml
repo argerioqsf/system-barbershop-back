@@ -3102,7 +3102,8 @@ collection:
               "value": 10,
               "planId": "{{ _.planId }}",
               "planProfileId": "id",
-              "paymentDate": "2025-01-01T00:00:00Z"
+              "status": "PENDING",
+              "dueDate": "2025-02-01T00:00:00Z"
             }
         headers:
           - name: Content-Type

@@ -30,6 +30,7 @@ import { sessionRoute } from './http/controllers/session/route'
 import { unitOpeningHourRoute } from './http/controllers/unit-opening-hour/route'
 import { categoryRoute } from './http/controllers/category/route'
 import { planRoute } from './http/controllers/plan/route'
+import { planProfileRoute } from './http/controllers/plan-profile/route'
 import { debtRoute } from './http/controllers/debt/route'
 import { benefitRoute } from './http/controllers/benefit/route'
 import { typeRecurrenceRoute } from './http/controllers/type-recurrence/route'
@@ -151,6 +152,7 @@ app.register(organizationRoute)
 app.register(unitRoute)
 app.register(unitOpeningHourRoute)
 app.register(planRoute)
+app.register(planProfileRoute)
 app.register(debtRoute)
 app.register(benefitRoute)
 app.register(typeRecurrenceRoute)

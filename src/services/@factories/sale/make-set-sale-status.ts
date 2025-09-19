@@ -14,6 +14,7 @@ import { PrismaSaleItemRepository } from '@/repositories/prisma/prisma-sale-item
 import { PrismaPlanProfileRepository } from '@/repositories/prisma/prisma-plan-profile-repository'
 import { PrismaCouponRepository } from '@/repositories/prisma/prisma-coupon-repository'
 import { PrismaProductRepository } from '@/repositories/prisma/prisma-product-repository'
+import { PrismaTypeRecurrenceRepository } from '@/repositories/prisma/prisma-type-recurrence-repository'
 
 export function makePaySale() {
   const saleRepository = new PrismaSaleRepository()
@@ -31,6 +32,7 @@ export function makePaySale() {
   const planProfileRepository = new PrismaPlanProfileRepository()
   const couponRepository = new PrismaCouponRepository()
   const productRepository = new PrismaProductRepository()
+  const typeRecurrenceRepository = new PrismaTypeRecurrenceRepository()
   return new PaySaleService(
     saleRepository,
     barberUserRepository,
@@ -47,5 +49,6 @@ export function makePaySale() {
     planProfileRepository,
     couponRepository,
     productRepository,
+    typeRecurrenceRepository,
   )
 }

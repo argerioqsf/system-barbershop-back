@@ -18,6 +18,7 @@ import { calculateBarberCommission } from './barber-commission'
 import { AppointmentNotFoundError } from '@/services/@errors/appointment/appointment-not-found-error'
 import { ProfileNotFoundError } from '@/services/@errors/profile/profile-not-found-error'
 import { ItemNeedsServiceOrProductOrAppointmentError } from '@/services/@errors/sale/item-needs-service-or-product-error'
+import { calculateRealValueSaleItem } from './item'
 
 export async function distributeProfits(
   sale: DetailedSale,
@@ -53,7 +54,8 @@ export async function distributeProfits(
   let ownerShare = 0
 
   for (const item of sale.items) {
-    const value = item.price ?? 0
+    const realPriceItem = calculateRealValueSaleItem(item.price, item.discounts)
+    const value = realPriceItem ?? 0
 
     if (!item.barberId) {
       ownerShare += value

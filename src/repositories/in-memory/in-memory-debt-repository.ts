@@ -5,14 +5,19 @@ import { randomUUID } from 'crypto'
 export class InMemoryDebtRepository implements DebtRepository {
   constructor(public debts: Debt[] = []) {}
 
-  async create(data: Prisma.DebtUncheckedCreateInput): Promise<Debt> {
+  async create(
+    data: Prisma.DebtUncheckedCreateInput,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _tx?: Prisma.TransactionClient,
+  ): Promise<Debt> {
     const debt: Debt = {
       id: randomUUID(),
       value: data.value ?? 0,
       status: (data.status as PaymentStatus) ?? PaymentStatus.PENDING,
       planId: data.planId ?? '',
       planProfileId: data.planProfileId ?? '',
-      paymentDate: data.paymentDate as Date,
+      paymentDate: (data.paymentDate as Date | null | undefined) ?? null,
+      dueDate: data.dueDate as Date,
       createdAt: (data.createdAt as Date) ?? new Date(),
     }
     this.debts.push(debt)
@@ -32,7 +37,8 @@ export class InMemoryDebtRepository implements DebtRepository {
       status: (data.status ?? current.status) as PaymentStatus,
       planId: (data.planId ?? current.planId) as string,
       planProfileId: (data.planProfileId ?? current.planProfileId) as string,
-      paymentDate: (data.paymentDate ?? current.paymentDate) as Date,
+      paymentDate: (data.paymentDate ?? current.paymentDate) as Date | null,
+      dueDate: (data.dueDate ?? current.dueDate) as Date,
       createdAt: (data.createdAt ?? current.createdAt) as Date,
     }
     this.debts[idx] = updated

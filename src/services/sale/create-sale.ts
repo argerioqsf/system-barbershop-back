@@ -24,6 +24,7 @@ export class CreateSaleService {
 
     const sale = await this.saleRepository.create({
       total: 0,
+      gross_value: 0,
       // TODO: nao receber mais esse campo method aqui, deixar para setar esse campo apenas no service de pagar a sale
       method: method ?? PaymentMethod.CASH,
       paymentStatus: PaymentStatus.PENDING,

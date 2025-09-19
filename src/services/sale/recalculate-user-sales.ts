@@ -9,12 +9,13 @@ import { AppointmentRepository } from '@/repositories/appointment-repository'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { prisma } from '@/lib/prisma'
 import { PaymentStatus, Prisma } from '@prisma/client'
-import { rebuildSaleItems, calculateTotal } from './utils/sale'
+import { calculateTotal } from './utils/sale'
 import {
   updateDiscountsOnSaleItem,
   ReturnBuildItemData,
   buildItemData,
 } from './utils/item'
+import { applyCouponSale } from './utils/coupon'
 
 interface RecalculateUserSalesRequest {
   userIds: string[]
@@ -58,6 +59,7 @@ export class RecalculateUserSalesService {
             quantity: item.quantity,
             price: item.price,
             customPrice: item.customPrice ?? undefined,
+            saleId: sale.id,
           },
           serviceRepository: this.serviceRepository,
           productRepository: this.productRepository,
@@ -67,16 +69,20 @@ export class RecalculateUserSalesService {
           productsToUpdate: [],
           barberUserRepository: this.barberUserRepository,
           planRepository: this.planRepository,
+          saleRepository: this.saleRepository,
+          planProfileRepository: this.planProfileRepository,
         })
         itemsBuild.push(build)
       }
-      const rebuilt = await rebuildSaleItems(itemsBuild, {
-        couponId: sale.coupon?.id ?? undefined,
-        clientId: sale.clientId,
-        planProfileRepository: this.planProfileRepository,
-        planRepository: this.planRepository,
-        couponRepository: this.couponRepository,
-      })
+      let rebuilt = itemsBuild
+      if (sale.coupon?.id) {
+        const { saleItems } = await applyCouponSale(
+          itemsBuild,
+          sale.coupon?.id,
+          this.couponRepository,
+        )
+        rebuilt = saleItems
+      }
 
       const total = calculateTotal(rebuilt)
 

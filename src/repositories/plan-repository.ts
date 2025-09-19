@@ -6,6 +6,7 @@ import {
   BenefitCategory,
   BenefitService,
   BenefitProduct,
+  TypeRecurrence,
 } from '@prisma/client'
 
 export type PlanWithBenefits = Plan & {
@@ -19,7 +20,7 @@ export type PlanWithBenefits = Plan & {
 }
 
 export type PlanWithRecurrence = Plan & {
-  typeRecurrence: { period: number }
+  typeRecurrence: TypeRecurrence
 }
 
 export type PlanWithBenefitsAndRecurrence = PlanWithBenefits &

@@ -1,6 +1,7 @@
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { TransactionFull } from '@/repositories/prisma/prisma-transaction-repository'
 import { TransactionRepository } from '@/repositories/transaction-repository'
+import { calculateRealValueSaleItem } from '../sale/utils/item'
 
 interface BarberBalanceRequest {
   barberId: string
@@ -53,9 +54,13 @@ export class BarberBalanceService {
       const serviceShare = items.reduce((totals, item) => {
         if (!item.productId) {
           const percentage = item.porcentagemBarbeiro ?? 0
-          const valueBarber = ((item.price ?? 0) * percentage) / 100
+          const realValueItem = calculateRealValueSaleItem(
+            item.price,
+            item.discounts,
+          )
+          const valueBarber = ((realValueItem ?? 0) * percentage) / 100
           setHistory(
-            item.price ?? 0,
+            realValueItem ?? 0,
             percentage,
             valueBarber,
             item.service?.name ?? '',

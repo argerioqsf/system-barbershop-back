@@ -16,6 +16,10 @@ export const UpdateSaleItemController = async (
     barberId: z.string().optional().nullable(),
     couponId: z.string().optional().nullable(),
     couponCode: z.string().optional().nullable(),
+    // TODO: analisar logica de quando eu tenho uma quantidade maior
+    // que 1 e adiciono um customPrice o valor total do saleItem vira
+    // o customPrice ele nao esta levando em consideracao a quantidade de itens
+    // o certo é pegar o valor do customPrice e multiplicar pela quantidade
     customPrice: z.number().optional().nullable(),
   })
   const { id } = paramsSchema.parse(request.params)

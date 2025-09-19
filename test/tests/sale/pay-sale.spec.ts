@@ -17,6 +17,7 @@ import {
   FakeCouponRepository,
   FakeProductRepository,
   FakePlanProfileRepository,
+  FakeTypeRecurrenceRepository,
 } from '../../helpers/fake-repositories'
 import {
   barberProfile,
@@ -47,11 +48,16 @@ let appointmentServiceRepo: FakeAppointmentServiceRepository
 let saleItemRepo: FakeSaleItemRepository
 let couponRepo: FakeCouponRepository
 let productRepo: FakeProductRepository
-let planProfileRepo: FakePlanProfileRepository
+  let planProfileRepo: FakePlanProfileRepository
+  let typeRecurrenceRepo: FakeTypeRecurrenceRepository
 
-vi.mock('../../../src/services/@factories/transaction/make-create-transaction', () => ({
-  makeCreateTransaction: () => new CreateTransactionService(transactionRepo, barberRepo, cashRepo),
-}))
+vi.mock(
+  '../../../src/services/@factories/transaction/make-create-transaction',
+  () => ({
+    makeCreateTransaction: () =>
+      new CreateTransactionService(transactionRepo, barberRepo, cashRepo),
+  }),
+)
 
 describe('Pay sale service', () => {
   let saleRepo: FakeSaleRepository
@@ -66,7 +72,9 @@ describe('Pay sale service', () => {
     barberServiceRepo = new FakeBarberServiceRelRepository()
     barberProductRepo = new FakeBarberProductRepository()
     appointmentRepo = new FakeAppointmentRepository()
-    appointmentServiceRepo = new FakeAppointmentServiceRepository(appointmentRepo)
+    appointmentServiceRepo = new FakeAppointmentServiceRepository(
+      appointmentRepo,
+    )
     cashRepo = new FakeCashRegisterRepository()
     transactionRepo = new FakeTransactionRepository()
     orgRepo = new FakeOrganizationRepository({ ...defaultOrganization })
@@ -80,6 +88,10 @@ describe('Pay sale service', () => {
     couponRepo = new FakeCouponRepository()
     productRepo = new FakeProductRepository()
     planProfileRepo = new FakePlanProfileRepository()
+    typeRecurrenceRepo = new FakeTypeRecurrenceRepository([
+      { id: 'rec-1', period: 1 },
+      { id: 'rec1', period: 1 },
+    ] as any)
 
     cashRepo.session = {
       id: 'session-1',
@@ -103,13 +115,16 @@ describe('Pay sale service', () => {
     )
     saleRepo.sales.push(sale)
 
-    barberRepo.users.push({
-      ...defaultUser,
-      id: 'cashier',
-      organizationId: defaultOrganization.id,
-      unitId: defaultUnit.id,
-      unit: { ...defaultUnit, organizationId: defaultOrganization.id },
-    }, barberUser)
+    barberRepo.users.push(
+      {
+        ...defaultUser,
+        id: 'cashier',
+        organizationId: defaultOrganization.id,
+        unitId: defaultUnit.id,
+        unit: { ...defaultUnit, organizationId: defaultOrganization.id },
+      },
+      barberUser,
+    )
 
     service = new PaySaleService(
       saleRepo,
@@ -127,9 +142,12 @@ describe('Pay sale service', () => {
       planProfileRepo,
       couponRepo,
       productRepo,
+      typeRecurrenceRepo,
     )
 
-    vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) => fn({} as any))
+    vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) =>
+      fn({} as any),
+    )
   })
 
   it('marks sale as paid', async () => {
@@ -163,7 +181,7 @@ describe('Pay sale service', () => {
       planStartDate: new Date(),
       status: 'PAID',
       saleItemId: 'old',
-      dueDateDebt: 1,
+      dueDayDebt: 1,
       planId: plan.id,
       profileId: 'profile-user',
       debts: [],

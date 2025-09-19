@@ -14,6 +14,11 @@ import { BarberServiceRepository } from '@/repositories/barber-service-repositor
 import { AppointmentServiceRepository } from '@/repositories/appointment-service-repository'
 import { BarberProductRepository } from '@/repositories/barber-product-repository'
 import { SaleItemRepository } from '@/repositories/sale-item-repository'
+import {
+  ProductToUpdate,
+  ReturnBuildItemData,
+  SaleItemBuildItem,
+} from './utils/item'
 
 export interface DistributeProfitsDeps {
   organizationRepository: OrganizationRepository
@@ -76,6 +81,26 @@ export interface RemoveAddSaleItemRequest {
   id: string
   addItemsIds?: CreateSaleItem[]
   removeItemIds?: string[]
+}
+export interface GetItemBuildRequest {
+  saleItem: SaleItemBuildItem
+  unitId: string
+}
+
+export interface GetItemBuildResponse {
+  saleItemBuild: ReturnBuildItemData
+  productsToUpdate: ProductToUpdate[]
+}
+
+export interface GetItemsBuildRequest {
+  saleItems: SaleItemBuildItem[]
+  unitId: string
+}
+
+export interface GetItemsBuildResponse {
+  saleItemsBuild: ReturnBuildItemData[]
+  newAppointmentsToLink: string[]
+  productsToUpdate: ProductToUpdate[]
 }
 
 export interface CreateSaleResponse {
