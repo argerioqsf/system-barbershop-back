@@ -1,6 +1,6 @@
 # Migration Plan – Next Modules
 
-Este plano complementa o `docs/SALE_FLOW_REFACTOR_PLAN.md` listando os próximos módulos a serem migrados para a nova arquitetura de use cases, serviços especializados e telemetria.
+Este plano complementa o `docs/sale/flow-refactor-plan.md` listando os próximos módulos a serem migrados para a nova arquitetura de use cases, serviços especializados e telemetria.
 
 ## 1. Caixa (Cash Register)
 - **Escopo**: abertura/fechamento de sessão, movimentações, verificações de saldo.

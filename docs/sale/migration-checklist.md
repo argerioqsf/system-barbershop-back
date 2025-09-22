@@ -25,4 +25,4 @@
 
 ## Communication
 - Share migration notes with the squad via Slack and schedule a walkthrough of the new module architecture.
-- Update onboarding materials to point to `docs/sale-flow-overview.md` and this checklist.
+- Update onboarding materials to point to `docs/sale/flow-overview.md` and this checklist.
