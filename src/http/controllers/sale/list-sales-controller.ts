@@ -1,4 +1,4 @@
-import { makeListSales } from '@/services/@factories/sale/make-list-sales'
+import { makeListSales } from '@/modules/sale/infra/factories/make-list-sales'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { UserToken } from '../authenticate-controller'
 import { z } from 'zod'
@@ -23,7 +23,16 @@ export const ListSalesController = async (
     userId: z.string().optional(),
   })
   const params = querySchema.parse(request.query)
-  const result = await service.execute(user, params)
+  const result = await service.execute({
+    actor: {
+      id: user.sub,
+      unitId: user.unitId,
+      organizationId: user.organizationId,
+      role: user.role,
+      permissions: user.permissions,
+    },
+    filters: params,
+  })
   if (params.withCount) return reply.status(200).send(result)
   return reply.status(200).send(result.items)
 }

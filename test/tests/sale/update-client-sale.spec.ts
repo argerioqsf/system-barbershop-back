@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { UpdateClientSaleService } from '../../../src/services/sale/update-client-sale'
+import { UpdateSaleClientUseCase } from '../../../src/modules/sale/application/use-cases/update-sale-client'
 import {
   FakeSaleRepository,
   FakeProfilesRepository,
@@ -18,13 +18,12 @@ import {
   makeService,
   defaultClient,
 } from '../../helpers/default-values'
-import {
-  DiscountOrigin,
-  DiscountType,
-  type PlanWithBenefits,
-  type Service,
-} from '@prisma/client'
-import { prisma } from '../../../src/lib/prisma'
+import { DiscountOrigin, DiscountType, type Service } from '@prisma/client'
+import { GetItemBuildService } from '../../../src/services/sale/get-item-build'
+import { GetItemsBuildService } from '../../../src/services/sale/get-items-build'
+import { TransactionRunner } from '../../../src/modules/sale/application/services/sale-item-update-executor'
+import { calculateRealValueSaleItem } from '../../../src/services/sale/utils/item'
+import { PlanWithBenefits } from '../../../src/repositories/plan-repository'
 
 let saleRepo: FakeSaleRepository
 let profileRepo: FakeProfilesRepository
@@ -36,8 +35,9 @@ let productRepo: FakeProductRepository
 let appointmentRepo: FakeAppointmentRepository
 let couponRepo: FakeCouponRepository
 let barberRepo: FakeBarberUsersRepository
-let service: UpdateClientSaleService
+let service: UpdateSaleClientUseCase
 let svc: Service
+let runInTransaction: TransactionRunner
 
 beforeEach(() => {
   saleRepo = new FakeSaleRepository()
@@ -77,23 +77,33 @@ beforeEach(() => {
   })
   const newClient = { ...defaultClient, id: 'c2' }
   profileRepo.profiles = [{ ...makeProfile('p-c2', 'c2'), user: newClient }]
-  service = new UpdateClientSaleService(
-    saleRepo,
-    profileRepo,
-    saleItemRepo,
-    planRepo,
-    planProfileRepo,
+  const getItemBuildService = new GetItemBuildService(
     serviceRepo,
     productRepo,
     appointmentRepo,
     couponRepo,
     barberRepo,
+    planRepo,
+    saleRepo,
+    planProfileRepo,
   )
-  vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) =>
+
+  const getItemsBuildService = new GetItemsBuildService(getItemBuildService)
+
+  runInTransaction = async (fn) =>
     fn({
       discount: { deleteMany: vi.fn() },
       planProfile: { deleteMany: vi.fn() },
-    } as any),
+    } as any)
+
+  service = new UpdateSaleClientUseCase(
+    saleRepo,
+    profileRepo,
+    saleItemRepo,
+    planRepo,
+    planProfileRepo,
+    getItemsBuildService,
+    runInTransaction,
   )
 })
 
@@ -126,7 +136,6 @@ describe('Update client sale service', () => {
             categories: [],
             services: [{ id: 'bs1', benefitId: 'b1', serviceId: svc.id }],
             products: [],
-            plans: [],
           },
         },
       ],
@@ -146,20 +155,24 @@ describe('Update client sale service', () => {
     const result = await service.execute({ id: 'sale-1', clientId: 'c2' })
 
     const item = result.sale!.items[0]
+    const realPriceItem = calculateRealValueSaleItem(item.price, item.discounts)
     expect(item.discounts[0]).toEqual(
       expect.objectContaining({ origin: DiscountOrigin.PLAN }),
     )
-    expect(item.price).toBe(90)
+    expect(realPriceItem).toBe(90)
+    expect(item.price).toBe(100)
   })
 
   it('removes plan discounts when changing to client without plan', async () => {
-    saleRepo.sales[0].items[0].price = 90
+    saleRepo.sales[0].items[0].price = 100
     saleRepo.sales[0].items[0].discounts = [
       {
         amount: 10,
         type: DiscountType.VALUE,
         origin: DiscountOrigin.PLAN,
         order: 1,
+        id: 'd1',
+        saleItemId: 'i1',
       },
     ]
 

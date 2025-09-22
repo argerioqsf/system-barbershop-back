@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { RecalculateUserSalesService } from '../../../src/services/sale/recalculate-user-sales'
+import { RecalculateUserSalesService } from '../../../src/modules/sale/application/use-cases/recalculate-user-sales'
+import { SaleItemsBuildService } from '../../../src/modules/sale/application/services/sale-items-build-service'
 import {
   FakeSaleRepository,
   FakeSaleItemRepository,
@@ -19,6 +20,7 @@ import {
 } from '../../helpers/default-values'
 import { PlanProfileStatus } from '@prisma/client'
 import { prisma } from '../../../src/lib/prisma'
+import { calculateRealValueSaleItem } from '../../../src/services/sale/utils/item'
 
 describe('Recalculate user sales service', () => {
   let saleRepo: FakeSaleRepository
@@ -30,6 +32,7 @@ describe('Recalculate user sales service', () => {
   let productRepo: FakeProductRepository
   let appointmentRepo: FakeAppointmentRepository
   let barberRepo: FakeBarberUsersRepository
+  let saleItemsBuildService: SaleItemsBuildService
   let service: RecalculateUserSalesService
 
   beforeEach(() => {
@@ -43,16 +46,20 @@ describe('Recalculate user sales service', () => {
     appointmentRepo = new FakeAppointmentRepository()
     barberRepo = new FakeBarberUsersRepository()
     ;(barberRepo.users as any).push(barberUser as any)
+    saleItemsBuildService = new SaleItemsBuildService({
+      serviceRepository: serviceRepo,
+      productRepository: productRepo,
+      appointmentRepository: appointmentRepo,
+      couponRepository: couponRepo,
+      barberUserRepository: barberRepo,
+      planRepository: planRepo,
+      saleRepository: saleRepo,
+      planProfileRepository: planProfileRepo,
+    })
     service = new RecalculateUserSalesService(
       saleRepo,
       saleItemRepo,
-      planRepo,
-      planProfileRepo,
-      couponRepo,
-      serviceRepo,
-      productRepo,
-      appointmentRepo,
-      barberRepo,
+      saleItemsBuildService,
     )
     vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) =>
       fn({} as any),
@@ -61,7 +68,7 @@ describe('Recalculate user sales service', () => {
 
   it('updates sale totals when plan discounts change', async () => {
     const plan = makePlan('plan1')
-    ;(planRepo.plans as any).push({
+    planRepo.plans.push({
       ...plan,
       benefits: [
         {
@@ -100,20 +107,33 @@ describe('Recalculate user sales service', () => {
     const svc = makeService('svc1', 100)
     sale.items[0].service = svc
     sale.items[0].serviceId = svc.id
-    serviceRepo.services.push(svc as any)
-    sale.items[0].price = 90
+    serviceRepo.services.push(svc)
+    sale.items[0].price = 100
     sale.items[0].discounts = [
-      { amount: 10, type: 'VALUE', origin: 'PLAN', order: 1 },
+      {
+        amount: 10,
+        type: 'VALUE',
+        origin: 'PLAN',
+        order: 1,
+        id: 'disc1',
+        saleItemId: 'sitem1',
+      },
     ]
     sale.total = 90
-    saleRepo.sales.push(sale as any)
+    sale.gross_value = 100
+    saleRepo.sales.push(sale)
 
     // update plan benefit discount
     ;(planRepo.plans[0] as any).benefits[0].benefit.discount = 20
 
     await service.execute({ userIds: ['client-1'] })
+    const realPriceItem = calculateRealValueSaleItem(
+      saleRepo.sales[0].items[0].price,
+      saleRepo.sales[0].items[0].discounts,
+    )
 
-    expect(saleRepo.sales[0].items[0].price).toBe(80)
+    expect(saleRepo.sales[0].items[0].price).toBe(100)
+    expect(realPriceItem).toBe(80)
     expect(saleRepo.sales[0].total).toBe(80)
   })
 })

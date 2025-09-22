@@ -1,5 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { PaySaleService } from '../../../src/services/sale/pay-sale'
+import { DefaultPaySaleCoordinator } from '../../../src/modules/finance/application/coordinators/pay-sale-coordinator'
+import { SaleCommissionService } from '../../../src/modules/finance/application/services/sale-commission-service'
+import { SaleProfitDistributionService } from '../../../src/modules/finance/application/services/sale-profit-distribution-service'
+import { PaySaleUseCase } from '../../../src/modules/finance/application/use-cases/pay-sale'
+import type { RecalculateUserSalesService } from '../../../src/modules/sale/application/use-cases/recalculate-user-sales'
 import { CreateTransactionService } from '../../../src/services/transaction/create-transaction'
 import {
   FakeSaleRepository,
@@ -48,8 +52,8 @@ let appointmentServiceRepo: FakeAppointmentServiceRepository
 let saleItemRepo: FakeSaleItemRepository
 let couponRepo: FakeCouponRepository
 let productRepo: FakeProductRepository
-  let planProfileRepo: FakePlanProfileRepository
-  let typeRecurrenceRepo: FakeTypeRecurrenceRepository
+let planProfileRepo: FakePlanProfileRepository
+let typeRecurrenceRepo: FakeTypeRecurrenceRepository
 
 vi.mock(
   '../../../src/services/@factories/transaction/make-create-transaction',
@@ -64,7 +68,12 @@ describe('Pay sale service', () => {
   let orgRepo: FakeOrganizationRepository
   let profileRepo: FakeProfilesRepository
   let unitRepo: FakeUnitRepository
-  let service: PaySaleService
+  let service: PaySaleUseCase
+  let saleCommissionService: SaleCommissionService
+  let saleProfitDistributionService: SaleProfitDistributionService
+  let paySaleCoordinator: DefaultPaySaleCoordinator
+  let recalculateUserSalesService: RecalculateUserSalesService
+  let recalculateUserSalesExecuteSpy: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
     saleRepo = new FakeSaleRepository()
@@ -92,6 +101,23 @@ describe('Pay sale service', () => {
       { id: 'rec-1', period: 1 },
       { id: 'rec1', period: 1 },
     ] as any)
+
+    saleCommissionService = new SaleCommissionService(
+      barberRepo,
+      barberServiceRepo,
+      barberProductRepo,
+    )
+    saleProfitDistributionService = new SaleProfitDistributionService(
+      orgRepo,
+      profileRepo,
+      unitRepo,
+      transactionRepo,
+      appointmentRepo,
+      barberServiceRepo,
+      barberProductRepo,
+      appointmentServiceRepo,
+      saleItemRepo,
+    )
 
     cashRepo.session = {
       id: 'session-1',
@@ -123,10 +149,10 @@ describe('Pay sale service', () => {
         unitId: defaultUnit.id,
         unit: { ...defaultUnit, organizationId: defaultOrganization.id },
       },
-      barberUser,
+      barberUser as any,
     )
 
-    service = new PaySaleService(
+    service = new PaySaleUseCase(
       saleRepo,
       barberRepo,
       barberServiceRepo,
@@ -143,20 +169,35 @@ describe('Pay sale service', () => {
       couponRepo,
       productRepo,
       typeRecurrenceRepo,
+      saleCommissionService,
+      saleProfitDistributionService,
     )
 
     vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) =>
       fn({} as any),
     )
+
+    recalculateUserSalesExecuteSpy = vi.fn()
+    recalculateUserSalesService = {
+      execute: recalculateUserSalesExecuteSpy,
+    } as unknown as RecalculateUserSalesService
+
+    paySaleCoordinator = new DefaultPaySaleCoordinator(
+      service,
+      recalculateUserSalesService,
+    )
   })
 
+  const execute = (saleId: string) =>
+    paySaleCoordinator.execute({ saleId, userId: 'cashier' })
+
   it('marks sale as paid', async () => {
-    const result = await service.execute({
-      saleId: 'sale-1',
-      userId: 'cashier',
-    })
+    const result = await execute('sale-1')
 
     expect(result.sale.paymentStatus).toBe(PaymentStatus.PAID)
+    expect(recalculateUserSalesExecuteSpy).toHaveBeenCalledWith({
+      userIds: ['c1'],
+    })
   })
 
   it('creates plan profile when paying sale with plan', async () => {
@@ -164,7 +205,7 @@ describe('Pay sale service', () => {
     saleRepo.sales[0].items[0].planId = plan.id
     saleRepo.sales[0].items[0].plan = plan as any
 
-    const res = await service.execute({ saleId: 'sale-1', userId: 'cashier' })
+    const res = await execute('sale-1')
 
     expect(res.sale.paymentStatus).toBe(PaymentStatus.PAID)
     expect(planProfileRepo.items).toHaveLength(1)
@@ -187,9 +228,9 @@ describe('Pay sale service', () => {
       debts: [],
     })
 
-    await expect(
-      service.execute({ saleId: 'sale-1', userId: 'cashier' }),
-    ).rejects.toThrow('Client already linked to this plan')
+    await expect(execute('sale-1')).rejects.toThrow(
+      'Client already linked to this plan',
+    )
   })
 
   it('updates coupon and product stock', async () => {
@@ -205,9 +246,24 @@ describe('Pay sale service', () => {
     saleRepo.sales[0].items[0].couponId = coupon.id
     saleRepo.sales[0].items[0].coupon = coupon as any
 
-    await service.execute({ saleId: 'sale-1', userId: 'cashier' })
+    await execute('sale-1')
 
     expect(productRepo.products[0].quantity).toBe(4)
     expect(couponRepo.coupons[0].quantity).toBe(4)
+  })
+
+  it('applies barber commission percentage when relations exist', async () => {
+    const relation = makeBarberServiceRel(
+      barberProfile.id,
+      'svc-test',
+      'PERCENTAGE_OF_USER_ITEM',
+      35,
+    )
+    barberServiceRepo.items = [relation as any]
+    saleRepo.sales[0].items[0].porcentagemBarbeiro = null
+
+    const result = await execute('sale-1')
+
+    expect(result.sale.items[0].porcentagemBarbeiro).toBe(35)
   })
 })

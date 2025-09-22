@@ -1,6 +1,7 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
-import { makeUpdateSaleItem } from '@/services/@factories/sale/update-sale-item'
+import { makeSaleItemCoordinator } from '@/modules/sale/infra/factories/make-sale-item-coordinator'
+import { UserToken } from '../authenticate-controller'
 
 export const UpdateSaleItemController = async (
   request: FastifyRequest,
@@ -16,10 +17,6 @@ export const UpdateSaleItemController = async (
     barberId: z.string().optional().nullable(),
     couponId: z.string().optional().nullable(),
     couponCode: z.string().optional().nullable(),
-    // TODO: analisar logica de quando eu tenho uma quantidade maior
-    // que 1 e adiciono um customPrice o valor total do saleItem vira
-    // o customPrice ele nao esta levando em consideracao a quantidade de itens
-    // o certo é pegar o valor do customPrice e multiplicar pela quantidade
     customPrice: z.number().optional().nullable(),
   })
   const { id } = paramsSchema.parse(request.params)
@@ -34,20 +31,69 @@ export const UpdateSaleItemController = async (
     couponCode,
     customPrice,
   } = bodySchema.parse(request.body)
-  const service = makeUpdateSaleItem()
-  const { sale, saleItems } = await service.execute({
-    id,
-    saleItemUpdateFields: {
-      serviceId,
-      productId,
-      appointmentId,
-      planId,
+  const coordinator = makeSaleItemCoordinator()
+  const performedBy = request.user.sub
+
+  let result: Awaited<ReturnType<typeof coordinator.updateCoupon>> | undefined
+
+  const hasDetailsChange =
+    serviceId !== undefined ||
+    productId !== undefined ||
+    appointmentId !== undefined ||
+    planId !== undefined
+
+  if (hasDetailsChange) {
+    result = await coordinator.updateDetails({
+      saleItemId: id,
+      serviceId: serviceId ?? undefined,
+      productId: productId ?? undefined,
+      appointmentId: appointmentId ?? undefined,
+      planId: planId ?? undefined,
       quantity,
-      barberId,
-      couponId,
-      couponCode,
+      performedBy,
+    })
+  }
+
+  const quantityHandled = hasDetailsChange && quantity !== undefined
+
+  if (quantity !== undefined && !quantityHandled) {
+    result = await coordinator.updateQuantity({
+      saleItemId: id,
+      quantity,
+      performedBy,
+    })
+  }
+
+  if (customPrice !== undefined) {
+    result = await coordinator.updateCustomPrice({
+      saleItemId: id,
       customPrice,
-    },
-  })
-  return reply.status(200).send({ sale, saleItems })
+      performedBy,
+    })
+  }
+
+  if (couponId !== undefined || couponCode !== undefined) {
+    result = await coordinator.updateCoupon({
+      saleItemId: id,
+      couponId: couponId ?? undefined,
+      couponCode: couponCode ?? undefined,
+      performedBy,
+    })
+  }
+
+  if (barberId !== undefined) {
+    result = await coordinator.updateBarber({
+      saleItemId: id,
+      barberId,
+      performedBy,
+    })
+  }
+
+  if (!result) {
+    throw new Error('No sale item changes provided')
+  }
+
+  return reply
+    .status(200)
+    .send({ sale: result.sale, saleItems: result.saleItems })
 }

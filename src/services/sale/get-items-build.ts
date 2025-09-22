@@ -1,8 +1,10 @@
 import { GetItemsBuildRequest, GetItemsBuildResponse } from './types'
 import { ProductToUpdate, ReturnBuildItemData } from './utils/item'
-import { makeGetItemBuildService } from '../@factories/sale/make-get-item-build'
+import { GetItemBuildService } from './get-item-build'
 
 export class GetItemsBuildService {
+  constructor(private readonly getItemBuildService: GetItemBuildService) {}
+
   async execute({
     saleItems,
     unitId,
@@ -10,14 +12,14 @@ export class GetItemsBuildService {
     const saleItemsBuild: ReturnBuildItemData[] = []
     const newAppointmentsToLink: string[] = []
     const productsToUpdate: ProductToUpdate[] = []
-    const getItemsBuild = makeGetItemBuildService()
     for (const saleItem of saleItems) {
-      const { productsToUpdate, saleItemBuild } = await getItemsBuild.execute({
-        saleItem,
-        unitId,
-      })
+      const { productsToUpdate: itemProductsToUpdate, saleItemBuild } =
+        await this.getItemBuildService.execute({
+          saleItem,
+          unitId,
+        })
       saleItemsBuild.push(saleItemBuild)
-      productsToUpdate.push(...productsToUpdate)
+      productsToUpdate.push(...itemProductsToUpdate)
       if (saleItem.appointmentId)
         newAppointmentsToLink.push(saleItem.appointmentId)
     }

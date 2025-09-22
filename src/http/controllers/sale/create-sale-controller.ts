@@ -1,4 +1,4 @@
-import { makeCreateSale } from '@/services/@factories/sale/make-create-sale'
+import { makeCreateSale } from '@/modules/sale/infra/factories/make-create-sale'
 import { PaymentMethod } from '@prisma/client'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'

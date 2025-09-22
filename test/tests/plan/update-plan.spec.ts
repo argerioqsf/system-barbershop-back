@@ -2,7 +2,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { UpdatePlanService } from '../../../src/services/plan/update-plan'
 import { prisma } from '../../../src/lib/prisma'
 import { FakePlanRepository, FakePlanProfileRepository, FakeProfilesRepository } from '../../helpers/fake-repositories'
-import { RecalculateUserSalesService } from '../../../src/services/sale/recalculate-user-sales'
+import { RecalculateUserSalesService } from '../../../src/modules/sale/application/use-cases/recalculate-user-sales'
+import { SaleItemsBuildService } from '../../../src/modules/sale/application/services/sale-items-build-service'
 import {
   FakeSaleRepository,
   FakeSaleItemRepository,
@@ -39,16 +40,20 @@ describe('Update plan service', () => {
     const productRepo = new FakeProductRepository()
     const appointmentRepo = new FakeAppointmentRepository()
     const barberRepo = new FakeBarberUsersRepository()
+    const saleItemsBuildService = new SaleItemsBuildService({
+      serviceRepository: serviceRepo,
+      productRepository: productRepo,
+      appointmentRepository: appointmentRepo,
+      couponRepository: couponRepo,
+      barberUserRepository: barberRepo,
+      planRepository: repo,
+      saleRepository: saleRepo,
+      planProfileRepository: planProfileRepo,
+    })
     recalc = new RecalculateUserSalesService(
       saleRepo,
       saleItemRepo,
-      repo,
-      planProfileRepo,
-      couponRepo,
-      serviceRepo,
-      productRepo,
-      appointmentRepo,
-      barberRepo,
+      saleItemsBuildService,
     )
     vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) =>
       fn({} as unknown as import('@prisma/client').Prisma.TransactionClient),

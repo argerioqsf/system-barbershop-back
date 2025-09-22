@@ -49,7 +49,7 @@ it('renews expired plan profile and recalculates sales', async () => {
     planRepo,
     debtRepo,
     profilesRepo,
-    (recalc as unknown as import('../../../src/services/sale/recalculate-user-sales').RecalculateUserSalesService),
+    (recalc as unknown as import('../../../src/modules/sale/application/use-cases/recalculate-user-sales').RecalculateUserSalesService),
   )
 
   const { planProfile } = await service.execute({ id: 'pp1' })

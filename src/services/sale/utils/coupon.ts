@@ -15,6 +15,9 @@ import {
   ReturnBuildItemData,
   SaleItemBuildItem,
 } from './item'
+import { logger } from '@/lib/logger'
+import { SaleDiscount } from '@/modules/sale/domain/sale-discount'
+import { SaleCoupon } from '@/modules/sale/domain/sale-coupon'
 
 export interface CouponItem {
   price: number
@@ -45,15 +48,23 @@ export async function applyCouponSaleItem({
   if (typeof saleItem.customPrice === 'number') {
     customPrice = saleItem.customPrice
     priceSaleItemTotal = customPrice * saleItem.quantity
-    const verifyPrice = basePrice / saleItem.quantity - customPrice
-    if (verifyPrice > 0) {
-      discounts.push({
-        amount: basePrice - priceSaleItemTotal,
+    const diffPrice = basePrice - customPrice
+    logger.debug('Price sale item total', {
+      basePrice,
+      priceSaleItemTotal,
+      customPrice,
+      quantity: saleItem.quantity,
+      diffPrice,
+    })
+    if (diffPrice > 0) {
+      const discount = SaleDiscount.create({
+        amount: diffPrice,
         type: DiscountType.VALUE,
         origin: DiscountOrigin.VALUE_SALE_ITEM,
         order: order++,
       })
-    } else if (verifyPrice < 0) {
+      discounts.push(discount.toPrimitives())
+    } else if (diffPrice < 0) {
       throw new ItemPriceGreaterError()
     }
   }
@@ -61,29 +72,48 @@ export async function applyCouponSaleItem({
   if (saleItem.couponId) {
     coupon = await couponRepository.findById(saleItem.couponId)
     if (!coupon) throw new CouponNotFoundError()
+    SaleCoupon.create({
+      id: coupon.id,
+      discount: coupon.discount,
+      discountType: coupon.discountType,
+    })
     if (userUnitId && coupon.unitId !== userUnitId) {
       throw new CouponNotFromUserUnitError()
     }
     if (coupon.quantity <= 0) throw new CouponExhaustedError()
-    console.log('priceSaleItemTotal', priceSaleItemTotal)
-    console.log('coupon.discount', coupon.discount)
+    logger.debug('Applying sale item coupon', {
+      saleItemId: saleItem.id,
+      priceSaleItemTotal,
+      couponDiscount: coupon.discount,
+    })
     const reduction =
       coupon.discountType === 'PERCENTAGE'
         ? (priceSaleItemTotal * coupon.discount) / 100
         : coupon.discount
-    console.log('reduction', reduction)
+    logger.debug('Coupon reduction computed', {
+      saleItemId: saleItem.id,
+      reduction,
+    })
     priceSaleItemTotal = Math.max(priceSaleItemTotal - reduction, 0)
-    discounts.push({
+    const saleDiscount = SaleDiscount.create({
       amount: coupon.discount,
       type: coupon.discountType,
       origin: DiscountOrigin.COUPON_SALE_ITEM,
       order: order++,
     })
+
+    discounts.push(saleDiscount.toPrimitives())
   }
+
+  const discountValue = basePrice - priceSaleItemTotal
 
   return {
     discounts,
     coupon,
+    finalPrice: priceSaleItemTotal,
+    price: basePrice,
+    discount: discountValue > 0 ? discountValue : 0,
+    discountType: coupon?.discountType ?? DiscountType.VALUE,
   }
 }
 
@@ -133,18 +163,17 @@ export async function applyCouponSale(
     } else if (affectedTotal > 0) {
       reduction = (realPrice / affectedTotal) * coupon.discount
     }
-    // saleItem.price = Math.max(realPrice - reduction, 0)
     const amount =
       coupon.discountType === 'PERCENTAGE' ? coupon.discount : reduction
-    saleItem.discounts = [
-      ...saleItem.discounts,
-      {
-        amount,
-        type: coupon.discountType,
-        origin: DiscountOrigin.COUPON_SALE,
-        order: saleItem.discounts.length + 1,
-      },
-    ]
+
+    const discount = SaleDiscount.create({
+      amount,
+      type: coupon.discountType,
+      origin: DiscountOrigin.COUPON_SALE,
+      order: saleItem.discounts.length + 1,
+    })
+
+    saleItem.discounts = [...saleItem.discounts, discount.toPrimitives()]
   }
 
   return { couponIdConnect: coupon.id, saleItems }

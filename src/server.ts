@@ -1,6 +1,7 @@
 import { app } from './app'
 import { env } from './env'
 import { startUpdatePlanProfileStatusJob } from './jobs/update-plan-profile-status-job'
+import { logger } from './lib/logger'
 
 app.get('/health', (req, res) => {
   res.status(200).send('health')
@@ -16,5 +17,5 @@ app
     port: env.PORT,
   })
   .then(() => {
-    console.log('Server is runner')
+    logger.info('Server started', { port: env.PORT })
   })

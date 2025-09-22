@@ -1,5 +1,15 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { UpdateSaleItemService } from '../../../src/services/sale/update-sale-item'
+import { UpdateSaleItemDetailsUseCase } from '../../../src/modules/sale/application/use-cases/update-sale-item-details'
+import { UpdateSaleItemCouponUseCase } from '../../../src/modules/sale/application/use-cases/update-sale-item-coupon'
+import { UpdateSaleItemBarberUseCase } from '../../../src/modules/sale/application/use-cases/update-sale-item-barber'
+import { UpdateSaleItemQuantityUseCase } from '../../../src/modules/sale/application/use-cases/update-sale-item-quantity'
+import {
+  SaleItemUpdateExecutor,
+  TransactionRunner,
+} from '../../../src/modules/sale/application/services/sale-item-update-executor'
+import { SaleTotalsService } from '../../../src/modules/sale/application/services/sale-totals-service'
+import { GetItemBuildService } from '../../../src/services/sale/get-item-build'
+import { GetItemsBuildService } from '../../../src/services/sale/get-items-build'
 import {
   FakeSaleRepository,
   FakeServiceRepository,
@@ -25,7 +35,7 @@ import {
   barberProfile,
 } from '../../helpers/default-values'
 import { DiscountOrigin, DiscountType } from '@prisma/client'
-import { prisma } from '../../../src/lib/prisma'
+import { calculateRealValueSaleItem } from '../../../src/services/sale/utils/item'
 
 let saleRepo: FakeSaleRepository
 let serviceRepo: FakeServiceRepository
@@ -36,7 +46,11 @@ let barberRepo: FakeBarberUsersRepository
 let saleItemRepo: FakeSaleItemRepository
 let planRepo: FakePlanRepository
 let planProfileRepo: FakePlanProfileRepository
-let service: UpdateSaleItemService
+let updateDetailsUseCase: UpdateSaleItemDetailsUseCase
+let updateCouponUseCase: UpdateSaleItemCouponUseCase
+let updateBarberUseCase: UpdateSaleItemBarberUseCase
+let updateQuantityUseCase: UpdateSaleItemQuantityUseCase
+let runInTransaction: TransactionRunner
 
 beforeEach(() => {
   saleRepo = new FakeSaleRepository()
@@ -52,6 +66,7 @@ beforeEach(() => {
   const svc = makeService('svc1', 100)
   sale.items[0].serviceId = svc.id
   sale.items[0].service = svc as any
+  sale.gross_value = 100
   saleRepo.sales.push(sale)
   serviceRepo.services.push(svc)
   barberRepo.users.push(
@@ -74,43 +89,94 @@ beforeEach(() => {
       },
     },
   )
-  service = new UpdateSaleItemService(
-    saleItemRepo,
+  const getItemBuildService = new GetItemBuildService(
     serviceRepo,
     productRepo,
     appointmentRepo,
     couponRepo,
     barberRepo,
-    saleRepo,
     planRepo,
+    saleRepo,
     planProfileRepo,
   )
-  vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) =>
+
+  const getItemsBuildService = new GetItemsBuildService(getItemBuildService)
+
+  const saleTotalsService = new SaleTotalsService(saleRepo, couponRepo, {
+    createGetItemBuildService: () => getItemBuildService,
+    createGetItemsBuildService: () => getItemsBuildService,
+  })
+
+  runInTransaction = async (fn) =>
     fn({
       discount: { deleteMany: vi.fn() },
       planProfile: { deleteMany: vi.fn() },
-    } as any),
+    } as any)
+
+  const executor = new SaleItemUpdateExecutor({
+    saleItemRepository: saleItemRepo,
+    saleRepository: saleRepo,
+    saleTotalsService,
+    runInTransaction,
+  })
+
+  updateDetailsUseCase = new UpdateSaleItemDetailsUseCase(executor, productRepo)
+
+  updateCouponUseCase = new UpdateSaleItemCouponUseCase(executor, couponRepo)
+
+  updateBarberUseCase = new UpdateSaleItemBarberUseCase(executor)
+
+  updateQuantityUseCase = new UpdateSaleItemQuantityUseCase(
+    executor,
+    productRepo,
   )
 })
 
 describe('Update sale item service', () => {
   it('updates quantity and total', async () => {
-    const result = await service.execute({
-      id: 'i1',
-      saleItemUpdateFields: { quantity: 2 },
+    const result = await updateQuantityUseCase.execute({
+      saleItemId: 'i1',
+      quantity: 2,
     })
 
     expect(result.sale?.total).toBe(200)
     expect(saleRepo.sales[0].total).toBe(200)
   })
 
+  it('updates gross total when quantity change keeps net total stable', async () => {
+    saleRepo.sales[0].items[0].customPrice = 50
+    saleRepo.sales[0].items[0].price = 100
+    saleRepo.sales[0].items[0].discounts = [
+      {
+        id: 'd-custom-price',
+        saleItemId: 'i1',
+        amount: 50,
+        type: DiscountType.VALUE,
+        origin: DiscountOrigin.VALUE_SALE_ITEM,
+        order: 1,
+      },
+    ]
+    saleRepo.sales[0].total = 50
+    saleRepo.sales[0].gross_value = 100
+
+    const result = await updateQuantityUseCase.execute({
+      saleItemId: 'i1',
+      quantity: 2,
+    })
+
+    expect(result.sale?.total).toBe(50)
+    expect(result.sale?.gross_value).toBe(200)
+    expect(saleRepo.sales[0].gross_value).toBe(200)
+  })
+
   it('changes service item to product and updates stock', async () => {
     const prod = makeProduct('p1', 50, 5)
     productRepo.products.push(prod)
 
-    const result = await service.execute({
-      id: 'i1',
-      saleItemUpdateFields: { productId: prod.id, serviceId: null },
+    const result = await updateDetailsUseCase.execute({
+      saleItemId: 'i1',
+      productId: prod.id,
+      serviceId: null,
     })
 
     expect(result.sale?.total).toBe(50)
@@ -121,16 +187,18 @@ describe('Update sale item service', () => {
     const coupon = makeCoupon('c1', 'OFF', 10, 'VALUE')
     couponRepo.coupons.push(coupon)
 
-    const result = await service.execute({
-      id: 'i1',
-      saleItemUpdateFields: { couponId: coupon.id },
+    const result = await updateCouponUseCase.execute({
+      saleItemId: 'i1',
+      couponId: coupon.id,
     })
 
     const item = result.saleItems![0]
     expect(item.discounts[0]).toEqual(
       expect.objectContaining({ origin: DiscountOrigin.COUPON_SALE_ITEM }),
     )
-    expect(item.price).toBe(90)
+    expect(item.price).toBe(100)
+    const realPriceItem = calculateRealValueSaleItem(item.price, item.discounts)
+    expect(realPriceItem).toBe(90)
     expect(result.sale?.total).toBe(90)
   })
 
@@ -147,12 +215,14 @@ describe('Update sale item service', () => {
         type: DiscountType.VALUE,
         origin: DiscountOrigin.COUPON_SALE_ITEM,
         order: 1,
+        id: 'd1',
+        saleItemId: 'i1',
       },
     ]
 
-    const result = await service.execute({
-      id: 'i1',
-      saleItemUpdateFields: { couponId: null },
+    const result = await updateCouponUseCase.execute({
+      saleItemId: 'i1',
+      couponId: null,
     })
 
     const item = result.saleItems![0]
@@ -196,17 +266,18 @@ describe('Update sale item service', () => {
       debts: [],
     })
 
-    const result = await service.execute({
-      id: 'i1',
-      saleItemUpdateFields: { quantity: 1 },
+    const result = await updateQuantityUseCase.execute({
+      saleItemId: 'i1',
+      quantity: 1,
     })
 
     const item = result.saleItems![0]
+    const realPriceItem = calculateRealValueSaleItem(item.price, item.discounts)
     expect(item.discounts[0]).toEqual(
       expect.objectContaining({ origin: DiscountOrigin.PLAN }),
     )
-    expect(item.price).toBe(90)
-    expect(result.sale?.total).toBe(90)
+    expect(realPriceItem).toBe(90)
+    expect(result.sale?.total).toBe(100)
   })
 
   it('restores stock when changing from product to service', async () => {
@@ -221,9 +292,10 @@ describe('Update sale item service', () => {
     productRepo.products.push(prod)
     serviceRepo.services.push(svc2)
 
-    const result = await service.execute({
-      id: 'i1',
-      saleItemUpdateFields: { serviceId: svc2.id, productId: null },
+    const result = await updateDetailsUseCase.execute({
+      saleItemId: 'i1',
+      serviceId: svc2.id,
+      productId: null,
     })
 
     expect(productRepo.products[0].quantity).toBe(5)
@@ -232,27 +304,27 @@ describe('Update sale item service', () => {
 
   it('throws when id is missing', async () => {
     await expect(
-      service.execute({ id: '', saleItemUpdateFields: { quantity: 1 } }),
-    ).rejects.toThrow('SaleItem ID is required')
+      updateQuantityUseCase.execute({ saleItemId: '', quantity: 1 }),
+    ).rejects.toThrow('Sale item identifier is required')
   })
 
   it('throws when sale item not found', async () => {
     await expect(
-      service.execute({ id: 'invalid', saleItemUpdateFields: { quantity: 1 } }),
+      updateQuantityUseCase.execute({ saleItemId: 'invalid', quantity: 1 }),
     ).rejects.toThrow('Sale Item not found')
   })
 
   it('throws when commission already paid', async () => {
     saleRepo.sales[0].items[0].commissionPaid = true
     await expect(
-      service.execute({ id: 'i1', saleItemUpdateFields: { quantity: 1 } }),
+      updateQuantityUseCase.execute({ saleItemId: 'i1', quantity: 1 }),
     ).rejects.toThrow('Cannot edit a paid sale item')
   })
 
   it('throws when sale is paid', async () => {
     saleRepo.sales[0].paymentStatus = 'PAID'
     await expect(
-      service.execute({ id: 'i1', saleItemUpdateFields: { quantity: 1 } }),
+      updateQuantityUseCase.execute({ saleItemId: 'i1', quantity: 1 }),
     ).rejects.toThrow('Cannot edit a paid sale')
   })
 
@@ -261,7 +333,7 @@ describe('Update sale item service', () => {
       .spyOn(saleRepo, 'findById')
       .mockResolvedValueOnce(null as any)
     await expect(
-      service.execute({ id: 'i1', saleItemUpdateFields: { quantity: 2 } }),
+      updateQuantityUseCase.execute({ saleItemId: 'i1', quantity: 2 }),
     ).rejects.toThrow('Sale not found')
     spy.mockRestore()
   })

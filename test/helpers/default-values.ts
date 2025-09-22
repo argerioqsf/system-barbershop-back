@@ -48,6 +48,7 @@ export const defaultSale: DetailedSale = {
   sessionId: 's1',
   couponId: null,
   total: 20,
+  gross_value: 20,
   method: 'CASH',
   paymentStatus: 'PAID',
   observation: '',
@@ -83,8 +84,6 @@ export const defaultSale: DetailedSale = {
       barberId: 'user-barber',
       couponId: null,
       price: 100,
-      discount: null,
-      discountType: null,
       discounts: [],
       porcentagemBarbeiro: 0,
       service: null,
@@ -94,6 +93,8 @@ export const defaultSale: DetailedSale = {
       plan: null,
       appointmentId: 'ap-1',
       appointment: null,
+      customPrice: null,
+      commissionPaid: false,
     },
   ],
   coupon: null,
@@ -157,7 +158,11 @@ export const barberUser = {
   profile: barberProfile,
 }
 
-export function makeService(id: string, price = 100, categoryId = 'cat-1'): Service {
+export function makeService(
+  id: string,
+  price = 100,
+  categoryId = 'cat-1',
+): Service {
   return {
     id,
     name: '',
@@ -221,6 +226,52 @@ export function makeProduct(
     unitId: 'unit-1',
     commissionPercentage: 0,
     categoryId,
+  }
+}
+
+export function makeSaleItem({
+  id,
+  saleId,
+  serviceId,
+  productId,
+  planId,
+  price = 100,
+  quantity = 1,
+  customPrice,
+  couponId,
+}: {
+  id: string
+  saleId: string
+  serviceId?: string
+  productId?: string
+  planId?: string
+  price?: number
+  quantity?: number
+  customPrice?: number | null
+  couponId?: string | null
+}) {
+  return {
+    id,
+    saleId,
+    serviceId: serviceId ?? null,
+    productId: productId ?? null,
+    planId: planId ?? null,
+    quantity,
+    barberId: null,
+    couponId: couponId ?? null,
+    price,
+    discount: null,
+    discountType: null,
+    discounts: [],
+    porcentagemBarbeiro: 0,
+    service: null,
+    product: null,
+    barber: null,
+    coupon: null,
+    plan: null,
+    appointmentId: null,
+    appointment: null,
+    customPrice: customPrice ?? null,
   }
 }
 
@@ -422,6 +473,7 @@ export function makeSaleWithBarber(): DetailedSale {
     clientId: 'c1',
     unitId: defaultUnit.id,
     total: 100,
+    gross_value: 100,
     method: 'CASH' as PaymentMethod,
     paymentStatus: PaymentStatus.PENDING,
     createdAt: new Date(),
@@ -438,8 +490,6 @@ export function makeSaleWithBarber(): DetailedSale {
         barberId: barberUser.id,
         couponId: null,
         price: 100,
-        discount: null,
-        discountType: null,
         discounts: [],
         porcentagemBarbeiro: barberProfile.commissionPercentage,
         service: null,
@@ -448,6 +498,10 @@ export function makeSaleWithBarber(): DetailedSale {
         coupon: null,
         appointmentId: null,
         appointment: null,
+        planId: null,
+        customPrice: null,
+        commissionPaid: false,
+        plan: null,
       },
     ],
     user: { ...defaultUser },
@@ -494,6 +548,9 @@ export function makeTransaction(
     unit: { organizationId: over.organizationId ?? 'org-1' },
     sale: over.sale ?? null,
     saleId: 'sl-1',
+    saleItemId: null,
+    appointmentServiceId: null,
+    loanId: null,
   }
 }
 

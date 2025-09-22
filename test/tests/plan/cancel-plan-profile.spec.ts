@@ -41,7 +41,7 @@ beforeEach(() => {
   service = new CancelPlanProfileService(
     repo,
     profilesRepo,
-    (recalc as unknown as import('../../../src/services/sale/recalculate-user-sales').RecalculateUserSalesService),
+    (recalc as unknown as import('../../../src/modules/sale/application/use-cases/recalculate-user-sales').RecalculateUserSalesService),
   )
 })
 

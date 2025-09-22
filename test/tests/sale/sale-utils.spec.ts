@@ -5,9 +5,11 @@ import {
   updateProductsStock,
   updateCouponsStock,
 } from '../../../src/services/sale/utils/sale'
-import { FakeProductRepository, FakeCouponRepository } from '../../helpers/fake-repositories'
+import {
+  FakeProductRepository,
+  FakeCouponRepository,
+} from '../../helpers/fake-repositories'
 import { makeProduct, makeCoupon } from '../../helpers/default-values'
-
 
 describe('sale utilities', () => {
   it('maps temp items to sale items', () => {
@@ -43,8 +45,8 @@ describe('sale utilities', () => {
 
   it('calculates total', () => {
     const total = calculateTotal([
-      { price: 40 } as any,
-      { price: 60 } as any,
+      { basePrice: 40 } as any,
+      { basePrice: 60 } as any,
     ])
     expect(total).toBe(100)
   })
@@ -58,7 +60,9 @@ describe('sale utilities', () => {
   })
 
   it('updates coupon stock', async () => {
-    const repo = new FakeCouponRepository([makeCoupon('c1', 'OFF', 10, 'VALUE')])
+    const repo = new FakeCouponRepository([
+      makeCoupon('c1', 'OFF', 10, 'VALUE'),
+    ])
     await updateCouponsStock(repo, [{ couponId: 'c1', price: 100 } as any])
     expect(repo.coupons[0].quantity).toBe(4)
   })

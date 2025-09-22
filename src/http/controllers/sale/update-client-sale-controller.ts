@@ -1,6 +1,6 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
-import { makeUpdateClientSale } from '@/services/@factories/sale/make-update-client-sale'
+import { makeUpdateClientSale } from '@/modules/sale/infra/factories/make-update-client-sale'
 
 export const UpdateClientSaleController = async (
   request: FastifyRequest,
@@ -12,10 +12,12 @@ export const UpdateClientSaleController = async (
   })
   const { id } = paramsSchema.parse(request.params)
   const { clientId } = bodySchema.parse(request.body)
+  const performedBy = request.user.sub
   const service = makeUpdateClientSale()
   const { sale } = await service.execute({
     id,
     clientId,
+    performedBy,
   })
   return reply.status(200).send(sale)
 }

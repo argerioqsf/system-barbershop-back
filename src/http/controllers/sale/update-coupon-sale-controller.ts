@@ -1,6 +1,6 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
-import { makeUpdateCouponSale } from '@/services/@factories/sale/make-update-coupon-sale'
+import { makeUpdateSaleCoupon } from '@/modules/sale/infra/factories/make-update-sale-coupon'
 import { PrismaCouponRepository } from '@/repositories/prisma/prisma-coupon-repository'
 
 export const UpdateCouponSaleController = async (
@@ -29,11 +29,13 @@ export const UpdateCouponSaleController = async (
     }
     couponId = coupon.id
   }
-  const service = makeUpdateCouponSale()
+  const service = makeUpdateSaleCoupon()
+  const performedBy = request.user.sub
   const { sale } = await service.execute({
     id,
     couponId,
     removeCoupon,
+    performedBy,
   })
   return reply.status(200).send(sale)
 }

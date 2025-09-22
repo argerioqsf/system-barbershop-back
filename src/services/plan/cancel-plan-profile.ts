@@ -1,6 +1,6 @@
 import { PlanProfileRepository } from '@/repositories/plan-profile-repository'
 import { ProfilesRepository } from '@/repositories/profiles-repository'
-import { RecalculateUserSalesService } from '../sale/recalculate-user-sales'
+import { RecalculateUserSalesService } from '@/modules/sale/application/use-cases/recalculate-user-sales'
 import { PlanProfile, PlanProfileStatus } from '@prisma/client'
 
 interface CancelPlanProfileRequest {

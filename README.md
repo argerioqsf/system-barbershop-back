@@ -2,6 +2,16 @@
 
 Esta API gerencia recursos de uma barbearia usando Fastify e Prisma.
 
+Documentação complementar:
+- `docs/sale-flow-overview.md`: visão geral da arquitetura do módulo de vendas.
+- `docs/SALE_FLOW_REFACTOR_PLAN.md`: histórico completo da migração do fluxo de vendas.
+- `docs/sale-migration-checklist.md`: checklist de validação e rollback da migração.
+- `docs/NEXT_MODULES_MIGRATION_PLAN.md`: roadmap para os próximos módulos a migrar.
+
+## Arquitetura do módulo de vendas
+
+O fluxo de vendas foi migrado para uma camada modular em `src/modules/sale`. Cada operação relevante (criar venda, atualizar itens, aplicar cupons, realizar pagamento) expõe um *use case* especializado instanciado por factories no diretório `src/modules/sale/infra`. Os controllers HTTP chamam apenas essas factories, garantindo orquestração explícita e telemetria padronizada. Consulte `docs/sale-flow-overview.md` para detalhes e exemplos de dependências injetadas.
+
 ## Requisitos
 
 - Node.js 20.19.0 ou superior
@@ -81,10 +91,12 @@ Rode as seguintes tarefas antes de enviar código:
 npm run lint
 npm run typecheck
 npm test
+
+# Rodar somente os testes de integração do fluxo de vendas
+npm test -- sale-http.spec.ts
 ```
 
 ## Coleção Insomnia
 
 O arquivo `insominia-barbershop.yaml` contém todas as requisições para testar as rotas.
 Importe-o no Insomnia e defina a variável `baseURL` para o endereço onde a aplicação está rodando (ex.: `http://localhost:3333`).
-

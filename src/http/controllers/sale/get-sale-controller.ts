@@ -1,4 +1,4 @@
-import { makeGetSale } from '@/services/@factories/sale/make-get-sale'
+import { makeGetSale } from '@/modules/sale/infra/factories/make-get-sale'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
