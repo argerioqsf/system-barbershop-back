@@ -1,4 +1,5 @@
 import { env } from '@/env'
+import { logger } from '@/lib/logger'
 import {
   PrismaClient,
   TransactionType,
@@ -564,7 +565,7 @@ async function main() {
     })
   }
 
-  console.log({
+  logger.info('Seed completed', {
     organization,
     organization2,
     mainUnit,

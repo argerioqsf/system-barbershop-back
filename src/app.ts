@@ -8,6 +8,7 @@ import { uploadDir, upload } from './lib/upload'
 import { ZodError } from 'zod'
 import { env } from './env'
 import { handleControllerError } from './utils/http-error-handler'
+import { logger } from './lib/logger'
 import { profileRoute } from './http/controllers/profile/route'
 import { profileHoursRoute } from './http/controllers/profile-hours/route'
 import { barberShopServiceRoute } from './http/controllers/barber-shop/route'
@@ -50,10 +51,13 @@ app.route({
   url: '/upload',
   preHandler: upload.single('avatar'),
   handler: function (request, reply) {
-    console.log('Uploaded file:', request.file)
     if (!request.file) {
       return reply.code(400).send('No file uploaded.')
     }
+    logger.info('File uploaded', {
+      filename: request.file.filename,
+      mimetype: request.file.mimetype,
+    })
     reply.code(200).send('SUCCESS')
   },
 })
@@ -64,6 +68,7 @@ app.route({
   handler: function (request, reply) {
     fs.readdir(uploadDir, { withFileTypes: true }, (err, files) => {
       if (err) {
+        logger.error('Unable to scan uploads directory', { error: err })
         reply.code(500).send('Unable to scan directory: ' + err)
         return
       }
@@ -111,8 +116,13 @@ app.route({
     if (fs.existsSync(filePath)) {
       fs.unlink(filePath, (err) => {
         if (err) {
+          logger.error('Failed to delete uploaded file', {
+            filename,
+            error: err,
+          })
           reply.code(500).send('Failed to delete file')
         } else {
+          logger.info('File deleted successfully', { filename })
           reply.code(200).send('File deleted successfully')
         }
       })
@@ -168,9 +178,11 @@ app.setErrorHandler((error, _, reply) => {
       .send({ message: 'Validation error', issues: error.format() })
   }
 
-  if (env.NODE_ENV !== 'production') {
-    console.log(error)
-  }
+  logger.error('Unhandled application error', {
+    error,
+    path: reply.request.url,
+    method: reply.request.method,
+  })
 
   return handleControllerError(error, reply)
 })

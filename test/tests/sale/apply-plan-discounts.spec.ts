@@ -6,6 +6,10 @@ import {
 } from '../../helpers/fake-repositories'
 import { makePlan, makeService } from '../../helpers/default-values'
 import { DiscountType, PaymentStatus, PlanProfileStatus } from '@prisma/client'
+import {
+  calculateRealValueSaleItem,
+  ReturnBuildItemData,
+} from '../../../src/services/sale/utils/item'
 
 it('applies plan discount when canceled plan is still valid', async () => {
   const service = makeService('svc1', 100)
@@ -28,11 +32,10 @@ it('applies plan discount when canceled plan is still valid', async () => {
             categories: [],
             services: [{ id: 'bs1', benefitId: 'b1', serviceId: service.id }],
             products: [],
-            plans: [],
           },
         },
       ],
-    } as any,
+    },
   ])
   const tomorrow = new Date()
   tomorrow.setDate(tomorrow.getDate() + 1)
@@ -59,9 +62,10 @@ it('applies plan discount when canceled plan is still valid', async () => {
       ],
     },
   ])
-  const items = [
+  const items: ReturnBuildItemData[] = [
     {
       price: 100,
+      basePrice: 100,
       quantity: 1,
       discounts: [],
       service,
@@ -72,9 +76,19 @@ it('applies plan discount when canceled plan is still valid', async () => {
     },
   ]
 
-  await applyPlanDiscounts(items as any, 'u1', planProfileRepo, planRepo)
+  const itemsUp = await applyPlanDiscounts(
+    items,
+    'u1',
+    planProfileRepo,
+    planRepo,
+  )
 
-  expect(items[0].price).toBe(90)
+  const realPrice = calculateRealValueSaleItem(
+    itemsUp[0].price,
+    itemsUp[0].discounts,
+  )
+  expect(realPrice).toBe(90)
+  expect(items[0].price).toBe(100)
   expect(items[0].discounts[0]).toEqual(
     expect.objectContaining({ origin: 'PLAN' }),
   )

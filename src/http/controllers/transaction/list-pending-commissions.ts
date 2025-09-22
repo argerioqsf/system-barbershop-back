@@ -1,4 +1,4 @@
-import { makeListUserPendingCommissions } from '@/services/@factories/sale/make-list-user-pending-commissions'
+import { makeListUserPendingCommissions } from '@/modules/finance/infra/factories/make-list-user-pending-commissions'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 

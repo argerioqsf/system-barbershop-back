@@ -34,15 +34,17 @@ import { BarberNotFromUserUnitError } from '../../@errors/barber/barber-not-from
 import { BarberCannotSellItemError } from '../../@errors/barber/barber-cannot-sell-item'
 import { hasPermission } from '@/utils/permissions'
 import { applyCouponSaleItem, NewDiscount } from './coupon'
+import { logger } from '@/lib/logger'
 import {
   DetailedSaleItemFindMany,
   SaleItemRepository,
 } from '@/repositories/sale-item-repository'
-import { RecalculateUserSalesService } from '../recalculate-user-sales'
+import { RecalculateUserSalesService } from '@/modules/sale/application/use-cases/recalculate-user-sales'
 import { ProfilesRepository } from '@/repositories/profiles-repository'
 import { applyPlanDiscounts } from './plan'
 import { SaleRepository } from '@/repositories/sale-repository'
 import { PlanProfileRepository } from '@/repositories/plan-profile-repository'
+import { SaleNotFoundError } from '@/services/@errors/sale/sale-not-found-error'
 
 export type ProductToUpdate = {
   id: string
@@ -307,8 +309,8 @@ export async function buildItemData({
     commissionPaid: false,
   }
 
-  const sale = await saleRepository?.findById(saleItem.saleId)
-  if (!sale) throw new Error('Sale not found')
+  const sale = await saleRepository.findById(saleItem.saleId)
+  if (!sale) throw SaleNotFoundError
 
   const saleItemsWithDiscountPlan = await applyPlanDiscounts(
     [saleItemForApplyPlanDiscounts],
@@ -324,7 +326,7 @@ export async function buildItemData({
     saleId: saleItem.saleId,
   }
 
-  const { coupon, discounts } = await applyCouponSaleItem({
+  const { coupon, discounts, price } = await applyCouponSaleItem({
     saleItem: {
       ...saleItemWithDiscountPlan,
       discounts: saleItemWithDiscountPlan.discounts,
@@ -342,7 +344,7 @@ export async function buildItemData({
     product,
     plan,
     barber,
-    price: basePrice,
+    price,
     basePrice,
     customPrice: saleItem.customPrice,
     discounts,
@@ -360,7 +362,6 @@ export async function updateDiscountsOnSaleItem(
   await saleItemRepository.update(
     saleItemId,
     {
-      // price: saleItem.price,
       ...(newDiscounts
         ? {
             discounts: {
@@ -401,12 +402,12 @@ export function calculateRealValueSaleItem(
   const realValueWithDiscounts = discountsOrder.reduce((acc, discount) => {
     if (discount.type === 'VALUE') {
       const discountValue = discount.amount
-      console.log('- ', discountValue)
+      logger.debug('Applying value discount', { discountValue })
       return acc - discountValue
     }
     if (discount.type === 'PERCENTAGE') {
       const discountValue = (acc * discount.amount) / 100
-      console.log('- ', discountValue)
+      logger.debug('Applying percentage discount', { discountValue })
       return acc - discountValue
     }
     return acc

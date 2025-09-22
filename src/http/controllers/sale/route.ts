@@ -10,6 +10,9 @@ import { UpdateCouponSaleController } from './update-coupon-sale-controller'
 import { UpdateClientSaleController } from './update-client-sale-controller'
 import { UpdateSaleItemController } from './update-sale-item-controler'
 import { UpdateCouponSaleItemController } from './update-coupon-sale-item-controler'
+import { UpdateSaleItemBarberController } from './update-sale-item-barber-controller'
+import { UpdateSaleItemQuantityController } from './update-sale-item-quantity-controller'
+import { UpdateSaleItemCustomPriceController } from './update-sale-item-custom-price-controller'
 
 export async function saleRoute(app: FastifyInstance) {
   app.addHook('onRequest', verifyJWT)
@@ -25,4 +28,10 @@ export async function saleRoute(app: FastifyInstance) {
   // Sale Item
   app.patch('/sales/saleItem/:id', UpdateSaleItemController)
   app.patch('/sales/saleItem/:id/coupon', UpdateCouponSaleItemController)
+  app.patch('/sales/saleItem/:id/barber', UpdateSaleItemBarberController)
+  app.patch('/sales/saleItem/:id/quantity', UpdateSaleItemQuantityController)
+  app.patch(
+    '/sales/saleItem/:id/custom-price',
+    UpdateSaleItemCustomPriceController,
+  )
 }

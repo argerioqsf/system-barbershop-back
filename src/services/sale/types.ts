@@ -66,6 +66,7 @@ export interface UpdateSaleRequest {
   couponId?: string
   clientId?: string
   removeCoupon?: boolean
+  performedBy?: string
 }
 
 export type SaleItemUpdateFields = Omit<
@@ -81,6 +82,7 @@ export interface RemoveAddSaleItemRequest {
   id: string
   addItemsIds?: CreateSaleItem[]
   removeItemIds?: string[]
+  performedBy?: string
 }
 export interface GetItemBuildRequest {
   saleItem: SaleItemBuildItem

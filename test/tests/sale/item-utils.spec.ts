@@ -1,6 +1,10 @@
-import { describe, it, expect } from 'vitest'
-import { buildItemData } from '../../../src/services/sale/utils/item'
+import { describe, it, expect, vi } from 'vitest'
 import {
+  buildItemData,
+  calculateRealValueSaleItem,
+} from '../../../src/services/sale/utils/item'
+import {
+  FakeSaleRepository,
   FakeServiceRepository,
   FakeProductRepository,
   FakeCouponRepository,
@@ -10,14 +14,15 @@ import {
 } from '../../helpers/fake-repositories'
 import {
   makeService,
-  makeProduct,
   makeCoupon,
   barberUser,
   barberProfile,
   defaultUnit,
+  makeSaleWithBarber,
 } from '../../helpers/default-values'
 
 function setup() {
+  const saleRepo = new FakeSaleRepository()
   const serviceRepo = new FakeServiceRepository()
   const productRepo = new FakeProductRepository()
   const couponRepo = new FakeCouponRepository()
@@ -26,14 +31,30 @@ function setup() {
     appointmentRepo,
   )
   const barberRepo = new FakeBarberUsersRepository()
-  barberRepo.users.push({ ...barberUser, profile: barberProfile })
+  barberRepo.users.push({ ...barberUser, profile: barberProfile as any })
+
+  const planRepo = {
+    findByIdWithBenefits: vi.fn().mockResolvedValue(null),
+  } as any
+
+  const planProfileRepo = {
+    findMany: vi.fn().mockResolvedValue([]),
+  } as any
+
+  const sale = makeSaleWithBarber()
+  saleRepo.sales.push(sale)
+
   return {
+    sale,
+    saleRepo,
     serviceRepo,
     productRepo,
     couponRepo,
     appointmentRepo,
     appointmentServiceRepo,
     barberRepo,
+    planRepo,
+    planProfileRepo,
   }
 }
 
@@ -46,16 +67,26 @@ describe('buildItemData util', () => {
     ctx.couponRepo.coupons.push(coupon)
 
     const item = await buildItemData({
-      saleItem: { serviceId: service.id, quantity: 1, couponId: coupon.id, barberId: barberUser.id },
+      saleItem: {
+        saleId: ctx.sale.id,
+        serviceId: service.id,
+        quantity: 1,
+        couponId: coupon.id,
+        barberId: barberUser.id,
+      },
+      saleRepository: ctx.saleRepo,
       serviceRepository: ctx.serviceRepo,
       productRepository: ctx.productRepo,
       appointmentRepository: ctx.appointmentRepo,
       couponRepository: ctx.couponRepo,
       barberUserRepository: ctx.barberRepo,
+      planRepository: ctx.planRepo,
+      planProfileRepository: ctx.planProfileRepo,
       userUnitId: defaultUnit.id,
     })
 
-    expect(item.price).toBe(90)
+    expect(item.price).toBe(100)
+    expect(calculateRealValueSaleItem(item.price, item.discounts)).toBe(90)
     expect(item.coupon?.id).toBe(coupon.id)
     expect(item.service?.id).toBe(service.id)
   })
@@ -77,12 +108,19 @@ describe('buildItemData util', () => {
     const stored = ctx.appointmentRepo.appointments[0]
 
     const item = await buildItemData({
-      saleItem: { appointmentId: appointment.id, quantity: 1 },
+      saleItem: {
+        saleId: ctx.sale.id,
+        appointmentId: appointment.id,
+        quantity: 1,
+      },
+      saleRepository: ctx.saleRepo,
       serviceRepository: ctx.serviceRepo,
       productRepository: ctx.productRepo,
       appointmentRepository: ctx.appointmentRepo,
       couponRepository: ctx.couponRepo,
       barberUserRepository: ctx.barberRepo,
+      planRepository: ctx.planRepo,
+      planProfileRepository: ctx.planProfileRepo,
       userUnitId: defaultUnit.id,
     })
 

@@ -1,4 +1,4 @@
-import { makeUpdateSale } from '@/services/@factories/sale/make-update-sale'
+import { makeUpdateSale } from '@/modules/sale/infra/factories/make-update-sale'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { PaymentMethod } from '@prisma/client'
@@ -14,11 +14,13 @@ export const UpdateSaleController = async (
   })
   const { id } = paramsSchema.parse(request.params)
   const { observation, method } = bodySchema.parse(request.body)
+  const performedBy = request.user.sub
   const service = makeUpdateSale()
   const { sale } = await service.execute({
     id,
     observation,
     method,
+    performedBy,
   })
   return reply.status(200).send(sale)
 }

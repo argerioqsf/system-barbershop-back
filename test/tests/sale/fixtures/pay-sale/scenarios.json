@@ -1,0 +1,26 @@
+[
+  {
+    "name": "pagar venda com item de serviço e cupom",
+    "sale": {
+      "id": "sale-fx-service-coupon",
+      "items": [
+        {
+          "id": "si-service",
+          "serviceId": "svc-service",
+          "quantity": 1,
+          "barberId": "barber-1"
+        }
+      ],
+      "coupon": {
+        "id": "coupon-value",
+        "discountType": "VALUE",
+        "discount": 10
+      }
+    },
+    "expectations": {
+      "paymentStatus": "PAID",
+      "total": 90,
+      "commissionPercentage": 35
+    }
+  }
+]

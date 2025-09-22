@@ -11,7 +11,7 @@ import { prisma } from '@/lib/prisma'
 import { PlanRepository } from '@/repositories/plan-repository'
 import { getLastDebtPaid, hasPendingDebts } from './utils/helpers'
 import { checkAndRecalculateAffectedSales } from '../sale/utils/item'
-import { RecalculateUserSalesService } from '../sale/recalculate-user-sales'
+import { RecalculateUserSalesService } from '@/modules/sale/application/use-cases/recalculate-user-sales'
 import { ProfilesRepository } from '@/repositories/profiles-repository'
 
 interface PayDebtRequest {

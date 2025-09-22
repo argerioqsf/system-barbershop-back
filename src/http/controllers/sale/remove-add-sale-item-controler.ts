@@ -1,6 +1,6 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
-import { makeRemoveAddSaleItem } from '@/services/@factories/sale/make-remove-add-sale-item'
+import { makeRemoveAddSaleItem } from '@/modules/sale/infra/factories/make-remove-add-sale-item'
 
 export const RemoveAddSaleItemController = async (
   request: FastifyRequest,
@@ -26,11 +26,13 @@ export const RemoveAddSaleItemController = async (
   })
   const { id } = paramsSchema.parse(request.params)
   const { addItemsIds, removeItemIds } = bodySchema.parse(request.body)
+  const performedBy = request.user.sub
   const service = makeRemoveAddSaleItem()
   const { sale } = await service.execute({
     id,
     addItemsIds,
     removeItemIds,
+    performedBy,
   })
   return reply.status(200).send(sale)
 }

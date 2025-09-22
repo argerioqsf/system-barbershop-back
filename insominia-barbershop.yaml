@@ -1313,8 +1313,8 @@ collection:
               mimeType: application/json
               text: |-
                 {
-                  "couponId":"ddab12c4-72b9-4895-b696-e303b57957f2"
-                	
+                  "observation": "Atualizado via nova arquitetura",
+                  "method": "PIX"
                 }
             headers:
               - name: Content-Type
@@ -1339,7 +1339,7 @@ collection:
               created: 1751331396307
               modified: 1753158858125
               isPrivate: false
-              description: ""
+              description: "Fluxo passa pelo PaySaleCoordinator (nova arquitetura)."
               sortKey: -1753060889826
             method: PATCH
             headers:
@@ -1565,7 +1565,7 @@ collection:
           created: 1751331396306
           modified: 1753128753342
           isPrivate: false
-          description: ""
+          description: "Fluxo do CreateSaleUseCase com telemetria."
           sortKey: -1751331396306
         method: POST
         body:
@@ -1599,7 +1599,7 @@ collection:
           created: 1751331396306
           modified: 1751331396306
           isPrivate: false
-          description: ""
+          description: "Delegado ao use case ListSalesUseCase via factory."
           sortKey: -1751331396306
         method: GET
         headers:
@@ -1623,7 +1623,7 @@ collection:
           created: 1751331396307
           modified: 1753223581223
           isPrivate: false
-          description: ""
+          description: "Executa GetSaleUseCase com telemetria."
           sortKey: -1751331396307
         method: GET
         headers:

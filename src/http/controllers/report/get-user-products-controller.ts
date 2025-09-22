@@ -1,4 +1,4 @@
-import { makeListUserSoldProductsService } from '@/services/@factories/sale/make-list-user-sold-products'
+import { makeListUserSoldProductsService } from '@/modules/finance/infra/factories/make-list-user-sold-products'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 

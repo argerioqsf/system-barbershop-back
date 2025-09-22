@@ -1,6 +1,7 @@
 import sgMail from '@sendgrid/mail'
 import { env } from '@/env'
 import { templateEmail } from '@/templates/templateEmail'
+import { logger } from './logger'
 
 sgMail.setApiKey(env.TOKEN_EMAIL_TWILIO)
 
@@ -35,7 +36,10 @@ export const sendLeadEmail = async (to: string, name: string) => {
   try {
     await sgMail.send(msg)
   } catch (error) {
-    console.log(error)
+    logger.error('Failed to send lead email', {
+      error,
+      to,
+    })
   }
 }
 
@@ -61,7 +65,10 @@ export const sendCreateIndicatorEmail = async (to: string, name: string) => {
   try {
     await sgMail.send(msg)
   } catch (error) {
-    console.log(error)
+    logger.error('Failed to send create indicator email', {
+      error,
+      to,
+    })
   }
 }
 
@@ -91,7 +98,10 @@ export const sendActiveIndicatorEmail = async (to: string, name: string) => {
   try {
     await sgMail.send(msg)
   } catch (error) {
-    console.log(error)
+    logger.error('Failed to send active indicator email', {
+      error,
+      to,
+    })
   }
 }
 
@@ -117,7 +127,10 @@ export const sendContractEmail = async function (
     await sgMail.send(msg)
     return true
   } catch (error) {
-    console.log(error)
+    logger.error('Failed to send contract email', {
+      error,
+      to,
+    })
     return false
   }
 }
@@ -153,7 +166,11 @@ export const sendConfirmIndicatorPaymentEmail = async (
   try {
     await sgMail.send(msg)
   } catch (error) {
-    console.log(error)
+    logger.error('Failed to send confirm indicator payment email', {
+      error,
+      to,
+      lead,
+    })
   }
 }
 
@@ -175,6 +192,9 @@ export const sendPasswordResetEmail = async (
   try {
     await sgMail.send(msg)
   } catch (error) {
-    console.log(error)
+    logger.error('Failed to send password reset email', {
+      error,
+      to,
+    })
   }
 }

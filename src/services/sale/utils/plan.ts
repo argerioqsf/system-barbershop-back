@@ -40,9 +40,6 @@ function applyBenefitOnItem(
   if (valueDiscount <= 0) return
   if (realPriceItem - valueDiscount < 0) {
     valueDiscount = realPriceItem
-    // item.price = 0
-  } else {
-    // item.price -= valueDiscount
   }
   item.discounts.push({
     amount:
@@ -81,7 +78,10 @@ export async function applyPlanDiscounts(
   const benefits = Object.values(benefitsMap)
 
   for (const item of saleItems) {
-    const realPriceItem = calculateRealValueSaleItem(item.price, item.discounts)
+    const realPriceItem = calculateRealValueSaleItem(
+      item.basePrice,
+      item.discounts,
+    )
     if (realPriceItem <= 0) continue
     for (const benefit of benefits) {
       applyBenefitOnItem(item, realPriceItem, benefit)

@@ -1,4 +1,4 @@
-import { makePaySale } from '@/services/@factories/sale/make-set-sale-status'
+import { makePaySaleCoordinator } from '@/modules/finance/infra/factories/make-pay-sale-coordinator'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
@@ -9,10 +9,11 @@ export const PaySaleController = async (
   const paramsSchema = z.object({ id: z.string() })
   const { id } = paramsSchema.parse(request.params)
   const userId = request.user.sub
-  const service = makePaySale()
-  const { sale } = await service.execute({
+  const coordinator = makePaySaleCoordinator()
+  const { sale } = await coordinator.execute({
     saleId: id,
     userId,
   })
+
   return reply.status(200).send(sale)
 }

@@ -1,6 +1,7 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
-import { makeUpdateCouponSaleItem } from '@/services/@factories/sale/make-update-coupon-sale-item'
+import { makeSaleItemCoordinator } from '@/modules/sale/infra/factories/make-sale-item-coordinator'
+import { UserToken } from '../authenticate-controller'
 
 export const UpdateCouponSaleItemController = async (
   request: FastifyRequest,
@@ -13,13 +14,13 @@ export const UpdateCouponSaleItemController = async (
   })
   const { id } = paramsSchema.parse(request.params)
   const { couponId, couponCode } = bodySchema.parse(request.body)
-  const service = makeUpdateCouponSaleItem()
-  const { sale, saleItems } = await service.execute({
-    id,
-    saleItemUpdateFields: {
-      couponId,
-      couponCode,
-    },
+  const performedBy = (request.user as UserToken | undefined)?.sub
+  const coordinator = makeSaleItemCoordinator()
+  const { sale, saleItems } = await coordinator.updateCoupon({
+    saleItemId: id,
+    couponId,
+    couponCode,
+    performedBy,
   })
   return reply.status(200).send({ sale, saleItems })
 }

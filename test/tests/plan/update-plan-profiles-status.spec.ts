@@ -45,7 +45,7 @@ it('marks plan profile as EXPIRED if there is overdue debt', async () => {
   const service = new UpdatePlanProfilesStatusService(
     repo,
     profilesRepo,
-    (recalc as unknown as import('../../../src/services/sale/recalculate-user-sales').RecalculateUserSalesService),
+    (recalc as unknown as import('../../../src/modules/sale/application/use-cases/recalculate-user-sales').RecalculateUserSalesService),
   )
   vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) =>
     fn({} as unknown as import('@prisma/client').Prisma.TransactionClient),
@@ -100,7 +100,7 @@ it('does not change status when plan profile is canceled', async () => {
   const service = new UpdatePlanProfilesStatusService(
     repo,
     profilesRepo,
-    (recalc as unknown as import('../../../src/services/sale/recalculate-user-sales').RecalculateUserSalesService),
+    (recalc as unknown as import('../../../src/modules/sale/application/use-cases/recalculate-user-sales').RecalculateUserSalesService),
   )
   vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) =>
     fn({} as unknown as import('@prisma/client').Prisma.TransactionClient),
@@ -142,7 +142,7 @@ it('marks CANCELED_ACTIVE plan as CANCELED_EXPIRED when last debt expired', asyn
   const service = new UpdatePlanProfilesStatusService(
     repo,
     profilesRepo,
-    (recalc as unknown as import('../../../src/services/sale/recalculate-user-sales').RecalculateUserSalesService),
+    (recalc as unknown as import('../../../src/modules/sale/application/use-cases/recalculate-user-sales').RecalculateUserSalesService),
   )
   vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) =>
     fn({} as unknown as import('@prisma/client').Prisma.TransactionClient),

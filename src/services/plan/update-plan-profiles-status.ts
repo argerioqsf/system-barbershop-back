@@ -3,7 +3,7 @@ import {
   PlanProfileWithDebts,
 } from '@/repositories/plan-profile-repository'
 import { ProfilesRepository } from '@/repositories/profiles-repository'
-import { RecalculateUserSalesService } from '../sale/recalculate-user-sales'
+import { RecalculateUserSalesService } from '@/modules/sale/application/use-cases/recalculate-user-sales'
 import { Debt, PlanProfileStatus } from '@prisma/client'
 import { isPlanExpired } from './utils/expired'
 import { getLastDebtPaid, hasPendingDebts } from './utils/helpers'

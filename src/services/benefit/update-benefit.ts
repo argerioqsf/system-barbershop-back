@@ -4,7 +4,7 @@ import { PlanProfileRepository } from '@/repositories/plan-profile-repository'
 import { ProfilesRepository } from '@/repositories/profiles-repository'
 import { Benefit, Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
-import { RecalculateUserSalesService } from '../sale/recalculate-user-sales'
+import { RecalculateUserSalesService } from '@/modules/sale/application/use-cases/recalculate-user-sales'
 import { findUserIdsLinkedToPlans } from '../plan/utils/find-user-ids-linked-to-plans'
 
 interface UpdateBenefitRequest {
