@@ -23,14 +23,24 @@ Este plano complementa o `docs/sale/flow-refactor-plan.md` listando os próximos
   - Atualizar testes (`test/tests/transactions/*`, `test/tests/report/*`) para apontarem para os novos use cases.
 
 ## 3. Agendamentos (Appointments)
-- **Escopo**: criação/remarcação/cancelamento, integração com vendas e planos.
-- **Ações iniciais**
-  - Mapear controllers em `src/http/controllers/appointment` e serviços em `src/services/appointment`.
-  - Definir casos de uso por operação e mover lógica de `update-appointment.ts` para módulos.
-  - Conectar com `SaleItemsBuildService` para reaproveitar rebuild de itens ligados a agendamentos.
-- **Cuidados**
-  - Validar impactos nas dependências (planos, notificações) antes da migração.
-  - Acrescentar eventos de telemetria (ex.: `appointment.created`, `appointment.rescheduled`).
+- **Escopo**: criação, remarcação, cancelamento e sincronização da venda associada.
+- **Referência**: `docs/appointment/migration-plan.md` detalha todas as etapas.
+- **Status**: Em planejamento — este módulo será o próximo a migrar.
+- **Fase 1 – Preparação**
+  - Levantar testes existentes e mapear dependências (`BarberUsersRepository`, `SaleRepository`, utilitários de disponibilidade).
+  - Definir contrato `AppointmentTelemetry` e eventos mínimos (`appointment.created`, `appointment.updated`, `appointment.cancelled`, `appointment.availability_checked`).
+- **Fase 2 – Serviços especializados**
+  - Extrair validações de janela (limite futuro, data passada) para `ValidateAppointmentWindowService`.
+  - Encapsular cálculo de disponibilidade em `CheckBarberAvailabilityService` reutilizando `isAppointmentAvailable`.
+  - Criar `SyncAppointmentSaleService` responsável por criar/atualizar a venda vinculada ao agendamento.
+- **Fase 3 – Casos de uso e factories**
+  - Implementar `CreateAppointmentUseCase`, `UpdateAppointmentUseCase`, `ListAppointmentsUseCase` e `ListAvailableBarbersUseCase` em `src/modules/appointment/application/use-cases`.
+  - Criar factories correspondentes em `src/modules/appointment/infra/factories` e atualizar controllers para consumi-las.
+  - Instrumentar telemetria nos pontos críticos.
+- **Fase 4 – Testes e hardening**
+  - Atualizar e expandir testes de integração para os endpoints de agendamento.
+  - Adicionar testes unitários para serviços extraídos (janela, disponibilidade, sincronização de venda).
+  - Validar integração com o módulo de vendas e relatórios/commissions existentes.
 
 ## Próximos Passos Gerais
 1. Criar diagramas atualizados no diretório `docs/` conforme cada módulo for migrado.

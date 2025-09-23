@@ -6,6 +6,9 @@ Documentação complementar:
 - `docs/sale/flow-overview.md`: visão geral da arquitetura do módulo de vendas.
 - `docs/sale/flow-refactor-plan.md`: histórico completo da migração do fluxo de vendas.
 - `docs/sale/migration-checklist.md`: checklist de validação e rollback da migração.
+- `docs/sale/utilities-review.md`: análise dos utilitários compartilhados de vendas.
+- `docs/appointment/migration-plan.md`: plano de migração do domínio de agendamentos.
+- `docs/appointment/migration-tasks.md`: checklist operacional da migração de agendamentos.
 - `docs/roadmap/next-modules-migration.md`: roadmap para os próximos módulos a migrar.
 
 ## Arquitetura do módulo de vendas

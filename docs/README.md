@@ -6,6 +6,10 @@
 - `docs/sale/migration-checklist.md`: checklist operacional para validação, deploy e rollback do módulo de vendas.
 - `docs/sale/utilities-review.md`: análise dos utilitários compartilhados de vendas e decisões de manutenção/migração.
 
+## Módulo de Agendamentos
+- `docs/appointment/migration-plan.md`: plano completo para migrar o domínio de agendamentos para a arquitetura modular.
+- `docs/appointment/migration-tasks.md`: checklist detalhado das atividades da migração, do planejamento ao pós-deploy.
+
 ## Roadmap
 - `docs/roadmap/next-modules-migration.md`: priorização dos próximos módulos a adequarem-se à nova arquitetura baseada em casos de uso, serviços especializados e telemetria.
 
