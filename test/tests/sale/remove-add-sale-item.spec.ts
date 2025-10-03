@@ -100,7 +100,9 @@ beforeEach(() => {
     runInTransaction,
   )
 
-  vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) => fn({} as any))
+  vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) =>
+    fn({} as any),
+  )
 })
 
 describe('Remove add sale item use case', () => {
@@ -110,7 +112,7 @@ describe('Remove add sale item use case', () => {
 
     const result = await useCase.execute({
       id: 'sale-1',
-      addItemsIds: [{ serviceId: svc2.id, quantity: 2 }],
+      addItems: [{ serviceId: svc2.id, quantity: 2 }],
     })
 
     expect(result.sale?.items).toHaveLength(2)
@@ -154,7 +156,7 @@ describe('Remove add sale item use case', () => {
 
     const result = await useCase.execute({
       id: 'sale-1',
-      addItemsIds: [{ productId: product.id, quantity: 1 }],
+      addItems: [{ productId: product.id, quantity: 1 }],
     })
 
     expect(result.sale?.items).toHaveLength(2)
@@ -173,7 +175,7 @@ describe('Remove add sale item use case', () => {
 
     const result = await useCase.execute({
       id: 'sale-1',
-      addItemsIds: [{ serviceId: svc2.id, quantity: 1 }],
+      addItems: [{ serviceId: svc2.id, quantity: 1 }],
     })
 
     const newItem = result.sale!.items[1]

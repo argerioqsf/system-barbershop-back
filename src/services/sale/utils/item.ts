@@ -25,7 +25,6 @@ import { ServiceNotFoundError } from '../../@errors/service/service-not-found-er
 import { ServiceNotFromUserUnitError } from '../../@errors/service/service-not-from-user-unit-error'
 import { ProductNotFoundError } from '../../@errors/product/product-not-found-error'
 import { InsufficientStockError } from '../../@errors/product/insufficient-stock-error'
-import { AppointmentAlreadyLinkedError } from '../../@errors/appointment/appointment-already-linked-error'
 import { AppointmentNotFoundError } from '../../@errors/appointment/appointment-not-found-error'
 import { InvalidAppointmentStatusError } from '../../@errors/appointment/invalid-appointment-status-error'
 import { BarberNotFoundError } from '../../@errors/barber/barber-not-found-error'
@@ -113,7 +112,8 @@ async function loadAppointment(
 ) {
   const appointment = await repo.findById(appointmentId)
   if (!appointment) throw new AppointmentNotFoundError()
-  if (appointment.saleItem) throw new AppointmentAlreadyLinkedError()
+  // TODO: retirar essa verificacao daqui, ela deve estar na hora
+  // que. eu adiciono o appointment na sale
   if (appointment.status === 'CANCELED' || appointment.status === 'NO_SHOW') {
     throw new InvalidAppointmentStatusError()
   }

@@ -89,7 +89,8 @@ export class UpdateSaleCouponUseCase {
       actorId: input.performedBy,
       metadata: {
         previousCouponId: saleCurrent.couponId ?? null,
-        newCouponId: saleUpdate?.couponId ?? (removeCoupon ? null : couponId ?? null),
+        newCouponId:
+          saleUpdate?.couponId ?? (removeCoupon ? null : couponId ?? null),
         removed: Boolean(removeCoupon),
       },
     })

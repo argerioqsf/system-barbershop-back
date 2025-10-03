@@ -1,5 +1,7 @@
+import { CreateSaleItem } from '@/services/sale/types'
 import { SaleItem } from '../../domain/sale-item'
 import { SaleItemValidationError } from '../errors/sale-item-validation-error'
+import { DetailedSaleItemFindById } from '@/repositories/sale-item-repository'
 
 export interface SaleItemTypePayload {
   serviceId?: string | null
@@ -19,6 +21,15 @@ export function ensureSaleItemIdProvided(id: string | undefined): string {
 export function validateSaleItemQuantity(quantity?: number): void {
   if (quantity === undefined) return
   SaleItem.create({ quantity })
+}
+
+export function validateSaleItemQuantityChanged(
+  saleItemCurrent: NonNullable<DetailedSaleItemFindById>,
+  saleItemUpdated: CreateSaleItem,
+): void {
+  if (saleItemCurrent.quantity === saleItemUpdated.quantity) {
+    throw new SaleItemValidationError('Quantity has not changed')
+  }
 }
 
 export function validateSaleItemCustomPrice(customPrice?: number | null): void {

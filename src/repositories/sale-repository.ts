@@ -12,6 +12,7 @@ import {
   Transaction,
   Appointment,
   Discount,
+  Unit,
 } from '@prisma/client'
 import { DetailedAppointment } from './appointment-repository'
 
@@ -36,6 +37,7 @@ export type DetailedSale = Sale & {
   coupon: Coupon | null
   session: CashRegisterSession | null
   transactions: Transaction[]
+  unit: Unit
 }
 
 export interface SaleRepository {

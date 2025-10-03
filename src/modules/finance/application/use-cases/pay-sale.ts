@@ -44,6 +44,7 @@ import {
 import { SaleCommissionService } from '@/modules/finance/application/services/sale-commission-service'
 import { SaleProfitDistributionService } from '@/modules/finance/application/services/sale-profit-distribution-service'
 import { SaleTelemetry } from '@/modules/sale/application/contracts/sale-telemetry'
+import { logger } from '@/lib/logger'
 
 export class PaySaleUseCase {
   constructor(
@@ -218,14 +219,19 @@ export class PaySaleUseCase {
     userId: string,
     organizationId: string,
     sessionId: string,
+    tx?: Prisma.TransactionClient,
   ) {
     await this.saleCommissionService.applyCommissionPercentages(sale)
-    await this.saleProfitDistributionService.distribute({
-      sale,
-      organizationId,
-      userId,
-      sessionId,
-    })
+    logger.debug('sale with commissions', { items: sale.items })
+    await this.saleProfitDistributionService.distribute(
+      {
+        sale,
+        organizationId,
+        userId,
+        sessionId,
+      },
+      tx,
+    )
   }
 
   async execute({
@@ -261,12 +267,17 @@ export class PaySaleUseCase {
         userId,
         user.organizationId,
         session.id,
+        tx,
       )
 
       return updatedSale
     }
-
-    const updatedSale = await prisma.$transaction(async (tx) => run(tx))
+    // TODO(opção A): reduzir o trabalho dentro da transação. Mover a
+    // distribuição de comissões/lucros para fora do callback e executar
+    // após o commit, mantendo na transação apenas as operações estritamente
+    // necessárias (pagar a venda, concluir agendamentos, criar PlanProfile
+    // e atualizar estoques). Avaliar compensações/retentativas.
+    const updatedSale = await prisma.$transaction((tx) => run(tx))
 
     if (updatedSale) {
       this.telemetry?.record({

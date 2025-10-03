@@ -14,6 +14,7 @@ import {
 import {
   ensureSaleItemIdProvided,
   validateSaleItemQuantity,
+  validateSaleItemQuantityChanged,
 } from '../validators/sale-item-payload'
 import { SaleTelemetry } from '@/modules/sale/application/contracts/sale-telemetry'
 
@@ -114,7 +115,9 @@ export class UpdateSaleItemQuantityUseCase {
   ): Promise<ProductAdjustmentMetadata> {
     const { saleItemCurrent, saleItemUpdated } = context
 
-    if (!saleItemUpdated.productId && !saleItemCurrent.productId) {
+    validateSaleItemQuantityChanged(saleItemCurrent, saleItemUpdated)
+
+    if (!saleItemCurrent.productId) {
       return {
         productsToUpdate: [],
         productsToRestore: [],
@@ -124,41 +127,19 @@ export class UpdateSaleItemQuantityUseCase {
     const productsToUpdate: ProductToUpdate[] = []
     const productsToRestore: { id: string; quantity: number }[] = []
 
-    if (saleItemUpdated.productId) {
-      if (saleItemUpdated.productId !== saleItemCurrent.productId) {
-        productsToUpdate.push({
-          id: saleItemUpdated.productId,
-          quantity: saleItemUpdated.quantity,
-          saleItemId: saleItemUpdated.id ?? saleItemCurrent.id,
-        })
+    const quantityDifference =
+      saleItemUpdated.quantity - saleItemCurrent.quantity
 
-        if (saleItemCurrent.productId) {
-          productsToRestore.push({
-            id: saleItemCurrent.productId,
-            quantity: saleItemCurrent.quantity,
-          })
-        }
-      } else {
-        const quantityDifference =
-          saleItemUpdated.quantity - saleItemCurrent.quantity
-        if (quantityDifference > 0) {
-          productsToUpdate.push({
-            id: saleItemUpdated.productId,
-            quantity: quantityDifference,
-            saleItemId: saleItemCurrent.id,
-          })
-        } else if (quantityDifference < 0) {
-          productsToRestore.push({
-            id: saleItemUpdated.productId,
-            quantity: Math.abs(quantityDifference),
-          })
-        }
-      }
-    } else if (saleItemCurrent.productId) {
-      // Product removed: restore previous stock
+    if (quantityDifference > 0) {
+      productsToUpdate.push({
+        id: saleItemCurrent.productId,
+        quantity: quantityDifference,
+        saleItemId: saleItemCurrent.id,
+      })
+    } else if (quantityDifference < 0) {
       productsToRestore.push({
         id: saleItemCurrent.productId,
-        quantity: saleItemCurrent.quantity,
+        quantity: Math.abs(quantityDifference),
       })
     }
 

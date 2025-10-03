@@ -23,27 +23,27 @@ Este arquivo lista todas as atividades necessárias para concluir a migração d
 - [ ] Atualizar `docs/appointment/migration-plan.md` se necessário após revisões.
 
 ## 3. Infraestrutura Base do Módulo
-- [ ] Criar diretórios `src/modules/appointment/application`, `src/modules/appointment/infra`.
-- [ ] Estruturar subpastas `contracts`, `services`, `use-cases`, `infra/factories`, `infra/prisma`.
+- [x] Criar diretórios `src/modules/appointment/application`, `src/modules/appointment/infra`.
+- [x] Estruturar subpastas `contracts`, `services`, `use-cases`, `infra/factories`, `infra/prisma`.
 - [ ] Definir e exportar `AppointmentModuleTypes` (interfaces auxiliares) se necessário.
-- [ ] Implementar contrato `AppointmentTelemetry` em `contracts/appointment-telemetry.ts` com type signatures.
-- [ ] Criar stub de `make-appointment-telemetry.ts` retornando implementação concreta (mesmo provider de `sale`).
+- [x] Implementar contrato `AppointmentTelemetry` em `contracts/appointment-telemetry.ts` com type signatures.
+- [x] Criar stub de `make-appointment-telemetry.ts` retornando implementação concreta (mesmo provider de `sale`).
 
 ## 4. Serviços Especializados
-- [ ] Implementar `ValidateAppointmentWindowService` (futuros limites, data passada, unidade).
-- [ ] Implementar `CheckBarberAvailabilityService` encapsulando `isAppointmentAvailable`.
-- [ ] Implementar `SyncAppointmentSaleService` (criação/atualização da venda vinculada).
+- [x] Implementar `ValidateAppointmentWindowService` (futuros limites, data passada, unidade).
+- [x] Implementar `CheckBarberAvailabilityService` encapsulando `isAppointmentAvailable`.
+- [x] Implementar `SyncAppointmentSaleService` (criação/atualização da venda vinculada).
 - [ ] Implementar serviço/função para validar permissões de barbeiro (reutilizar `assertPermission`).
 - [ ] Escrever testes unitários para cada serviço.
 - [ ] Documentar decisões ou ajustes em `docs/appointment/migration-plan.md`.
 
 ## 5. Casos de Uso
-- [ ] Criar `CreateAppointmentUseCase` utilizando serviços especializados e telemetria.
-- [ ] Criar `UpdateAppointmentUseCase` (revalidação de janela, disponibilidade, sincronização da venda).
-- [ ] Criar `ListAppointmentsUseCase` (refatorar lógica de listagem).
-- [ ] Criar `ListAvailableBarbersUseCase` (usar novo serviço de disponibilidade).
+- [x] Criar `CreateAppointmentUseCase` utilizando serviços especializados e telemetria.
+- [x] Criar `UpdateAppointmentUseCase` (revalidação de janela, disponibilidade, sincronização da venda).
+- [x] Criar `ListAppointmentsUseCase` (refatorar lógica de listagem).
+- [x] Criar `ListAvailableBarbersUseCase` (usar novo serviço de disponibilidade).
 - [ ] (Opcional) Criar `CancelAppointmentUseCase` se existir fluxo equivalente.
-- [ ] Adicionar testes unitários para cada use case (incluindo mocks de telemetria).
+- [x] Adicionar testes unitários para cada use case (incluindo mocks de telemetria).
 
 ## 6. Adaptadores e Repositórios
 - [ ] Criar `PrismaAppointmentRepository` dentro de `infra/prisma` reutilizando o repositório existente.
@@ -52,16 +52,16 @@ Este arquivo lista todas as atividades necessárias para concluir a migração d
 - [ ] Adicionar testes unitários/integrados para os adaptadores (ex.: interações com Prisma mockado).
 
 ## 7. Factories
-- [ ] Implementar `make-create-appointment.ts` criando use case com dependências concretas.
-- [ ] Implementar `make-update-appointment.ts` com `SyncAppointmentSaleService` reutilizado.
-- [ ] Implementar `make-list-appointments.ts` e `make-list-available-barbers.ts`.
-- [ ] Garantir que `make-appointment-telemetry.ts` injete implementação configurada.
+- [x] Implementar `make-create-appointment.ts` criando use case com dependências concretas.
+- [x] Implementar `make-update-appointment.ts` com `SyncAppointmentSaleService` reutilizado.
+- [x] Implementar `make-list-appointments.ts` e `make-list-available-barbers.ts`.
+- [x] Garantir que `make-appointment-telemetry.ts` injete implementação configurada.
 - [ ] Escrever testes unitários para factories (instanciação correta, dependências obrigatórias).
 
 ## 8. Integração com Controllers
-- [ ] Atualizar `create-appointment-controller.ts` para invocar factory nova.
-- [ ] Atualizar `update-appointment-controller.ts` para use case modular.
-- [ ] Atualizar `list-appointments-controller.ts` e `list-available-barbers-controller.ts`.
+- [x] Atualizar `create-appointment-controller.ts` para invocar factory nova.
+- [x] Atualizar `update-appointment-controller.ts` para use case modular.
+- [x] Atualizar `list-appointments-controller.ts` e `list-available-barbers-controller.ts`.
 - [ ] Revisar rotas em `src/http/controllers/appointment/route.ts` para garantir que dependem das factories.
 - [ ] Inserir telemetria onde necessário (antes/depois de execuções) se controllers tratam eventos adicionais.
 
@@ -72,9 +72,9 @@ Este arquivo lista todas as atividades necessárias para concluir a migração d
 - [ ] Ajustar testes do módulo de vendas se comportamento mudar.
 
 ## 10. Remoção / Depreciação de Serviços Legados
-- [ ] Garantir que nenhuma referência permanece aos serviços em `src/services/appointment/*`.
-- [ ] Marcar serviços legados como obsoletos ou excluí-los após validação.
-- [ ] Atualizar importações nos testes para apontarem para novos use cases.
+- [x] Garantir que nenhuma referência permanece aos serviços em `src/services/appointment/*`.
+- [x] Marcar serviços legados como obsoletos ou excluí-los após validação.
+- [x] Atualizar importações nos testes para apontarem para novos use cases.
 - [ ] Registrar migração em changelog/nota de versão (se houver).
 
 ## 11. Testes e Qualidade

@@ -1,23 +1,23 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { ListAppointmentsService } from '../../../src/services/appointment/list-appointments'
+import { ListAppointmentsUseCase } from '../../../src/modules/appointment/application/use-cases/list-appointments'
 import { FakeAppointmentRepository } from '../../helpers/fake-repositories'
 import {
   appointment1 as a1,
   appointment2 as a2,
 } from '../../helpers/default-values'
 
-describe('List appointments service', () => {
+describe('List appointments use case', () => {
   let repo: FakeAppointmentRepository
-  let service: ListAppointmentsService
+  let useCase: ListAppointmentsUseCase
 
   beforeEach(() => {
     repo = new FakeAppointmentRepository()
     repo.appointments.push(a1, a2)
-    service = new ListAppointmentsService(repo)
+    useCase = new ListAppointmentsUseCase(repo)
   })
 
   it('lists all for admin', async () => {
-    const res = await service.execute({
+    const res = await useCase.execute({
       sub: '1',
       role: 'ADMIN',
       unitId: 'unit-1',
@@ -27,7 +27,7 @@ describe('List appointments service', () => {
   })
 
   it('filters by organization for owner', async () => {
-    const res = await service.execute({
+    const res = await useCase.execute({
       sub: '1',
       role: 'OWNER',
       unitId: 'unit-1',
@@ -38,7 +38,7 @@ describe('List appointments service', () => {
   })
 
   it('filters by unit for others', async () => {
-    const res = await service.execute({
+    const res = await useCase.execute({
       sub: '1',
       role: 'BARBER',
       unitId: 'unit-2',
@@ -50,7 +50,7 @@ describe('List appointments service', () => {
 
   it('throws if user not found', async () => {
     await expect(
-      service.execute({
+      useCase.execute({
         sub: '',
         role: 'ADMIN',
         unitId: 'u1',

@@ -41,6 +41,7 @@ export class CreateTransactionService {
     const session = await this.cashRegisterRepository.findOpenByUnit(
       user.unitId,
     )
+    // TODO: receber a saleId por parametro para nao precisar fazer varias requests para pegar a session em fluxos com muitas transactios
     if (!session) throw new CashRegisterClosedError()
 
     let affectedUser

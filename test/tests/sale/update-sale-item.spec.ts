@@ -268,7 +268,7 @@ describe('Update sale item service', () => {
 
     const result = await updateQuantityUseCase.execute({
       saleItemId: 'i1',
-      quantity: 1,
+      quantity: 2,
     })
 
     const item = result.saleItems![0]
@@ -276,8 +276,8 @@ describe('Update sale item service', () => {
     expect(item.discounts[0]).toEqual(
       expect.objectContaining({ origin: DiscountOrigin.PLAN }),
     )
-    expect(realPriceItem).toBe(90)
-    expect(result.sale?.total).toBe(100)
+    expect(realPriceItem).toBe(190)
+    expect(result.sale?.total).toBe(200)
   })
 
   it('restores stock when changing from product to service', async () => {

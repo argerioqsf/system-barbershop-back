@@ -1,7 +1,6 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { makeSaleItemCoordinator } from '@/modules/sale/infra/factories/make-sale-item-coordinator'
-import { UserToken } from '../authenticate-controller'
 
 export const UpdateSaleItemController = async (
   request: FastifyRequest,

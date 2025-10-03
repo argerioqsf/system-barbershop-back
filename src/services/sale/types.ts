@@ -61,7 +61,7 @@ export interface UpdateSaleRequest {
   observation?: string
   method?: PaymentMethod
   paymentStatus?: PaymentStatus
-  addItemsIds?: CreateSaleItem[]
+  addItems?: CreateSaleItem[]
   removeItemIds?: string[]
   couponId?: string
   clientId?: string
@@ -80,7 +80,7 @@ export type UpdateSaleItemRequest = {
 }
 export interface RemoveAddSaleItemRequest {
   id: string
-  addItemsIds?: CreateSaleItem[]
+  addItems?: CreateSaleItem[]
   removeItemIds?: string[]
   performedBy?: string
 }

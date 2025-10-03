@@ -46,8 +46,7 @@ export class UpdateSaleUseCase {
 
     const observationChanged =
       observation !== undefined && observation !== currentSale.observation
-    const methodChanged =
-      method !== undefined && method !== currentSale.method
+    const methodChanged = method !== undefined && method !== currentSale.method
 
     this.telemetry?.record({
       operation: 'sale.updated',

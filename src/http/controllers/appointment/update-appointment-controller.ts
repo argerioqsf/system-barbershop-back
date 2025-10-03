@@ -1,7 +1,8 @@
-import { makeUpdateAppointment } from '@/services/@factories/appointment/make-update-appointment'
+import { makeUpdateAppointment } from '@/modules/appointment/infra/factories/make-update-appointment'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { AppointmentStatus } from '@prisma/client'
+import { UserToken } from '../authenticate-controller'
 
 export const UpdateAppointmentController = async (
   request: FastifyRequest,
@@ -14,7 +15,11 @@ export const UpdateAppointmentController = async (
   })
   const { id } = paramsSchema.parse(request.params)
   const data = bodySchema.parse(request.body)
-  const service = makeUpdateAppointment()
-  const { appointment } = await service.execute({ id, data })
+  const useCase = makeUpdateAppointment()
+  const { appointment } = await useCase.execute({
+    id,
+    data,
+    actorId: (request.user as UserToken).sub,
+  })
   return reply.status(200).send(appointment)
 }

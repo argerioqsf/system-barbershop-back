@@ -5,4 +5,3 @@ export function makeGetItemsBuildService() {
   const getItemBuildService = makeGetItemBuildService()
   return new GetItemsBuildService(getItemBuildService)
 }
-
