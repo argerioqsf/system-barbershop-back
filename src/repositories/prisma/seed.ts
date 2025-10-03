@@ -339,7 +339,82 @@ async function main() {
   const client: User & { profile: Profile | null } = await prisma.user.create({
     data: {
       name: 'Client',
-      email: 'argerioaf@gmail.com',
+      email: 'client@barbershop.com',
+      password: passwordHash,
+      active: true,
+      organization: { connect: { id: organization.id } },
+      profile: {
+        create: {
+          phone: '969777777',
+          cpf: '22233344455',
+          genre: 'F',
+          birthday: '2001-07-20',
+          pix: 'clientpix',
+          totalBalance: 0,
+          role: { connect: { id: roleClient.id } },
+        },
+      },
+      unit: { connect: { id: mainUnit.id } },
+    },
+    include: {
+      profile: true,
+    },
+  })
+
+  const client2: User & { profile: Profile | null } = await prisma.user.create({
+    data: {
+      name: 'Client 2',
+      email: 'client2@barbershop.com',
+      password: passwordHash,
+      active: true,
+      organization: { connect: { id: organization.id } },
+      profile: {
+        create: {
+          phone: '969777777',
+          cpf: '22233344455',
+          genre: 'F',
+          birthday: '2001-07-20',
+          pix: 'clientpix',
+          totalBalance: 0,
+          role: { connect: { id: roleClient.id } },
+        },
+      },
+      unit: { connect: { id: mainUnit.id } },
+    },
+    include: {
+      profile: true,
+    },
+  })
+
+  const client3: User & { profile: Profile | null } = await prisma.user.create({
+    data: {
+      name: 'Client 3',
+      email: 'client3@barbershop.com',
+      password: passwordHash,
+      active: true,
+      organization: { connect: { id: organization.id } },
+      profile: {
+        create: {
+          phone: '969777777',
+          cpf: '22233344455',
+          genre: 'F',
+          birthday: '2001-07-20',
+          pix: 'clientpix',
+          totalBalance: 0,
+          role: { connect: { id: roleClient.id } },
+        },
+      },
+      unit: { connect: { id: mainUnit.id } },
+    },
+    include: {
+      profile: true,
+    },
+  })
+
+  const client4: User & { profile: Profile | null } = await prisma.user.create({
+    data: {
+      name: 'Client 4',
+      email: 'client4@barbershop.com',
       password: passwordHash,
       active: true,
       organization: { connect: { id: organization.id } },
@@ -573,6 +648,9 @@ async function main() {
     admin,
     barber,
     client,
+    client2,
+    client3,
+    client4,
     haircut,
     shampoo,
     owner,

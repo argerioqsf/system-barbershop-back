@@ -1,4 +1,4 @@
-import { makeListAppointments } from '@/services/@factories/appointment/make-list-appointments'
+import { makeListAppointments } from '@/modules/appointment/infra/factories/make-list-appointments'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { UserToken } from '../authenticate-controller'
 import { z } from 'zod'
@@ -7,9 +7,9 @@ export const ListAppointmentsController = async (
   request: FastifyRequest,
   reply: FastifyReply,
 ) => {
-  const service = makeListAppointments()
+  const useCase = makeListAppointments()
   const user = request.user as UserToken
-  const { appointments } = await service.execute(user)
+  const { appointments } = await useCase.execute(user)
   const querySchema = z.object({
     withCount: z.coerce.boolean().optional(),
     page: z.coerce.number().int().min(1).optional(),

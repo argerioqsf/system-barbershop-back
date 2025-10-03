@@ -44,6 +44,7 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
         services: { include: { service: true, transactions: true } },
         client: true,
         barber: { include: { profile: true } },
+        saleItem: true,
       },
     })
     return appointments

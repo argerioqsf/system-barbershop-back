@@ -21,25 +21,19 @@ export class IncrementBalanceUnitService {
     tx?: Prisma.TransactionClient,
   ): Promise<IncrementBalanceUnitResponse> {
     const createTransactionService = makeCreateTransaction()
-    try {
-      await this.repository.incrementBalance(id, amount)
-      const unit = await this.repository.findById(id)
-      const transaction = await createTransactionService.execute({
-        type:
-          amount < 0 ? TransactionType.WITHDRAWAL : TransactionType.ADDITION,
-        description: description ?? 'Increment Balance Unit',
-        amount: Math.abs(amount),
-        userId,
-        receiptUrl: undefined,
-        saleId,
-        isLoan: isLoan ?? false,
-        loanId,
-        tx,
-      })
-      return { unit, transaction: transaction.transaction }
-    } catch (error) {
-      await this.repository.incrementBalance(id, -amount)
-      throw error
-    }
+    await this.repository.incrementBalance(id, amount, tx)
+    const unit = await this.repository.findById(id)
+    const transaction = await createTransactionService.execute({
+      type: amount < 0 ? TransactionType.WITHDRAWAL : TransactionType.ADDITION,
+      description: description ?? 'Increment Balance Unit',
+      amount: Math.abs(amount),
+      userId,
+      receiptUrl: undefined,
+      saleId,
+      isLoan: isLoan ?? false,
+      loanId,
+      tx,
+    })
+    return { unit, transaction: transaction.transaction }
   }
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { ListAppointmentBarbersService } from '../../../src/services/users/list-appointment-barbers'
+import { ListAvailableBarbersUseCase } from '../../../src/modules/appointment/application/use-cases/list-available-barbers'
 import { InMemoryBarberUsersRepository } from '../../helpers/fake-repositories'
 import { makeProfile, makeUser, makeUnit } from '../../helpers/default-values'
 import {
@@ -13,9 +13,9 @@ import {
   Role,
 } from '@prisma/client'
 
-describe('List appointment barbers service', () => {
+describe('List appointment barbers use case', () => {
   let repo: InMemoryBarberUsersRepository
-  let service: ListAppointmentBarbersService
+  let useCase: ListAvailableBarbersUseCase
 
   beforeEach(() => {
     const unit = makeUnit('unit-1')
@@ -47,11 +47,11 @@ describe('List appointment barbers service', () => {
       makeUser('u1', profile1, unit),
       makeUser('u2', profile2, unit),
     ])
-    service = new ListAppointmentBarbersService(repo)
+    useCase = new ListAvailableBarbersUseCase(repo)
   })
 
   it('returns users that can be scheduled', async () => {
-    const res = await service.execute({
+    const res = await useCase.execute({
       sub: 'admin',
       role: 'ADMIN',
       unitId: 'unit-1',

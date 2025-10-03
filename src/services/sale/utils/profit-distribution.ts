@@ -185,6 +185,8 @@ export async function distributeProfits(
       await appointmentServiceRepository.update(
         appointmentServiceId,
         {
+          // TODO: ver se esse campo commissionPercentage a abixao nao
+          // é redundante ja que existe o campo porcentagemBarbeiro no saleItem
           commissionPercentage: percentage,
         },
         tx,
@@ -199,6 +201,10 @@ export async function distributeProfits(
       )
     }
   }
+  // TODO: verificar pq tem uma transaction que adiciona o valor total da sale na unidade
+  // verificar onde faz isso e se faz sentido fazer isso, pois ja tem uma transacction
+  // q adiciona o valor respectivo da unidade, entender esse comportamento estranho e
+  // ver se é intencional, se for ver se faz sentido refatorar essa lógica
 
   const transactionUnit = await incrementUnit.execute(
     sale.unitId,

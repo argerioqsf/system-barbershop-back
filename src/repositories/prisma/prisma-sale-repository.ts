@@ -147,6 +147,7 @@ export class PrismaSaleRepository implements SaleRepository {
         coupon: true,
         session: true,
         transactions: true,
+        unit: true,
       },
     })
     const detailed = sale as DetailedSale | null

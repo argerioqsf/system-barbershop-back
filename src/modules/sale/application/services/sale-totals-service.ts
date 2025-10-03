@@ -62,38 +62,24 @@ export class SaleTotalsService {
       name: this.recalculateSaleTotalsOnItemChange.name,
     })
     const sale = await this.loadSaleOrThrow(currentItem.saleId)
-    const getItemBuild = this.createGetItemBuildService()
 
     const [updatedItemBuilt, currentItemBuilt] = await Promise.all([
-      this.buildSaleItemForSale(getItemBuild, sale, updatedItem),
-      this.buildSaleItemForSale(getItemBuild, sale, currentItem),
+      this.buildSaleItemForSale(sale, updatedItem),
+      this.buildSaleItemForSale(sale, currentItem),
     ])
-    let itemForUpdate = updatedItemBuilt
-
-    const newEffectivePrice = this.getEffectivePrice(updatedItemBuilt)
-    const oldEffectivePrice = this.getEffectivePrice(currentItemBuilt)
-    const basePriceDelta =
-      updatedItemBuilt.basePrice - currentItemBuilt.basePrice
-    const quantityChanged =
-      updatedItemBuilt.quantity !== currentItemBuilt.quantity
-    const hasBasePriceDelta = Math.abs(basePriceDelta) > Number.EPSILON
-
-    if (newEffectivePrice === oldEffectivePrice) {
-      logger.debug('No price change', { newEffectivePrice, oldEffectivePrice })
-      const grossTotalSale =
-        quantityChanged && hasBasePriceDelta
-          ? sale.gross_value + basePriceDelta
-          : sale.gross_value
-      return {
-        itemsForUpdate: [updatedItemBuilt],
-        totalSale: sale.total,
-        grossTotalSale,
-      }
-    }
-    logger.debug('Price change', { newEffectivePrice, oldEffectivePrice })
+    let itemForUpdateWithAllDiscounts = updatedItemBuilt
+    let itemCurrentWithAllDiscounts = currentItemBuilt
 
     if (sale.couponId) {
       logger.debug('Sale have a coupon', { couponId: sale.couponId })
+      const { saleItems } = await applyCouponSale(
+        [currentItemBuilt],
+        sale.couponId,
+        this.couponRepository,
+        sale.unitId,
+      )
+      itemCurrentWithAllDiscounts = saleItems[0]
+
       if (sale.coupon?.discountType === DiscountType.VALUE) {
         logger.debug('Has coupon value discount')
         const getItemsBuild = this.createGetItemsBuildService()
@@ -104,6 +90,9 @@ export class SaleTotalsService {
             saleItemUpdated: updatedItem,
             getItemsBuild,
           })
+        logger.debug('itemForUpdateWithAllDiscounts', {
+          itemForUpdateWithAllDiscounts: items[0],
+        })
         return {
           itemsForUpdate: items,
           totalSale: total,
@@ -118,9 +107,21 @@ export class SaleTotalsService {
           this.couponRepository,
           sale.unitId,
         )
-        itemForUpdate = saleItems[0]
-        logger.debug('itemForUpdate', { itemForUpdate })
+        itemForUpdateWithAllDiscounts = saleItems[0]
       }
+    }
+
+    const newEffectivePrice = this.getEffectivePrice(
+      itemForUpdateWithAllDiscounts,
+    )
+    const oldEffectivePrice = this.getEffectivePrice(
+      itemCurrentWithAllDiscounts,
+    )
+
+    if (newEffectivePrice === oldEffectivePrice) {
+      logger.debug('No price change', { newEffectivePrice, oldEffectivePrice })
+    } else {
+      logger.debug('Price change', { newEffectivePrice, oldEffectivePrice })
     }
 
     const adjustedTotals = this.applyTotalsDelta({
@@ -128,12 +129,15 @@ export class SaleTotalsService {
       baseGrossTotal: sale.gross_value,
       newEffectivePrice,
       oldEffectivePrice,
-      newBasePrice: itemForUpdate.basePrice,
-      oldBasePrice: currentItemBuilt.basePrice,
+      newBasePrice: itemForUpdateWithAllDiscounts.basePrice,
+      oldBasePrice: itemCurrentWithAllDiscounts.basePrice,
     })
 
+    logger.debug('itemForUpdateWithAllDiscounts', {
+      itemForUpdateWithAllDiscounts,
+    })
     return {
-      itemsForUpdate: [itemForUpdate],
+      itemsForUpdate: [itemForUpdateWithAllDiscounts],
       totalSale: adjustedTotals.total,
       grossTotalSale: adjustedTotals.grossTotal,
     }
@@ -179,10 +183,10 @@ export class SaleTotalsService {
   }
 
   private async buildSaleItemForSale(
-    getItemBuild: ReturnType<CreateGetItemBuildService>,
     sale: DetailedSale,
     rawItem: SaleItemSourceForBuild,
   ): Promise<ReturnBuildItemData> {
+    const getItemBuild = this.createGetItemBuildService()
     const saleItem = this.mapToSaleItemBuildInput(sale.id, rawItem)
     const { saleItemBuild } = await getItemBuild.execute({
       saleItem,
@@ -269,8 +273,17 @@ export class SaleTotalsService {
       oldBasePrice,
     } = params
 
+    logger.debug('applyTotalsDelta', {
+      baseTotal,
+      newEffectivePrice,
+      oldEffectivePrice,
+      baseGrossTotal,
+      newBasePrice,
+      oldBasePrice,
+    })
+    const valueCalculated = baseTotal + (newEffectivePrice - oldEffectivePrice)
     return {
-      total: baseTotal + (newEffectivePrice - oldEffectivePrice),
+      total: valueCalculated >= 0 ? valueCalculated : 0,
       grossTotal: baseGrossTotal + (newBasePrice - oldBasePrice),
     }
   }

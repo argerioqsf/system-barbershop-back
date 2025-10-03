@@ -1,7 +1,6 @@
-import { makeCreateAppointment } from '@/services/@factories/appointment/make-create-appointment'
+import { makeCreateAppointment } from '@/modules/appointment/infra/factories/make-create-appointment'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
-import { UserToken } from '../authenticate-controller'
 
 export const CreateAppointmentController = async (
   request: FastifyRequest,
@@ -20,14 +19,14 @@ export const CreateAppointmentController = async (
   const data = bodySchema.parse(request.body)
 
   const service = makeCreateAppointment()
-  const unitId = data.unitId ?? (request.user as UserToken).unitId
+  const unitId = data.unitId ?? request.user.unitId
   const { appointment } = await service.execute({
     clientId: data.clientId,
     barberId: data.barberId,
     serviceIds: data.serviceIds,
     date: data.date,
     unitId,
-    userId: (request.user as UserToken).sub,
+    userId: request.user.sub,
   })
 
   return reply.status(201).send(appointment)

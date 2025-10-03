@@ -4,6 +4,8 @@ Este plano descreve a migração do domínio de agendamentos para a arquitetura 
 
 > Consulte também `docs/appointment/migration-tasks.md` para um checklist sequencial da implementação.
 
+**Status atual**: Casos de uso e factories de criação, atualização, listagem e listagem de barbeiros disponíveis estão implementados na nova arquitetura, com telemetria integrada para criação e atualização.
+
 ## 1. Diagnóstico Atual
 - Controllers em `src/http/controllers/appointment` instanciam serviços legados diretamente.
 - Serviços em `src/services/appointment/*` misturam validações de domínio, consultas Prisma e integração com vendas.

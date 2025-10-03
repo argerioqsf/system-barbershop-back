@@ -27,6 +27,8 @@ import {
   SaleItemsBuildService,
 } from '../services/sale-items-build-service'
 import { SaleTelemetry } from '@/modules/sale/application/contracts/sale-telemetry'
+import { logger } from '@/lib/logger'
+import { AppointmentAlreadyLinkedError } from '@/services/@errors/appointment/appointment-already-linked-error'
 
 export type TransactionRunner = <T>(
   fn: (tx: Prisma.TransactionClient) => Promise<T>,
@@ -60,7 +62,7 @@ export class RemoveAddSaleItemUseCase {
   private async initVerify(
     id: string,
     removeItemIds?: string[],
-    addItemsIds?: CreateSaleItem[],
+    addItems?: CreateSaleItem[],
   ): Promise<{
     saleCurrent: NonNullable<DetailedSale>
     user: NonNullable<UserFindById>
@@ -76,9 +78,10 @@ export class RemoveAddSaleItemUseCase {
 
     const user = await this.barberUserRepository.findById(saleCurrent.userId)
     if (!user) throw new Error('User not found')
-
+    logger.debug('addItems: ', { addItems })
+    logger.debug('removeItemIds: ', { removeItemIds })
     const hasItemChanges =
-      (addItemsIds && addItemsIds.length > 0) ||
+      (addItems && addItems.length > 0) ||
       (removeItemIds && removeItemIds.length > 0)
     if (!hasItemChanges) throw new Error('No item changes detected')
 
@@ -177,6 +180,29 @@ export class RemoveAddSaleItemUseCase {
     )
   }
 
+  private checkIfHaveAppointmentItems(addItems: CreateSaleItem[]) {
+    return addItems.some((item) => item.appointmentId)
+  }
+
+  private async checkIfAnyAppointmentAlreadyLinkedToASale(
+    addItems: CreateSaleItem[],
+  ) {
+    let appointmentIsAlreadyLinked = false
+    const itemsWithAppointments = addItems.filter((item) => item.appointmentId)
+    for (const item of itemsWithAppointments) {
+      const appointment = await this.appointmentRepository.findById(
+        item.appointmentId as string,
+      )
+      if (appointment?.saleItem) {
+        appointmentIsAlreadyLinked = true
+        break
+      }
+    }
+    if (appointmentIsAlreadyLinked) {
+      throw new AppointmentAlreadyLinkedError()
+    }
+  }
+
   private async updateStockProducts(
     productsToRestore: ProductsToRestore[],
     productsToUpdate: ProductToUpdate[],
@@ -199,7 +225,7 @@ export class RemoveAddSaleItemUseCase {
 
   async execute({
     id,
-    addItemsIds,
+    addItems,
     removeItemIds,
     performedBy,
   }: RemoveAddSaleItemRequest): Promise<UpdateSaleResponse> {
@@ -211,7 +237,7 @@ export class RemoveAddSaleItemUseCase {
     let { saleCurrent, user, generalSaleItems } = await this.initVerify(
       id,
       removeItemIds,
-      addItemsIds,
+      addItems,
     )
 
     if (removeItemIds?.length) {
@@ -223,13 +249,16 @@ export class RemoveAddSaleItemUseCase {
       )
     }
 
-    if (addItemsIds?.length) {
-      const addItemsFormatted: SaleItemBuildItem[] = addItemsIds.map(
-        (item) => ({
-          ...item,
-          saleId: id,
-        }),
-      )
+    if (addItems?.length) {
+      const addItemsFormatted: SaleItemBuildItem[] = addItems.map((item) => ({
+        ...item,
+        saleId: id,
+      }))
+      const haveAppointmentItems = this.checkIfHaveAppointmentItems(addItems)
+
+      if (haveAppointmentItems) {
+        await this.checkIfAnyAppointmentAlreadyLinkedToASale(addItems)
+      }
 
       const newItemsBuild = await this.getItemsBuild(
         addItemsFormatted,
@@ -294,7 +323,7 @@ export class RemoveAddSaleItemUseCase {
       saleId: saleUpdate?.id ?? id,
       actorId: performedBy,
       metadata: {
-        addedItems: addItemsIds?.length ?? 0,
+        addedItems: addItems?.length ?? 0,
         removedItems: removeItemIds?.length ?? 0,
         totalSale: totalSaleItemsRebuild,
         grossTotal: grossTotalSaleItemsRebuild,

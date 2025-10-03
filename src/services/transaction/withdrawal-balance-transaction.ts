@@ -59,12 +59,11 @@ export class WithdrawalBalanceTransactionService {
 
     const transactions: Transaction[] = []
 
-    const increment = -data.amount
-
     if (data.amount < 0) {
       throw new NegativeValuesNotAllowedError()
     }
 
+    const increment = -data.amount
     const effectiveUser = affectedUser ?? user
     const balanceUnit = effectiveUser.unit?.totalBalance ?? 0
     const balanceUser = effectiveUser.profile?.totalBalance ?? 0
@@ -87,6 +86,7 @@ export class WithdrawalBalanceTransactionService {
       if (remainingBalanceRelative > balanceUnit) {
         throw new WithdrawalGreaterThanUnitBalanceError()
       }
+      // TODO: envolver os dois increments a abaixo em uma transaction do prisma
       const transactionProfile = await incrementProfile.execute(
         effectiveUser.id,
         increment,

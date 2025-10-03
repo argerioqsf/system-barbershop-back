@@ -1404,7 +1404,7 @@ collection:
               mimeType: application/json
               text: |-
                 {
-                	"addItemsIds": [
+                	"addItems": [
                     {
                       "serviceId": "{{ _.serviceId }}",
                       "quantity": 1,

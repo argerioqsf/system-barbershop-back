@@ -36,7 +36,13 @@ export class InMemoryUnitRepository implements UnitRepository {
     throw new Error('not implemented')
   }
 
-  async incrementBalance(id: string, amount: number): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async incrementBalance(
+    id: string,
+    amount: number,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    tx?: Prisma.TransactionClient,
+  ): Promise<void> {
     const unit = this.units.find((u) => u.id === id)
     if (unit) {
       unit.totalBalance += amount

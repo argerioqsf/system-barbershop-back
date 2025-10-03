@@ -3,4 +3,3 @@ import { LoggerSaleTelemetry } from '@/modules/sale/infra/telemetry/logger-sale-
 export function makeSaleTelemetry() {
   return new LoggerSaleTelemetry()
 }
-

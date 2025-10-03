@@ -9,6 +9,7 @@ import { BarberServiceRepository } from '@/repositories/barber-service-repositor
 import { BarberProductRepository } from '@/repositories/barber-product-repository'
 import { AppointmentServiceRepository } from '@/repositories/appointment-service-repository'
 import { SaleItemRepository } from '@/repositories/sale-item-repository'
+import { Prisma } from '@prisma/client'
 
 interface DistributeParams {
   sale: DetailedSale
@@ -30,24 +31,28 @@ export class SaleProfitDistributionService {
     private readonly saleItemRepository: SaleItemRepository,
   ) {}
 
-  async distribute({
-    sale,
-    organizationId,
-    userId,
-    sessionId,
-  }: DistributeParams) {
+  async distribute(
+    { sale, organizationId, userId, sessionId }: DistributeParams,
+    tx?: Prisma.TransactionClient,
+  ) {
     sale.sessionId = sessionId
 
-    await distributeProfits(sale, organizationId, userId, {
-      organizationRepository: this.organizationRepository,
-      profileRepository: this.profileRepository,
-      unitRepository: this.unitRepository,
-      transactionRepository: this.transactionRepository,
-      appointmentRepository: this.appointmentRepository,
-      barberServiceRepository: this.barberServiceRepository,
-      barberProductRepository: this.barberProductRepository,
-      appointmentServiceRepository: this.appointmentServiceRepository,
-      saleItemRepository: this.saleItemRepository,
-    })
+    await distributeProfits(
+      sale,
+      organizationId,
+      userId,
+      {
+        organizationRepository: this.organizationRepository,
+        profileRepository: this.profileRepository,
+        unitRepository: this.unitRepository,
+        transactionRepository: this.transactionRepository,
+        appointmentRepository: this.appointmentRepository,
+        barberServiceRepository: this.barberServiceRepository,
+        barberProductRepository: this.barberProductRepository,
+        appointmentServiceRepository: this.appointmentServiceRepository,
+        saleItemRepository: this.saleItemRepository,
+      },
+      tx,
+    )
   }
 }

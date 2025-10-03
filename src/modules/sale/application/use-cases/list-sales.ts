@@ -4,15 +4,8 @@ import {
   PermissionName,
   RoleName,
 } from '@prisma/client'
-import {
-  DetailedSale,
-  SaleRepository,
-} from '@/repositories/sale-repository'
-import {
-  assertPermission,
-  buildUnitWhere,
-  getScope,
-} from '@/utils/permissions'
+import { DetailedSale, SaleRepository } from '@/repositories/sale-repository'
+import { assertPermission, buildUnitWhere, getScope } from '@/utils/permissions'
 import { UserNotFoundError } from '@/services/@errors/user/user-not-found-error'
 import { SaleTelemetry } from '@/modules/sale/application/contracts/sale-telemetry'
 
@@ -136,14 +129,7 @@ export class ListSalesUseCase {
   }
 
   private describeFilters(filters: ListSalesFilters) {
-    const {
-      paymentStatus,
-      method,
-      from,
-      to,
-      clientId,
-      userId,
-    } = filters
+    const { paymentStatus, method, from, to, clientId, userId } = filters
 
     return {
       paymentStatus,

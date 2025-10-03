@@ -8,7 +8,7 @@ export const RemoveAddSaleItemController = async (
 ) => {
   const paramsSchema = z.object({ id: z.string() })
   const bodySchema = z.object({
-    addItemsIds: z
+    addItems: z
       .array(
         z.object({
           serviceId: z.string().optional(),
@@ -25,12 +25,12 @@ export const RemoveAddSaleItemController = async (
     removeItemIds: z.array(z.string()).optional(),
   })
   const { id } = paramsSchema.parse(request.params)
-  const { addItemsIds, removeItemIds } = bodySchema.parse(request.body)
+  const { addItems, removeItemIds } = bodySchema.parse(request.body)
   const performedBy = request.user.sub
   const service = makeRemoveAddSaleItem()
   const { sale } = await service.execute({
     id,
-    addItemsIds,
+    addItems,
     removeItemIds,
     performedBy,
   })
