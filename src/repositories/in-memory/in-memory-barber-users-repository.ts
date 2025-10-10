@@ -264,6 +264,71 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
     return rest
   }
 
+  async findManyPaginated(
+    where: Prisma.UserWhereInput = {},
+    { page = 1, perPage = 10 }: { page?: number; perPage?: number },
+  ) {
+    const allUsers = this.users.filter((u) => {
+      if (where.unitId && u.unit?.id !== where.unitId) return false
+      if (where.organizationId && u.organizationId !== where.organizationId) {
+        return false
+      }
+      if (
+        where.unit &&
+        typeof where.unit === 'object' &&
+        'organizationId' in where.unit &&
+        u.unit?.organizationId !==
+          (where.unit as { organizationId: string }).organizationId
+      ) {
+        return false
+      }
+
+      if (
+        where.name &&
+        typeof where.name === 'object' &&
+        'contains' in where.name
+      ) {
+        const searchTerm = (
+          where.name as { contains: string }
+        ).contains.toLowerCase()
+        if (!u.name.toLowerCase().includes(searchTerm)) {
+          return false
+        }
+      }
+
+      if (
+        where.profile &&
+        typeof where.profile === 'object' &&
+        'permissions' in where.profile &&
+        (
+          where.profile as {
+            permissions?: { some?: { name?: PermissionName } }
+          }
+        ).permissions?.some?.name
+      ) {
+        const perm = (
+          where.profile as { permissions: { some: { name: PermissionName } } }
+        ).permissions.some.name
+        return u.profile?.permissions.some((p) => p.name === perm)
+      }
+      return true
+    })
+
+    const count = allUsers.length
+    const paginatedUsers = allUsers.slice((page - 1) * perPage, page * perPage)
+
+    const sanitizedUsers = paginatedUsers.map((u) => {
+      const rest = { ...u }
+      delete (rest as { password?: string }).password
+      return rest
+    })
+
+    return {
+      users: sanitizedUsers,
+      count,
+    }
+  }
+
   async delete(id: string): Promise<void> {
     this.users = this.users.filter((u) => u.id !== id)
   }

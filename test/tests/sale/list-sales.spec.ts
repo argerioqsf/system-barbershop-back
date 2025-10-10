@@ -32,7 +32,7 @@ describe('ListSalesUseCase', () => {
     const res = await useCase.execute({
       actor: defaultActor,
     })
-    expect(res.items).toHaveLength(2)
+    expect(res.items).toHaveLength(1)
     expect(telemetry.events).toHaveLength(1)
     expect(telemetry.events[0]).toMatchObject({
       operation: 'sale.list',

@@ -1,6 +1,5 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { PrismaUsersRepository } from '@/repositories/prisma/prisma-users-repository'
-import { RoleName } from '@prisma/client'
 import { UserToken } from '../controllers/authenticate-controller'
 
 export async function verifyJWT(request: FastifyRequest, replay: FastifyReply) {
@@ -9,7 +8,7 @@ export async function verifyJWT(request: FastifyRequest, replay: FastifyReply) {
     const token = request.user as UserToken
     const repo = new PrismaUsersRepository()
     const user = await repo.findById(token.sub)
-    if (!user) {
+    if (!user || !user.profile) {
       return replay.status(401).send({ message: 'Unauthorized' })
     }
     if (
@@ -28,7 +27,7 @@ export async function verifyJWT(request: FastifyRequest, replay: FastifyReply) {
         sub: user.id,
         unitId: user.unitId,
         organizationId: user.organizationId,
-        role: user.profile?.role.name as RoleName,
+        role: user.profile.role.name,
         permissions,
         versionToken: newVersion,
       }
@@ -36,7 +35,7 @@ export async function verifyJWT(request: FastifyRequest, replay: FastifyReply) {
         {
           unitId: user.unitId,
           organizationId: user.organizationId,
-          role: user.profile?.role.name,
+          role: user.profile.role.name,
           permissions,
           versionToken: newVersion,
         },

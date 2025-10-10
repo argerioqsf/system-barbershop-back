@@ -1,7 +1,6 @@
 import { UserToken } from '@/http/controllers/authenticate-controller'
 import { TransactionRepository } from '@/repositories/transaction-repository'
 import { assertUser } from '@/utils/assert-user'
-import { getScope, buildUnitWhere } from '@/utils/permissions'
 import { Transaction } from '@prisma/client'
 
 interface ListTransactionsResponse {
@@ -13,8 +12,7 @@ export class ListTransactionsService {
 
   async execute(userToken: UserToken): Promise<ListTransactionsResponse> {
     assertUser(userToken)
-    const scope = getScope(userToken)
-    const where = buildUnitWhere(scope)
+    const where = { unitId: userToken.unitId }
     const transactions = await this.repository.findMany(where)
     return { transactions }
   }

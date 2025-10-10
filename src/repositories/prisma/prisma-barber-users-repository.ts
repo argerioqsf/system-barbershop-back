@@ -125,6 +125,34 @@ export class PrismaBarberUsersRepository implements BarberUsersRepository {
     >(users)
   }
 
+  async findManyPaginated(
+    where: Prisma.UserWhereInput,
+    { page = 1, perPage = 10 }: { page?: number; perPage?: number },
+  ) {
+    const [users, count] = await prisma.$transaction([
+      prisma.user.findMany({
+        where,
+        include: {
+          profile: {
+            include: {
+              workHours: true,
+              blockedHours: true,
+              role: true,
+            },
+          },
+        },
+        take: perPage,
+        skip: (page - 1) * perPage,
+      }),
+      prisma.user.count({ where }),
+    ])
+
+    return {
+      users: this.sanitizeUsers(users),
+      count,
+    }
+  }
+
   async findById(id: string): Promise<UserFindById> {
     const user = await prisma.user.findUnique({
       where: { id },

@@ -12,6 +12,7 @@ import {
   PermissionCategory,
   User,
   Profile,
+  SaleStatus,
 } from '@prisma/client'
 import { hash } from 'bcryptjs'
 import 'dotenv/config'
@@ -205,6 +206,19 @@ async function main() {
     },
   })
 
+  const roleAttendant = await prisma.role.create({
+    data: {
+      name: RoleName.ATTENDANT,
+      unit: { connect: { id: mainUnit.id } },
+      permissions: {
+        connect: [
+          { id: permissions[PermissionName.CREATE_SALE].id },
+          { id: permissions[PermissionName.LIST_APPOINTMENTS_UNIT].id },
+        ],
+      },
+    },
+  })
+
   const owner = await prisma.user.create({
     data: {
       name: 'Owner',
@@ -215,7 +229,7 @@ async function main() {
       profile: {
         create: {
           phone: '969855555',
-          cpf: '33344455566',
+          cpf: '33258539863',
           genre: 'M',
           birthday: '1980-04-15',
           pix: 'ownerpix',
@@ -240,7 +254,7 @@ async function main() {
       profile: {
         create: {
           phone: '969855555',
-          cpf: '33344455566',
+          cpf: '33258539863',
           genre: 'M',
           birthday: '1980-04-15',
           pix: 'ownerpix',
@@ -253,7 +267,7 @@ async function main() {
     },
   })
 
-  const admin = await prisma.user.create({
+  const admin: User & { profile: Profile | null } = await prisma.user.create({
     data: {
       name: 'Admin',
       email: 'admin@barbershop.com',
@@ -263,7 +277,7 @@ async function main() {
       profile: {
         create: {
           phone: '969999999',
-          cpf: '00011122233',
+          cpf: '33258539863',
           genre: 'M',
           birthday: '2000-01-01',
           pix: 'adminpix',
@@ -275,6 +289,9 @@ async function main() {
         },
       },
       unit: { connect: { id: mainUnit.id } },
+    },
+    include: {
+      profile: true,
     },
   })
 
@@ -288,7 +305,7 @@ async function main() {
       profile: {
         create: {
           phone: '969222222',
-          cpf: '55566677788',
+          cpf: '33258539863',
           genre: 'M',
           birthday: '1990-03-10',
           pix: 'managerpix',
@@ -313,7 +330,7 @@ async function main() {
       profile: {
         create: {
           phone: '969888888',
-          cpf: '11122233344',
+          cpf: '33258539863',
           genre: 'M',
           birthday: '1995-05-10',
           pix: 'barberpix',
@@ -346,7 +363,7 @@ async function main() {
       profile: {
         create: {
           phone: '969777777',
-          cpf: '22233344455',
+          cpf: '33258539863',
           genre: 'F',
           birthday: '2001-07-20',
           pix: 'clientpix',
@@ -371,7 +388,7 @@ async function main() {
       profile: {
         create: {
           phone: '969777777',
-          cpf: '22233344455',
+          cpf: '33258539863',
           genre: 'F',
           birthday: '2001-07-20',
           pix: 'clientpix',
@@ -396,7 +413,7 @@ async function main() {
       profile: {
         create: {
           phone: '969777777',
-          cpf: '22233344455',
+          cpf: '33258539863',
           genre: 'F',
           birthday: '2001-07-20',
           pix: 'clientpix',
@@ -421,7 +438,7 @@ async function main() {
       profile: {
         create: {
           phone: '969777777',
-          cpf: '22233344455',
+          cpf: '33258539863',
           genre: 'F',
           birthday: '2001-07-20',
           pix: 'clientpix',
@@ -435,6 +452,32 @@ async function main() {
       profile: true,
     },
   })
+
+  const attendant: User & { profile: Profile | null } =
+    await prisma.user.create({
+      data: {
+        name: 'Attendant',
+        email: 'attendant@barbershop.com',
+        password: passwordHash,
+        active: true,
+        organization: { connect: { id: organization.id } },
+        profile: {
+          create: {
+            phone: '969666666',
+            cpf: '33258539863',
+            genre: 'F',
+            birthday: '1998-10-05',
+            pix: 'attendantpix',
+            totalBalance: 0,
+            role: { connect: { id: roleAttendant.id } },
+          },
+        },
+        unit: { connect: { id: mainUnit.id } },
+      },
+      include: {
+        profile: true,
+      },
+    })
 
   const defaultCategory = await prisma.category.create({
     data: { name: 'Default', unit: { connect: { id: mainUnit.id } } },
@@ -461,6 +504,15 @@ async function main() {
     },
   })
 
+  const serviceAdmin = await prisma.barberService.create({
+    data: {
+      profile: { connect: { id: admin?.profile?.id } },
+      service: { connect: { id: haircut.id } },
+      time: 30,
+      commissionPercentage: 50,
+    },
+  })
+
   const shampoo = await prisma.product.create({
     data: {
       name: 'Shampoo',
@@ -477,6 +529,13 @@ async function main() {
   const productBarber = await prisma.barberProduct.create({
     data: {
       profile: { connect: { id: barber?.profile?.id } },
+      product: { connect: { id: shampoo.id } },
+    },
+  })
+
+  const productAdmin = await prisma.barberProduct.create({
+    data: {
+      profile: { connect: { id: admin?.profile?.id } },
       product: { connect: { id: shampoo.id } },
     },
   })
@@ -535,25 +594,40 @@ async function main() {
     })
   }
 
-  const cashSession = await prisma.cashRegisterSession.create({
-    data: {
-      openedById: admin.id,
-      unitId: mainUnit.id,
-      initialAmount: 100,
-    },
-  })
-
-  await prisma.transaction.create({
-    data: {
-      userId: admin.id,
-      unitId: mainUnit.id,
-      cashRegisterSessionId: cashSession.id,
-      type: TransactionType.ADDITION,
-      description: 'Initial cash',
-      amount: 100,
-      receiptUrl: '/uploads/sample-receipt.png',
-    },
-  })
+  let cashSession = null
+  if (barber.profile && attendant.profile) {
+    cashSession = await prisma.cashRegisterSession.create({
+      data: {
+        openedById: admin.id,
+        unitId: mainUnit.id,
+        initialAmount: 100,
+        finalAmount: 100,
+        commissionCheckpoints: {
+          create: [
+            {
+              profileId: barber.profile.id,
+              totalBalance: barber.profile.totalBalance,
+            },
+            {
+              profileId: attendant.profile.id,
+              totalBalance: attendant.profile.totalBalance,
+            },
+          ],
+        },
+      },
+    })
+    await prisma.transaction.create({
+      data: {
+        userId: admin.id,
+        unitId: mainUnit.id,
+        cashRegisterSessionId: cashSession.id,
+        type: TransactionType.ADDITION,
+        description: 'Initial cash',
+        amount: 100,
+        receiptUrl: '/uploads/sample-receipt.png',
+      },
+    })
+  }
 
   await prisma.unit.update({
     where: { id: mainUnit.id },
@@ -590,6 +664,7 @@ async function main() {
       price: 80,
       typeRecurrence: { connect: { id: recurrence.id } },
       benefits: { create: [{ benefit: { connect: { id: benefit.id } } }] },
+      unit: { connect: { id: mainUnit.id } },
     },
     include: { benefits: true },
   })
@@ -603,6 +678,8 @@ async function main() {
       gross_value: plan.price,
       method: PaymentMethod.CASH,
       paymentStatus: PaymentStatus.PAID,
+      status: SaleStatus.COMPLETED,
+      completionDate: new Date(),
       items: {
         create: [{ plan: { connect: { id: plan.id } }, price: plan.price }],
       },
@@ -663,6 +740,8 @@ async function main() {
     owner2,
     serviceBarber,
     productBarber,
+    serviceAdmin,
+    productAdmin,
   })
 }
 

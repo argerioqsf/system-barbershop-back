@@ -81,7 +81,7 @@ describe('Get user service', () => {
     repo.users.push({ ...user, profile })
     const srv = makeService('srv-1', 100)
     const app = makeAppointment('ap-1', srv, {
-      date: new Date('2024-01-01T09:00:00'),
+      date: new Date('2024-01-01T09:00:00Z'),
       durationService: 60,
     })
     appointmentRepo.appointments.push({

@@ -30,15 +30,21 @@ export class SetUserUnitService {
     if (!user) throw new UserNotFoundError()
     const changeUnit = unitId !== user.unitId
 
+    const isAdmin = user.role === 'ADMIN'
     const unit = await this.unitRepository.findById(unitId)
     if (!unit) throw new UnitNotFoundError()
 
-    if (unit.organizationId !== user.organizationId) {
+    const changeOrganization = unit.organizationId !== user.organizationId
+
+    if (!isAdmin && changeOrganization) {
       throw new UnitNotFromOrganizationError()
     }
 
     const userUpdated = await this.usersRepository.update(user.sub, {
       unit: { connect: { id: unitId } },
+      ...(changeOrganization && {
+        organization: { connect: { id: unit.organizationId } },
+      }),
       ...(changeUnit && { versionToken: { increment: 1 } }),
       ...(changeUnit && {
         versionTokenInvalidate: user.versionToken,
@@ -53,7 +59,7 @@ export class SetUserUnitService {
         {
           unitId,
           organizationId: userUpdated.organizationId,
-          role: userUpdated?.profile?.role,
+          role: userUpdated.profile?.role.name,
           permissions,
           versionToken: userUpdated.versionToken,
         },

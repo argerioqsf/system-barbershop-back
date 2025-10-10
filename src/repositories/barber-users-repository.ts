@@ -54,6 +54,21 @@ export interface BarberUsersRepository {
         | null
     })[]
   >
+  findManyPaginated(
+    where: Prisma.UserWhereInput,
+    { page, perPage }: { page?: number; perPage?: number },
+  ): Promise<{
+    users: (Omit<User, 'password'> & {
+      profile:
+        | (Profile & {
+            workHours: ProfileWorkHour[]
+            blockedHours: ProfileBlockedHour[]
+            role: Role
+          })
+        | null
+    })[]
+    count: number
+  }>
   findById(id: string): Promise<UserFindById>
   findByEmail(email: string): Promise<
     | (Omit<User, 'password'> & {

@@ -11,8 +11,11 @@ import { AffectedUserNotFoundError } from '@/services/@errors/transaction/affect
 import { NegativeValuesNotAllowedError } from '@/services/@errors/transaction/negative-values-not-allowed-error'
 import { InsufficientBalanceError } from '@/services/@errors/transaction/insufficient-balance-error'
 import { WithdrawalGreaterThanUnitBalanceError } from '@/services/@errors/transaction/withdrawal-greater-than-unit-balance-error'
+import { prisma } from '@/lib/prisma'
+import { UpdateCashRegisterFinalAmountService } from '../cash-register/update-cash-register-final-amount'
+import { round, toCents } from '@/utils/format-currency'
 
-interface withdrawalBalanceTransactionRequest {
+interface WithdrawalBalanceTransactionRequest {
   userId: string
   affectedUserId?: string
   description: string
@@ -20,9 +23,8 @@ interface withdrawalBalanceTransactionRequest {
   receiptUrl?: string | null
 }
 
-interface withdrawalBalanceTransactionResponse {
+interface WithdrawalBalanceTransactionResponse {
   transactions: Transaction[]
-  surplusValue?: number
 }
 
 export class WithdrawalBalanceTransactionService {
@@ -31,11 +33,14 @@ export class WithdrawalBalanceTransactionService {
     private cashRegisterRepository: CashRegisterRepository,
     private profileRepository: ProfilesRepository,
     private unitRepository: UnitRepository,
+    private incrementProfileService: IncrementBalanceProfileService,
+    private incrementUnitService: IncrementBalanceUnitService,
+    private updateCashRegisterFinalAmountService: UpdateCashRegisterFinalAmountService,
   ) {}
 
   async execute(
-    data: withdrawalBalanceTransactionRequest,
-  ): Promise<withdrawalBalanceTransactionResponse> {
+    data: WithdrawalBalanceTransactionRequest,
+  ): Promise<WithdrawalBalanceTransactionResponse> {
     const user = await this.barberUserRepository.findById(data.userId)
     if (!user) throw new UserNotFoundError()
 
@@ -44,80 +49,86 @@ export class WithdrawalBalanceTransactionService {
     )
     if (!session) throw new CashRegisterClosedError()
 
-    let affectedUser
-    if (data.affectedUserId) {
-      affectedUser = await this.barberUserRepository.findById(
-        data.affectedUserId,
-      )
-      if (!affectedUser) throw new AffectedUserNotFoundError()
-    }
-
-    const incrementProfile = new IncrementBalanceProfileService(
-      this.profileRepository,
-    )
-    const incrementUnit = new IncrementBalanceUnitService(this.unitRepository)
-
-    const transactions: Transaction[] = []
-
-    if (data.amount < 0) {
+    const withdrawalAmount = round(data.amount)
+    if (withdrawalAmount <= 0) {
       throw new NegativeValuesNotAllowedError()
     }
 
-    const increment = -data.amount
-    const effectiveUser = affectedUser ?? user
-    const balanceUnit = effectiveUser.unit?.totalBalance ?? 0
-    const balanceUser = effectiveUser.profile?.totalBalance ?? 0
+    const effectiveUser = data.affectedUserId
+      ? await this.barberUserRepository.findById(data.affectedUserId)
+      : user
 
-    const surplusValue =
-      -increment > balanceUser
-        ? balanceUser < 0
-          ? increment
-          : balanceUser - -increment
-        : undefined
+    if (!effectiveUser) throw new AffectedUserNotFoundError()
 
-    const remainingBalance =
-      balanceUser > 0 ? balanceUser - -increment : increment
+    const userBalance = round(effectiveUser.profile?.totalBalance ?? 0)
+    const unitBalance = round(effectiveUser.unit?.totalBalance ?? 0)
 
-    if (remainingBalance < 0) {
-      if (!effectiveUser.unit?.allowsLoan) {
-        throw new InsufficientBalanceError()
+    const finalUserBalance = round(userBalance - withdrawalAmount)
+
+    const transactions = await prisma.$transaction(async (tx) => {
+      const txs: Transaction[] = []
+
+      // If the withdrawal results in a negative balance, it's a loan
+      if (toCents(finalUserBalance) < 0) {
+        if (!effectiveUser.unit?.allowsLoan) {
+          throw new InsufficientBalanceError()
+        }
+
+        const loanAmount = -finalUserBalance
+        if (toCents(loanAmount) > toCents(unitBalance)) {
+          throw new WithdrawalGreaterThanUnitBalanceError()
+        }
+
+        // Decrement user balance (it will become negative)
+        const transactionProfile = await this.incrementProfileService.execute(
+          effectiveUser.id,
+          -withdrawalAmount,
+          undefined,
+          true, // isLoan
+          data.description,
+          undefined,
+          undefined,
+          undefined,
+          tx,
+        )
+
+        // Decrement unit balance because the unit is loaning money
+        const transactionUnit = await this.incrementUnitService.execute(
+          effectiveUser.unitId,
+          effectiveUser.id,
+          -loanAmount, // The amount the unit is effectively losing
+          undefined,
+          true, // isLoan
+          undefined,
+          undefined,
+          tx,
+        )
+        txs.push(transactionProfile.transaction, transactionUnit.transaction)
+      } else {
+        // Simple withdrawal, no loan involved
+        const transactionProfile = await this.incrementProfileService.execute(
+          effectiveUser.id,
+          -withdrawalAmount,
+          undefined,
+          false, // isLoan
+          data.description,
+          undefined,
+          undefined,
+          undefined,
+          tx,
+        )
+        txs.push(transactionProfile.transaction)
       }
-      const remainingBalanceRelative = -remainingBalance
-      if (remainingBalanceRelative > balanceUnit) {
-        throw new WithdrawalGreaterThanUnitBalanceError()
-      }
-      // TODO: envolver os dois increments a abaixo em uma transaction do prisma
-      const transactionProfile = await incrementProfile.execute(
-        effectiveUser.id,
-        increment,
-        undefined,
-        true,
-        undefined,
-        undefined,
-        undefined,
-      )
-      const transactionUnit = await incrementUnit.execute(
-        effectiveUser.unitId,
-        effectiveUser.id,
-        remainingBalance,
-        undefined,
-        true,
-      )
-      transactions.push(transactionProfile.transaction)
-      transactions.push(transactionUnit.transaction)
-    } else {
-      const transactionProfile = await incrementProfile.execute(
-        effectiveUser.id,
-        increment,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-      )
-      transactions.push(transactionProfile.transaction)
-    }
 
-    return { transactions, surplusValue }
+      // Update cash register with the withdrawal amount
+      await this.updateCashRegisterFinalAmountService.execute(
+        { sessionId: session.id, amount: -withdrawalAmount },
+        tx,
+      )
+
+      return txs
+    })
+
+    return { transactions }
   }
 }

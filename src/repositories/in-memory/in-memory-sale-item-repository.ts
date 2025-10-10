@@ -1,23 +1,169 @@
 import {
   Prisma,
+  Sale,
   SaleItem,
   PaymentStatus,
   Discount,
   DiscountOrigin,
   DiscountType,
+  SaleStatus,
 } from '@prisma/client'
-import { DetailedSaleItem } from '../sale-repository'
+import { DetailedSale, DetailedSaleItem } from '../sale-repository'
 import crypto from 'node:crypto'
 import {
   DetailedSaleItemFindMany,
-  DetailedAppointmentService,
   SaleItemRepository,
   DetailedSaleItemFindById,
 } from '../sale-item-repository'
 import { InMemorySaleRepository } from './in-memory-sale-repository'
 
+const DEFAULT_DISCOUNT_TYPE = DiscountType.VALUE
+const DEFAULT_DISCOUNT_ORIGIN = DiscountOrigin.VALUE_SALE_ITEM
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+}
+
+function toNumber(value: unknown, fallback: number): number {
+  if (value === undefined || value === null) return fallback
+  if (typeof value === 'number') return value
+  if (typeof value === 'bigint') return Number(value)
+  if (isObject(value) && 'toNumber' in value) {
+    const candidate = value as { toNumber?: () => number }
+    if (typeof candidate.toNumber === 'function') {
+      return candidate.toNumber()
+    }
+  }
+  const coerced = Number(value)
+  return Number.isNaN(coerced) ? fallback : coerced
+}
+
+function resolveNullableNumber(
+  value: unknown,
+  fallback: number | null,
+): number | null {
+  if (value === undefined) return fallback
+  if (value === null) return null
+  if (isObject(value) && 'set' in value) {
+    const setValue = (value as { set?: unknown }).set
+    return resolveNullableNumber(setValue ?? null, fallback)
+  }
+  return toNumber(value, fallback ?? 0)
+}
+
+function resolveBoolean(value: unknown, fallback: boolean): boolean {
+  if (value === undefined) return fallback
+  if (typeof value === 'boolean') return value
+  if (isObject(value) && 'set' in value) {
+    const setValue = (value as { set?: boolean }).set
+    return setValue ?? fallback
+  }
+  return Boolean(value)
+}
+
 export class InMemorySaleItemRepository implements SaleItemRepository {
   constructor(private saleRepository: InMemorySaleRepository) {}
+
+  private cloneAppointment(
+    appointment: DetailedSaleItem['appointment'],
+  ): DetailedSaleItem['appointment'] {
+    if (!appointment) return null
+    const services =
+      appointment.services?.map((service) => ({ ...service })) ?? []
+    return {
+      ...appointment,
+      services,
+    }
+  }
+
+  private mapDiscountPayload(
+    saleItemId: string,
+    payload:
+      | Prisma.DiscountCreateWithoutSaleItemInput
+      | Prisma.DiscountUncheckedCreateWithoutSaleItemInput
+      | Prisma.DiscountCreateManySaleItemInput,
+  ): Discount {
+    const amount = toNumber((payload as { amount?: unknown }).amount, 0)
+    const type =
+      (payload as { type?: DiscountType }).type ?? DEFAULT_DISCOUNT_TYPE
+    const origin =
+      (payload as { origin?: DiscountOrigin }).origin ?? DEFAULT_DISCOUNT_ORIGIN
+    const orderValue = (payload as { order?: unknown }).order
+    const order = orderValue === undefined ? 0 : toNumber(orderValue, 0)
+    const id = (payload as { id?: string }).id ?? crypto.randomUUID()
+
+    return {
+      id,
+      saleItemId,
+      amount,
+      type,
+      origin,
+      order,
+    }
+  }
+
+  private buildDiscountsFromUpdate(
+    saleItemId: string,
+    input: Prisma.SaleItemUpdateInput['discounts'],
+  ): Discount[] {
+    if (!input || !isObject(input)) return []
+
+    const discounts: Discount[] = []
+
+    if ('create' in input && input.create) {
+      const creations = Array.isArray(input.create)
+        ? input.create
+        : [input.create]
+      discounts.push(
+        ...creations.map((payload) =>
+          this.mapDiscountPayload(saleItemId, payload),
+        ),
+      )
+    }
+
+    if ('createMany' in input && input.createMany?.data) {
+      const bulkData = input.createMany.data
+      const entries = Array.isArray(bulkData) ? bulkData : [bulkData]
+      discounts.push(
+        ...entries.map((payload) =>
+          this.mapDiscountPayload(saleItemId, payload),
+        ),
+      )
+    }
+
+    return discounts
+  }
+
+  private buildDetailedItem(
+    sale: DetailedSale,
+    item: DetailedSaleItem,
+  ): DetailedSaleItemFindById {
+    const saleSnapshot: Sale = {
+      id: sale.id,
+      userId: sale.userId,
+      clientId: sale.clientId,
+      unitId: sale.unitId,
+      sessionId: sale.sessionId,
+      couponId: sale.couponId,
+      total: sale.total,
+      gross_value: sale.gross_value,
+      method: sale.method,
+      paymentStatus: sale.paymentStatus,
+      createdAt: sale.createdAt,
+      observation: sale.observation,
+      status: sale.status,
+      completionDate: sale.completionDate,
+    }
+
+    return {
+      ...item,
+      sale: saleSnapshot,
+      discounts: item.discounts.map((discount) => ({ ...discount })),
+      transactions: [],
+      appointment: this.cloneAppointment(item.appointment) as any,
+    }
+  }
+
   async updateManyIndividually(
     updates: { id: string; data: Prisma.SaleItemUpdateInput }[],
   ): Promise<SaleItem[]> {
@@ -36,56 +182,41 @@ export class InMemorySaleItemRepository implements SaleItemRepository {
     data: Prisma.SaleItemUpdateInput,
   ): Promise<SaleItem> {
     for (const sale of this.saleRepository.sales) {
-      const item = sale.items.find((i) => i.id === id)
-      if (item) {
-        if (data.price !== undefined) {
-          item.price = data.price as number
-        }
-        if (data.discounts) {
-          item.discounts = []
-          const create = (data.discounts as { create?: Discount[] }).create
-          if (create) {
-            item.discounts = create.map((d) => ({
-              id: crypto.randomUUID(),
-              saleItemId: id,
-              amount: d.amount,
-              type: d.type as DiscountType,
-              origin: d.origin as DiscountOrigin,
-              order: d.order,
-            }))
-          }
-        }
-        if (data.porcentagemBarbeiro !== undefined) {
-          item.porcentagemBarbeiro = data.porcentagemBarbeiro as number | null
-        }
-        const extra = data as { commissionPaid?: boolean }
-        if (extra.commissionPaid !== undefined) {
-          item.commissionPaid = extra.commissionPaid
-        }
-        return item
+      const item = sale.items.find((saleItem) => saleItem.id === id)
+      if (!item) continue
+
+      if (data.price !== undefined) {
+        item.price = toNumber(data.price, item.price)
       }
+
+      if (data.discounts !== undefined) {
+        item.discounts = this.buildDiscountsFromUpdate(id, data.discounts)
+      }
+
+      if (data.porcentagemBarbeiro !== undefined) {
+        item.porcentagemBarbeiro = resolveNullableNumber(
+          data.porcentagemBarbeiro,
+          item.porcentagemBarbeiro,
+        )
+      }
+
+      if (data.commissionPaid !== undefined) {
+        item.commissionPaid = resolveBoolean(
+          data.commissionPaid,
+          item.commissionPaid,
+        )
+      }
+
+      return item
     }
     throw new Error('Sale item not found')
   }
 
   async findById(id: string): Promise<DetailedSaleItemFindById | null> {
     for (const sale of this.saleRepository.sales) {
-      const item = sale.items.find((i) => i.id === id)
-      if (item) {
-        const result: DetailedSaleItemFindById = {
-          ...(item as DetailedSaleItem),
-          sale,
-          transactions: [],
-          appointment: item.appointment
-            ? {
-                ...item.appointment,
-                services: (item.appointment.services ??
-                  []) as DetailedAppointmentService[],
-              }
-            : null,
-        }
-        return result
-      }
+      const item = sale.items.find((saleItem) => saleItem.id === id)
+      if (!item) continue
+      return this.buildDetailedItem(sale, item)
     }
     return null
   }
@@ -197,18 +328,7 @@ export class InMemorySaleItemRepository implements SaleItemRepository {
           }
         }
 
-        items.push({
-          ...(item as DetailedSaleItem),
-          sale,
-          transactions: [],
-          appointment: item.appointment
-            ? {
-                ...item.appointment,
-                services: (item.appointment.services ??
-                  []) as DetailedAppointmentService[],
-              }
-            : null,
-        })
+        items.push(this.buildDetailedItem(sale, item))
       }
     }
 
@@ -351,33 +471,61 @@ export class InMemorySaleItemRepository implements SaleItemRepository {
           }
         }
 
-        const cloned: DetailedSaleItemFindMany = {
-          ...(item as DetailedSaleItem),
-          sale,
-          transactions: [],
-          appointment: item.appointment
-            ? {
-                ...item.appointment,
-                services: (item.appointment.services ??
-                  []) as DetailedAppointmentService[],
-              }
-            : null,
-        }
+        const detailedItem = this.buildDetailedItem(sale, item)
 
-        if (appointmentServiceIds.length > 0 && cloned.appointment) {
-          cloned.appointment = {
-            ...cloned.appointment,
-            services:
-              cloned.appointment.services?.filter((svc) =>
-                appointmentServiceIds.includes(svc.id),
-              ) ?? [],
+        if (
+          appointmentServiceIds.length > 0 &&
+          detailedItem.appointment &&
+          detailedItem.appointment.services.length > 0
+        ) {
+          const filtered = {
+            ...detailedItem,
+            appointment: {
+              ...detailedItem.appointment,
+              services: detailedItem.appointment.services.filter((service) =>
+                appointmentServiceIds.includes(service.id),
+              ),
+            },
           }
+          items.push(filtered)
+          continue
         }
 
-        items.push(cloned)
+        items.push(detailedItem)
       }
     }
 
+    return items
+  }
+
+  async findManyByBarberId(
+    barberId: string,
+  ): Promise<DetailedSaleItemFindMany[]> {
+    const items: DetailedSaleItemFindMany[] = []
+    for (const sale of this.saleRepository.sales) {
+      for (const item of sale.items) {
+        if (item.barberId !== barberId) continue
+        items.push(this.buildDetailedItem(sale, item))
+      }
+    }
+    return items
+  }
+
+  async findManyPendingCommission(
+    barberId: string,
+  ): Promise<DetailedSaleItemFindMany[]> {
+    const items: DetailedSaleItemFindMany[] = []
+    for (const sale of this.saleRepository.sales) {
+      for (const item of sale.items) {
+        if (
+          item.barberId === barberId &&
+          item.commissionPaid === false &&
+          sale.paymentStatus === 'PAID'
+        ) {
+          items.push(this.buildDetailedItem(sale, item))
+        }
+      }
+    }
     return items
   }
 }

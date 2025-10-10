@@ -5,6 +5,7 @@ import {
   User,
   ProfileWorkHour,
   ProfileBlockedHour,
+  Role,
 } from '@prisma/client'
 
 export type ResponseFindByUserId =
@@ -13,6 +14,7 @@ export type ResponseFindByUserId =
       permissions: { id: string; name: string }[]
       workHours: ProfileWorkHour[]
       blockedHours: ProfileBlockedHour[]
+      role?: Role
     })
   | null
 export interface ProfilesRepository {
@@ -24,8 +26,15 @@ export interface ProfilesRepository {
     data: Prisma.ProfileUncheckedCreateInput,
     permissionIds?: string[],
   ): Promise<Profile>
-  findByUserId(userId: string): Promise<ResponseFindByUserId>
-  update(id: string, data: Prisma.ProfileUncheckedUpdateInput): Promise<Profile>
+  findByUserId(
+    userId: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<ResponseFindByUserId>
+  update(
+    id: string,
+    data: Prisma.ProfileUncheckedUpdateInput,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Profile>
   findMany(
     where?: Prisma.ProfileWhereInput,
     orderBy?: Prisma.ProfileOrderByWithRelationInput,

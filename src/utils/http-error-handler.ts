@@ -30,10 +30,14 @@ import { ItemPriceGreaterError } from '@/services/@errors/sale/Item-price-greate
 import { InvalidAppointmentStatusError } from '@/services/@errors/appointment/invalid-appointment-status-error'
 import { CannotEditPaidSaleError } from '@/services/@errors/sale/cannot-edit-paid-sale-error'
 import { LoanPaymentGreaterThanRemainingError } from '@/services/@errors/loan/loan-payment-greater-than-remaining-error'
+import { CollaboratorNotFoundError } from '@/modules/collaborator/application/errors/collaborator-not-found.error'
+import { UnauthorizedAccessError } from '@/modules/collaborator/application/errors/unauthorized-access.error'
+import { PlanNotFromUserUnitError } from '@/services/@errors/plan/plan-not-from-user-unit-error'
 
 export function mapErrorToStatus(error: Error): number {
   if (
     error instanceof InvalidCredentialsError ||
+    error instanceof UnauthorizedAccessError ||
     error instanceof UserInactiveError ||
     error instanceof UnitNotFromOrganizationError ||
     error instanceof CashRegisterClosedError ||
@@ -47,7 +51,8 @@ export function mapErrorToStatus(error: Error): number {
     error instanceof ItemPriceGreaterError ||
     error instanceof InvalidAppointmentStatusError ||
     error instanceof CannotEditPaidSaleError ||
-    error instanceof LoanPaymentGreaterThanRemainingError
+    error instanceof LoanPaymentGreaterThanRemainingError ||
+    error instanceof PlanNotFromUserUnitError
   ) {
     return 400
   }
@@ -67,6 +72,7 @@ export function mapErrorToStatus(error: Error): number {
     error instanceof AffectedUserNotFoundError ||
     error instanceof BarberNotFoundError ||
     error instanceof BarberProfileNotFoundError ||
+    error instanceof CollaboratorNotFoundError ||
     error instanceof OwnerNotFoundError
   ) {
     return 404

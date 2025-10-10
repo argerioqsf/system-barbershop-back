@@ -1,4 +1,6 @@
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
+import { BarberServiceRepository } from '@/repositories/barber-service-repository'
+import { BarberProductRepository } from '@/repositories/barber-product-repository'
 import { PermissionRepository } from '@/repositories/permission-repository'
 import { UnitRepository } from '@/repositories/unit-repository'
 import { UserNotFoundError } from '@/services/@errors/user/user-not-found-error'
@@ -10,6 +12,7 @@ import { hasPermission } from '@/utils/permissions'
 import { UnauthorizedError } from '../@errors/auth/unauthorized-error'
 import { UserToken } from '@/http/controllers/authenticate-controller'
 import { FastifyReply, FastifyRequest } from 'fastify'
+import { logger } from '@/lib/logger'
 
 interface UpdateUserRequest {
   id: string
@@ -25,6 +28,27 @@ interface UpdateUserRequest {
   email?: string
   unitId?: string
   commissionPercentage?: number
+  services?: Array<{
+    serviceId: string
+    time?: number | null
+    commissionPercentage?: number | undefined
+    commissionType?:
+      | 'PERCENTAGE_OF_ITEM'
+      | 'PERCENTAGE_OF_USER'
+      | 'PERCENTAGE_OF_USER_ITEM'
+      | undefined
+  }>
+  products?: Array<{
+    productId: string
+    commissionPercentage?: number | undefined
+    commissionType?:
+      | 'PERCENTAGE_OF_ITEM'
+      | 'PERCENTAGE_OF_USER'
+      | 'PERCENTAGE_OF_USER_ITEM'
+      | undefined
+  }>
+  removeServiceIds?: string[]
+  removeProductIds?: string[]
 }
 
 type OldUser =
@@ -44,6 +68,8 @@ export class UpdateUserService {
     private repository: BarberUsersRepository,
     private unitRepository: UnitRepository,
     private permissionRepository: PermissionRepository,
+    private barberServiceRepository: BarberServiceRepository,
+    private barberProductRepository: BarberProductRepository,
   ) {}
 
   private async verifyPermissions(user: OldUser, userToken?: UserToken) {
@@ -145,6 +171,77 @@ export class UpdateUserService {
       },
       permissionIds,
     )
+
+    // Vincular/atualizar serviços/produtos do barbeiro
+    if (profile) {
+      if (data.services && data.services.length > 0) {
+        for (const s of data.services) {
+          const exists =
+            await this.barberServiceRepository.findByProfileService(
+              profile.id,
+              s.serviceId,
+            )
+          logger.debug('exists barberService', { exists })
+          if (exists) {
+            await this.barberServiceRepository.update(profile.id, s.serviceId, {
+              time: s.time ?? undefined,
+              commissionPercentage: s.commissionPercentage,
+              commissionType: s.commissionType,
+            })
+          } else {
+            await this.barberServiceRepository.create({
+              profileId: profile.id,
+              serviceId: s.serviceId,
+              time: s.time ?? undefined,
+              commissionPercentage: s.commissionPercentage,
+              commissionType: s.commissionType,
+            })
+          }
+        }
+      }
+
+      if (data.products && data.products.length > 0) {
+        for (const p of data.products) {
+          const exists =
+            await this.barberProductRepository.findByProfileProduct(
+              profile.id,
+              p.productId,
+            )
+          logger.debug('exists barberProduct', { exists })
+          if (exists) {
+            await this.barberProductRepository.update(profile.id, p.productId, {
+              commissionPercentage: p.commissionPercentage,
+              commissionType: p.commissionType,
+            })
+          } else {
+            await this.barberProductRepository.create({
+              profileId: profile.id,
+              productId: p.productId,
+              commissionPercentage: p.commissionPercentage,
+              commissionType: p.commissionType,
+            })
+          }
+        }
+      }
+
+      // removals
+      if (data.removeServiceIds && data.removeServiceIds.length > 0) {
+        for (const serviceId of data.removeServiceIds) {
+          await this.barberServiceRepository.deleteByProfileService(
+            profile.id,
+            serviceId,
+          )
+        }
+      }
+      if (data.removeProductIds && data.removeProductIds.length > 0) {
+        for (const productId of data.removeProductIds) {
+          await this.barberProductRepository.deleteByProfileProduct(
+            profile.id,
+            productId,
+          )
+        }
+      }
+    }
 
     if (
       userToken &&

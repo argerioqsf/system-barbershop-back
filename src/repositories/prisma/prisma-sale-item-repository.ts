@@ -3,6 +3,7 @@ import { Prisma, SaleItem } from '@prisma/client'
 import {
   DetailedSaleItemFindById,
   DetailedSaleItemFindMany,
+  ReturnFindManyPendingCommission,
   SaleItemRepository,
 } from '../sale-item-repository'
 export class PrismaSaleItemRepository implements SaleItemRepository {
@@ -85,6 +86,59 @@ export class PrismaSaleItemRepository implements SaleItemRepository {
           },
         },
         discounts: true,
+      },
+    })
+  }
+
+  async findManyByBarberId(
+    barberId: string,
+  ): Promise<DetailedSaleItemFindMany[]> {
+    return prisma.saleItem.findMany({
+      where: {
+        barberId,
+        sale: {
+          paymentStatus: 'PAID',
+        },
+      },
+      include: {
+        sale: true,
+        transactions: true,
+        appointment: {
+          include: {
+            services: {
+              include: { service: true, transactions: true },
+            },
+          },
+        },
+        discounts: true,
+      },
+    })
+  }
+
+  async findManyPendingCommission(
+    barberId: string,
+  ): Promise<ReturnFindManyPendingCommission[]> {
+    return prisma.saleItem.findMany({
+      where: {
+        barberId,
+        commissionPaid: false,
+        sale: {
+          paymentStatus: 'PAID',
+        },
+      },
+      include: {
+        sale: true,
+        transactions: true,
+        appointment: {
+          include: {
+            services: {
+              include: { service: true, transactions: true },
+            },
+          },
+        },
+        discounts: true,
+        service: true,
+        product: true,
       },
     })
   }

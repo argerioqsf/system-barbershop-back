@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, vi, beforeAll } from 'vitest'
 import { WithdrawalBalanceTransactionService } from '../../../src/services/transaction/withdrawal-balance-transaction'
 import { CreateTransactionService } from '../../../src/services/transaction/create-transaction'
 import {
@@ -79,8 +79,14 @@ function setup(options?: {
   return { service, profileRepo, unitRepo, transactionRepo, user, barberRepo }
 }
 
+import { prisma } from '../../../src/lib/prisma'
+
 describe('Withdrawal balance transaction service', () => {
   let ctx: ReturnType<typeof setup>
+
+  beforeAll(() => {
+    vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) => fn(prisma))
+  })
 
   beforeEach(() => {
     ctx = setup()

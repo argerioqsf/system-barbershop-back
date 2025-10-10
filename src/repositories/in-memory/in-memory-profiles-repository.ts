@@ -5,6 +5,7 @@ import {
   User,
   ProfileWorkHour,
   ProfileBlockedHour,
+  Role,
 } from '@prisma/client'
 import { ProfileNotFoundError } from '@/services/@errors/profile/profile-not-found-error'
 import crypto from 'node:crypto'
@@ -16,6 +17,7 @@ export class InMemoryProfilesRepository implements ProfilesRepository {
     permissions: { id: string; name: string }[]
     workHours: ProfileWorkHour[]
     blockedHours: ProfileBlockedHour[]
+    role?: Role
   })[] = []
 
   async create(
@@ -26,11 +28,11 @@ export class InMemoryProfilesRepository implements ProfilesRepository {
       permissions: { id: string; name: string }[]
     } = {
       id: crypto.randomUUID(),
-      phone: data.phone,
-      cpf: data.cpf,
-      genre: data.genre,
-      birthday: data.birthday,
-      pix: data.pix,
+      phone: data.phone ?? null,
+      cpf: data.cpf ?? null,
+      genre: data.genre ?? null,
+      birthday: data.birthday ?? null,
+      pix: data.pix ?? null,
       roleId: (data as { roleId: string }).roleId,
       commissionPercentage: data.commissionPercentage ?? 0,
       totalBalance: 0,
@@ -65,6 +67,7 @@ export class InMemoryProfilesRepository implements ProfilesRepository {
       user,
       workHours: [],
       blockedHours: [],
+      role: undefined,
     })
     return profile
   }
@@ -89,6 +92,7 @@ export class InMemoryProfilesRepository implements ProfilesRepository {
         permissions: { id: string; name: string }[]
         workHours: ProfileWorkHour[]
         blockedHours: ProfileBlockedHour[]
+        role?: Role
       })
     | null
   > {
@@ -115,6 +119,7 @@ export class InMemoryProfilesRepository implements ProfilesRepository {
     (Profile & {
       user: Omit<User, 'password'>
       permissions: { id: string; name: string }[]
+      role?: Role
     })[]
   > {
     return this.items

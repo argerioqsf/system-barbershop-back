@@ -66,6 +66,9 @@ export class PrismaTransactionRepository implements TransactionRepository {
           },
         },
       },
+      orderBy: {
+        createdAt: 'desc',
+      },
     })
   }
 
@@ -98,20 +101,66 @@ export class PrismaTransactionRepository implements TransactionRepository {
           },
         },
       },
+      orderBy: {
+        createdAt: 'desc',
+      },
     })
   }
 
   async findManyByUnit(unitId: string): Promise<Transaction[]> {
-    return prisma.transaction.findMany({ where: { unitId } })
+    return prisma.transaction.findMany({
+      where: { unitId },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    })
   }
 
   async findManyBySession(sessionId: string): Promise<Transaction[]> {
     return prisma.transaction.findMany({
       where: { cashRegisterSessionId: sessionId },
+      orderBy: {
+        createdAt: 'desc',
+      },
     })
   }
 
   async delete(id: string): Promise<void> {
     await prisma.transaction.delete({ where: { id } })
+  }
+
+  async findManyByAffectedUser(
+    affectedUserId: string,
+  ): Promise<TransactionFull[]> {
+    return prisma.transaction.findMany({
+      where: { affectedUserId },
+      include: {
+        sale: {
+          include: {
+            coupon: true,
+            items: {
+              include: {
+                service: true,
+                barber: {
+                  include: {
+                    profile: true,
+                  },
+                },
+                discounts: true,
+                coupon: true,
+              },
+            },
+            user: {
+              include: {
+                profile: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    })
   }
 }

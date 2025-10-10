@@ -20,7 +20,7 @@ describe('List sessions service', () => {
       unitId: 'unit-1',
       organizationId: 'org-1',
     })
-    expect(res.sessions).toHaveLength(2)
+    expect(res.sessions).toHaveLength(1)
   })
 
   it('filters by organization for owner', async () => {

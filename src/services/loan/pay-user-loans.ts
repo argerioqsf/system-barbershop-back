@@ -3,7 +3,7 @@ import {
   LoanWithTransactions,
 } from '@/repositories/loan-repository'
 import { UnitRepository } from '@/repositories/unit-repository'
-import { LoanStatus, Transaction } from '@prisma/client'
+import { LoanStatus, Prisma, Transaction } from '@prisma/client'
 import { IncrementBalanceUnitService } from '../unit/increment-balance'
 import { UserFindById } from '@/repositories/barber-users-repository'
 
@@ -31,15 +31,18 @@ export class PayUserLoansService {
     )
   }
 
-  async execute({
-    affectedUser,
-    amount,
-  }: PayUserLoansRequest): Promise<PayUserLoansResponse> {
-    const loans = await this.loanRepository.findMany({
-      userId: affectedUser.id,
-      status: { equals: LoanStatus.PAID },
-      fullyPaid: { equals: false },
-    })
+  async execute(
+    { affectedUser, amount }: PayUserLoansRequest,
+    tx?: Prisma.TransactionClient,
+  ): Promise<PayUserLoansResponse> {
+    const loans = await this.loanRepository.findMany(
+      {
+        userId: affectedUser.id,
+        status: { equals: LoanStatus.PAID },
+        fullyPaid: { equals: false },
+      },
+      tx,
+    )
     loans.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
 
     const incUnit = new IncrementBalanceUnitService(this.unitRepository)
@@ -53,11 +56,15 @@ export class PayUserLoansService {
       const toPay = Math.min(loan.amount - amountPaidForTransactions, remaining)
 
       if (toPay <= 0) {
-        await this.loanRepository.update(loan.id, {
-          fullyPaid: true,
-          paidAt: new Date(),
-          status: LoanStatus.PAID,
-        })
+        await this.loanRepository.update(
+          loan.id,
+          {
+            fullyPaid: true,
+            paidAt: new Date(),
+            status: LoanStatus.PAID,
+          },
+          tx,
+        )
         continue
       }
 
@@ -68,6 +75,8 @@ export class PayUserLoansService {
         undefined,
         true,
         loan.id,
+        undefined,
+        tx,
       )
       transactions.push(txUnit.transaction)
       totalPaid += toPay
@@ -75,13 +84,21 @@ export class PayUserLoansService {
 
       const fully = amountPaidForTransactions + toPay >= loan.amount
       if (fully) {
-        await this.loanRepository.update(loan.id, {
-          fullyPaid: fully,
-          paidAt: new Date(),
-          status: LoanStatus.PAID,
-        })
+        await this.loanRepository.update(
+          loan.id,
+          {
+            fullyPaid: fully,
+            paidAt: new Date(),
+            status: LoanStatus.PAID,
+          },
+          tx,
+        )
       }
     }
-    return { transactions, remaining, totalPaid }
+    return {
+      transactions,
+      remaining: Math.floor(remaining * 100) / 100,
+      totalPaid: Math.floor(totalPaid * 100) / 100,
+    }
   }
 }

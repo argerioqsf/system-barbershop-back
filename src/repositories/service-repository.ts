@@ -10,4 +10,5 @@ export interface ServiceRepository {
     page: number,
     perPage: number,
   ): Promise<{ items: Service[]; count: number }>
+  update(id: string, data: Prisma.ServiceUpdateInput): Promise<Service>
 }

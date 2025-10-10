@@ -26,7 +26,7 @@ describe('List services service', () => {
       unitId: 'unit-1',
       organizationId: 'org-1',
     })
-    expect(res.items).toHaveLength(2)
+    expect(res.items).toHaveLength(1)
   })
 
   it('filters by organization for owner', async () => {

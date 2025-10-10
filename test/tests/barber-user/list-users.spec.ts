@@ -4,8 +4,12 @@ import {
   InMemoryBarberUsersRepository,
   FakeAppointmentRepository,
 } from '../../helpers/fake-repositories'
-import { listUser1 as u1, listUser2 as u2 } from '../../helpers/default-values'
-import { makeService, makeAppointment } from '../../helpers/default-values'
+import {
+  listUser1 as u1,
+  listUser2 as u2,
+  makeService,
+  makeAppointment,
+} from '../../helpers/default-values'
 
 describe('List users service', () => {
   let repo: InMemoryBarberUsersRepository
@@ -18,37 +22,46 @@ describe('List users service', () => {
     service = new ListUsersService(repo, appointmentRepo)
   })
 
-  it('lists all for admin', async () => {
-    const res = await service.execute({
-      sub: '1',
-      role: 'ADMIN',
-      unitId: 'unit-1',
-      organizationId: 'org-1',
-    })
-    expect(res.users).toHaveLength(2)
+  it('lists user for admin', async () => {
+    const res = await service.execute(
+      {
+        sub: '1',
+        role: 'ADMIN',
+        unitId: 'unit-1',
+        organizationId: 'org-1',
+      },
+      {},
+    )
+    expect(res.users).toHaveLength(1)
     expect(res.users[0].profile?.workHours).toBeDefined()
     expect(res.users[0].profile?.blockedHours).toBeDefined()
     expect(Array.isArray(res.users[0].availableSlots)).toBe(true)
   })
 
   it('filters by organization for owner', async () => {
-    const res = await service.execute({
-      sub: '1',
-      role: 'OWNER',
-      unitId: 'unit-1',
-      organizationId: 'org-1',
-    })
+    const res = await service.execute(
+      {
+        sub: '1',
+        role: 'OWNER',
+        unitId: 'unit-1',
+        organizationId: 'org-1',
+      },
+      {},
+    )
     expect(res.users).toHaveLength(1)
     expect(res.users[0].id).toBe('u1')
   })
 
   it('filters by unit for others', async () => {
-    const res = await service.execute({
-      sub: '1',
-      role: 'BARBER',
-      unitId: 'unit-2',
-      organizationId: 'org-2',
-    })
+    const res = await service.execute(
+      {
+        sub: '1',
+        role: 'BARBER',
+        unitId: 'unit-2',
+        organizationId: 'org-2',
+      },
+      {},
+    )
     expect(res.users).toHaveLength(1)
     expect(res.users[0].id).toBe('u2')
   })
@@ -78,14 +91,20 @@ describe('List users service', () => {
     }
     repo.users = [{ ...u1, profile }, u2]
     const srv = makeService('srv-1', 100)
-    const app = makeAppointment('ap-1', srv, { date: new Date('2024-01-01T09:00:00'), durationService: 60 })
-    appointmentRepo.appointments.push({ ...app, barberId: u1.id, barber: u1 })
-    const res = await service.execute({
-      sub: '1',
-      role: 'ADMIN',
-      unitId: 'unit-1',
-      organizationId: 'org-1',
+    const app = makeAppointment('ap-1', srv, {
+      date: new Date('2024-01-01T09:00:00Z'),
+      durationService: 60,
     })
+    appointmentRepo.appointments.push({ ...app, barberId: u1.id, barber: u1 })
+    const res = await service.execute(
+      {
+        sub: '1',
+        role: 'ADMIN',
+        unitId: 'unit-1',
+        organizationId: 'org-1',
+      },
+      {},
+    )
     const u = res.users.find((x) => x.id === 'u1')
     expect(u?.availableSlots).toEqual([
       expect.objectContaining({ start: '10:00', end: '11:00' }),
@@ -95,22 +114,28 @@ describe('List users service', () => {
 
   it('returns empty list when no users', async () => {
     repo.users = []
-    const res = await service.execute({
-      sub: '1',
-      role: 'ADMIN',
-      unitId: 'unit-1',
-      organizationId: 'org-1',
-    })
+    const res = await service.execute(
+      {
+        sub: '1',
+        role: 'ADMIN',
+        unitId: 'unit-1',
+        organizationId: 'org-1',
+      },
+      {},
+    )
     expect(res.users).toHaveLength(0)
   })
   it('throws if user not found', async () => {
     await expect(
-      service.execute({
-        sub: '',
-        role: 'ADMIN',
-        unitId: 'u1',
-        organizationId: 'o1',
-      }),
+      service.execute(
+        {
+          sub: '',
+          role: 'ADMIN',
+          unitId: 'u1',
+          organizationId: 'o1',
+        },
+        {},
+      ),
     ).rejects.toThrow('User not found')
   })
 })

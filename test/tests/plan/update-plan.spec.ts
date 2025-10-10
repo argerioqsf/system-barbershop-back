@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { UpdatePlanService } from '../../../src/services/plan/update-plan'
 import { prisma } from '../../../src/lib/prisma'
-import { FakePlanRepository, FakePlanProfileRepository, FakeProfilesRepository } from '../../helpers/fake-repositories'
-import { RecalculateUserSalesService } from '../../../src/modules/sale/application/use-cases/recalculate-user-sales'
-import { SaleItemsBuildService } from '../../../src/modules/sale/application/services/sale-items-build-service'
 import {
+  FakePlanRepository,
+  FakePlanProfileRepository,
+  FakeProfilesRepository,
   FakeSaleRepository,
   FakeSaleItemRepository,
   FakeCouponRepository,
@@ -13,6 +13,8 @@ import {
   FakeAppointmentRepository,
   FakeBarberUsersRepository,
 } from '../../helpers/fake-repositories'
+import { RecalculateUserSalesService } from '../../../src/modules/sale/application/use-cases/recalculate-user-sales'
+import { SaleItemsBuildService } from '../../../src/modules/sale/application/services/sale-items-build-service'
 
 const plan = {
   id: 'p1',
@@ -20,6 +22,7 @@ const plan = {
   name: 'Old',
   typeRecurrenceId: 'rec1',
   benefits: [],
+  unitId: 'unit-1',
 }
 
 describe('Update plan service', () => {

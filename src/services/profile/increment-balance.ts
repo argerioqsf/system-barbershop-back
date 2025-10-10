@@ -1,15 +1,11 @@
 import { ProfilesRepository } from '@/repositories/profiles-repository'
-import {
-  Prisma,
-  Profile,
-  Transaction,
-  TransactionType,
-  User,
-} from '@prisma/client'
+import { Prisma, Profile, Transaction, TransactionType } from '@prisma/client'
 import { makeCreateTransaction } from '../@factories/transaction/make-create-transaction'
+import { round } from '@/utils/format-currency'
+import { UserNotFoundError } from '../@errors/user/user-not-found-error'
 
 interface IncrementBalanceProfileResponse {
-  profile: (Profile & { user: Omit<User, 'password'> }) | null
+  profile: Profile | null
   transaction: Transaction
 }
 
@@ -28,8 +24,24 @@ export class IncrementBalanceProfileService {
     tx?: Prisma.TransactionClient,
   ): Promise<IncrementBalanceProfileResponse> {
     const createTransactionService = makeCreateTransaction()
-    let profile: IncrementBalanceProfileResponse['profile'] = null
-    profile = await this.repository.incrementBalance(userId, amount, tx)
+
+    const profileToUpdate = await this.repository.findByUserId(userId, tx)
+
+    if (!profileToUpdate) {
+      throw new UserNotFoundError() // Or a more specific ProfileNotFoundError
+    }
+
+    const currentBalance = profileToUpdate.totalBalance
+    const newBalance = round(currentBalance + amount)
+
+    const profile = await this.repository.update(
+      profileToUpdate.id,
+      {
+        totalBalance: newBalance,
+      },
+      tx,
+    )
+
     const transaction = await createTransactionService.execute({
       type: amount < 0 ? TransactionType.WITHDRAWAL : TransactionType.ADDITION,
       description: description ?? 'Increment Balance Profile',
@@ -44,6 +56,7 @@ export class IncrementBalanceProfileService {
       loanId,
       tx,
     })
+
     return { profile, transaction: transaction.transaction }
   }
 }

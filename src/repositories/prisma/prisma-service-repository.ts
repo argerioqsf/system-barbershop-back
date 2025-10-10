@@ -36,4 +36,12 @@ export class PrismaServiceRepository implements ServiceRepository {
     const service = await prisma.service.findUnique({ where: { id } })
     return service
   }
+
+  async update(id: string, data: Prisma.ServiceUpdateInput): Promise<Service> {
+    const service = await prisma.service.update({
+      where: { id },
+      data,
+    })
+    return service
+  }
 }

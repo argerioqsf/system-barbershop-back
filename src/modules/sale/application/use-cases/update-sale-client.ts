@@ -72,6 +72,7 @@ export class UpdateSaleClientUseCase {
       newClientProfile.userId,
       this.planProfileRepository,
       this.planRepository,
+      saleCurrent.unitId,
     )
 
     const totalCurrentSaleItems = calculateTotal(saleItemsWithDiscountPlan)

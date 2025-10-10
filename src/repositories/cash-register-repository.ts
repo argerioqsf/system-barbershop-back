@@ -8,6 +8,7 @@ import {
   Profile,
   Coupon,
   Transaction,
+  CheckpointCommissionProfile,
 } from '@prisma/client'
 
 export type DetailedCashSession = CashRegisterSession & {
@@ -35,6 +36,7 @@ export type CompleteCashSession = CashRegisterSession & {
 export type ResponseFindOpenByUnit =
   | (CashRegisterSession & {
       transactions: Transaction[]
+      commissionCheckpoints: CheckpointCommissionProfile[]
     })
   | null
 
@@ -53,4 +55,9 @@ export interface CashRegisterRepository {
   findOpenByUser(userId: string): Promise<CashRegisterSession | null>
   findOpenByUnit(unitId: string): Promise<ResponseFindOpenByUnit>
   findById(id: string): Promise<CompleteCashSession | null>
+  incrementFinalAmount(
+    sessionId: string,
+    amount: number,
+    tx?: Prisma.TransactionClient,
+  ): Promise<CashRegisterSession>
 }

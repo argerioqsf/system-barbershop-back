@@ -298,12 +298,14 @@ export function makePlan(
   id: string,
   price = 50,
   typeRecurrenceId = 'rec-1',
+  unitId = 'unit-1',
 ): Plan {
   return {
     id,
     price,
     name: `Plan ${id}`,
     typeRecurrenceId,
+    unitId,
   }
 }
 
@@ -536,7 +538,7 @@ export function makeTransaction(
   return {
     id: over.id ?? 't1',
     userId: over.userId ?? 'u1',
-    affectedUserId: null,
+    affectedUserId: over.affectedUserId ?? null,
     unitId: over.unitId ?? 'unit-1',
     cashRegisterSessionId: 's1',
     type: over.type ?? TransactionType.ADDITION,

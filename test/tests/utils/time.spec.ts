@@ -10,7 +10,7 @@ import {
 describe('time utilities', () => {
   it('converts time to minutes', () => {
     expect(timeToMinutes('00:00')).toBe(0)
-    expect(timeToMinutes(new Date('2024-01-01T01:30:00'))).toBe(90)
+    expect(timeToMinutes(new Date('2024-01-01T01:30:00Z'))).toBe(90)
   })
 
   it('detects interval overlap', () => {

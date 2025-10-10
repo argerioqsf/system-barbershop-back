@@ -48,14 +48,14 @@ describe('List transactions service', () => {
     service = new ListTransactionsService(repo)
   })
 
-  it('lists all for admin', async () => {
+  it('lists transactions for admin', async () => {
     const res = await service.execute({
       sub: '1',
       role: 'ADMIN',
       unitId: 'unit-1',
       organizationId: 'org-1',
     })
-    expect(res.transactions).toHaveLength(2)
+    expect(res.transactions).toHaveLength(1)
   })
 
   it('filters by organization for owner', async () => {

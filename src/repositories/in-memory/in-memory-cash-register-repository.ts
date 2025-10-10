@@ -63,7 +63,8 @@ export class InMemoryCashRegisterRepository implements CashRegisterRepository {
     const updated = {
       ...current,
       closedAt: data.closedAt as Date,
-      finalAmount: data.finalAmount as number,
+      // finalAmount is now a running total, so we don't update it on close.
+      finalAmount: current.finalAmount,
     }
     this.sessions[index] = updated
     return updated
@@ -113,5 +114,21 @@ export class InMemoryCashRegisterRepository implements CashRegisterRepository {
 
   async findById(id: string): Promise<CompleteCashSession | null> {
     return this.sessions.find((s) => s.id === id) ?? null
+  }
+
+  async incrementFinalAmount(
+    sessionId: string,
+    amount: number,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _tx?: Prisma.TransactionClient,
+  ): Promise<CashRegisterSession> {
+    const sessionIndex = this.sessions.findIndex((s) => s.id === sessionId)
+    if (sessionIndex < 0) {
+      throw new Error('Session not found in memory')
+    }
+    const session = this.sessions[sessionIndex]
+    session.finalAmount = (session.finalAmount ?? 0) + amount
+    this.sessions[sessionIndex] = session
+    return session
   }
 }

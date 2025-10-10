@@ -73,10 +73,10 @@ describe('Add profile blocked hour', () => {
     })
     const res = await addBlocked.execute(tokenBlock, {
       profileId: 'prof-1',
-      startHour: new Date('2024-01-01T08:00:00'),
-      endHour: new Date('2024-01-01T12:00:00'),
+      startHour: new Date('2024-01-01T08:00:00Z'),
+      endHour: new Date('2024-01-01T12:00:00Z'),
     })
-    expect(res.blocked.startHour.getHours()).toBe(8)
+    expect(res.blocked.startHour.getUTCHours()).toBe(8)
     expect(blockedRepo.items).toHaveLength(1)
   })
 
@@ -91,8 +91,8 @@ describe('Add profile blocked hour', () => {
     await expect(
       addBlocked.execute(token, {
         profileId: 'prof-1',
-        startHour: new Date('2024-01-02T09:00:00'),
-        endHour: new Date('2024-01-02T12:00:00'),
+        startHour: new Date('2024-01-02T09:00:00Z'),
+        endHour: new Date('2024-01-02T12:00:00Z'),
       }),
     ).rejects.toThrow()
   })
@@ -136,15 +136,15 @@ describe('Add profile blocked hour', () => {
     })
     await addBlocked.execute(tokenBlock, {
       profileId: 'prof-2',
-      startHour: new Date('2024-01-03T10:00:00'),
-      endHour: new Date('2024-01-03T12:00:00'),
+      startHour: new Date('2024-01-03T10:00:00Z'),
+      endHour: new Date('2024-01-03T12:00:00Z'),
     })
 
     await expect(
       addBlocked.execute(tokenBlock, {
         profileId: 'prof-2',
-        startHour: new Date('2024-01-03T10:00:00'),
-        endHour: new Date('2024-01-03T12:00:00'),
+        startHour: new Date('2024-01-03T10:00:00Z'),
+        endHour: new Date('2024-01-03T12:00:00Z'),
       }),
     ).rejects.toThrow()
   })

@@ -100,4 +100,10 @@ export class InMemoryTransactionRepository implements TransactionRepository {
   async delete(id: string): Promise<void> {
     this.transactions = this.transactions.filter((t) => t.id !== id)
   }
+
+  async findManyByAffectedUser(
+    affectedUserId: string,
+  ): Promise<TransactionFull[]> {
+    return this.transactions.filter((t) => t.affectedUserId === affectedUserId)
+  }
 }

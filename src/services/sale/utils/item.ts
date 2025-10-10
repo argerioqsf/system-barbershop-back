@@ -41,6 +41,7 @@ import {
 import { RecalculateUserSalesService } from '@/modules/sale/application/use-cases/recalculate-user-sales'
 import { ProfilesRepository } from '@/repositories/profiles-repository'
 import { applyPlanDiscounts } from './plan'
+import { PlanNotFromUserUnitError } from '@/services/@errors/plan/plan-not-from-user-unit-error'
 import { SaleRepository } from '@/repositories/sale-repository'
 import { PlanProfileRepository } from '@/repositories/plan-profile-repository'
 import { SaleNotFoundError } from '@/services/@errors/sale/sale-not-found-error'
@@ -127,9 +128,16 @@ async function loadAppointment(
   return { appointment, price: total, barberId: appointment.barberId }
 }
 
-async function loadPlan(planId: string, repo: PlanRepository) {
+async function loadPlan(
+  planId: string,
+  repo: PlanRepository,
+  userUnitId?: string,
+) {
   const plan = await repo.findById(planId)
   if (!plan) throw new Error('Plan not found')
+  if (userUnitId && plan.unitId !== userUnitId) {
+    throw new PlanNotFromUserUnitError()
+  }
   const price = plan.price
   return { plan, price }
 }
@@ -277,7 +285,11 @@ export async function buildItemData({
     basePrice = AppointmentLoaded.price
     barberId = barberId ?? AppointmentLoaded.barberId
   } else if (saleItem.planId && planRepository) {
-    const PlanLoaded = await loadPlan(saleItem.planId, planRepository)
+    const PlanLoaded = await loadPlan(
+      saleItem.planId,
+      planRepository,
+      userUnitId,
+    )
     plan = PlanLoaded.plan
     basePrice = PlanLoaded.price
   }
@@ -317,6 +329,7 @@ export async function buildItemData({
     sale.clientId,
     planProfileRepository,
     planRepository,
+    sale.unitId,
   )
 
   const saleItemWithDiscountPlan: SaleItemBuildItem & {

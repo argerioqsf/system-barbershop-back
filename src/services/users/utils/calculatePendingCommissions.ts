@@ -1,6 +1,8 @@
+import { logger } from '@/lib/logger'
 import { DetailedAppointmentService } from '@/repositories/appointment-repository'
 import { DetailedSaleItemFindMany } from '@/repositories/sale-item-repository'
 import { calculateRealValueSaleItem } from '@/services/sale/utils/item'
+import { round } from '@/utils/format-currency'
 import { Sale, Service } from '@prisma/client'
 
 type Transaction = { amount: number }
@@ -45,7 +47,10 @@ export function calculateCommissions(
     }
   }
 
-  return { totalCommission, saleItemsRecords }
+  return {
+    totalCommission: round(totalCommission),
+    saleItemsRecords,
+  }
 }
 
 // Processa itens de venda direta (produto ou serviço)
@@ -55,7 +60,10 @@ function processSaleItem(item: DetailedSaleItemFindMany): PaymentItems | null {
   const baseValue = realPriceItem ?? 0
   const totalPaid = sumTransactions(item.transactions)
   const commissionValue = calculateCommission(baseValue, rate)
-  const remaining = commissionValue - totalPaid
+  const remaining = round(commissionValue - totalPaid)
+  logger.debug('commissionValue', { commissionValue })
+  logger.debug('totalPaid', { totalPaid })
+  logger.debug('remaining', { remaining })
 
   if (remaining <= 0) return null
 
@@ -79,9 +87,9 @@ function processAppointmentItem(
   for (const svc of services) {
     const rate = svc.commissionPercentage ?? item.porcentagemBarbeiro ?? 0
     const baseValue = svc.service.price
-    const totalPaid = sumTransactions(svc.transactions)
+    const totalPaid = sumTransactions(svc.transactions) * 100
     const commissionValue = calculateCommission(baseValue, rate)
-    const remaining = commissionValue - totalPaid
+    const remaining = round(commissionValue - totalPaid * 100)
 
     if (remaining > 0) {
       records.push({
@@ -102,15 +110,15 @@ function processAppointmentItem(
 
 // Cálculo genérico de comissão
 function calculateCommission(value: number, percentage: number): number {
-  return (value * percentage) / 100
+  return round((value * percentage) / 100)
 }
 
 // Soma dos valores transacionados
 function sumTransactions(transactions: Transaction[] = []): number {
-  return transactions.reduce((sum, tx) => sum + tx.amount, 0)
+  return round(transactions.reduce((sum, tx) => sum + tx.amount, 0))
 }
 
 // Soma os valores de múltiplos registros de comissão
 function sumAmounts<T extends { amount: number }>(records: T[]): number {
-  return records.reduce((sum, rec) => sum + rec.amount, 0)
+  return round(records.reduce((sum, rec) => sum + rec.amount, 0))
 }

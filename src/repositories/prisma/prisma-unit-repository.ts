@@ -7,8 +7,12 @@ export class PrismaUnitRepository implements UnitRepository {
     return prisma.unit.create({ data })
   }
 
-  async findById(id: string): Promise<Unit | null> {
-    return prisma.unit.findUnique({ where: { id } })
+  async findById(
+    id: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Unit | null> {
+    const prismaClient = tx || prisma
+    return prismaClient.unit.findUnique({ where: { id } })
   }
 
   async findManyByOrganization(organizationId: string): Promise<Unit[]> {
@@ -19,8 +23,13 @@ export class PrismaUnitRepository implements UnitRepository {
     return prisma.unit.findMany({ where })
   }
 
-  async update(id: string, data: Prisma.UnitUpdateInput): Promise<Unit> {
-    return prisma.unit.update({ where: { id }, data })
+  async update(
+    id: string,
+    data: Prisma.UnitUpdateInput,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Unit> {
+    const prismaClient = tx || prisma
+    return prismaClient.unit.update({ where: { id }, data })
   }
 
   async delete(id: string): Promise<void> {

@@ -11,4 +11,5 @@ export interface TransactionRepository {
   findManyByUnit(unitId: string): Promise<Transaction[]>
   findManyBySession(sessionId: string): Promise<Transaction[]>
   delete(id: string): Promise<void>
+  findManyByAffectedUser(affectedUserId: string): Promise<TransactionFull[]>
 }

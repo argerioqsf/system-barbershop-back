@@ -1,6 +1,5 @@
 import { UserToken } from '@/http/controllers/authenticate-controller'
 import { assertUser } from '@/utils/assert-user'
-import { getScope, buildUnitWhere } from '@/utils/permissions'
 import {
   CashRegisterRepository,
   DetailedCashSession,
@@ -15,8 +14,7 @@ export class ListSessionsService {
 
   async execute(userToken: UserToken): Promise<ListSessionsResponse> {
     assertUser(userToken)
-    const scope = getScope(userToken)
-    const where = buildUnitWhere(scope)
+    const where = { unitId: userToken.unitId }
     const sessions = await this.repository.findMany(where)
     return { sessions }
   }

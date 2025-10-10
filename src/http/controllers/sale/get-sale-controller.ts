@@ -9,7 +9,17 @@ export const GetSaleController = async (
   const paramsSchema = z.object({ id: z.string() })
   const { id } = paramsSchema.parse(request.params)
   const service = makeGetSale()
-  const { sale } = await service.execute({ id })
+  const user = request.user
+  const { sale } = await service.execute({
+    id,
+    actor: {
+      id: user.sub,
+      unitId: user.unitId,
+      organizationId: user.organizationId,
+      role: user.role,
+      permissions: user.permissions,
+    },
+  })
   if (!sale) return reply.status(404).send({ message: 'Sale not found' })
   return reply.status(200).send(sale)
 }

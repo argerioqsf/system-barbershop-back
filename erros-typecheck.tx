@@ -1,0 +1,81 @@
+yarn run v1.22.22
+$ tsc --noEmit
+src/repositories/in-memory/in-memory-plan-profile-repository.ts:34:21 - error TS2304: Cannot find name 'Plan'.
+
+34     const basePlan: Plan = {
+                       ~~~~
+
+src/repositories/in-memory/in-memory-plan-repository.ts:133:13 - error TS2339: Property 'benefits' does not exist on type '{ id: string; price: number; name: string; typeRecurrenceId: string; unitId: string; } | PlanWithBenefits'.
+  Property 'benefits' does not exist on type '{ id: string; price: number; name: string; typeRecurrenceId: string; unitId: string; }'.
+
+133       (plan.benefits ?? []) as Array<
+                ~~~~~~~~
+
+src/repositories/in-memory/in-memory-plan-repository.ts:151:9 - error TS2345: Argument of type '{}' is not assignable to parameter of type '{ id: string; period: number; }'.
+  Type '{}' is missing the following properties from type '{ id: string; period: number; }': id, period
+
+151         plan.typeRecurrence,
+            ~~~~~~~~~~~~~~~~~~~
+
+src/repositories/in-memory/in-memory-plan-repository.ts:277:22 - error TS2339: Property 'benefit' does not exist on type 'BenefitPlanCreateWithoutPlanInput | BenefitPlanUncheckedCreateWithoutPlanInput | (Without<...> & BenefitPlanUncheckedCreateWithoutPlanInput) | (Without<...> & BenefitPlanCreateWithoutPlanInput)'.
+  Property 'benefit' does not exist on type 'BenefitPlanUncheckedCreateWithoutPlanInput'.
+
+277             creation.benefit as { connect?: { id: string } } | undefined,
+                         ~~~~~~~
+
+src/repositories/in-memory/in-memory-plan-repository.ts:414:7 - error TS2353: Object literal may only specify known properties, and 'saleItems' does not exist in type '{ id: string; price: number; name: string; typeRecurrenceId: string; unitId: string; }'.
+
+414       saleItems: [],
+          ~~~~~~~~~
+
+src/repositories/in-memory/in-memory-sale-item-repository.ts:153:7 - error TS2353: Object literal may only specify known properties, and 'user' does not exist in type '{ id: string; userId: string; clientId: string; unitId: string; sessionId: string | null; couponId: string | null; total: number; gross_value: number; method: PaymentMethod; paymentStatus: PaymentStatus; createdAt: Date; observation: string | null; }'.
+
+153       user: sale.user,
+          ~~~~
+
+src/repositories/in-memory/in-memory-sale-item-repository.ts:166:26 - error TS2339: Property 'transactions' does not exist on type 'DetailedSaleItem'.
+
+166       transactions: item.transactions ?? [],
+                             ~~~~~~~~~~~~
+
+src/repositories/in-memory/in-memory-sale-item-repository.ts:167:7 - error TS2322: Type '({ id: string; clientId: string; barberId: string; unitId: string; date: Date; status: AppointmentStatus; durationService: number | null; observation: string | null; } & { ...; }) | null' is not assignable to type '({ id: string; clientId: string; barberId: string; unitId: string; date: Date; status: AppointmentStatus; durationService: number | null; observation: string | null; } & { ...; }) | null | undefined'.
+  Type '{ id: string; clientId: string; barberId: string; unitId: string; date: Date; status: AppointmentStatus; durationService: number | null; observation: string | null; } & { ...; }' is not assignable to type '({ id: string; clientId: string; barberId: string; unitId: string; date: Date; status: AppointmentStatus; durationService: number | null; observation: string | null; } & { ...; }) | null | undefined'.
+    Type '{ id: string; clientId: string; barberId: string; unitId: string; date: Date; status: import("/Users/argeriofilho/Documents/Projetos/sistema-barbearia-back/node_modules/.prisma/client/index").$Enums.AppointmentStatus; durationService: number | null; observation: string | null; } & { ...; }' is not assignable to type '{ id: string; clientId: string; barberId: string; unitId: string; date: Date; status: import("/Users/argeriofilho/Documents/Projetos/sistema-barbearia-back/node_modules/.prisma/client/index").$Enums.AppointmentStatus; durationService: number | null; observation: string | null; } & { ...; }'. Two different types with this name exist, but they are unrelated.
+      Type '{ id: string; clientId: string; barberId: string; unitId: string; date: Date; status: AppointmentStatus; durationService: number | null; observation: string | null; } & { ...; }' is not assignable to type '{ services: DetailedAppointmentService[]; }'.
+        Types of property 'services' are incompatible.
+          Type 'DetailedAppointmentService[] | undefined' is not assignable to type 'DetailedAppointmentService[]'.
+            Type 'undefined' is not assignable to type 'DetailedAppointmentService[]'.
+
+167       appointment: this.cloneAppointment(item.appointment),
+          ~~~~~~~~~~~
+
+  src/repositories/sale-item-repository.ts:32:3
+    32   appointment?:
+         ~~~~~~~~~~~
+    The expected type comes from property 'appointment' which is declared here on type 'DetailedSaleItemFindById'
+
+src/repositories/in-memory/in-memory-sale-repository.ts:476:13 - error TS2322: Type '{ id: string; price: number; name: string; typeRecurrenceId: string; } | null' is not assignable to type '{ id: string; price: number; name: string; typeRecurrenceId: string; unitId: string; } | null'.
+  Property 'unitId' is missing in type '{ id: string; price: number; name: string; typeRecurrenceId: string; }' but required in type '{ id: string; price: number; name: string; typeRecurrenceId: string; unitId: string; }'.
+
+476             plan: it.plan
+                ~~~~
+
+  node_modules/.prisma/client/index.d.ts:31954:7
+    31954       unitId: string
+                ~~~~~~
+    'unitId' is declared here.
+  src/repositories/sale-repository.ts:22:3
+    22   plan: Plan | null
+         ~~~~
+    The expected type comes from property 'plan' which is declared here on type 'DetailedSaleItem'
+
+
+Found 9 errors in 4 files.
+
+Errors  Files
+     1  src/repositories/in-memory/in-memory-plan-profile-repository.ts:34
+     4  src/repositories/in-memory/in-memory-plan-repository.ts:133
+     3  src/repositories/in-memory/in-memory-sale-item-repository.ts:153
+     1  src/repositories/in-memory/in-memory-sale-repository.ts:476
+error Command failed with exit code 2.
+info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.

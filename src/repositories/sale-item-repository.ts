@@ -3,6 +3,7 @@ import {
   AppointmentService,
   Discount,
   Prisma,
+  Product,
   Sale,
   SaleItem,
   Service,
@@ -36,6 +37,19 @@ export type DetailedSaleItemFindById = SaleItem & {
     | null
 }
 
+export type ReturnFindManyPendingCommission = SaleItem & {
+  sale: Sale
+  transactions: Transaction[]
+  discounts: Discount[]
+  appointment?:
+    | (Appointment & {
+        services: DetailedAppointmentService[]
+      })
+    | null
+  service: Service | null
+  product: Product | null
+}
+
 export interface SaleItemRepository {
   update(
     id: string,
@@ -55,4 +69,10 @@ export interface SaleItemRepository {
     where?: Prisma.SaleItemWhereInput,
     appointmentServiceIds?: string[],
   ): Promise<DetailedSaleItemFindMany[]>
+
+  findManyByBarberId(barberId: string): Promise<DetailedSaleItemFindMany[]>
+
+  findManyPendingCommission(
+    barberId: string,
+  ): Promise<ReturnFindManyPendingCommission[]>
 }

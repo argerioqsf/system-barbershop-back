@@ -58,11 +58,15 @@ describe('Close session service', () => {
     service = new CloseSessionService(repo)
   })
 
-  it('closes an open session calculating final amount', async () => {
+  it('closes an open session', async () => {
     const session = makeSession()
+    session.finalAmount = 60 // Pre-set the final amount as it's now a running total
     repo.sessions.push(session)
 
     const res = await service.execute({ unitId: 'unit-1' })
+
+    // The service should now just close the session, not calculate the amount.
+    // We expect the finalAmount to be the one that was already in the session.
     expect(res.session.finalAmount).toBe(60)
     expect(repo.sessions[0].closedAt).toBeInstanceOf(Date)
   })
