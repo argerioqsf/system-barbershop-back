@@ -21,6 +21,7 @@ import {
 import { NegativeValuesNotAllowedError } from '../../../src/services/@errors/transaction/negative-values-not-allowed-error'
 import { InsufficientBalanceError } from '../../../src/services/@errors/transaction/insufficient-balance-error'
 import type { PaymentItems } from '../../../src/services/users/utils/calculatePendingCommissions'
+import { IncrementBalanceProfileService } from '../../../src/services/profile/increment-balance'
 
 let service: PayUserCommissionService
 let profileRepo: FakeProfilesRepository
@@ -51,7 +52,15 @@ async function setup(balance = 100) {
   user = makeUser('u1', profile, defaultUnit)
   barberRepo.users.push(user)
   cashRepo.session = { ...makeCashSession('s1', user.unitId), user }
-  service = new PayUserCommissionService(profileRepo, saleItemRepo, appointmentServiceRepo)
+
+  const incrementBalanceProfileService = new IncrementBalanceProfileService(profileRepo)
+
+  service = new PayUserCommissionService(
+    profileRepo,
+    saleItemRepo,
+    appointmentServiceRepo,
+    incrementBalanceProfileService,
+  )
 }
 
 async function makePaymentItems(): Promise<PaymentItems[]> {

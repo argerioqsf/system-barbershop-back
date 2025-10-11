@@ -26,12 +26,12 @@ export const AddBalanceTransactionController = async (
 
   const userId = user.sub
   const service = makeAddBalanceTransaction()
-  const { transactions, surplusValue } = await service.execute({
+  const { transactions } = await service.execute({
     description: data.description,
     amount: data.amount,
     userId,
     affectedUserId: data.affectedUserId,
     receiptUrl,
   })
-  return reply.status(201).send({ transactions, surplusValue })
+  return reply.status(201).send({ transactions })
 }

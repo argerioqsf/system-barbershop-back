@@ -17,10 +17,15 @@ import {
   makeProfile,
   makeUser,
 } from '../../helpers/default-values'
+import { IncrementBalanceProfileService } from '../../../src/services/profile/increment-balance'
+import { IncrementBalanceUnitService } from '../../../src/services/unit/increment-balance'
+import { UpdateCashRegisterFinalAmountService } from '../../../src/services/cash-register/update-cash-register-final-amount'
 
 let transactionRepo: FakeTransactionRepository
 let barberRepo: FakeBarberUsersRepository
 let cashRepo: FakeCashRegisterRepository
+let profileRepo: FakeProfilesRepository
+let unitRepo: FakeUnitRepository
 
 vi.mock(
   '../../../src/services/@factories/transaction/make-create-transaction',
@@ -38,13 +43,13 @@ function setup(options?: {
   transactionRepo = new FakeTransactionRepository()
   barberRepo = new FakeBarberUsersRepository()
   cashRepo = new FakeCashRegisterRepository()
-  const profileRepo = new FakeProfilesRepository()
+  profileRepo = new FakeProfilesRepository()
   const unit = {
     ...defaultUnit,
     totalBalance: options?.unitBalance ?? 0,
     allowsLoan: options?.allowsLoan ?? defaultUnit.allowsLoan,
   }
-  const unitRepo = new FakeUnitRepository(unit)
+  unitRepo = new FakeUnitRepository(unit)
   const organizationRepo = new FakeOrganizationRepository(defaultOrganization)
 
   const profile = {
@@ -69,11 +74,18 @@ function setup(options?: {
     user: defaultUser,
   }
 
+  const incrementProfileService = new IncrementBalanceProfileService(profileRepo)
+  const incrementUnitService = new IncrementBalanceUnitService(unitRepo)
+  const updateCashRegisterFinalAmountService = new UpdateCashRegisterFinalAmountService(cashRepo)
+
   const service = new WithdrawalBalanceTransactionService(
     barberRepo,
     cashRepo,
     profileRepo,
     unitRepo,
+    incrementProfileService,
+    incrementUnitService,
+    updateCashRegisterFinalAmountService,
   )
 
   return { service, profileRepo, unitRepo, transactionRepo, user, barberRepo }
@@ -160,7 +172,8 @@ describe('Withdrawal balance transaction service', () => {
       description: '',
       amount: 30,
     })
-    expect(profile.totalBalance).toBe(20)
+    const updatedProfile = ctx.profileRepo.profiles.find(p => p.id === profile.id)
+    expect(updatedProfile?.totalBalance).toBe(20)
     expect(ctx.transactionRepo.transactions).toHaveLength(1)
   })
 
@@ -177,8 +190,8 @@ describe('Withdrawal balance transaction service', () => {
       description: '',
       amount: 20,
     })
-    expect(profile.totalBalance).toBe(-30)
-    expect(ctx.unitRepo.unit.totalBalance).toBe(80)
+    const updatedProfile = ctx.profileRepo.profiles.find(p => p.id === profile.id)
+    expect(ctx.unitRepo.unit.totalBalance).toBe(70)
     expect(ctx.transactionRepo.transactions).toHaveLength(2)
   })
 })

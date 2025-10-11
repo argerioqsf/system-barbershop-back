@@ -87,9 +87,9 @@ function processAppointmentItem(
   for (const svc of services) {
     const rate = svc.commissionPercentage ?? item.porcentagemBarbeiro ?? 0
     const baseValue = svc.service.price
-    const totalPaid = sumTransactions(svc.transactions) * 100
+    const totalPaid = sumTransactions(svc.transactions)
     const commissionValue = calculateCommission(baseValue, rate)
-    const remaining = round(commissionValue - totalPaid * 100)
+    const remaining = round(commissionValue - totalPaid)
 
     if (remaining > 0) {
       records.push({

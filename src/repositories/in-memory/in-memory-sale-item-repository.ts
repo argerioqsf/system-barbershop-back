@@ -6,7 +6,6 @@ import {
   Discount,
   DiscountOrigin,
   DiscountType,
-  SaleStatus,
 } from '@prisma/client'
 import { DetailedSale, DetailedSaleItem } from '../sale-repository'
 import crypto from 'node:crypto'
@@ -14,6 +13,7 @@ import {
   DetailedSaleItemFindMany,
   SaleItemRepository,
   DetailedSaleItemFindById,
+  ReturnFindManyPendingCommission,
 } from '../sale-item-repository'
 import { InMemorySaleRepository } from './in-memory-sale-repository'
 
@@ -513,8 +513,8 @@ export class InMemorySaleItemRepository implements SaleItemRepository {
 
   async findManyPendingCommission(
     barberId: string,
-  ): Promise<DetailedSaleItemFindMany[]> {
-    const items: DetailedSaleItemFindMany[] = []
+  ): Promise<ReturnFindManyPendingCommission[]> {
+    const items: ReturnFindManyPendingCommission[] = []
     for (const sale of this.saleRepository.sales) {
       for (const item of sale.items) {
         if (
@@ -522,7 +522,11 @@ export class InMemorySaleItemRepository implements SaleItemRepository {
           item.commissionPaid === false &&
           sale.paymentStatus === 'PAID'
         ) {
-          items.push(this.buildDetailedItem(sale, item))
+          items.push({
+            ...this.buildDetailedItem(sale, item),
+            product: null,
+            service: null,
+          })
         }
       }
     }

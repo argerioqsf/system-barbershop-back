@@ -3,6 +3,7 @@ import {
   CashRegisterRepository,
   CompleteCashSession,
   DetailedCashSession,
+  ResponseFindOpenByUnit,
 } from '../cash-register-repository'
 import { randomUUID } from 'crypto'
 
@@ -103,13 +104,17 @@ export class InMemoryCashRegisterRepository implements CashRegisterRepository {
     return session ?? null
   }
 
-  async findOpenByUnit(
-    unitId: string,
-  ): Promise<(CashRegisterSession & { transactions: Transaction[] }) | null> {
+  async findOpenByUnit(unitId: string): Promise<ResponseFindOpenByUnit> {
     const session = this.sessions.find(
       (s) => s.unitId === unitId && s.closedAt === null,
     )
-    return session ? { ...session, transactions: session.transactions } : null
+    return session
+      ? {
+          ...session,
+          transactions: session.transactions,
+          commissionCheckpoints: [],
+        }
+      : null
   }
 
   async findById(id: string): Promise<CompleteCashSession | null> {
