@@ -66,14 +66,85 @@ export class PrismaTransactionRepository implements TransactionRepository {
           },
         },
       },
+      orderBy: {
+        createdAt: 'desc',
+      },
     })
   }
 
   async findMany(
     where: Prisma.TransactionWhereInput = {},
+    pagination?: { page: number; perPage: number },
+  ): Promise<{ items: TransactionFull[]; count: number }> {
+    const { page = 1, perPage = 10 } = pagination || {}
+    const skip = (page - 1) * perPage
+
+    const [items, count] = await prisma.$transaction([
+      prisma.transaction.findMany({
+        where,
+        include: {
+          sale: {
+            include: {
+              coupon: true,
+              items: {
+                include: {
+                  service: true,
+                  barber: {
+                    include: {
+                      profile: true,
+                    },
+                  },
+                  discounts: true,
+                  coupon: true,
+                },
+              },
+              user: {
+                include: {
+                  profile: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        skip,
+        take: perPage,
+      }),
+      prisma.transaction.count({ where }),
+    ])
+
+    return { items, count }
+  }
+
+  async findManyByUnit(unitId: string): Promise<Transaction[]> {
+    return prisma.transaction.findMany({
+      where: { unitId },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    })
+  }
+
+  async findManyBySession(sessionId: string): Promise<Transaction[]> {
+    return prisma.transaction.findMany({
+      where: { cashRegisterSessionId: sessionId },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    })
+  }
+
+  async delete(id: string): Promise<void> {
+    await prisma.transaction.delete({ where: { id } })
+  }
+
+  async findManyByAffectedUser(
+    affectedUserId: string,
   ): Promise<TransactionFull[]> {
     return prisma.transaction.findMany({
-      where,
+      where: { affectedUserId },
       include: {
         sale: {
           include: {
@@ -98,20 +169,9 @@ export class PrismaTransactionRepository implements TransactionRepository {
           },
         },
       },
+      orderBy: {
+        createdAt: 'desc',
+      },
     })
-  }
-
-  async findManyByUnit(unitId: string): Promise<Transaction[]> {
-    return prisma.transaction.findMany({ where: { unitId } })
-  }
-
-  async findManyBySession(sessionId: string): Promise<Transaction[]> {
-    return prisma.transaction.findMany({
-      where: { cashRegisterSessionId: sessionId },
-    })
-  }
-
-  async delete(id: string): Promise<void> {
-    await prisma.transaction.delete({ where: { id } })
   }
 }

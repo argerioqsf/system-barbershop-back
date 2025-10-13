@@ -52,12 +52,12 @@ describe('barber availability utils', () => {
     barber.profile.blockedHours.push({
       id: 'bh1',
       profileId: barber.profile.id,
-      startHour: new Date('2024-01-01T10:00:00'),
-      endHour: new Date('2024-01-01T10:30:00'),
+      startHour: new Date('2024-01-01T10:00:00Z'),
+      endHour: new Date('2024-01-01T10:30:00Z'),
     })
     const svc = makeService('svc1', 100)
     const app = makeAppointment('app1', svc, {
-      date: new Date('2024-01-01T09:30:00'),
+      date: new Date('2024-01-01T09:30:00Z'),
       durationService: 30,
     })
     appointmentRepo.appointments.push({ ...app, barberId: barber.id, barber })
@@ -105,13 +105,13 @@ describe('barber availability utils', () => {
     barber.profile.blockedHours.push({
       id: 'bh1',
       profileId: barber.profile.id,
-      startHour: new Date('2024-01-01T10:00:00'),
-      endHour: new Date('2024-01-01T10:30:00'),
+      startHour: new Date('2024-01-01T10:00:00Z'),
+      endHour: new Date('2024-01-01T10:30:00Z'),
     })
 
     const result = await isAppointmentAvailable(
       barber as any,
-      new Date('2024-01-01T10:15:00'),
+      new Date('2024-01-01T10:15:00Z'),
       30,
       appointmentRepo,
     )
@@ -123,14 +123,14 @@ describe('barber availability utils', () => {
     barber.profile.workHours.push(wh2)
     const svc = makeService('svc1', 100)
     const app = makeAppointment('app1', svc, {
-      date: new Date('2024-01-01T09:00:00'),
+      date: new Date('2024-01-01T09:00:00Z'),
       durationService: 60,
     })
     appointmentRepo.appointments.push({ ...app, barberId: barber.id, barber })
 
     const result = await isAppointmentAvailable(
       barber as any,
-      new Date('2024-01-01T09:30:00'),
+      new Date('2024-01-01T09:30:00Z'),
       30,
       appointmentRepo,
     )
@@ -143,7 +143,7 @@ describe('barber availability utils', () => {
 
     const result = await isAppointmentAvailable(
       barber as any,
-      new Date('2024-01-01T09:00:00'),
+      new Date('2024-01-01T09:00:00Z'),
       30,
       appointmentRepo,
     )

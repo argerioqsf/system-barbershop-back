@@ -3,6 +3,8 @@ import {
   PaymentStatus,
   SaleItem,
   Discount,
+  RoleName,
+  PermissionName,
 } from '@prisma/client'
 import { DetailedSale } from '@/repositories/sale-repository'
 import { OrganizationRepository } from '@/repositories/organization-repository'
@@ -145,8 +147,16 @@ export type SaleItemTemp = Omit<
   | 'commissionPaid'
 >
 
+export interface ListSalesActor {
+  id: string
+  unitId: string
+  organizationId: string
+  role: RoleName
+  permissions?: PermissionName[]
+}
 export interface GetSaleRequest {
   id: string
+  actor: ListSalesActor
 }
 
 export interface GetSaleResponse {

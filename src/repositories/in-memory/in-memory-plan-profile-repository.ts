@@ -1,8 +1,10 @@
 import {
+  Plan,
   PlanProfileStatus,
   PaymentStatus,
   Prisma,
   PlanProfile,
+  TypeRecurrence,
 } from '@prisma/client'
 import {
   PlanProfileRepository,
@@ -18,14 +20,41 @@ export class InMemoryPlanProfileRepository implements PlanProfileRepository {
   ) {
     this.items = items.map((item) => ({
       ...item,
-      plan: item.plan ?? {
-        id: item.planId,
-        name: '',
-        price: 0,
-        typeRecurrenceId: '',
-        typeRecurrence: { id: 'rec-default', period: 1 },
-      },
+      plan: this.ensurePlan(item.planId, item.plan),
     }))
+  }
+
+  private createTypeRecurrence(): TypeRecurrence {
+    return {
+      id: 'rec-default',
+      period: 1,
+    }
+  }
+
+  private createPlan(planId: string): PlanWithRecurrence {
+    const basePlan: Plan = {
+      id: planId,
+      name: '',
+      price: 0,
+      typeRecurrenceId: '',
+      unitId: 'unit-1',
+    }
+
+    return {
+      ...basePlan,
+      typeRecurrence: this.createTypeRecurrence(),
+    }
+  }
+
+  private ensurePlan(
+    planId: string,
+    plan?: PlanWithRecurrence,
+  ): PlanWithRecurrence {
+    if (!plan) return this.createPlan(planId)
+    return {
+      ...plan,
+      typeRecurrence: plan.typeRecurrence ?? this.createTypeRecurrence(),
+    }
   }
 
   async create(
@@ -42,13 +71,7 @@ export class InMemoryPlanProfileRepository implements PlanProfileRepository {
       planId: data.planId,
       profileId: data.profileId,
       debts: [],
-      plan: {
-        id: data.planId,
-        name: '',
-        price: 0,
-        typeRecurrenceId: '',
-        typeRecurrence: { id: 'rec-default', period: 1 },
-      },
+      plan: this.createPlan(data.planId),
     }
 
     planProfile.debts = (data.debts ?? []).map((d) => ({
@@ -81,18 +104,14 @@ export class InMemoryPlanProfileRepository implements PlanProfileRepository {
 
   async findById(id: string): Promise<PlanProfileFindById | null> {
     const item = this.items.find((p) => p.id === id)
-    return item
-      ? ({
-          ...item,
-          plan: item.plan ?? {
-            id: item.planId,
-            name: '',
-            price: 0,
-            typeRecurrenceId: '',
-            typeRecurrence: { period: 1 },
-          },
-        } as PlanProfileFindById)
-      : null
+    if (!item) return null
+
+    const planProfile: PlanProfileFindById = {
+      ...item,
+      plan: this.ensurePlan(item.planId, item.plan),
+    }
+
+    return planProfile
   }
 
   async findByDebtId(id: string): Promise<PlanProfileWithDebts | null> {
@@ -107,7 +126,7 @@ export class InMemoryPlanProfileRepository implements PlanProfileRepository {
     const idx = this.items.findIndex((p) => p.id === id)
     if (idx < 0) throw new Error('PlanProfile not found')
     const current = this.items[idx]
-    const updated: PlanProfileWithDebts = {
+    const updated: PlanProfileWithDebts & { plan?: PlanWithRecurrence } = {
       ...current,
       planStartDate: (data.planStartDate ?? current.planStartDate) as Date,
       status: (data.status ?? current.status) as PlanProfileStatus,
@@ -115,8 +134,20 @@ export class InMemoryPlanProfileRepository implements PlanProfileRepository {
       dueDayDebt: (data.dueDayDebt ?? current.dueDayDebt) as number,
       planId: (data.planId ?? current.planId) as string,
       profileId: (data.profileId ?? current.profileId) as string,
+      plan: this.ensurePlan(
+        (data.planId ?? current.planId) as string,
+        current.plan,
+      ),
     }
     this.items[idx] = updated
-    return updated
+    return {
+      id: updated.id,
+      planStartDate: updated.planStartDate,
+      status: updated.status,
+      saleItemId: updated.saleItemId,
+      dueDayDebt: updated.dueDayDebt,
+      planId: updated.planId,
+      profileId: updated.profileId,
+    }
   }
 }

@@ -5,6 +5,7 @@ import {
   PaymentStatus,
   Discount,
   DiscountOrigin,
+  SaleStatus,
 } from '@prisma/client'
 import {
   SaleRepository,
@@ -32,6 +33,18 @@ export class InMemorySaleRepository implements SaleRepository {
       client: this.sanitizeUser(sale.client) as DetailedSale['client'],
       items: sale.items.map((item) => ({
         ...item,
+        discounts: item.discounts.map((discount) => ({ ...discount })),
+        transactions: [],
+        appointment: item.appointment
+          ? {
+              ...item.appointment,
+              services:
+                item.appointment.services?.map((service) => ({
+                  ...service,
+                  transactions: [],
+                })) ?? [],
+            }
+          : null,
         barber: this.sanitizeUser(item.barber) as DetailedSaleItem['barber'],
       })),
     }
@@ -84,6 +97,7 @@ export class InMemorySaleRepository implements SaleRepository {
       })),
       porcentagemBarbeiro: it.porcentagemBarbeiro ?? null,
       commissionPaid: false,
+      transactions: [],
       appointment: it.appointment
         ? {
             id: it.appointment.connect.id,
@@ -95,6 +109,7 @@ export class InMemorySaleRepository implements SaleRepository {
             status: 'SCHEDULED',
             durationService: null,
             observation: null,
+            services: [],
           }
         : null,
       service: it.service
@@ -131,6 +146,11 @@ export class InMemorySaleRepository implements SaleRepository {
             price: 0,
             name: '',
             typeRecurrenceId: '',
+            unitId: 'unit-1',
+            saleItems: [],
+            benefits: [],
+            planProfiles: [],
+            debts: [],
           }
         : null,
       barber: it.barber
@@ -193,6 +213,8 @@ export class InMemorySaleRepository implements SaleRepository {
       createdAt: new Date(),
       observation: data.observation ?? null,
       items,
+      status: SaleStatus.IN_PROGRESS,
+      completionDate: new Date(),
       user: {
         id: (data.user as { connect: { id: string } }).connect.id,
         name: '',
@@ -460,6 +482,7 @@ export class InMemorySaleRepository implements SaleRepository {
                   price: 0,
                   name: '',
                   typeRecurrenceId: '',
+                  unitId: sale.unitId,
                 }
               : null,
             barber: it.barber
@@ -511,6 +534,15 @@ export class InMemorySaleRepository implements SaleRepository {
       }
     }
     sale.transactions = sale.transactions ?? []
+    return this.sanitizeSale(sale)
+  }
+
+  async updateStatus(id: string, status: PaymentStatus): Promise<DetailedSale> {
+    const sale = this.sales.find((s) => s.id === id)
+    if (!sale) {
+      throw new Error('Sale not found')
+    }
+    sale.paymentStatus = status
     return this.sanitizeSale(sale)
   }
 

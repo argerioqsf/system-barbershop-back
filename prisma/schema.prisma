@@ -33,6 +33,7 @@ enum PermissionName {
   SELL_PRODUCT
   SELL_SERVICE
   SELL_APPOINTMENT
+  SELL_PLAN
   ACCEPT_APPOINTMENT
   CREATE_SALE
   CREATE_USER_OWNER
@@ -63,6 +64,7 @@ enum PermissionCategory {
   SALE
   TRANSACTION
   APPOINTMENT
+  PLAN
 }
 
 enum PaymentMethod {
@@ -92,6 +94,13 @@ enum DiscountOrigin {
 enum PaymentStatus {
   PAID
   PENDING
+}
+
+enum SaleStatus {
+  COMPLETED
+  CANCELLED
+  CREATED
+  IN_PROGRESS
 }
 
 enum CommissionCalcType {
@@ -149,7 +158,7 @@ model Permission {
 model User {
   id                     String                @id @default(uuid())
   name                   String
-  email                  String                @unique
+  email                  String                
   password               String
   active                 Boolean               @default(false)
   organizationId         String
@@ -177,25 +186,26 @@ model User {
 }
 
 model Profile {
-  id                   String               @id @default(uuid())
-  phone                String
-  cpf                  String
-  genre                String
-  birthday             String
-  pix                  String
-  permissions          Permission[]         @relation("ProfilePermissions")
-  roleId               String
-  role                 Role                 @relation(fields: [roleId], references: [id])
-  commissionPercentage Float                @default(0)
-  totalBalance         Float                @default(0)
-  barberServices       BarberService[]
-  barberProducts       BarberProduct[]
-  userId               String               @unique
-  user                 User                 @relation(fields: [userId], references: [id])
-  createdAt            DateTime             @default(now())
-  workHours            ProfileWorkHour[]
-  blockedHours         ProfileBlockedHour[]
-  plans                PlanProfile[]
+  id                    String                        @id @default(uuid())
+  phone                 String?
+  cpf                   String?
+  genre                 String?
+  birthday              String?
+  pix                   String?
+  permissions           Permission[]                  @relation("ProfilePermissions")
+  roleId                String
+  role                  Role                          @relation(fields: [roleId], references: [id])
+  commissionPercentage  Float                         @default(0)
+  totalBalance          Float                         @default(0)
+  barberServices        BarberService[]
+  barberProducts        BarberProduct[]
+  userId                String                        @unique
+  user                  User                          @relation(fields: [userId], references: [id])
+  createdAt             DateTime                      @default(now())
+  workHours             ProfileWorkHour[]
+  blockedHours          ProfileBlockedHour[]
+  plans                 PlanProfile[]
+  commissionCheckpoints CheckpointCommissionProfile[]
 
   @@map("profiles")
 }
@@ -348,8 +358,10 @@ model Sale {
   gross_value   Float         @default(0)
   method        PaymentMethod
   paymentStatus PaymentStatus @default(PAID)
+  status        SaleStatus    @default(CREATED)
   createdAt     DateTime      @default(now())
   observation   String?
+  completionDate DateTime?       
 
   user         User                 @relation(fields: [userId], references: [id])
   client       User                 @relation("SaleClient", fields: [clientId], references: [id])
@@ -407,13 +419,14 @@ model Discount {
 }
 
 model CashRegisterSession {
-  id            String    @id @default(uuid())
-  openedById    String
-  unitId        String
-  openedAt      DateTime  @default(now())
-  closedAt      DateTime?
-  initialAmount Float
-  finalAmount   Float?
+  id                    String                        @id @default(uuid())
+  openedById            String
+  unitId                String
+  openedAt              DateTime                      @default(now())
+  closedAt              DateTime?
+  initialAmount         Float
+  finalAmount           Float?
+  commissionCheckpoints CheckpointCommissionProfile[]
 
   user         User          @relation(fields: [openedById], references: [id])
   unit         Unit          @relation(fields: [unitId], references: [id])
@@ -509,6 +522,7 @@ model Unit {
   roles                      Role[]
   openingHours               UnitOpeningHour[]
   benefits                   Benefit[]
+  plans                      Plan[]
 
   organization Organization @relation(fields: [organizationId], references: [id])
   Coupon       Coupon[]
@@ -593,12 +607,14 @@ model Plan {
   price            Float
   name             String
   typeRecurrenceId String
+  unitId           String
   saleItems        SaleItem[]
   benefits         BenefitPlan[]
   planProfiles     PlanProfile[]
   debts            Debt[]
 
   typeRecurrence TypeRecurrence @relation(fields: [typeRecurrenceId], references: [id])
+  unit           Unit           @relation(fields: [unitId], references: [id])
 
   @@map("plans")
 }
@@ -683,4 +699,16 @@ model PlanProfile {
   profile  Profile  @relation(fields: [profileId], references: [id])
 
   @@map("plan_profiles")
+}
+
+model CheckpointCommissionProfile {
+  id                    String              @id @default(uuid())
+  totalBalance          Float
+  profileId             String
+  profile               Profile             @relation(fields: [profileId], references: [id])
+  cashRegisterSessionId String
+  cashRegisterSession   CashRegisterSession @relation(fields: [cashRegisterSessionId], references: [id])
+  createdAt     DateTime      @default(now())
+
+  @@map("checkpoint_commission_profiles")
 }

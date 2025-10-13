@@ -34,4 +34,5 @@ export interface AppointmentRepository {
     data: Prisma.AppointmentUpdateInput,
     tx?: Prisma.TransactionClient,
   ): Promise<Appointment>
+  findManyPendingCommission(barberId: string): Promise<DetailedAppointment[]>
 }

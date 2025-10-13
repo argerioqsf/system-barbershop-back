@@ -1,6 +1,8 @@
 import { UnitRepository } from '@/repositories/unit-repository'
 import { Prisma, Transaction, TransactionType, Unit } from '@prisma/client'
 import { makeCreateTransaction } from '../@factories/transaction/make-create-transaction'
+import { round } from '@/utils/format-currency'
+import { UnitNotFoundError } from '../@errors/unit/unit-not-found-error'
 
 export interface IncrementBalanceUnitResponse {
   unit: Unit | null
@@ -21,8 +23,21 @@ export class IncrementBalanceUnitService {
     tx?: Prisma.TransactionClient,
   ): Promise<IncrementBalanceUnitResponse> {
     const createTransactionService = makeCreateTransaction()
-    await this.repository.incrementBalance(id, amount, tx)
-    const unit = await this.repository.findById(id)
+
+    const unitToUpdate = await this.repository.findById(id, tx)
+    if (!unitToUpdate) {
+      throw new UnitNotFoundError()
+    }
+
+    const currentBalance = unitToUpdate.totalBalance
+    const newBalance = round(currentBalance + amount)
+
+    const unit = await this.repository.update(
+      id,
+      { totalBalance: newBalance },
+      tx,
+    )
+
     const transaction = await createTransactionService.execute({
       type: amount < 0 ? TransactionType.WITHDRAWAL : TransactionType.ADDITION,
       description: description ?? 'Increment Balance Unit',

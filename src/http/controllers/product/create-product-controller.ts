@@ -2,6 +2,7 @@ import { makeCreateProductService } from '@/services/@factories/product/make-cre
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { UserToken } from '../authenticate-controller'
+import { logger } from '@/lib/logger'
 
 export const CreateProductController = async (
   request: FastifyRequest,
@@ -16,11 +17,19 @@ export const CreateProductController = async (
     commissionPercentage: z.number().optional(),
     categoryId: z.string(),
   })
-  const data = bodySchema.parse(request.body)
+  const parsed = bodySchema.safeParse(request.body)
+
+  if (!parsed.success) {
+    logger.debug('errors createProduct', { errors: parsed.error })
+  }
 
   const imageUrl = request.file
     ? `/uploads/${request.file.filename}`
     : undefined
+
+  logger.debug('imageUrl', { imageUrl })
+
+  const data = bodySchema.parse(request.body)
 
   const service = makeCreateProductService()
   const unitId = (request.user as UserToken).unitId

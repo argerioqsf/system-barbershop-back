@@ -1,26 +1,23 @@
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { CashRegisterRepository } from '@/repositories/cash-register-repository'
-import { ProfilesRepository } from '@/repositories/profiles-repository'
-import {
-  DetailedSaleItemFindMany,
-  SaleItemRepository,
-} from '@/repositories/sale-item-repository'
-import { AppointmentServiceRepository } from '@/repositories/appointment-service-repository'
-import { UnitRepository } from '@/repositories/unit-repository'
-import { LoanRepository } from '@/repositories/loan-repository'
+import { SaleItemRepository } from '@/repositories/sale-item-repository'
 import { PayUserLoansService } from '../loan/pay-user-loans'
-import { PaymentStatus, Transaction } from '@prisma/client'
+import { Transaction } from '@prisma/client'
 import { CashRegisterClosedError } from '@/services/@errors/cash-register/cash-register-closed-error'
 import { AffectedUserNotFoundError } from '@/services/@errors/transaction/affected-user-not-found-error'
 import { InsufficientBalanceError } from '@/services/@errors/transaction/insufficient-balance-error'
 import { PayUserCommissionService } from './pay-user-comission'
 import {
-  calculateCommissions,
-  CalculateCommissionsReturn,
+  calculateCommissionsForItems,
   PaymentItems,
 } from '../users/utils/calculatePendingCommissions'
 import { UserToken } from '@/http/controllers/authenticate-controller'
 import { AmountsUserInconsistentError } from '../@errors/user/amounts-user-inconsistent'
+import { UpdateCashRegisterFinalAmountService } from '../cash-register/update-cash-register-final-amount'
+import { logger } from '@/lib/logger'
+import { round, toCents } from '@/utils/format-currency'
+import { prisma } from '@/lib/prisma'
+import { NegativeValuesNotAllowedError } from '../@errors/transaction/negative-values-not-allowed-error'
 
 interface PayBalanceTransactionRequest {
   userId: string
@@ -42,74 +39,26 @@ export class PayBalanceTransactionService {
   constructor(
     private barberUserRepository: BarberUsersRepository,
     private cashRegisterRepository: CashRegisterRepository,
-    private profileRepository: ProfilesRepository,
     private saleItemRepository: SaleItemRepository,
-    private appointmentServiceRepository: AppointmentServiceRepository,
-    private unitRepository: UnitRepository,
-    private loanRepository: LoanRepository,
+    private payUserCommissionService: PayUserCommissionService,
+    private payLoansService: PayUserLoansService,
+    private updateCashRegisterFinalAmountService: UpdateCashRegisterFinalAmountService,
   ) {}
 
-  private async calculateCommissionsForIdsHandler(
+  private async totalCommissionCalculatorForUser(
     affectedUserId: string,
-    saleItemIds: string[],
-    appointmentServiceIds: string[],
   ): Promise<{
-    saleItemsForIds: DetailedSaleItemFindMany[]
-    valuesCalculateCommissions: CalculateCommissionsReturn
+    totalUserCommission: number
+    allUserUnpaidSalesItemsFormatted: PaymentItems[]
   }> {
-    const saleItemsForIds: DetailedSaleItemFindMany[] =
-      await this.saleItemRepository.findManyFilterAppointmentService(
-        {
-          barberId: affectedUserId,
-          sale: { paymentStatus: PaymentStatus.PAID },
-          commissionPaid: false,
-          OR: [
-            {
-              AND: [{ id: { in: saleItemIds } }, { serviceId: { not: null } }],
-            },
-            {
-              AND: [{ id: { in: saleItemIds } }, { productId: { not: null } }],
-            },
-            {
-              AND: [
-                { appointmentId: { not: null } },
-                {
-                  appointment: {
-                    services: {
-                      some: { id: { in: appointmentServiceIds } },
-                    },
-                  },
-                },
-              ],
-            },
-          ],
-        },
-        appointmentServiceIds,
-      )
+    const allSaleItemsPending =
+      await this.saleItemRepository.findManyPendingCommission(affectedUserId)
+    const resultCalculateCommission =
+      calculateCommissionsForItems(allSaleItemsPending)
     return {
-      saleItemsForIds,
-      valuesCalculateCommissions: calculateCommissions(saleItemsForIds),
-    }
-  }
-
-  private async calculateCommissionsHandler(affectedUserId: string): Promise<{
-    saleItems: DetailedSaleItemFindMany[]
-    valuesCalculateCommissions: CalculateCommissionsReturn
-  }> {
-    const saleItems = await this.saleItemRepository.findMany({
-      barberId: affectedUserId,
-      sale: { paymentStatus: PaymentStatus.PAID },
-      commissionPaid: false,
-      OR: [
-        { appointmentId: { not: null } },
-        { serviceId: { not: null } },
-        { productId: { not: null } },
-      ],
-    })
-
-    return {
-      saleItems,
-      valuesCalculateCommissions: calculateCommissions(saleItems),
+      totalUserCommission: resultCalculateCommission.totalCommission,
+      allUserUnpaidSalesItemsFormatted:
+        resultCalculateCommission.allUserUnpaidSalesItemsFormatted,
     }
   }
 
@@ -129,55 +78,33 @@ export class PayBalanceTransactionService {
     return typeForPayment
   }
 
-  private async getPayValueForTypeForPayment(
+  private async getCommissionToPaidByPaymentLogic(
     typeForPayment: TypeForPayment,
     data: PayBalanceTransactionRequest,
     affectedUserId: string,
-  ) {
-    let payValue = 0
+  ): Promise<{ commissionToBePaid: number; itemsToBePaid: PaymentItems[] }> {
     if (typeForPayment === 'forAmmount') {
-      payValue = data.amount ?? 0
+      return { commissionToBePaid: round(data.amount ?? 0), itemsToBePaid: [] }
     } else if (typeForPayment === 'ForListIds') {
-      const {
-        valuesCalculateCommissions: { totalCommission },
-      } = await this.calculateCommissionsForIdsHandler(
-        affectedUserId,
-        data.saleItemIds ?? [],
-        data.appointmentServiceIds ?? [],
-      )
-      payValue = totalCommission ?? 0
+      const itemsToBePaid =
+        await this.saleItemRepository.findManyPendingCommissionForIds(
+          affectedUserId,
+          data.appointmentServiceIds,
+          data.saleItemIds,
+        )
+      const resultCalculateCommissionsForItems =
+        calculateCommissionsForItems(itemsToBePaid)
+      return {
+        commissionToBePaid: round(
+          resultCalculateCommissionsForItems.totalCommission,
+        ),
+        itemsToBePaid:
+          resultCalculateCommissionsForItems.allUserUnpaidSalesItemsFormatted,
+      }
     } else {
       throw new Error(
         'It is mandatory to pass at least one of the fields amount, saleItemIds, appointment ServiceIds',
       )
-    }
-    return payValue
-  }
-
-  private async getValuesForPay(
-    typeForPayment: TypeForPayment,
-    affectedUserId: string,
-    payValue: number,
-    saleItemIds?: string[],
-    appointmentServiceIds?: string[],
-  ): Promise<{
-    paymentItems: PaymentItems[]
-    totalToPay: number
-  }> {
-    if (typeForPayment === 'ForListIds') {
-      const {
-        valuesCalculateCommissions: { totalCommission, saleItemsRecords },
-      } = await this.calculateCommissionsForIdsHandler(
-        affectedUserId,
-        saleItemIds ?? [],
-        appointmentServiceIds ?? [],
-      )
-      return { paymentItems: saleItemsRecords, totalToPay: totalCommission }
-    } else {
-      const {
-        valuesCalculateCommissions: { saleItemsRecords },
-      } = await this.calculateCommissionsHandler(affectedUserId)
-      return { paymentItems: saleItemsRecords, totalToPay: payValue }
     }
   }
 
@@ -185,6 +112,7 @@ export class PayBalanceTransactionService {
     data: PayBalanceTransactionRequest,
     userToken: UserToken,
   ): Promise<PayBalanceTransactionResponse> {
+    logger.debug(PayBalanceTransactionService.name)
     const session = await this.cashRegisterRepository.findOpenByUnit(
       userToken.unitId,
     )
@@ -193,88 +121,113 @@ export class PayBalanceTransactionService {
       data.affectedUserId,
     )
     if (!affectedUser) throw new AffectedUserNotFoundError()
-    if (!affectedUser.profile?.totalBalance) {
+    logger.debug('total balance of the affected user', {
+      totalBalance: affectedUser.profile?.totalBalance,
+    })
+
+    const balanceAffectedUser = round(affectedUser.profile?.totalBalance ?? 0)
+    if (balanceAffectedUser === undefined) {
       throw new Error('Balance user not found')
     }
-    const balanceAffectedUser = affectedUser.profile.totalBalance
+    const discountLoans = data.discountLoans
+    // pega o valor total de comissao que o user tem disponivel
+    const { totalUserCommission, allUserUnpaidSalesItemsFormatted } =
+      await this.totalCommissionCalculatorForUser(affectedUser.id)
 
-    const payUserCommissionService = new PayUserCommissionService(
-      this.profileRepository,
-      this.saleItemRepository,
-      this.appointmentServiceRepository,
-    )
+    // pega qual o tipo de pagamento ta sendo feito forAmmount ou ForListIds
+    const paymentLogic = this.typeForPaymentHandler(data)
 
-    const payLoans = new PayUserLoansService(
-      this.loanRepository,
-      this.unitRepository,
-    )
+    // retorna o valor que foi solicitado a pagar de acordo com a logica de pagamento
+    const { commissionToBePaid, itemsToBePaid } =
+      await this.getCommissionToPaidByPaymentLogic(
+        paymentLogic,
+        data,
+        affectedUser.id,
+      )
 
-    const {
-      valuesCalculateCommissions: { totalCommission, saleItemsRecords },
-    } = await this.calculateCommissionsHandler(affectedUser.id)
+    logger.debug('checks the consistency of the commission calculation', {
+      totalUserCommission,
+      balanceAffectedUser,
+    })
 
-    const typeForPayment = this.typeForPaymentHandler(data)
-    let payValue: number = await this.getPayValueForTypeForPayment(
-      typeForPayment,
-      data,
-      affectedUser.id,
-    )
-
-    const transactions: Transaction[] = []
-
-    if (totalCommission !== balanceAffectedUser) {
+    if (toCents(totalUserCommission) !== toCents(balanceAffectedUser)) {
       throw new AmountsUserInconsistentError()
     }
 
-    if (payValue > balanceAffectedUser) {
+    logger.debug(
+      'checks that the amount to be paid is not greater than the users balance',
+      { commissionToBePaid, balanceAffectedUser },
+    )
+
+    if (toCents(commissionToBePaid) > toCents(balanceAffectedUser)) {
       throw new InsufficientBalanceError()
     }
 
-    if (data.discountLoans) {
-      const {
-        transactions: transactionsLoan,
-        remaining: remainingAfterLoan,
-        totalPaid: totalPaidLoan,
-      } = await payLoans.execute({
-        affectedUser,
-        amount: payValue,
-      })
+    if (toCents(commissionToBePaid) < 0) {
+      throw new NegativeValuesNotAllowedError()
+    }
 
-      if (totalPaidLoan > 0) {
-        const { transactions: transactionsPayUserCommission } =
-          await payUserCommissionService.execute({
-            valueToPay: totalPaidLoan,
-            affectedUser,
-            description: 'Payment Loan',
-            totalToPay: totalCommission,
-            paymentItems: [...saleItemsRecords],
-          })
-        transactions.push(...transactionsPayUserCommission)
+    const transactions = await prisma.$transaction(async (tx) => {
+      const txs: Transaction[] = []
+
+      if (discountLoans) {
+        const { transactions: transactionsLoan } =
+          await this.payLoansService.execute(
+            {
+              affectedUser,
+              amount: commissionToBePaid,
+            },
+            tx,
+          )
+
+        txs.push(...transactionsLoan)
       }
 
-      transactions.push(...transactionsLoan)
-      payValue = remainingAfterLoan
-    }
+      if (paymentLogic === 'ForListIds') {
+        logger.debug('payment will be made by items', {
+          itemsToBePaidIds: itemsToBePaid.map((item) => ({
+            saleItemId: item.saleItemId,
+            amount: item.amount,
+          })),
+        })
+        const { transactions: transactionsPayUser } =
+          await this.payUserCommissionService.execute(
+            {
+              userId: affectedUser.id,
+              description: data.description,
+              allUserUnpaidSalesItemsFormatted,
+              itemsToBePaid,
+            },
+            tx,
+          )
+        txs.push(...transactionsPayUser)
+      } else {
+        logger.debug('payment will be made for a fixed amount', {
+          commissionToBePaid,
+        })
+        const { transactions: transactionsPayUser } =
+          await this.payUserCommissionService.execute(
+            {
+              commissionToBePaid,
+              userId: affectedUser.id,
+              description: data.description,
+              allUserUnpaidSalesItemsFormatted,
+            },
+            tx,
+          )
+        txs.push(...transactionsPayUser)
+      }
 
-    if (payValue > 0) {
-      const { paymentItems, totalToPay } = await this.getValuesForPay(
-        typeForPayment,
-        affectedUser.id,
-        payValue,
-        data.saleItemIds,
-        data.appointmentServiceIds,
+      logger.debug('updated cash with the value', {
+        value: -commissionToBePaid,
+      })
+      await this.updateCashRegisterFinalAmountService.execute(
+        { sessionId: session.id, amount: -commissionToBePaid },
+        tx,
       )
 
-      const { transactions: transactionsPayUser } =
-        await payUserCommissionService.execute({
-          valueToPay: payValue,
-          affectedUser,
-          description: data.description,
-          totalToPay,
-          paymentItems,
-        })
-      transactions.push(...transactionsPayUser)
-    }
+      return txs
+    })
 
     return { transactions }
   }

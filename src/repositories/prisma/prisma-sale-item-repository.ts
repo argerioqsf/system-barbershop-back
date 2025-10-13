@@ -1,8 +1,9 @@
 import { prisma } from '@/lib/prisma'
-import { Prisma, SaleItem } from '@prisma/client'
+import { PaymentStatus, Prisma, SaleItem } from '@prisma/client'
 import {
   DetailedSaleItemFindById,
   DetailedSaleItemFindMany,
+  ReturnFindManyPendingCommission,
   SaleItemRepository,
 } from '../sale-item-repository'
 export class PrismaSaleItemRepository implements SaleItemRepository {
@@ -67,12 +68,37 @@ export class PrismaSaleItemRepository implements SaleItemRepository {
     })
   }
 
-  async findManyFilterAppointmentService(
-    where: Prisma.SaleItemWhereInput = {},
+  async findManyPendingCommissionForIds(
+    barberId: string,
     appointmentServiceIds?: string[],
-  ): Promise<DetailedSaleItemFindMany[]> {
+    saleItemIds?: string[],
+  ): Promise<ReturnFindManyPendingCommission[]> {
     return prisma.saleItem.findMany({
-      where,
+      where: {
+        barberId,
+        commissionPaid: false,
+        sale: {
+          paymentStatus: PaymentStatus.PAID,
+        },
+        AND: [
+          {
+            ...(saleItemIds &&
+              saleItemIds.length > 0 && { id: { in: saleItemIds } }),
+          },
+          {
+            ...(appointmentServiceIds &&
+              appointmentServiceIds.length > 0 && {
+                appointment: {
+                  services: {
+                    some: {
+                      id: { in: appointmentServiceIds },
+                    },
+                  },
+                },
+              }),
+          },
+        ],
+      },
       include: {
         sale: true,
         transactions: true,
@@ -85,6 +111,70 @@ export class PrismaSaleItemRepository implements SaleItemRepository {
           },
         },
         discounts: true,
+        service: true,
+        product: true,
+      },
+    })
+  }
+
+  async findManyByBarberId(
+    barberId: string,
+  ): Promise<DetailedSaleItemFindMany[]> {
+    return prisma.saleItem.findMany({
+      where: {
+        barberId,
+        sale: {
+          paymentStatus: 'PAID',
+        },
+      },
+      include: {
+        sale: true,
+        transactions: true,
+        appointment: {
+          include: {
+            services: {
+              include: { service: true, transactions: true },
+            },
+          },
+        },
+        discounts: true,
+      },
+    })
+  }
+
+  async findManyPendingCommission(
+    barberId: string,
+  ): Promise<ReturnFindManyPendingCommission[]> {
+    return prisma.saleItem.findMany({
+      where: {
+        barberId,
+        commissionPaid: false,
+        sale: {
+          paymentStatus: PaymentStatus.PAID,
+        },
+        OR: [
+          { appointmentId: { not: null } },
+          { serviceId: { not: null } },
+          { productId: { not: null } },
+        ],
+      },
+      include: {
+        sale: true,
+        transactions: true,
+        appointment: {
+          include: {
+            services: {
+              where: { commissionPaid: false }, // <-- filtra APENAS os services pendentes
+              include: {
+                service: true,
+                transactions: true,
+              },
+            },
+          },
+        },
+        discounts: true,
+        service: true,
+        product: true,
       },
     })
   }

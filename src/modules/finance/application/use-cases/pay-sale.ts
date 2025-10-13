@@ -12,7 +12,12 @@ import {
   ResponseFindByUserId,
 } from '@/repositories/profiles-repository'
 import { UnitRepository } from '@/repositories/unit-repository'
-import { PaymentStatus, PlanProfileStatus, Prisma } from '@prisma/client'
+import {
+  PaymentStatus,
+  PlanProfileStatus,
+  Prisma,
+  SaleStatus,
+} from '@prisma/client'
 import { SaleNotFoundError } from '@/services/@errors/sale/sale-not-found-error'
 import { CashRegisterClosedError } from '@/services/@errors/cash-register/cash-register-closed-error'
 import {
@@ -45,6 +50,7 @@ import { SaleCommissionService } from '@/modules/finance/application/services/sa
 import { SaleProfitDistributionService } from '@/modules/finance/application/services/sale-profit-distribution-service'
 import { SaleTelemetry } from '@/modules/sale/application/contracts/sale-telemetry'
 import { logger } from '@/lib/logger'
+import { UpdateCashRegisterFinalAmountService } from '@/services/cash-register/update-cash-register-final-amount'
 
 export class PaySaleUseCase {
   constructor(
@@ -243,11 +249,16 @@ export class PaySaleUseCase {
     const session = await this.getAndVerifySession(user.unitId)
     const clientProfile = await this.getAndVerifySaleClient(sale.clientId)
 
+    const updateCashRegisterFinalAmount =
+      new UpdateCashRegisterFinalAmountService(this.cashRegisterRepository)
+
     const run = async (tx: Prisma.TransactionClient) => {
       const updatedSale = await this.saleRepository.update(
         saleId,
         {
           paymentStatus: PaymentStatus.PAID,
+          status: SaleStatus.COMPLETED,
+          completionDate: new Date(),
           session: { connect: { id: session.id } },
         },
         tx,
@@ -267,6 +278,11 @@ export class PaySaleUseCase {
         userId,
         user.organizationId,
         session.id,
+        tx,
+      )
+
+      await updateCashRegisterFinalAmount.execute(
+        { sessionId: session.id, amount: updatedSale.total },
         tx,
       )
 

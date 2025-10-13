@@ -13,9 +13,13 @@ import {
 } from '@/services/sale/utils/item'
 import { applyPlanDiscounts } from '@/services/sale/utils/plan'
 import { calculateTotal } from '@/services/sale/utils/sale'
-import { CannotEditPaidSaleError } from '@/services/@errors/sale/cannot-edit-paid-sale-error'
 import { ProfileNotFoundError } from '@/services/@errors/profile/profile-not-found-error'
-import { PaymentStatus, Prisma, DiscountOrigin } from '@prisma/client'
+import {
+  PaymentStatus,
+  Prisma,
+  DiscountOrigin,
+  SaleStatus,
+} from '@prisma/client'
 import { TransactionRunner } from '../services/sale-item-update-executor'
 import { UpdateSaleRequest } from '@/services/sale/types'
 import { SaleTelemetry } from '@/modules/sale/application/contracts/sale-telemetry'
@@ -43,8 +47,12 @@ export class UpdateSaleClientUseCase {
 
     const saleCurrent = await this.saleRepository.findById(id)
     if (!saleCurrent) throw new Error('Sale not found')
-    if (saleCurrent.paymentStatus === PaymentStatus.PAID) {
-      throw new CannotEditPaidSaleError()
+    if (
+      saleCurrent.paymentStatus === PaymentStatus.PAID ||
+      saleCurrent.status === SaleStatus.COMPLETED ||
+      saleCurrent.status === SaleStatus.CANCELLED
+    ) {
+      throw new Error('Cannot edit a paid, completed, or cancelled sale.')
     }
 
     if (!clientId || clientId === saleCurrent.clientId) {
@@ -72,6 +80,7 @@ export class UpdateSaleClientUseCase {
       newClientProfile.userId,
       this.planProfileRepository,
       this.planRepository,
+      saleCurrent.unitId,
     )
 
     const totalCurrentSaleItems = calculateTotal(saleItemsWithDiscountPlan)

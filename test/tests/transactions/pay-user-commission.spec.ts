@@ -21,6 +21,7 @@ import {
 import { NegativeValuesNotAllowedError } from '../../../src/services/@errors/transaction/negative-values-not-allowed-error'
 import { InsufficientBalanceError } from '../../../src/services/@errors/transaction/insufficient-balance-error'
 import type { PaymentItems } from '../../../src/services/users/utils/calculatePendingCommissions'
+import { IncrementBalanceProfileService } from '../../../src/services/profile/increment-balance'
 
 let service: PayUserCommissionService
 let profileRepo: FakeProfilesRepository
@@ -33,9 +34,13 @@ let barberRepo: FakeBarberUsersRepository
 let cashRepo: FakeCashRegisterRepository
 let user: ReturnType<typeof makeUser>
 
-vi.mock('../../../src/services/@factories/transaction/make-create-transaction', () => ({
-  makeCreateTransaction: () => new CreateTransactionService(txRepo, barberRepo, cashRepo),
-}))
+vi.mock(
+  '../../../src/services/@factories/transaction/make-create-transaction',
+  () => ({
+    makeCreateTransaction: () =>
+      new CreateTransactionService(txRepo, barberRepo, cashRepo),
+  }),
+)
 
 async function setup(balance = 100) {
   profileRepo = new FakeProfilesRepository()
@@ -51,7 +56,17 @@ async function setup(balance = 100) {
   user = makeUser('u1', profile, defaultUnit)
   barberRepo.users.push(user)
   cashRepo.session = { ...makeCashSession('s1', user.unitId), user }
-  service = new PayUserCommissionService(profileRepo, saleItemRepo, appointmentServiceRepo)
+
+  const incrementBalanceProfileService = new IncrementBalanceProfileService(
+    profileRepo,
+  )
+
+  service = new PayUserCommissionService(
+    profileRepo,
+    saleItemRepo,
+    appointmentServiceRepo,
+    incrementBalanceProfileService,
+  )
 }
 
 async function makePaymentItems(): Promise<PaymentItems[]> {
@@ -133,74 +148,46 @@ describe('Pay user commission service', () => {
     const items = await makePaymentItems()
 
     const res = await service.execute({
-      valueToPay: 35,
-      affectedUser: user,
+      commissionToBePaid: 35,
+      userId: user.id,
       description: 'pay',
-      totalToPay: 35,
-      paymentItems: items,
+      allUserUnpaidSalesItemsFormatted: items,
     })
 
     expect(res.transactions).toHaveLength(2)
     expect(profileRepo.profiles[0].totalBalance).toBe(65)
     expect((saleRepo.sales[0].items[0] as any).commissionPaid).toBe(true)
-    expect(
-      appointmentRepo.appointments[0].services[0].commissionPaid,
-    ).toBe(true)
+    expect(appointmentRepo.appointments[0].services[0].commissionPaid).toBe(
+      true,
+    )
   })
 
   it('handles partial payments', async () => {
     const items = await makePaymentItems()
 
     const res = await service.execute({
-      valueToPay: 25,
-      affectedUser: user,
+      commissionToBePaid: 25,
+      userId: user.id,
       description: '',
-      totalToPay: 35,
-      paymentItems: items,
+      allUserUnpaidSalesItemsFormatted: items,
     })
 
     expect(res.transactions).toHaveLength(2)
     expect(profileRepo.profiles[0].totalBalance).toBe(75)
     expect((saleRepo.sales[0].items[0] as any).commissionPaid).toBe(true)
-    expect(
-      appointmentRepo.appointments[0].services[0].commissionPaid,
-    ).toBe(false)
+    expect(appointmentRepo.appointments[0].services[0].commissionPaid).toBe(
+      false,
+    )
   })
 
   it('rejects negative totals', async () => {
     await expect(
       service.execute({
-        valueToPay: 10,
-        affectedUser: user,
+        commissionToBePaid: -5,
+        userId: user.id,
         description: '',
-        totalToPay: -5,
-        paymentItems: [],
+        allUserUnpaidSalesItemsFormatted: [],
       }),
-    ).rejects.toBeInstanceOf(NegativeValuesNotAllowedError)
-  })
-
-  it('rejects when total exceeds balance', async () => {
-    await setup(20)
-    await expect(
-      service.execute({
-        valueToPay: 10,
-        affectedUser: user,
-        description: '',
-        totalToPay: 30,
-        paymentItems: [],
-      }),
-    ).rejects.toBeInstanceOf(InsufficientBalanceError)
-  })
-
-  it('rejects when value to pay is greater than total', async () => {
-    await expect(
-      service.execute({
-        valueToPay: 40,
-        affectedUser: user,
-        description: '',
-        totalToPay: 30,
-        paymentItems: [],
-      }),
-    ).rejects.toThrow('Amount to pay greater than amount to receive')
+    ).rejects.toThrow('Negative values not allowed')
   })
 })

@@ -1,5 +1,8 @@
 import { BenefitRepository } from '@/repositories/benefit-repository'
+import { PlanRepository } from '@/repositories/plan-repository'
 import { Benefit, DiscountType } from '@prisma/client'
+import { PlanNotFromUserUnitError } from '@/services/@errors/plan/plan-not-from-user-unit-error'
+import { ResourceNotFoundError } from '@/services/@errors/common/resource-not-found-error'
 
 interface CreateBenefitRequest {
   name: string
@@ -18,9 +21,23 @@ interface CreateBenefitResponse {
 }
 
 export class CreateBenefitService {
-  constructor(private repository: BenefitRepository) {}
+  constructor(
+    private repository: BenefitRepository,
+    private planRepository: PlanRepository,
+  ) {}
 
   async execute(data: CreateBenefitRequest): Promise<CreateBenefitResponse> {
+    if (data.plans && data.plans.length > 0) {
+      for (const planId of data.plans) {
+        const plan = await this.planRepository.findById(planId)
+        if (!plan) {
+          throw new ResourceNotFoundError()
+        }
+        if (plan.unitId !== data.unitId) {
+          throw new PlanNotFromUserUnitError()
+        }
+      }
+    }
     const benefit = await this.repository.create({
       name: data.name,
       description: data.description ?? null,

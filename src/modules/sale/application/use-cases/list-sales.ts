@@ -5,7 +5,7 @@ import {
   RoleName,
 } from '@prisma/client'
 import { DetailedSale, SaleRepository } from '@/repositories/sale-repository'
-import { assertPermission, buildUnitWhere, getScope } from '@/utils/permissions'
+import { assertPermission } from '@/utils/permissions'
 import { UserNotFoundError } from '@/services/@errors/user/user-not-found-error'
 import { SaleTelemetry } from '@/modules/sale/application/contracts/sale-telemetry'
 
@@ -57,14 +57,8 @@ export class ListSalesUseCase {
 
     assertPermission([PermissionName.LIST_SALES_UNIT], actor.permissions)
 
-    const scope = getScope({
-      role: actor.role,
-      organizationId: actor.organizationId,
-      unitId: actor.unitId,
-    })
-
     const where = {
-      ...buildUnitWhere(scope),
+      ...{ unitId: actor.unitId },
       ...(filters.paymentStatus
         ? { paymentStatus: filters.paymentStatus }
         : {}),

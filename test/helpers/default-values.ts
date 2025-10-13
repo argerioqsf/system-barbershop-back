@@ -52,6 +52,19 @@ export const defaultSale: DetailedSale = {
   method: 'CASH',
   paymentStatus: 'PAID',
   observation: '',
+  status: 'IN_PROGRESS',
+  completionDate: new Date(),
+  unit: {
+    id: 'unit-1',
+    name: 'unit',
+    slug: 'uni1',
+    organizationId: 'org',
+    totalBalance: 0,
+    allowsLoan: false,
+    loanMonthlyLimit: 7,
+    slotDuration: 30,
+    appointmentFutureLimitDays: 7,
+  },
   user: {
     ...defaultUser,
     id: 'user-1',
@@ -298,12 +311,14 @@ export function makePlan(
   id: string,
   price = 50,
   typeRecurrenceId = 'rec-1',
+  unitId = 'unit-1',
 ): Plan {
   return {
     id,
     price,
     name: `Plan ${id}`,
     typeRecurrenceId,
+    unitId,
   }
 }
 
@@ -480,6 +495,19 @@ export function makeSaleWithBarber(): DetailedSale {
     observation: null,
     couponId: null,
     sessionId: null,
+    status: 'IN_PROGRESS',
+    completionDate: new Date(),
+    unit: {
+      id: 'unit-1',
+      name: 'unit',
+      slug: 'uni1',
+      organizationId: 'org',
+      totalBalance: 0,
+      allowsLoan: false,
+      loanMonthlyLimit: 7,
+      slotDuration: 30,
+      appointmentFutureLimitDays: 7,
+    },
     items: [
       {
         id: 'i1',
@@ -536,7 +564,7 @@ export function makeTransaction(
   return {
     id: over.id ?? 't1',
     userId: over.userId ?? 'u1',
-    affectedUserId: null,
+    affectedUserId: over.affectedUserId ?? null,
     unitId: over.unitId ?? 'unit-1',
     cashRegisterSessionId: 's1',
     type: over.type ?? TransactionType.ADDITION,

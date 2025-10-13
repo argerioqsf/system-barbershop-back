@@ -1,22 +1,33 @@
 import { makeListUsersService } from '@/services/@factories/barber-user/make-list-users'
-import { makeBarberBalance } from '@/services/@factories/report/make-barber-balance'
 import { FastifyReply, FastifyRequest } from 'fastify'
+import { z } from 'zod'
 import { UserToken } from '../authenticate-controller'
 
 export const ListBarberUsersController = async (
   request: FastifyRequest,
   reply: FastifyReply,
 ) => {
-  const service = makeListUsersService()
-  const user = request.user as UserToken
-  const { users } = await service.execute(user)
-  const balanceService = makeBarberBalance()
-  const usersWithBalance = await Promise.all(
-    users.map(async (user) => {
-      const { balance } = await balanceService.execute({ barberId: user.id })
-      return { ...user, balance }
-    }),
-  )
+  const querySchema = z.object({
+    page: z.coerce.number().int().min(1).optional(),
+    perPage: z.coerce.number().int().min(1).max(100).optional(),
+    name: z.string().optional(),
+    withCount: z.coerce.boolean().optional(),
+  })
+  const { page, perPage, name, withCount } = querySchema.parse(request.query)
 
-  return reply.status(200).send({ users: usersWithBalance })
+  const service = makeListUsersService()
+  const userToken = request.user as UserToken
+
+  const result = await service.execute(userToken, { page, perPage, name })
+
+  if (withCount) {
+    return reply.status(200).send({
+      items: result.users,
+      count: result.count,
+      page: page ?? 1,
+      perPage: perPage ?? 10,
+    })
+  }
+
+  return reply.status(200).send(result.users)
 }

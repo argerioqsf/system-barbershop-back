@@ -1,6 +1,7 @@
 import { makeUpdateUserService } from '@/services/@factories/barber-user/make-update-user'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
+import { CommissionCalcType } from '@prisma/client'
 import { UserToken } from '../authenticate-controller'
 
 export const UpdateBarberUserController = async (
@@ -26,6 +27,33 @@ export const UpdateBarberUserController = async (
         return val === 'true'
       })
       .optional(),
+    services: z
+      .array(
+        z.object({
+          serviceId: z.string(),
+          time: z.number().int().nullable().optional(),
+          commissionPercentage: z.number().nullable().optional(),
+          commissionType: z
+            .nativeEnum(CommissionCalcType)
+            .nullable()
+            .optional(),
+        }),
+      )
+      .optional(),
+    products: z
+      .array(
+        z.object({
+          productId: z.string(),
+          commissionPercentage: z.number().nullable().optional(),
+          commissionType: z
+            .nativeEnum(CommissionCalcType)
+            .nullable()
+            .optional(),
+        }),
+      )
+      .optional(),
+    removeServiceIds: z.array(z.string()).optional(),
+    removeProductIds: z.array(z.string()).optional(),
   })
 
   const { id } = paramsSchema.parse(request.params)
@@ -33,8 +61,23 @@ export const UpdateBarberUserController = async (
   const service = makeUpdateUserService()
   const userToken = request.user as UserToken
 
+  const normalized = {
+    ...data,
+    services: data.services?.map((s) => ({
+      serviceId: s.serviceId,
+      time: s.time ?? undefined,
+      commissionPercentage: s.commissionPercentage ?? undefined,
+      commissionType: s.commissionType ?? undefined,
+    })),
+    products: data.products?.map((p) => ({
+      productId: p.productId,
+      commissionPercentage: p.commissionPercentage ?? undefined,
+      commissionType: p.commissionType ?? undefined,
+    })),
+  }
+
   const { user } = await service.execute(
-    { id, ...data },
+    { id, ...normalized },
     userToken,
     reply,
     request,

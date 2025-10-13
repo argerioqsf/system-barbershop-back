@@ -6,4 +6,10 @@ export interface BarberServiceRepository {
     profileId: string,
     serviceId: string,
   ): Promise<BarberService | null>
+  update(
+    profileId: string,
+    serviceId: string,
+    data: Prisma.BarberServiceUncheckedUpdateInput,
+  ): Promise<BarberService>
+  deleteByProfileService(profileId: string, serviceId: string): Promise<void>
 }

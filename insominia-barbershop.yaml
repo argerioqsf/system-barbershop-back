@@ -427,6 +427,30 @@ collection:
             send: true
             store: true
           rebuildPath: true
+      - url: "{{ baseURL }}/services/{{ _.serviceId }}"
+        name: Get service
+        meta:
+          id: req_97d26b45346a420fb5ac018aff848911
+          created: 1751331396303
+          modified: 1753413755904
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396302
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        scripts:
+          preRequest: ""
+          afterResponse: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
     scripts:
       afterResponse: ""
       preRequest: ""
@@ -3343,17 +3367,64 @@ collection:
             send: true
             store: true
           rebuildPath: true
-      - url: "{{ baseURL }}/type-recurrences"
-        name: List type recurrences
-        meta:
-          id: req_905576a9174b4f118531cbec7cc12179
-          created: 1751331396323
-          modified: 1752884583108
-          isPrivate: false
-          description: ""
-          sortKey: -1751331396323
         method: GET
         headers:
+  - name: Collaborator
+    meta:
+      id: fld_a7f1fd255b3446fab42833713f4b19f8
+      created: 1751331396301
+      modified: 1753156200329
+      sortKey: -1751331396301
+      description: ""
+    children:
+      - url: "{{ baseURL }}/collaborator/users/{{ _.barberId }}/pending-commission-sale-items"
+        name: List pending commission sale items
+        meta:
+          id: req_1e8fecc7bdb342ad9a65fc3b0d63c49d
+          created: 1751331396304
+          modified: 1753158197643
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396304
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        scripts:
+          preRequest: ""
+          afterResponse: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/collaborator/users/{{ _.barberId }}/pending-commission-appointments"
+        name: List pending commission appointments
+        meta:
+          id: req_794049391b644df6876c23e6b541a938
+          created: 1751331396304
+          modified: 1751331396304
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396304
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        scripts:
+          preRequest: ""
+          afterResponse: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
           - name: Authorization
             value: Bearer {{ token }}
         scripts:

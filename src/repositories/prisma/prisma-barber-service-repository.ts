@@ -17,4 +17,24 @@ export class PrismaBarberServiceRepository implements BarberServiceRepository {
       where: { profileId_serviceId: { profileId, serviceId } },
     })
   }
+
+  async update(
+    profileId: string,
+    serviceId: string,
+    data: Prisma.BarberServiceUncheckedUpdateInput,
+  ): Promise<BarberService> {
+    return prisma.barberService.update({
+      where: { profileId_serviceId: { profileId, serviceId } },
+      data,
+    })
+  }
+
+  async deleteByProfileService(
+    profileId: string,
+    serviceId: string,
+  ): Promise<void> {
+    await prisma.barberService.delete({
+      where: { profileId_serviceId: { profileId, serviceId } },
+    })
+  }
 }

@@ -20,9 +20,8 @@ export class ListClientsService {
     params: ListClientsRequest = {},
   ): Promise<ListClientsResponse> {
     assertUser(userToken)
-    const scope = getScope(userToken)
     const where: Prisma.UserWhereInput = {
-      ...buildUnitWhere(scope),
+      ...{ organizationId: userToken.organizationId },
       profile: {
         role: { name: RoleName.CLIENT },
       },

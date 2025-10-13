@@ -160,7 +160,7 @@ export class CreateAppointmentUseCase {
       if (!link) {
         throw new BarberDoesNotHaveThisServiceError()
       }
-
+      // TODO: o campo defaultTime no service precisa ser obrigatório
       totalDuration += link.time ?? service.defaultTime ?? 0
     }
 

@@ -1,6 +1,6 @@
 export function timeToMinutes(time: string | Date): number {
   if (time instanceof Date) {
-    return time.getHours() * 60 + time.getMinutes()
+    return time.getUTCHours() * 60 + time.getUTCMinutes()
   }
   const [h, m] = time.split(':').map(Number)
   return h * 60 + m

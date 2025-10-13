@@ -31,8 +31,7 @@ describe('List user sold products service', () => {
       barberId: barberUser.id,
       couponId: null,
       price: 50,
-      discount: null,
-      discountType: null,
+      discounts: [],
       porcentagemBarbeiro: null,
       service: null,
       product,
@@ -40,9 +39,14 @@ describe('List user sold products service', () => {
       coupon: null,
       appointmentId: null,
       appointment: null,
+      planId: null,
+      plan: null,
+      customPrice: null,
+      commissionPaid: false,
     })
     const sale2 = makeSale('s2')
     sale2.items.push({
+      ...defaultSale,
       id: 'i2',
       saleId: sale2.id,
       serviceId: null,
@@ -51,8 +55,7 @@ describe('List user sold products service', () => {
       barberId: 'other-barber',
       couponId: null,
       price: 30,
-      discount: null,
-      discountType: null,
+      discounts: [],
       porcentagemBarbeiro: null,
       service: null,
       product: makeProduct('other', 30),
@@ -60,9 +63,14 @@ describe('List user sold products service', () => {
       coupon: null,
       appointmentId: null,
       appointment: null,
+      planId: null,
+      plan: null,
+      customPrice: null,
+      commissionPaid: false,
     })
     const sale3 = makeSale('s3')
     sale3.items.push({
+      ...defaultSale,
       id: 'i2',
       saleId: sale3.id,
       serviceId: null,
@@ -71,8 +79,7 @@ describe('List user sold products service', () => {
       barberId: 'other-barber',
       couponId: null,
       price: 30,
-      discount: null,
-      discountType: null,
+      discounts: [],
       porcentagemBarbeiro: null,
       service: null,
       product: makeProduct('other', 30),
@@ -80,6 +87,10 @@ describe('List user sold products service', () => {
       coupon: null,
       appointmentId: null,
       appointment: null,
+      planId: null,
+      plan: null,
+      customPrice: null,
+      commissionPaid: false,
     })
     repo.sales.push(sale1, sale2, sale3)
 

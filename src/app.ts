@@ -13,6 +13,7 @@ import { profileRoute } from './http/controllers/profile/route'
 import { profileHoursRoute } from './http/controllers/profile-hours/route'
 import { barberShopServiceRoute } from './http/controllers/barber-shop/route'
 import { productRoute } from './http/controllers/product/route'
+import { serviceRoute } from './http/controllers/service/route'
 import { appointmentRoute } from './http/controllers/appointment/route'
 import { barberUserRoute } from './http/controllers/barber-user/route'
 import { couponRoute } from './http/controllers/coupon/route'
@@ -30,6 +31,7 @@ import { unitRoute } from './http/controllers/unit/route'
 import { sessionRoute } from './http/controllers/session/route'
 import { unitOpeningHourRoute } from './http/controllers/unit-opening-hour/route'
 import { categoryRoute } from './http/controllers/category/route'
+import { collaboratorRoute } from './http/controllers/collaborators/route'
 import { planRoute } from './http/controllers/plan/route'
 import { planProfileRoute } from './http/controllers/plan-profile/route'
 import { debtRoute } from './http/controllers/debt/route'
@@ -148,6 +150,7 @@ app.register(sessionRoute)
 app.register(profileRoute)
 app.register(profileHoursRoute)
 app.register(productRoute)
+app.register(serviceRoute)
 app.register(categoryRoute)
 app.register(barberShopServiceRoute)
 app.register(appointmentRoute)
@@ -170,6 +173,7 @@ app.register(saleRoute)
 app.register(reportRoute)
 app.register(configRoute)
 app.register(userRoute)
+app.register(collaboratorRoute)
 
 app.setErrorHandler((error, _, reply) => {
   if (error instanceof ZodError) {

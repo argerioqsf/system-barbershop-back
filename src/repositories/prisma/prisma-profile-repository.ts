@@ -1,20 +1,18 @@
 import { prisma } from '@/lib/prisma'
+import { Prisma, Profile, User } from '@prisma/client'
 import {
-  Prisma,
-  Profile,
-  Unit,
-  User,
-  ProfileWorkHour,
-  ProfileBlockedHour,
-} from '@prisma/client'
-import { ProfilesRepository } from '../profiles-repository'
+  ProfilesRepository,
+  ResponseFindByUserId,
+} from '../profiles-repository'
 
 export class PrismaProfilesRepository implements ProfilesRepository {
   async update(
     id: string,
     data: Prisma.ProfileUncheckedUpdateInput,
+    tx?: Prisma.TransactionClient,
   ): Promise<Profile> {
-    const profile = await prisma.profile.update({
+    const prismaClient = tx || prisma
+    const profile = await prismaClient.profile.update({
       where: { id },
       data,
     })
@@ -46,16 +44,12 @@ export class PrismaProfilesRepository implements ProfilesRepository {
     return profile as (Profile & { user: Omit<User, 'password'> }) | null
   }
 
-  async findByUserId(id: string): Promise<
-    | (Profile & {
-        user: Omit<User, 'password'> & { unit: Unit }
-        permissions: { id: string; name: string }[]
-        workHours: ProfileWorkHour[]
-        blockedHours: ProfileBlockedHour[]
-      })
-    | null
-  > {
-    const profile = await prisma.profile.findUnique({
+  async findByUserId(
+    id: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<ResponseFindByUserId> {
+    const prismaClient = tx || prisma
+    const profile = await prismaClient.profile.findUnique({
       where: { userId: id },
       include: {
         user: {
@@ -72,6 +66,7 @@ export class PrismaProfilesRepository implements ProfilesRepository {
             versionTokenInvalidate: true,
           },
         },
+        role: true,
         permissions: { select: { id: true, name: true } },
         workHours: true,
         blockedHours: true,

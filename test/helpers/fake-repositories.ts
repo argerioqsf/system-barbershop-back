@@ -2,7 +2,7 @@ import { InMemoryCashRegisterRepository as BaseCashRegisterRepository } from '..
 import type { Transaction, Sale } from '@prisma/client'
 import type { CompleteCashSession } from '../../src/repositories/cash-register-repository'
 import { InMemoryProfilesRepository } from '../../src/repositories/in-memory/in-memory-profiles-repository'
-import { Profile, User } from '@prisma/client'
+import { Profile, User, Role } from '@prisma/client'
 export { InMemoryServiceRepository as FakeServiceRepository } from '../../src/repositories/in-memory/in-memory-service-repository'
 export { InMemoryBarberServiceRepository as FakeBarberServiceRelRepository } from '../../src/repositories/in-memory/in-memory-barber-service-repository'
 export { InMemoryBarberProductRepository as FakeBarberProductRepository } from '../../src/repositories/in-memory/in-memory-barber-product-repository'
@@ -22,22 +22,25 @@ export class FakeProfilesRepository extends InMemoryProfilesRepository {
   private _profiles: (Profile & {
     user: Omit<User, 'password'>
     permissions: { id: string; name: string }[]
+    role?: Role
   })[] = []
 
   constructor(
     profiles: (Profile & {
       user: Omit<User, 'password'>
       permissions: { id: string; name: string }[]
+      role?: Role
     })[] = [],
   ) {
     super()
     this._profiles = profiles
-    this.items = profiles
+    this.items = profiles as any
   }
 
   get profiles(): (Profile & {
     user: Omit<User, 'password'>
     permissions: { id: string; name: string }[]
+    role?: Role
   })[] {
     return this._profiles
   }
@@ -46,10 +49,11 @@ export class FakeProfilesRepository extends InMemoryProfilesRepository {
     profiles: (Profile & {
       user: Omit<User, 'password'>
       permissions: { id: string; name: string }[]
+      role?: Role
     })[],
   ) {
     this._profiles = profiles
-    this.items = profiles
+    this.items = profiles as any
   }
 }
 
@@ -110,4 +114,3 @@ export { InMemoryPlanProfileRepository as FakePlanProfileRepository } from '../.
 export { InMemoryDebtRepository as FakeDebtRepository } from '../../src/repositories/in-memory/in-memory-debt-repository'
 export { InMemoryBenefitRepository as FakeBenefitRepository } from '../../src/repositories/in-memory/in-memory-benefit-repository'
 export { InMemoryTypeRecurrenceRepository as FakeTypeRecurrenceRepository } from '../../src/repositories/in-memory/in-memory-type-recurrence-repository'
-

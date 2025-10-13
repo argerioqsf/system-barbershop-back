@@ -3,18 +3,21 @@ import { OpenSessionService } from '../../../src/services/cash-register/open-ses
 import {
   InMemoryCashRegisterRepository,
   FakeTransactionRepository,
+  FakeProfilesRepository,
 } from '../../helpers/fake-repositories'
 import { sessionUser } from '../../helpers/default-values'
 
 describe('Open session service', () => {
   let repo: InMemoryCashRegisterRepository
   let transactionRepo: FakeTransactionRepository
+  let profilesRepo: FakeProfilesRepository
   let service: OpenSessionService
 
   beforeEach(() => {
     repo = new InMemoryCashRegisterRepository()
     transactionRepo = new FakeTransactionRepository()
-    service = new OpenSessionService(repo, transactionRepo)
+    profilesRepo = new FakeProfilesRepository()
+    service = new OpenSessionService(repo, transactionRepo, profilesRepo)
   })
 
   it('opens session without initial amount', async () => {

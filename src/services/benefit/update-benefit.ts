@@ -6,6 +6,8 @@ import { Benefit, Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { RecalculateUserSalesService } from '@/modules/sale/application/use-cases/recalculate-user-sales'
 import { findUserIdsLinkedToPlans } from '../plan/utils/find-user-ids-linked-to-plans'
+import { PlanNotFromUserUnitError } from '@/services/@errors/plan/plan-not-from-user-unit-error'
+import { ResourceNotFoundError } from '@/services/@errors/common/resource-not-found-error'
 
 interface UpdateBenefitRequest {
   id: string
@@ -56,6 +58,23 @@ export class UpdateBenefitService {
     products,
     plans,
   }: UpdateBenefitRequest): Promise<UpdateBenefitResponse> {
+    const current = await this.repository.findById(id)
+    if (!current) {
+      throw new ResourceNotFoundError()
+    }
+
+    if (plans && plans.length > 0) {
+      for (const planId of plans) {
+        const plan = await this.planRepository.findById(planId)
+        if (!plan) {
+          throw new ResourceNotFoundError()
+        }
+        if (plan.unitId !== current.unitId) {
+          throw new PlanNotFromUserUnitError()
+        }
+      }
+    }
+
     const updated: Benefit = await this.repository.update(id, {
       ...data,
       ...(categories && {

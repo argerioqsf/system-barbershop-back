@@ -1,7 +1,6 @@
 import { SaleRepository, DetailedSale } from '@/repositories/sale-repository'
 import { UpdateSaleRequest } from '@/services/sale/types'
-import { CannotEditPaidSaleError } from '@/services/@errors/sale/cannot-edit-paid-sale-error'
-import { PaymentStatus, Prisma } from '@prisma/client'
+import { PaymentStatus, Prisma, SaleStatus } from '@prisma/client'
 import { SaleTelemetry } from '@/modules/sale/application/contracts/sale-telemetry'
 
 export type TransactionRunner = <T>(
@@ -25,8 +24,12 @@ export class UpdateSaleUseCase {
 
     const currentSale = await this.saleRepository.findById(id)
     if (!currentSale) throw new Error('Sale not found')
-    if (currentSale.paymentStatus === PaymentStatus.PAID) {
-      throw new CannotEditPaidSaleError()
+    if (
+      currentSale.paymentStatus === PaymentStatus.PAID ||
+      currentSale.status === SaleStatus.COMPLETED ||
+      currentSale.status === SaleStatus.CANCELLED
+    ) {
+      throw new Error('Cannot edit a paid, completed, or cancelled sale.')
     }
 
     if (observation === undefined && method === undefined) {

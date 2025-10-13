@@ -1,7 +1,6 @@
 import { UserToken } from '@/http/controllers/authenticate-controller'
 import { ServiceRepository } from '@/repositories/service-repository'
 import { assertUser } from '@/utils/assert-user'
-import { getScope, buildUnitWhere } from '@/utils/permissions'
 import { Prisma, Service } from '@prisma/client'
 
 export class ListServicesService {
@@ -23,9 +22,8 @@ export class ListServicesService {
     perPage: number
   }> {
     assertUser(userToken)
-    const scope = getScope(userToken)
     const where: Prisma.ServiceWhereInput = {
-      ...buildUnitWhere(scope),
+      ...{ unitId: userToken.unitId },
       ...(params.name ? { name: { contains: params.name } } : {}),
       ...(params.categoryId ? { categoryId: params.categoryId } : {}),
     }

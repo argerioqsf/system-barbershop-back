@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, vi, beforeAll } from 'vitest'
 import { PayBalanceTransactionService } from '../../../src/services/transaction/pay-balance-transaction'
 import { CreateTransactionService } from '../../../src/services/transaction/create-transaction'
 import {
@@ -21,11 +21,20 @@ import {
   makeUser,
   makeSaleWithBarber,
 } from '../../helpers/default-values'
+import { PayUserCommissionService } from '../../../src/services/transaction/pay-user-comission'
+import { PayUserLoansService } from '../../../src/services/loan/pay-user-loans'
+import { IncrementBalanceProfileService } from '../../../src/services/profile/increment-balance'
+import { IncrementBalanceUnitService } from '../../../src/services/unit/increment-balance'
+import { UpdateCashRegisterFinalAmountService } from '../../../src/services/cash-register/update-cash-register-final-amount'
 
 let transactionRepo: FakeTransactionRepository
 let barberRepo: FakeBarberUsersRepository
 let cashRepo: FakeCashRegisterRepository
 let loanRepo: FakeLoanRepository
+let profileRepo: FakeProfilesRepository
+let unitRepo: FakeUnitRepository
+let saleItemRepo: FakeSaleItemRepository
+let appointmentServiceRepo: FakeAppointmentServiceRepository
 
 vi.mock(
   '../../../src/services/@factories/transaction/make-create-transaction',
@@ -42,13 +51,13 @@ function setup(options?: { userBalance?: number; unitBalance?: number }) {
   loanRepo = new FakeLoanRepository()
   const saleRepo = new FakeSaleRepository()
   const appointmentRepo = new FakeAppointmentRepository()
-  const saleItemRepo = new FakeSaleItemRepository(saleRepo)
-  const appointmentServiceRepo = new FakeAppointmentServiceRepository(
+  saleItemRepo = new FakeSaleItemRepository(saleRepo)
+  appointmentServiceRepo = new FakeAppointmentServiceRepository(
     appointmentRepo,
   )
-  const profileRepo = new FakeProfilesRepository()
+  profileRepo = new FakeProfilesRepository()
   const unit = { ...defaultUnit, totalBalance: options?.unitBalance ?? 0 }
-  const unitRepo = new FakeUnitRepository(unit)
+  unitRepo = new FakeUnitRepository(unit)
 
   const profile = { ...defaultProfile, totalBalance: 0, user: { ...defaultUser } }
   profileRepo.profiles.push(profile)
@@ -68,14 +77,26 @@ function setup(options?: { userBalance?: number; unitBalance?: number }) {
     user: defaultUser,
   }
 
-  const service = new PayBalanceTransactionService(
-    barberRepo,
-    cashRepo,
+  const incrementProfileService = new IncrementBalanceProfileService(profileRepo)
+  const incrementUnitService = new IncrementBalanceUnitService(unitRepo)
+  const updateCashRegisterFinalAmountService = new UpdateCashRegisterFinalAmountService(cashRepo)
+
+  const payUserCommissionService = new PayUserCommissionService(
     profileRepo,
     saleItemRepo,
     appointmentServiceRepo,
-    unitRepo,
-    loanRepo,
+    incrementProfileService,
+  )
+
+  const payLoansService = new PayUserLoansService(loanRepo, unitRepo)
+
+  const service = new PayBalanceTransactionService(
+    barberRepo,
+    cashRepo,
+    saleItemRepo,
+    payUserCommissionService,
+    payLoansService,
+    updateCashRegisterFinalAmountService,
   )
 
   return {
@@ -94,8 +115,14 @@ function setup(options?: { userBalance?: number; unitBalance?: number }) {
   }
 }
 
+import { prisma } from '../../../src/lib/prisma'
+
 describe('Pay balance transaction service', () => {
   let ctx: ReturnType<typeof setup>
+
+  beforeAll(() => {
+    vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) => fn(prisma))
+  })
 
   beforeEach(() => {
     ctx = setup({ unitBalance: 100 })
@@ -162,7 +189,8 @@ describe('Pay balance transaction service', () => {
       { unitId: ctx.unitRepo.unit.id } as any,
     )
 
-    expect(profile.totalBalance).toBe(10)
+    const updatedProfile = ctx.profileRepo.profiles.find(p => p.id === profile.id)
+    expect(updatedProfile?.totalBalance).toBe(10)
     expect(ctx.unitRepo.unit.totalBalance).toBe(100)
     expect(ctx.transactionRepo.transactions).toHaveLength(1)
   })
@@ -209,7 +237,8 @@ describe('Pay balance transaction service', () => {
       { unitId: ctx.unitRepo.unit.id } as any,
     )
 
-    expect(profile.totalBalance).toBe(5)
+    const updatedProfile = ctx.profileRepo.profiles.find(p => p.id === profile.id)
+    expect(updatedProfile?.totalBalance).toBe(5)
     expect(ctx.transactionRepo.transactions).toHaveLength(2)
     expect((sale2.items[0] as any).commissionPaid).toBe(false)
     expect((sale1.items[0] as any).commissionPaid).toBe(true)

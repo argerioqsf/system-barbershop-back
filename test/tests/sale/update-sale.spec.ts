@@ -20,7 +20,9 @@ describe('Update sale use case', () => {
     runInTransaction = vi.fn(async (fn) => fn({} as any))
     useCase = new UpdateSaleUseCase(repo, runInTransaction)
 
-    vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) => fn({} as any))
+    vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) =>
+      fn({} as any),
+    )
   })
 
   it('updates sale method and observation', async () => {
@@ -39,7 +41,7 @@ describe('Update sale use case', () => {
     repo.sales[0].paymentStatus = 'PAID'
 
     await expect(useCase.execute({ id: 'sale-up-1' })).rejects.toThrow(
-      'Cannot edit a paid sale',
+      'Cannot edit a paid, completed, or cancelled sale.',
     )
   })
 })

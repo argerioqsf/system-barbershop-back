@@ -169,4 +169,15 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
     }
     return appointment
   }
+
+  async findManyPendingCommission(
+    barberId: string,
+  ): Promise<DetailedAppointment[]> {
+    return this.appointments.filter(
+      (a) =>
+        a.barberId === barberId &&
+        a.saleItem &&
+        a.saleItem.commissionPaid === false,
+    )
+  }
 }

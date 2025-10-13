@@ -62,4 +62,35 @@ export class InMemoryServiceRepository implements ServiceRepository {
     )
     return { items, count }
   }
+
+  async update(id: string, data: Prisma.ServiceUpdateInput): Promise<Service> {
+    const index = this.services.findIndex((s) => s.id === id)
+    if (index === -1) {
+      throw new Error('Service not found')
+    }
+    const service = this.services[index]
+    if (data.name) {
+      service.name = data.name as string
+    }
+    if (data.description) {
+      service.description = data.description as string
+    }
+    if (data.imageUrl) {
+      service.imageUrl = data.imageUrl as string
+    }
+    if (data.cost) {
+      service.cost = data.cost as number
+    }
+    if (data.price) {
+      service.price = data.price as number
+    }
+    if (data.defaultTime) {
+      service.defaultTime = data.defaultTime as number
+    }
+    if (data.commissionPercentage) {
+      service.commissionPercentage = data.commissionPercentage as number
+    }
+    this.services[index] = service
+    return service
+  }
 }

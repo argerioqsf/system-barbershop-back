@@ -1,5 +1,5 @@
 import { CashRegisterRepository } from '@/repositories/cash-register-repository'
-import { CashRegisterSession, TransactionType } from '@prisma/client'
+import { CashRegisterSession } from '@prisma/client'
 import { CashRegisterNotOpenedError } from '@/services/@errors/cash-register/cash-register-not-opened-error'
 
 interface CloseSessionRequest {
@@ -12,26 +12,15 @@ interface CloseSessionResponse {
 
 export class CloseSessionService {
   constructor(private repository: CashRegisterRepository) {}
-
+  // TODO: quando fechar o caixa criar um campo na tabela de caixa de lista que ira ter uma lista de
+  // todos os barbeiros e atendentes relacionando eles com suas comissoes do momento para deixar registrado
   async execute({
     unitId,
   }: CloseSessionRequest): Promise<CloseSessionResponse> {
     const sessionOpen = await this.repository.findOpenByUnit(unitId)
     if (!sessionOpen) throw new CashRegisterNotOpenedError()
 
-    const finalAmount = sessionOpen.transactions.reduce(
-      (total, transaction) => {
-        if (transaction.type === TransactionType.ADDITION)
-          return total + transaction.amount
-        if (transaction.type === TransactionType.WITHDRAWAL)
-          return total - transaction.amount
-        return total
-      },
-      0,
-    )
-
     const session = await this.repository.close(sessionOpen.id, {
-      finalAmount,
       closedAt: new Date(),
     })
     return { session }

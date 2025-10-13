@@ -1,7 +1,6 @@
 import { UserToken } from '@/http/controllers/authenticate-controller'
 import { ProductRepository } from '@/repositories/product-repository'
 import { assertUser } from '@/utils/assert-user'
-import { getScope, buildUnitWhere } from '@/utils/permissions'
 import { Product } from '@prisma/client'
 
 export interface ListProductsFilters {
@@ -26,9 +25,8 @@ export class ListProductsService {
     { name, page, perPage, withCount }: ListProductsFilters = {},
   ): Promise<ListProductsResponse> {
     assertUser(user)
-    const scope = getScope(user)
     const where = {
-      ...buildUnitWhere(scope),
+      ...{ unitId: user.unitId },
       ...(name ? { name: { contains: name } } : {}),
     }
 

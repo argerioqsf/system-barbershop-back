@@ -81,6 +81,7 @@ it('applies plan discount when canceled plan is still valid', async () => {
     'u1',
     planProfileRepo,
     planRepo,
+    service.unitId,
   )
 
   const realPrice = calculateRealValueSaleItem(

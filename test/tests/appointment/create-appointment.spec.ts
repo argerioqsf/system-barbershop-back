@@ -163,7 +163,7 @@ describe('Create appointment use case', () => {
       serviceIds: ['service-33'],
       unitId: 'unit-1',
       userId: defaultUser.id,
-      date: new Date('2024-01-03T08:00:00'),
+      date: new Date('2024-01-03T08:00:00Z'),
     })
 
     await expect(
@@ -173,7 +173,7 @@ describe('Create appointment use case', () => {
         serviceIds: ['service-33'],
         unitId: 'unit-1',
         userId: defaultUser.id,
-        date: new Date('2024-01-03T08:30:00'),
+        date: new Date('2024-01-03T08:30:00Z'),
       }),
     ).rejects.toThrow('Barber not available')
   })
@@ -389,7 +389,7 @@ describe('Create appointment use case', () => {
       serviceIds: ['svc-disc'],
       unitId: 'unit-1',
       userId: defaultUser.id,
-      date: new Date('2024-01-01T09:00:00'),
+      date: new Date('2024-01-01T09:00:00Z'),
     })
     expect(res.appointment).toBeTruthy()
   })

@@ -7,8 +7,12 @@ export interface TransactionRepository {
     tx?: Prisma.TransactionClient,
   ): Promise<Transaction>
   findManyByUser(userId: string): Promise<TransactionFull[]>
-  findMany(where?: Prisma.TransactionWhereInput): Promise<TransactionFull[]>
+  findMany(
+    where?: Prisma.TransactionWhereInput,
+    pagination?: { page: number; perPage: number },
+  ): Promise<{ items: TransactionFull[]; count: number }>
   findManyByUnit(unitId: string): Promise<Transaction[]>
   findManyBySession(sessionId: string): Promise<Transaction[]>
   delete(id: string): Promise<void>
+  findManyByAffectedUser(affectedUserId: string): Promise<TransactionFull[]>
 }

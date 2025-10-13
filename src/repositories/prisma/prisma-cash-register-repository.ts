@@ -1,9 +1,10 @@
 import { prisma } from '@/lib/prisma'
-import { Prisma, CashRegisterSession, Transaction } from '@prisma/client'
+import { Prisma, CashRegisterSession } from '@prisma/client'
 import {
   CashRegisterRepository,
   DetailedCashSession,
   CompleteCashSession,
+  ResponseFindOpenByUnit,
 } from '../cash-register-repository'
 
 export class PrismaCashRegisterRepository implements CashRegisterRepository {
@@ -44,12 +45,10 @@ export class PrismaCashRegisterRepository implements CashRegisterRepository {
     })
   }
 
-  async findOpenByUnit(
-    unitId: string,
-  ): Promise<(CashRegisterSession & { transactions: Transaction[] }) | null> {
+  async findOpenByUnit(unitId: string): Promise<ResponseFindOpenByUnit> {
     return prisma.cashRegisterSession.findFirst({
       where: { unitId, closedAt: null },
-      include: { transactions: true },
+      include: { transactions: true, commissionCheckpoints: true },
     })
   }
 
@@ -66,6 +65,22 @@ export class PrismaCashRegisterRepository implements CashRegisterRepository {
           },
         },
         transactions: true,
+      },
+    })
+  }
+
+  async incrementFinalAmount(
+    sessionId: string,
+    amount: number,
+    tx?: Prisma.TransactionClient,
+  ): Promise<CashRegisterSession> {
+    const prismaClient = tx || prisma
+    return prismaClient.cashRegisterSession.update({
+      where: { id: sessionId },
+      data: {
+        finalAmount: {
+          increment: amount,
+        },
       },
     })
   }

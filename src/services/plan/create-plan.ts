@@ -6,6 +6,7 @@ interface CreatePlanRequest {
   price: number
   typeRecurrenceId: string
   benefitIds?: string[]
+  unitId: string
 }
 
 interface CreatePlanResponse {
@@ -20,11 +21,13 @@ export class CreatePlanService {
     price,
     typeRecurrenceId,
     benefitIds,
+    unitId,
   }: CreatePlanRequest): Promise<CreatePlanResponse> {
     const plan = await this.repository.create({
       name,
       price,
       typeRecurrence: { connect: { id: typeRecurrenceId } },
+      unit: { connect: { id: unitId } },
       ...(benefitIds && {
         benefits: {
           create: benefitIds.map((id) => ({ benefit: { connect: { id } } })),

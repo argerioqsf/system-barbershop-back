@@ -13,6 +13,8 @@ import {
   Role,
   RoleName,
 } from '@prisma/client'
+import { InMemoryBarberServiceRepository } from '../../../src/repositories/in-memory/in-memory-barber-service-repository'
+import { InMemoryBarberProductRepository } from '../../../src/repositories/in-memory/in-memory-barber-product-repository'
 
 describe('Register user service', () => {
   let repo: InMemoryBarberUsersRepository
@@ -20,15 +22,26 @@ describe('Register user service', () => {
   let service: RegisterUserService
   let permRepo: InMemoryPermissionRepository
   let roleRepo: InMemoryRoleRepository
+  let barberServiceRepo: InMemoryBarberServiceRepository
+  let barberProductRepo: InMemoryBarberProductRepository
 
   beforeEach(() => {
     repo = new InMemoryBarberUsersRepository()
     unitRepo = new FakeUnitRepository({ ...defaultUnit }, [{ ...defaultUnit }])
     permRepo = new InMemoryPermissionRepository()
+    barberServiceRepo = new InMemoryBarberServiceRepository()
+    barberProductRepo = new InMemoryBarberProductRepository()
     roleRepo = new InMemoryRoleRepository([
       { id: 'role-1', name: 'ADMIN', unitId: defaultUnit.id },
     ])
-    service = new RegisterUserService(repo, unitRepo, permRepo, roleRepo)
+    service = new RegisterUserService(
+      repo,
+      unitRepo,
+      permRepo,
+      roleRepo,
+      barberServiceRepo,
+      barberProductRepo,
+    )
   })
 
   it('creates user and profile ADMIN', async () => {
@@ -123,7 +136,14 @@ describe('Register user service', () => {
       { id: 'role-1', name: 'ADMIN', unitId: defaultUnit.id },
       clientRole,
     ])
-    service = new RegisterUserService(repo, unitRepo, permRepo, roleRepo)
+    service = new RegisterUserService(
+      repo,
+      unitRepo,
+      permRepo,
+      roleRepo,
+      barberServiceRepo,
+      barberProductRepo,
+    )
     await expect(
       service.execute(
         {
@@ -152,7 +172,14 @@ describe('Register user service', () => {
       { id: 'role-1', name: 'MANAGER', unitId: defaultUnit.id },
       barberRole,
     ])
-    service = new RegisterUserService(repo, unitRepo, permRepo, roleRepo)
+    service = new RegisterUserService(
+      repo,
+      unitRepo,
+      permRepo,
+      roleRepo,
+      barberServiceRepo,
+      barberProductRepo,
+    )
     await expect(
       service.execute(
         {
@@ -181,7 +208,14 @@ describe('Register user service', () => {
       { id: 'role-1', name: 'MANAGER', unitId: defaultUnit.id },
       attendantRole,
     ])
-    service = new RegisterUserService(repo, unitRepo, permRepo, roleRepo)
+    service = new RegisterUserService(
+      repo,
+      unitRepo,
+      permRepo,
+      roleRepo,
+      barberServiceRepo,
+      barberProductRepo,
+    )
     await expect(
       service.execute(
         {
@@ -210,7 +244,14 @@ describe('Register user service', () => {
       { id: 'role-1', name: 'MANAGER', unitId: defaultUnit.id },
       ownerRole,
     ])
-    service = new RegisterUserService(repo, unitRepo, permRepo, roleRepo)
+    service = new RegisterUserService(
+      repo,
+      unitRepo,
+      permRepo,
+      roleRepo,
+      barberServiceRepo,
+      barberProductRepo,
+    )
     await expect(
       service.execute(
         {
@@ -247,7 +288,14 @@ describe('Register user service', () => {
       },
     ])
     permRepo.permissions[0].roles = [clientRole]
-    service = new RegisterUserService(repo, unitRepo, permRepo, roleRepo)
+    service = new RegisterUserService(
+      repo,
+      unitRepo,
+      permRepo,
+      roleRepo,
+      barberServiceRepo,
+      barberProductRepo,
+    )
     const res = await service.execute(
       {
         sub: 'admin',

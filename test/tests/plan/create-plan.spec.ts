@@ -11,10 +11,12 @@ describe('Create plan service', () => {
       price: 10,
       typeRecurrenceId: 'rec1',
       benefitIds: ['b1', 'b2'],
+      unitId: 'unit-1',
     })
     const stored = repo.plans[0]
     expect((stored as any).benefits).toHaveLength(2)
     expect((stored as any).benefits[0].benefitId).toBe('b1')
+    expect((stored as any).unitId).toBe('unit-1')
     expect(result.plan.name).toBe('P')
   })
 })

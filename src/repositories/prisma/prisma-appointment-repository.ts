@@ -71,4 +71,26 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
     const prismaClient = tx || prisma
     return prismaClient.appointment.update({ where: { id }, data })
   }
+
+  async findManyPendingCommission(
+    barberId: string,
+  ): Promise<DetailedAppointment[]> {
+    const appointments = await prisma.appointment.findMany({
+      where: {
+        barberId,
+        saleItem: {
+          is: {
+            commissionPaid: false,
+          },
+        },
+      },
+      include: {
+        services: { include: { service: true, transactions: true } },
+        client: true,
+        barber: { include: { profile: true } },
+        saleItem: true,
+      },
+    })
+    return appointments as DetailedAppointment[]
+  }
 }

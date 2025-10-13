@@ -23,7 +23,7 @@ export class UnitLoanBalanceService {
       isLoan: true,
     })
 
-    const { borrowed, paid } = transactions.reduce(
+    const { borrowed, paid } = transactions.items.reduce(
       (totals, tx) => {
         if (tx.amount < 0) totals.borrowed += Math.abs(tx.amount)
         else totals.paid += tx.amount

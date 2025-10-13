@@ -1,123 +1,256 @@
-import { BarberUsersRepository } from '@/repositories/barber-users-repository'
-import { CashRegisterRepository } from '@/repositories/cash-register-repository'
-import { ProfilesRepository } from '@/repositories/profiles-repository'
+import {
+  BarberUsersRepository,
+  UserFindById,
+} from '@/repositories/barber-users-repository'
+import {
+  CashRegisterRepository,
+  ResponseFindOpenByUnit,
+} from '@/repositories/cash-register-repository'
+import { SaleItemRepository } from '@/repositories/sale-item-repository'
+import { PayUserLoansService } from '../loan/pay-user-loans'
 import { Transaction } from '@prisma/client'
-import { UnitRepository } from '@/repositories/unit-repository'
-import { IncrementBalanceUnitService } from '../unit/increment-balance'
-import { IncrementBalanceProfileService } from '../profile/increment-balance'
-import { UserNotFoundError } from '@/services/@errors/user/user-not-found-error'
 import { CashRegisterClosedError } from '@/services/@errors/cash-register/cash-register-closed-error'
 import { AffectedUserNotFoundError } from '@/services/@errors/transaction/affected-user-not-found-error'
-import { NegativeValuesNotAllowedError } from '@/services/@errors/transaction/negative-values-not-allowed-error'
 import { InsufficientBalanceError } from '@/services/@errors/transaction/insufficient-balance-error'
-import { WithdrawalGreaterThanUnitBalanceError } from '@/services/@errors/transaction/withdrawal-greater-than-unit-balance-error'
+import { PayUserCommissionService } from './pay-user-comission'
+import {
+  calculateCommissionsForItems,
+  PaymentItems,
+} from '../users/utils/calculatePendingCommissions'
+import { UserToken } from '@/http/controllers/authenticate-controller'
+import { AmountsUserInconsistentError } from '../@errors/user/amounts-user-inconsistent'
+import { UpdateCashRegisterFinalAmountService } from '../cash-register/update-cash-register-final-amount'
+import { logger } from '@/lib/logger'
+import { round, toCents } from '@/utils/format-currency'
+import { prisma } from '@/lib/prisma'
+import { NegativeValuesNotAllowedError } from '../@errors/transaction/negative-values-not-allowed-error'
+import { UnitRepository } from '@/repositories/unit-repository'
+import { UnitNotFoundError } from '../@errors/unit/unit-not-found-error'
+import { IncrementBalanceUnitService } from '../unit/increment-balance'
+import { UserNotFromUnitError } from '../@errors/user/user-not-from-unir-error'
 
-interface withdrawalBalanceTransactionRequest {
+interface PayBalanceTransactionRequest {
   userId: string
   affectedUserId?: string
-  description: string
-  amount: number
+  description?: string
+  amount?: number
   receiptUrl?: string | null
+  discountLoans?: boolean
 }
 
-interface withdrawalBalanceTransactionResponse {
+interface PayBalanceTransactionResponse {
   transactions: Transaction[]
-  surplusValue?: number
 }
-
 export class WithdrawalBalanceTransactionService {
   constructor(
     private barberUserRepository: BarberUsersRepository,
     private cashRegisterRepository: CashRegisterRepository,
-    private profileRepository: ProfilesRepository,
+    private saleItemRepository: SaleItemRepository,
+    private payUserCommissionService: PayUserCommissionService,
+    private payLoansService: PayUserLoansService,
+    private updateCashRegisterFinalAmountService: UpdateCashRegisterFinalAmountService,
     private unitRepository: UnitRepository,
+    private decrementBalance: IncrementBalanceUnitService,
   ) {}
 
-  async execute(
-    data: withdrawalBalanceTransactionRequest,
-  ): Promise<withdrawalBalanceTransactionResponse> {
-    const user = await this.barberUserRepository.findById(data.userId)
-    if (!user) throw new UserNotFoundError()
+  private async totalCommissionCalculatorForUser(
+    affectedUserId: string,
+  ): Promise<{
+    totalUserCommission: number
+    allUserUnpaidSalesItemsFormatted: PaymentItems[]
+  }> {
+    const allSaleItemsPending =
+      await this.saleItemRepository.findManyPendingCommission(affectedUserId)
+    const resultCalculateCommission =
+      calculateCommissionsForItems(allSaleItemsPending)
+    return {
+      totalUserCommission: resultCalculateCommission.totalCommission,
+      allUserUnpaidSalesItemsFormatted:
+        resultCalculateCommission.allUserUnpaidSalesItemsFormatted,
+    }
+  }
 
-    const session = await this.cashRegisterRepository.findOpenByUnit(
-      user.unitId,
-    )
+  private async unitWithdrawal(
+    unitId: string,
+    userId: string,
+    session: ResponseFindOpenByUnit,
+    data: PayBalanceTransactionRequest,
+  ): Promise<Transaction[]> {
     if (!session) throw new CashRegisterClosedError()
 
-    let affectedUser
-    if (data.affectedUserId) {
-      affectedUser = await this.barberUserRepository.findById(
-        data.affectedUserId,
-      )
-      if (!affectedUser) throw new AffectedUserNotFoundError()
+    const unitAffected = await this.unitRepository.findById(unitId)
+    if (!unitAffected) throw new UnitNotFoundError()
+
+    const balanceAffectedUnit = round(unitAffected.totalBalance)
+    if (balanceAffectedUnit === undefined) {
+      throw new Error('Balance unit not found')
+    }
+    const valueToWithdrawn = round(data.amount ?? 0)
+
+    logger.debug(
+      'checks that the amount to be paid is not greater than the unit balance',
+      { valueToWithdrawn, balanceAffectedUnit },
+    )
+
+    if (toCents(valueToWithdrawn) > toCents(balanceAffectedUnit)) {
+      throw new InsufficientBalanceError()
     }
 
-    const incrementProfile = new IncrementBalanceProfileService(
-      this.profileRepository,
+    const transaction = await prisma.$transaction(async (tx) => {
+      const txs = await this.decrementBalance.execute(
+        unitId,
+        userId,
+        -valueToWithdrawn,
+        undefined,
+        undefined,
+        undefined,
+        data.description,
+        tx,
+      )
+      logger.debug('updated cash with the value', {
+        value: -valueToWithdrawn,
+      })
+      await this.updateCashRegisterFinalAmountService.execute(
+        { sessionId: session.id, amount: -valueToWithdrawn },
+        tx,
+      )
+      return txs.transaction
+    })
+
+    return [transaction]
+  }
+
+  private async userWithdrawal(
+    affectedUser: UserFindById,
+    session: ResponseFindOpenByUnit,
+    data: PayBalanceTransactionRequest,
+  ) {
+    if (!session) throw new CashRegisterClosedError()
+    if (!affectedUser) throw new AffectedUserNotFoundError()
+
+    logger.debug('total balance of the affected user', {
+      totalBalance: affectedUser.profile?.totalBalance,
+    })
+
+    const balanceAffectedUser = round(affectedUser.profile?.totalBalance ?? 0)
+    if (balanceAffectedUser === undefined) {
+      throw new Error('Balance user not found')
+    }
+    const discountLoans = data.discountLoans
+
+    // pega o valor total de comissao que o user tem disponivel
+    const { totalUserCommission, allUserUnpaidSalesItemsFormatted } =
+      await this.totalCommissionCalculatorForUser(affectedUser.id)
+
+    // pega o valor que foi solicitado a pagar de acordo com a logica de pagamento
+    const commissionToBePaid = round(data.amount ?? 0)
+
+    logger.debug('checks the consistency of the commission calculation', {
+      totalUserCommission,
+      balanceAffectedUser,
+    })
+
+    if (toCents(totalUserCommission) !== toCents(balanceAffectedUser)) {
+      throw new AmountsUserInconsistentError()
+    }
+
+    logger.debug(
+      'checks that the amount to be paid is not greater than the users balance',
+      { commissionToBePaid, balanceAffectedUser },
     )
-    const incrementUnit = new IncrementBalanceUnitService(this.unitRepository)
 
-    const transactions: Transaction[] = []
+    if (toCents(commissionToBePaid) > toCents(balanceAffectedUser)) {
+      throw new InsufficientBalanceError()
+    }
 
-    if (data.amount < 0) {
+    if (toCents(commissionToBePaid) < 0) {
       throw new NegativeValuesNotAllowedError()
     }
 
-    const increment = -data.amount
-    const effectiveUser = affectedUser ?? user
-    const balanceUnit = effectiveUser.unit?.totalBalance ?? 0
-    const balanceUser = effectiveUser.profile?.totalBalance ?? 0
+    const transactions = await prisma.$transaction(async (tx) => {
+      const txs: Transaction[] = []
 
-    const surplusValue =
-      -increment > balanceUser
-        ? balanceUser < 0
-          ? increment
-          : balanceUser - -increment
-        : undefined
+      if (discountLoans) {
+        const { transactions: transactionsLoan } =
+          await this.payLoansService.execute(
+            {
+              affectedUser,
+              amount: commissionToBePaid,
+            },
+            tx,
+          )
 
-    const remainingBalance =
-      balanceUser > 0 ? balanceUser - -increment : increment
-
-    if (remainingBalance < 0) {
-      if (!effectiveUser.unit?.allowsLoan) {
-        throw new InsufficientBalanceError()
+        txs.push(...transactionsLoan)
       }
-      const remainingBalanceRelative = -remainingBalance
-      if (remainingBalanceRelative > balanceUnit) {
-        throw new WithdrawalGreaterThanUnitBalanceError()
-      }
-      // TODO: envolver os dois increments a abaixo em uma transaction do prisma
-      const transactionProfile = await incrementProfile.execute(
-        effectiveUser.id,
-        increment,
-        undefined,
-        true,
-        undefined,
-        undefined,
-        undefined,
+
+      logger.debug('payment will be made for a fixed amount', {
+        commissionToBePaid,
+      })
+      const { transactions: transactionsPayUser } =
+        await this.payUserCommissionService.execute(
+          {
+            commissionToBePaid,
+            userId: affectedUser.id,
+            description: data.description,
+            allUserUnpaidSalesItemsFormatted,
+          },
+          tx,
+        )
+      txs.push(...transactionsPayUser)
+
+      logger.debug('updated cash with the value', {
+        value: -commissionToBePaid,
+      })
+      await this.updateCashRegisterFinalAmountService.execute(
+        { sessionId: session.id, amount: -commissionToBePaid },
+        tx,
       )
-      const transactionUnit = await incrementUnit.execute(
-        effectiveUser.unitId,
-        effectiveUser.id,
-        remainingBalance,
-        undefined,
-        true,
-      )
-      transactions.push(transactionProfile.transaction)
-      transactions.push(transactionUnit.transaction)
-    } else {
-      const transactionProfile = await incrementProfile.execute(
-        effectiveUser.id,
-        increment,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-      )
-      transactions.push(transactionProfile.transaction)
+
+      return txs
+    })
+
+    return transactions
+  }
+
+  async execute(
+    data: PayBalanceTransactionRequest,
+    userToken: UserToken,
+  ): Promise<PayBalanceTransactionResponse> {
+    logger.debug(WithdrawalBalanceTransactionService.name)
+
+    const session = await this.cashRegisterRepository.findOpenByUnit(
+      userToken.unitId,
+    )
+
+    const receiptUrl = data.receiptUrl
+    logger.debug('receiptUrl', { receiptUrl })
+
+    if (data?.amount && data?.amount < 0) {
+      throw new Error('Negative values not allowed')
     }
-
-    return { transactions, surplusValue }
+    if (data.affectedUserId) {
+      // retirada de um usuário
+      const affectedUser = await this.barberUserRepository.findById(
+        data.affectedUserId,
+      )
+      if (affectedUser?.unitId !== userToken.unitId) {
+        throw new UserNotFromUnitError()
+      }
+      const transactions = await this.userWithdrawal(
+        affectedUser,
+        session,
+        data,
+      )
+      return { transactions }
+    } else {
+      // retirada de uma unidade
+      const transactions = await this.unitWithdrawal(
+        userToken.unitId,
+        userToken.sub,
+        session,
+        data,
+      )
+      return { transactions }
+    }
   }
 }

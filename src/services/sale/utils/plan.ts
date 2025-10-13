@@ -59,9 +59,11 @@ export async function applyPlanDiscounts(
   clientId: string,
   planProfileRepo: PlanProfileRepository,
   planRepo: PlanRepository,
+  unitId?: string,
 ): Promise<ReturnBuildItemData[]> {
   const profilePlans = await planProfileRepo.findMany({
     profile: { userId: clientId },
+    plan: { unitId },
     status: { in: [PlanProfileStatus.PAID, PlanProfileStatus.CANCELED_ACTIVE] },
   })
   const benefitsMap: Record<

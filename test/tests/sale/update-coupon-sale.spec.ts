@@ -159,7 +159,7 @@ describe('Update coupon sale service', () => {
     saleRepo.sales[0].paymentStatus = 'PAID'
     await expect(
       service.execute({ id: 'sale-1', removeCoupon: true }),
-    ).rejects.toThrow('Cannot edit a paid sale')
+    ).rejects.toThrow('Cannot edit a paid, completed, or cancelled sale.')
   })
 
   it('throws when user not found', async () => {

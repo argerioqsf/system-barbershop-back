@@ -19,7 +19,16 @@ describe('Get sale service', () => {
   })
 
   it('returns sale when found', async () => {
-    const res = await useCase.execute({ id: 'sale-1' })
+    const res = await useCase.execute({
+      id: 'sale-1',
+      actor: {
+        id: 'user-1',
+        unitId: 'unit-1',
+        organizationId: 'organization-1',
+        role: 'ADMIN',
+        permissions: [],
+      },
+    })
     expect(res.sale?.id).toBe('sale-1')
     expect(telemetry.events).toHaveLength(1)
     expect(telemetry.events[0]).toMatchObject({
@@ -30,7 +39,16 @@ describe('Get sale service', () => {
   })
 
   it('returns null when not found', async () => {
-    const res = await useCase.execute({ id: 'other' })
+    const res = await useCase.execute({
+      id: 'other',
+      actor: {
+        id: 'user-1',
+        unitId: 'unit-1',
+        organizationId: 'organization-1',
+        role: 'ADMIN',
+        permissions: [],
+      },
+    })
     expect(res.sale).toBeNull()
     expect(telemetry.events.at(-1)).toMatchObject({
       operation: 'sale.viewed',
