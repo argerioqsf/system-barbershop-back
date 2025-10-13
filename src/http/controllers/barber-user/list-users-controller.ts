@@ -1,5 +1,4 @@
 import { makeListUsersService } from '@/services/@factories/barber-user/make-list-users'
-import { makeBarberBalance } from '@/services/@factories/report/make-barber-balance'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { UserToken } from '../authenticate-controller'
@@ -21,22 +20,14 @@ export const ListBarberUsersController = async (
 
   const result = await service.execute(userToken, { page, perPage, name })
 
-  const balanceService = makeBarberBalance()
-  const usersWithBalance = await Promise.all(
-    result.users.map(async (user) => {
-      const { balance } = await balanceService.execute({ barberId: user.id })
-      return { ...user, balance }
-    }),
-  )
-
   if (withCount) {
     return reply.status(200).send({
-      items: usersWithBalance,
+      items: result.users,
       count: result.count,
       page: page ?? 1,
       perPage: perPage ?? 10,
     })
   }
 
-  return reply.status(200).send(usersWithBalance)
+  return reply.status(200).send(result.users)
 }

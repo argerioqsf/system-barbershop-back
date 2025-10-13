@@ -11,14 +11,16 @@ import {
 import { BarberUsersRepository, UserFindById } from '../barber-users-repository'
 
 export class PrismaBarberUsersRepository implements BarberUsersRepository {
-  private sanitizeUser<T>(user: T & { password: string }): Omit<T, 'password'> {
+  private sanitizeUser<T extends { password: string }>(
+    user: T,
+  ): Omit<T, 'password'> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...safeUser } = user
     return safeUser
   }
 
-  private sanitizeUsers<T>(
-    users: (T & { password: string })[],
+  private sanitizeUsers<T extends { password: string }>(
+    users: T[],
   ): Omit<T, 'password'>[] {
     return users.map((user) => this.sanitizeUser(user))
   }
@@ -187,7 +189,7 @@ export class PrismaBarberUsersRepository implements BarberUsersRepository {
       })
     | null
   > {
-    const user = await prisma.user.findUnique({
+    const user = await prisma.user.findFirst({
       where: { email },
       include: {
         profile: {

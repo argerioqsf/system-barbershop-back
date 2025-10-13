@@ -83,7 +83,10 @@ export class BarberBalanceService {
     )
     const transactions = Array.from(
       new Map(
-        [...transactionsSales, ...transactionsBarber].map((tx) => [tx.id, tx]),
+        [...transactionsSales.items, ...transactionsBarber].map((tx) => [
+          tx.id,
+          tx,
+        ]),
       ).values(),
     )
 

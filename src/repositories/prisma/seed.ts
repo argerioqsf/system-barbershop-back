@@ -29,6 +29,10 @@ async function main() {
       category: PermissionCategory.APPOINTMENT,
     },
     {
+      name: PermissionName.SELL_PLAN,
+      category: PermissionCategory.PLAN,
+    },
+    {
       name: PermissionName.UPDATE_USER_ADMIN,
       category: PermissionCategory.USER,
     },
@@ -165,6 +169,29 @@ async function main() {
     data: {
       name: RoleName.OWNER,
       unit: { connect: { id: mainUnit.id } },
+      permissions: {
+        connect: [
+          { id: permissions[PermissionName.CREATE_USER_ATTENDANT].id },
+          { id: permissions[PermissionName.CREATE_USER_BARBER].id },
+          { id: permissions[PermissionName.CREATE_SALE].id },
+          { id: permissions[PermissionName.CREATE_USER_MANAGER].id },
+          { id: permissions[PermissionName.CREATE_USER_CLIENT].id },
+          { id: permissions[PermissionName.LIST_SALES_UNIT].id },
+          { id: permissions[PermissionName.LIST_UNIT_ORG].id },
+          { id: permissions[PermissionName.LIST_USER_ORG].id },
+          { id: permissions[PermissionName.LIST_ROLES_ALL].id },
+          { id: permissions[PermissionName.LIST_PERMISSIONS_ALL].id },
+          { id: permissions[PermissionName.LIST_APPOINTMENTS_UNIT].id },
+          { id: permissions[PermissionName.SELL_APPOINTMENT].id },
+          { id: permissions[PermissionName.SELL_SERVICE].id },
+          { id: permissions[PermissionName.SELL_PRODUCT].id },
+          { id: permissions[PermissionName.MANAGE_OTHER_USER_TRANSACTION].id },
+          {
+            id: permissions[PermissionName.MANAGE_USER_TRANSACTION_WITHDRAWAL]
+              .id,
+          },
+        ],
+      },
     },
   })
 
@@ -172,6 +199,23 @@ async function main() {
     data: {
       name: RoleName.MANAGER,
       unit: { connect: { id: mainUnit.id } },
+      permissions: {
+        connect: [
+          { id: permissions[PermissionName.CREATE_USER_ATTENDANT].id },
+          { id: permissions[PermissionName.CREATE_USER_BARBER].id },
+          { id: permissions[PermissionName.CREATE_USER_CLIENT].id },
+          { id: permissions[PermissionName.CREATE_SALE].id },
+          { id: permissions[PermissionName.LIST_SALES_UNIT].id },
+          { id: permissions[PermissionName.LIST_USER_UNIT].id },
+          { id: permissions[PermissionName.LIST_ROLES_ALL].id },
+          { id: permissions[PermissionName.LIST_PERMISSIONS_ALL].id },
+          { id: permissions[PermissionName.LIST_APPOINTMENTS_UNIT].id },
+          { id: permissions[PermissionName.SELL_PRODUCT].id },
+          { id: permissions[PermissionName.SELL_APPOINTMENT].id },
+          { id: permissions[PermissionName.SELL_SERVICE].id },
+          { id: permissions[PermissionName.SELL_PLAN].id },
+        ],
+      },
     },
   })
 
@@ -193,6 +237,15 @@ async function main() {
         connect: [
           { id: permissions[PermissionName.SELL_SERVICE].id },
           { id: permissions[PermissionName.SELL_PRODUCT].id },
+          { id: permissions[PermissionName.SELL_APPOINTMENT].id },
+          { id: permissions[PermissionName.SELL_PLAN].id },
+          { id: permissions[PermissionName.MANAGE_SELF_WORK_HOURS].id },
+          { id: permissions[PermissionName.MANAGE_SELF_BLOCKED_HOURS].id },
+          { id: permissions[PermissionName.CREATE_SALE].id },
+          { id: permissions[PermissionName.CREATE_USER_CLIENT].id },
+          { id: permissions[PermissionName.LIST_PERMISSIONS_ALL].id },
+          { id: permissions[PermissionName.LIST_ROLES_ALL].id },
+          { id: permissions[PermissionName.LIST_SERVICES_UNIT].id },
           { id: permissions[PermissionName.ACCEPT_APPOINTMENT].id },
         ],
       },
@@ -213,7 +266,14 @@ async function main() {
       permissions: {
         connect: [
           { id: permissions[PermissionName.CREATE_SALE].id },
+          { id: permissions[PermissionName.CREATE_USER_CLIENT].id },
           { id: permissions[PermissionName.LIST_APPOINTMENTS_UNIT].id },
+          { id: permissions[PermissionName.LIST_PERMISSIONS_ALL].id },
+          { id: permissions[PermissionName.LIST_ROLES_ALL].id },
+          { id: permissions[PermissionName.SELL_SERVICE].id },
+          { id: permissions[PermissionName.SELL_PRODUCT].id },
+          { id: permissions[PermissionName.SELL_APPOINTMENT].id },
+          { id: permissions[PermissionName.SELL_PLAN].id },
         ],
       },
     },

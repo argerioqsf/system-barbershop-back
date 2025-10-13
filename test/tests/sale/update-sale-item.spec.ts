@@ -325,7 +325,7 @@ describe('Update sale item service', () => {
     saleRepo.sales[0].paymentStatus = 'PAID'
     await expect(
       updateQuantityUseCase.execute({ saleItemId: 'i1', quantity: 1 }),
-    ).rejects.toThrow('Cannot edit a paid sale')
+    ).rejects.toThrow('Cannot edit a paid, completed, or cancelled sale.')
   })
 
   it('throws when sale not found during update', async () => {

@@ -121,6 +121,7 @@ describe('Update client sale service', () => {
       price: 100,
       name: 'Plan',
       typeRecurrenceId: 'rec1',
+      unitId: 'unit-1',
       benefits: [
         {
           id: 'bp1',
@@ -203,7 +204,7 @@ describe('Update client sale service', () => {
     saleRepo.sales[0].paymentStatus = 'PAID'
     await expect(
       service.execute({ id: 'sale-1', clientId: 'c2' }),
-    ).rejects.toThrow('Cannot edit a paid sale')
+    ).rejects.toThrow('Cannot edit a paid, completed, or cancelled sale.')
   })
 
   it('throws when profile not found', async () => {

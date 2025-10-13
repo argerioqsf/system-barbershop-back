@@ -33,6 +33,7 @@ enum PermissionName {
   SELL_PRODUCT
   SELL_SERVICE
   SELL_APPOINTMENT
+  SELL_PLAN
   ACCEPT_APPOINTMENT
   CREATE_SALE
   CREATE_USER_OWNER
@@ -63,6 +64,7 @@ enum PermissionCategory {
   SALE
   TRANSACTION
   APPOINTMENT
+  PLAN
 }
 
 enum PaymentMethod {
@@ -156,7 +158,7 @@ model Permission {
 model User {
   id                     String                @id @default(uuid())
   name                   String
-  email                  String                @unique
+  email                  String                
   password               String
   active                 Boolean               @default(false)
   organizationId         String

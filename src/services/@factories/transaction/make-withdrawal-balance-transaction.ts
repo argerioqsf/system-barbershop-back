@@ -6,26 +6,43 @@ import { UpdateCashRegisterFinalAmountService } from '@/services/cash-register/u
 import { IncrementBalanceProfileService } from '@/services/profile/increment-balance'
 import { IncrementBalanceUnitService } from '@/services/unit/increment-balance'
 import { WithdrawalBalanceTransactionService } from '@/services/transaction/withdrawal-balance-transaction'
+import { PrismaSaleItemRepository } from '@/repositories/prisma/prisma-sale-item-repository'
+import { PayUserCommissionService } from '@/services/transaction/pay-user-comission'
+import { PrismaAppointmentServiceRepository } from '@/repositories/prisma/prisma-appointment-service-repository'
+import { PayUserLoansService } from '@/services/loan/pay-user-loans'
+import { PrismaLoanRepository } from '@/repositories/prisma/prisma-loan-repository'
 
 export function makeWithdrawalBalanceTransaction() {
   const profilesRepository = new PrismaProfilesRepository()
   const unitRepository = new PrismaUnitRepository()
   const cashRegisterRepository = new PrismaCashRegisterRepository()
-
-  const incrementProfileService = new IncrementBalanceProfileService(
+  const saleItemRepository = new PrismaSaleItemRepository()
+  const appointmentServiceRepository = new PrismaAppointmentServiceRepository()
+  const incrementBalanceProfileService = new IncrementBalanceProfileService(
     profilesRepository,
   )
+  const payUserCommissionService = new PayUserCommissionService(
+    profilesRepository,
+    saleItemRepository,
+    appointmentServiceRepository,
+    incrementBalanceProfileService,
+  )
+  const loanRepository = new PrismaLoanRepository()
   const incrementUnitService = new IncrementBalanceUnitService(unitRepository)
   const updateCashRegisterFinalAmountService =
     new UpdateCashRegisterFinalAmountService(cashRegisterRepository)
-
+  const payLoansService = new PayUserLoansService(
+    loanRepository,
+    unitRepository,
+  )
   return new WithdrawalBalanceTransactionService(
     new PrismaBarberUsersRepository(),
     cashRegisterRepository,
-    profilesRepository,
-    unitRepository,
-    incrementProfileService,
-    incrementUnitService,
+    saleItemRepository,
+    payUserCommissionService,
+    payLoansService,
     updateCashRegisterFinalAmountService,
+    unitRepository,
+    incrementUnitService,
   )
 }

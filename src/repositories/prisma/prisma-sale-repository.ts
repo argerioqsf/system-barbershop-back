@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { Prisma } from '@prisma/client'
+import { PaymentStatus, Prisma } from '@prisma/client'
 import {
   SaleRepository,
   DetailedSale,
@@ -301,5 +301,35 @@ export class PrismaSaleRepository implements SaleRepository {
     })
     const detailed = sales as DetailedSale[]
     return detailed.map((sale) => this.sanitizeSale(sale))
+  }
+
+  async updateStatus(id: string, status: PaymentStatus): Promise<DetailedSale> {
+    const sale = await prisma.sale.update({
+      where: { id },
+      data: { paymentStatus: status },
+      include: {
+        items: {
+          include: {
+            service: true,
+            product: true,
+            plan: true,
+            barber: { include: { profile: true } },
+            coupon: true,
+            appointment: {
+              include: { services: { include: { service: true } } },
+            },
+            discounts: true,
+          },
+        },
+        user: { include: { profile: true } },
+        client: { include: { profile: true } },
+        coupon: true,
+        session: true,
+        transactions: true,
+        unit: true,
+      },
+    })
+    const detailed = sale as DetailedSale
+    return this.sanitizeSale(detailed)
   }
 }

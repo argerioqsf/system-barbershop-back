@@ -65,7 +65,6 @@ export class ListUsersService {
     { page, perPage, name }: ListUsersRequest,
   ): Promise<ListUsersResponse> {
     assertUser(userToken)
-
     const where: Prisma.UserWhereInput = {
       ...{ unitId: userToken.unitId },
       ...(name && { name: { contains: name } }),

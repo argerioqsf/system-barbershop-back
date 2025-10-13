@@ -12,8 +12,7 @@ import {
 } from '@/services/sale/utils/item'
 import { applyCouponSale } from '@/services/sale/utils/coupon'
 import { calculateTotal } from '@/services/sale/utils/sale'
-import { CannotEditPaidSaleError } from '@/services/@errors/sale/cannot-edit-paid-sale-error'
-import { PaymentStatus, Prisma } from '@prisma/client'
+import { PaymentStatus, Prisma, SaleStatus } from '@prisma/client'
 import { TransactionRunner } from '../services/sale-item-update-executor'
 import { UpdateSaleRequest } from '@/services/sale/types'
 import { SaleTelemetry } from '@/modules/sale/application/contracts/sale-telemetry'
@@ -104,8 +103,12 @@ export class UpdateSaleCouponUseCase {
   }> {
     const saleCurrent = await this.saleRepository.findById(saleId)
     if (!saleCurrent) throw new Error('Sale not found')
-    if (saleCurrent.paymentStatus === PaymentStatus.PAID) {
-      throw new CannotEditPaidSaleError()
+    if (
+      saleCurrent.paymentStatus === PaymentStatus.PAID ||
+      saleCurrent.status === SaleStatus.COMPLETED ||
+      saleCurrent.status === SaleStatus.CANCELLED
+    ) {
+      throw new Error('Cannot edit a paid, completed, or cancelled sale.')
     }
 
     const user = await this.barberUsersRepository.findById(saleCurrent.userId)

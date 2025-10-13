@@ -13,6 +13,7 @@ import {
   Appointment,
   Discount,
   Unit,
+  PaymentStatus,
 } from '@prisma/client'
 import { DetailedAppointment } from './appointment-repository'
 
@@ -54,6 +55,7 @@ export interface SaleRepository {
     data: Prisma.SaleUpdateInput,
     tx?: Prisma.TransactionClient,
   ): Promise<DetailedSale>
+  updateStatus(id: string, status: PaymentStatus): Promise<DetailedSale>
   findManyByDateRange(start: Date, end: Date): Promise<DetailedSale[]>
   findManyByUser(userId: string): Promise<DetailedSale[]>
   findManyByBarber(

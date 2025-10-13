@@ -20,8 +20,7 @@ import {
   calculateGrossTotal,
 } from '@/services/sale/utils/sale'
 import { CreateSaleItem, RemoveAddSaleItemRequest } from '@/services/sale/types'
-import { CannotEditPaidSaleError } from '@/services/@errors/sale/cannot-edit-paid-sale-error'
-import { PaymentStatus, Prisma } from '@prisma/client'
+import { PaymentStatus, Prisma, SaleStatus } from '@prisma/client'
 import {
   BuildItemsResult,
   SaleItemsBuildService,
@@ -72,8 +71,12 @@ export class RemoveAddSaleItemUseCase {
 
     const saleCurrent = await this.saleRepository.findById(id)
     if (!saleCurrent) throw new Error('Sale not found')
-    if (saleCurrent.paymentStatus === PaymentStatus.PAID) {
-      throw new CannotEditPaidSaleError()
+    if (
+      saleCurrent.paymentStatus === PaymentStatus.PAID ||
+      saleCurrent.status === SaleStatus.COMPLETED ||
+      saleCurrent.status === SaleStatus.CANCELLED
+    ) {
+      throw new Error('Cannot edit a paid, completed, or cancelled sale.')
     }
 
     const user = await this.barberUserRepository.findById(saleCurrent.userId)

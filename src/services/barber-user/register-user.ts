@@ -114,6 +114,19 @@ export class RegisterUserService {
     }
   }
 
+  private async verifyEmailAlreadyExistsInOrganization(
+    email: string,
+    organizationId: string,
+  ) {
+    const userByEmailInOrganization = await this.repository.findMany({
+      email,
+      organizationId,
+    })
+    if (userByEmailInOrganization.length > 0) {
+      throw new UserAlreadyExistsError()
+    }
+  }
+
   async execute(
     userToken: UserToken,
     data: RegisterUserRequest,
@@ -128,11 +141,10 @@ export class RegisterUserService {
     if (role?.name === RoleName.ADMIN && userToken.role !== 'ADMIN') {
       throw new UnauthorizedError()
     }
-
-    const existing = await this.repository.findByEmail(data.email)
-    if (existing) {
-      throw new UserAlreadyExistsError()
-    }
+    await this.verifyEmailAlreadyExistsInOrganization(
+      data.email,
+      userToken.organizationId,
+    )
     const password_hash = await hash(data.password, 6)
     const unit = await this.unitRepository.findById(data.unitId)
     if (!unit) throw new UnitNotExistsError()

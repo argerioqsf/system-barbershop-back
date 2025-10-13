@@ -65,10 +65,11 @@ export interface SaleItemRepository {
     where?: Prisma.SaleItemWhereInput,
   ): Promise<DetailedSaleItemFindMany[]>
 
-  findManyFilterAppointmentService(
-    where?: Prisma.SaleItemWhereInput,
+  findManyPendingCommissionForIds(
+    barberId: string,
     appointmentServiceIds?: string[],
-  ): Promise<DetailedSaleItemFindMany[]>
+    saleItemIds?: string[],
+  ): Promise<ReturnFindManyPendingCommission[]>
 
   findManyByBarberId(barberId: string): Promise<DetailedSaleItemFindMany[]>
 

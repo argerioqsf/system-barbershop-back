@@ -532,4 +532,42 @@ export class InMemorySaleItemRepository implements SaleItemRepository {
     }
     return items
   }
+
+  async findManyPendingCommissionForIds(
+    barberId: string,
+    appointmentServiceIds?: string[],
+    saleItemIds?: string[],
+  ): Promise<ReturnFindManyPendingCommission[]> {
+    const items: ReturnFindManyPendingCommission[] = []
+    for (const sale of this.saleRepository.sales) {
+      for (const item of sale.items) {
+        if (
+          item.barberId === barberId &&
+          item.commissionPaid === false &&
+          sale.paymentStatus === 'PAID'
+        ) {
+          if (saleItemIds && saleItemIds.includes(item.id)) {
+            items.push({
+              ...this.buildDetailedItem(sale, item),
+              product: null,
+              service: null,
+            })
+          }
+          if (appointmentServiceIds && item.appointment) {
+            const hasService = item.appointment.services?.some((s) =>
+              appointmentServiceIds.includes(s.id),
+            )
+            if (hasService) {
+              items.push({
+                ...this.buildDetailedItem(sale, item),
+                product: null,
+                service: null,
+              })
+            }
+          }
+        }
+      }
+    }
+    return items
+  }
 }

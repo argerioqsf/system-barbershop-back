@@ -1,18 +1,16 @@
 import { logger } from '@/lib/logger'
 import { DetailedAppointmentService } from '@/repositories/appointment-repository'
-import { DetailedSaleItemFindMany } from '@/repositories/sale-item-repository'
+import { ReturnFindManyPendingCommission } from '@/repositories/sale-item-repository'
 import { calculateRealValueSaleItem } from '@/services/sale/utils/item'
 import { round } from '@/utils/format-currency'
-import { Sale, Service } from '@prisma/client'
-
-type Transaction = { amount: number }
+import { Sale, Service, Transaction } from '@prisma/client'
 
 export type PaymentItems = {
   saleId: string
   saleItemId?: string
   appointmentServiceId?: string
   amount: number
-  item: DetailedSaleItemFindMany
+  item: ReturnFindManyPendingCommission
   service?: Service
   sale?: Sale
   transactions: Transaction[]
@@ -20,13 +18,13 @@ export type PaymentItems = {
 
 export type CalculateCommissionsReturn = {
   totalCommission: number
-  saleItemsRecords: PaymentItems[]
+  allUserUnpaidSalesItemsFormatted: PaymentItems[]
 }
 
-export function calculateCommissions(
-  items: DetailedSaleItemFindMany[],
+export function calculateCommissionsForItems(
+  items: ReturnFindManyPendingCommission[],
 ): CalculateCommissionsReturn {
-  const saleItemsRecords: PaymentItems[] = []
+  const allUserUnpaidSalesItemsFormatted: PaymentItems[] = []
   let totalCommission = 0
 
   for (const item of items) {
@@ -36,12 +34,12 @@ export function calculateCommissions(
       item.appointment.services.length > 0
     ) {
       const records = processAppointmentItem(item, item.appointment.services)
-      saleItemsRecords.push(...records)
+      allUserUnpaidSalesItemsFormatted.push(...records)
       totalCommission += sumAmounts(records)
     } else {
       const record = processSaleItem(item)
       if (record) {
-        saleItemsRecords.push(record)
+        allUserUnpaidSalesItemsFormatted.push(record)
         totalCommission += record.amount
       }
     }
@@ -49,12 +47,14 @@ export function calculateCommissions(
 
   return {
     totalCommission: round(totalCommission),
-    saleItemsRecords,
+    allUserUnpaidSalesItemsFormatted,
   }
 }
 
 // Processa itens de venda direta (produto ou serviço)
-function processSaleItem(item: DetailedSaleItemFindMany): PaymentItems | null {
+function processSaleItem(
+  item: ReturnFindManyPendingCommission,
+): PaymentItems | null {
   const rate = item.porcentagemBarbeiro ?? 0
   const realPriceItem = calculateRealValueSaleItem(item.price, item.discounts)
   const baseValue = realPriceItem ?? 0
@@ -79,7 +79,7 @@ function processSaleItem(item: DetailedSaleItemFindMany): PaymentItems | null {
 
 // Processa itens com serviços em agendamento
 function processAppointmentItem(
-  item: DetailedSaleItemFindMany,
+  item: ReturnFindManyPendingCommission,
   services: DetailedAppointmentService[],
 ): PaymentItems[] {
   const records: PaymentItems[] = []

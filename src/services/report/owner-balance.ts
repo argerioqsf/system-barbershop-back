@@ -64,7 +64,10 @@ export class OwnerBalanceService {
     )
     const transactions = Array.from(
       new Map(
-        [...transactionsSales, ...transactionsOwner].map((tx) => [tx.id, tx]),
+        [...transactionsSales.items, ...transactionsOwner].map((tx) => [
+          tx.id,
+          tx,
+        ]),
       ).values(),
     )
     const additions = transactions

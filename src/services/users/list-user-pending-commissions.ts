@@ -3,9 +3,9 @@ import {
   LoanRepository,
   LoanWithTransactions,
 } from '@/repositories/loan-repository'
-import { LoanStatus, PaymentStatus } from '@prisma/client'
+import { LoanStatus } from '@prisma/client'
 import {
-  calculateCommissions,
+  calculateCommissionsForItems,
   PaymentItems,
 } from './utils/calculatePendingCommissions'
 
@@ -29,16 +29,9 @@ export class ListUserPendingCommissionsService {
   async execute({
     userId,
   }: ListUserPendingCommissionsRequest): Promise<ListUserPendingCommissionsResponse> {
-    const saleItems = await this.saleItemRepository.findMany({
-      barberId: userId,
-      sale: { paymentStatus: PaymentStatus.PAID },
-      commissionPaid: false,
-      OR: [
-        { appointmentId: { not: null } },
-        { serviceId: { not: null } },
-        { productId: { not: null } },
-      ],
-    })
+    const saleItems = await this.saleItemRepository.findManyPendingCommission(
+      userId,
+    )
 
     const loans = await this.loanRepository.findMany({
       userId,
@@ -46,9 +39,8 @@ export class ListUserPendingCommissionsService {
       fullyPaid: false,
     })
 
-    const { totalCommission, saleItemsRecords } = await calculateCommissions(
-      saleItems,
-    )
+    const { totalCommission, allUserUnpaidSalesItemsFormatted } =
+      await calculateCommissionsForItems(saleItems)
 
     const outstanding = loans.reduce((sum, loan) => {
       const paid = loan.transactions.reduce(
@@ -60,7 +52,7 @@ export class ListUserPendingCommissionsService {
     }, 0)
 
     return {
-      saleItemsRecords,
+      saleItemsRecords: allUserUnpaidSalesItemsFormatted,
       totalCommission,
       outstanding: -outstanding,
       loans,

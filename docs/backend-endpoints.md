@@ -216,11 +216,21 @@ Transações/Comissões
   - Exemplo (form-data): `receipt: <comprovante.png>`, `amount: 120`, `saleItemIds: ["saleItemId1","saleItemId2"]`, `affectedUserId: "user_id"`
   - Permissões: `MANAGE_USER_TRANSACTION_WITHDRAWAL` e `MANAGE_OTHER_USER_TRANSACTION`
   - Resposta: `{ transactions: Transaction[] }`
+- POST `/withdrawal/transactions` [protegido]
+  - multipart/form-data (arquivo: `receipt`)
+  - Body: `{ description, amount (>0), affectedUserId?, discountLoans? (boolean) }`
+  - Exemplo (form-data): `receipt: <comprovante.png>`, `description: "Retirada de caixa"`, `amount: 120`, `affectedUserId: "user_id"`
+  - Permissões: `MANAGE_USER_TRANSACTION_WITHDRAWAL`. Requer `MANAGE_OTHER_USER_TRANSACTION` se `affectedUserId` for informado.
+  - Observação: Se o `affectedUserId` não for passado, a retirada será feita da unidade em que o usuário que está registrando está definido.
+  - Resposta: `{ transactions: Transaction[] }`
 - GET `/pay/pending/:userId` [protegido]
   - Exige permissão MANAGE_OTHER_USER_TRANSACTION
   - Resposta: `{ saleItemsRecords, totalCommission, loans, outstanding }`
 - GET `/transactions` [protegido]
-  - Resposta: `Transaction[]`
+  - Query: `{ withCount?, page?, perPage? }`
+  - Resposta: `items` ou `{ items, count, page, perPage }`
+  - Exemplo (com withCount=true): `{ "items": [{ "id": "tx_1", "amount": 120, "type": "WITHDRAWAL" }], "count": 1, "page": 1, "perPage": 10 }`
+  - Exemplo (sem withCount): `[{ "id": "tx_1", "amount": 120, "type": "WITHDRAWAL" }]`
   - Exemplo (POST /pay/transactions resposta): `{ "transactions": [{ "id": "tx_1", "amount": 120, "type": "WITHDRAWAL" }] }`
   - Exemplo (GET /pay/pending/:userId): `{ "saleItemsRecords": [{ "id": "si_1", "commission": 20 }], "totalCommission": 200, "loans": [{ "id": "loan_1", "remaining": 100 }], "outstanding": 100 }`
   - Exemplo (GET /transactions): `[{ "id": "tx_1", "amount": 120, "type": "WITHDRAWAL" }]`
@@ -353,6 +363,9 @@ Vendas
   - Exemplo: `{ "id": "sale_1", "paymentStatus": "PAID", "items": [{ "id": "si_1", "productId": "prd_1", "quantity": 1, "price": 15 }] }`
  - PATCH `/sales/:id` [protegido]
   - Body: `{ observation?, method? }`
+  - Resposta: `sale`
+ - PATCH `/sales/:id/status` [protegido]
+  - Body: `{ status: PaymentStatus }`
   - Resposta: `sale`
  - PATCH `/sales/:id/saleItems` [protegido]
   - Body: `{ addItems?: { serviceId?|productId?|appointmentId?|planId?, quantity, barberId?, couponId?, customPrice? }[], removeItemIds?: string[] }`

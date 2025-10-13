@@ -537,6 +537,15 @@ export class InMemorySaleRepository implements SaleRepository {
     return this.sanitizeSale(sale)
   }
 
+  async updateStatus(id: string, status: PaymentStatus): Promise<DetailedSale> {
+    const sale = this.sales.find((s) => s.id === id)
+    if (!sale) {
+      throw new Error('Sale not found')
+    }
+    sale.paymentStatus = status
+    return this.sanitizeSale(sale)
+  }
+
   async findManyByDateRange(start: Date, end: Date): Promise<DetailedSale[]> {
     return this.sales
       .filter((s) => s.createdAt >= start && s.createdAt <= end)

@@ -68,8 +68,9 @@ export class InMemoryTransactionRepository implements TransactionRepository {
 
   async findMany(
     where: Prisma.TransactionWhereInput = {},
-  ): Promise<TransactionFull[]> {
-    return this.transactions.filter((t) => {
+    pagination?: { page: number; perPage: number },
+  ): Promise<{ items: TransactionFull[]; count: number }> {
+    const filtered = this.transactions.filter((t) => {
       if (where.unitId && t.unitId !== where.unitId) return false
       if (where.isLoan !== undefined && t.isLoan !== where.isLoan) return false
       if (
@@ -83,8 +84,34 @@ export class InMemoryTransactionRepository implements TransactionRepository {
           (t as { organizationId?: string }).organizationId
         return unitOrg === orgId
       }
+      // This is a simplified filter for tests. Add more conditions as needed.
+      if (
+        where.sale &&
+        typeof where.sale === 'object' &&
+        'items' in where.sale
+      ) {
+        const saleItemsWhere = where.sale
+          .items as Prisma.SaleItemListRelationFilter
+        if (saleItemsWhere.some) {
+          const some = saleItemsWhere.some
+          if (some.barberId) {
+            return t.sale?.items.some((i) => i.barberId === some.barberId)
+          }
+        }
+      }
       return true
     })
+
+    const count = filtered.length
+
+    if (pagination) {
+      const { page = 1, perPage = 10 } = pagination
+      const start = (page - 1) * perPage
+      const end = start + perPage
+      return { items: filtered.slice(start, end), count }
+    }
+
+    return { items: filtered, count }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

@@ -1,5 +1,4 @@
 import { prisma } from '@/lib/prisma'
-import { CannotEditPaidSaleError } from '@/services/@errors/sale/cannot-edit-paid-sale-error'
 import { CannotEditPaidSaleItemError } from '@/services/@errors/sale/cannot-edit-paid-sale-item-error'
 import { SaleTotalsService } from '@/modules/sale/application/services/sale-totals-service'
 import { CreateSaleItem, SaleItemUpdateFields } from '@/services/sale/types'
@@ -10,7 +9,7 @@ import {
   DetailedSaleItemFindById,
 } from '@/repositories/sale-item-repository'
 import { SaleRepository, DetailedSale } from '@/repositories/sale-repository'
-import { PaymentStatus, Prisma, SaleItem } from '@prisma/client'
+import { PaymentStatus, Prisma, SaleItem, SaleStatus } from '@prisma/client'
 
 export type TransactionRunner = <T>(
   fn: (tx: Prisma.TransactionClient) => Promise<T>,
@@ -147,8 +146,12 @@ export class SaleItemUpdateExecutor {
       throw new CannotEditPaidSaleItemError()
     }
 
-    if (saleItem.sale.paymentStatus === PaymentStatus.PAID) {
-      throw new CannotEditPaidSaleError()
+    if (
+      saleItem.sale.paymentStatus === PaymentStatus.PAID ||
+      saleItem.sale.status === SaleStatus.COMPLETED ||
+      saleItem.sale.status === SaleStatus.CANCELLED
+    ) {
+      throw new Error('Cannot edit a paid, completed, or cancelled sale.')
     }
   }
 }
