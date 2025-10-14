@@ -1,6 +1,11 @@
 import { SaleRepository, DetailedSale } from '@/repositories/sale-repository'
 import { UpdateSaleRequest } from '@/services/sale/types'
-import { PaymentStatus, Prisma, SaleStatus } from '@prisma/client'
+import {
+  PaymentMethod,
+  PaymentStatus,
+  Prisma,
+  SaleStatus,
+} from '@prisma/client'
 import { SaleTelemetry } from '@/modules/sale/application/contracts/sale-telemetry'
 
 export type TransactionRunner = <T>(
@@ -30,6 +35,10 @@ export class UpdateSaleUseCase {
       currentSale.status === SaleStatus.CANCELLED
     ) {
       throw new Error('Cannot edit a paid, completed, or cancelled sale.')
+    }
+
+    if (method === PaymentMethod.EXEMPT && currentSale.total > 0) {
+      throw new Error('invalid payment method for this sale')
     }
 
     if (observation === undefined && method === undefined) {

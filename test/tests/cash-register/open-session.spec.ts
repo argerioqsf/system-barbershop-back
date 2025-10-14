@@ -4,20 +4,36 @@ import {
   InMemoryCashRegisterRepository,
   FakeTransactionRepository,
   FakeProfilesRepository,
+  FakeUnitRepository,
+  InMemoryBarberUsersRepository,
 } from '../../helpers/fake-repositories'
-import { sessionUser } from '../../helpers/default-values'
-
+import {
+  defaultUnit,
+  defaultUser,
+  sessionUser,
+} from '../../helpers/default-values'
+import { IncrementBalanceUnitService } from '../../../src/services/unit/increment-balance'
+import { CreateTransactionService } from '../../../src/services/transaction/create-transaction'
 describe('Open session service', () => {
   let repo: InMemoryCashRegisterRepository
   let transactionRepo: FakeTransactionRepository
   let profilesRepo: FakeProfilesRepository
   let service: OpenSessionService
+  let incrementBalanceUnit: IncrementBalanceUnitService
+  let barberUsersRepo: InMemoryBarberUsersRepository
 
   beforeEach(() => {
     repo = new InMemoryCashRegisterRepository()
     transactionRepo = new FakeTransactionRepository()
     profilesRepo = new FakeProfilesRepository()
-    service = new OpenSessionService(repo, transactionRepo, profilesRepo)
+    barberUsersRepo = new InMemoryBarberUsersRepository([
+      { ...defaultUser, id: sessionUser.sub, profile: null, unit: null },
+    ])
+    incrementBalanceUnit = new IncrementBalanceUnitService(
+      new FakeUnitRepository({ ...defaultUnit }, [{ ...defaultUnit }]),
+      new CreateTransactionService(transactionRepo, barberUsersRepo, repo),
+    )
+    service = new OpenSessionService(repo, profilesRepo, incrementBalanceUnit)
   })
 
   it('opens session without initial amount', async () => {

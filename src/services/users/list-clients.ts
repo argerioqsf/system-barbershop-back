@@ -1,7 +1,6 @@
 import { UserToken } from '@/http/controllers/authenticate-controller'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { assertUser } from '@/utils/assert-user'
-import { buildUnitWhere, getScope } from '@/utils/permissions'
 import { Prisma, Profile, RoleName, User } from '@prisma/client'
 
 interface ListClientsResponse {

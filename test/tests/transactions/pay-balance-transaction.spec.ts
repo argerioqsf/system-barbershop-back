@@ -27,6 +27,8 @@ import { IncrementBalanceProfileService } from '../../../src/services/profile/in
 import { IncrementBalanceUnitService } from '../../../src/services/unit/increment-balance'
 import { UpdateCashRegisterFinalAmountService } from '../../../src/services/cash-register/update-cash-register-final-amount'
 
+import { prisma } from '../../../src/lib/prisma'
+
 let transactionRepo: FakeTransactionRepository
 let barberRepo: FakeBarberUsersRepository
 let cashRepo: FakeCashRegisterRepository
@@ -52,14 +54,16 @@ function setup(options?: { userBalance?: number; unitBalance?: number }) {
   const saleRepo = new FakeSaleRepository()
   const appointmentRepo = new FakeAppointmentRepository()
   saleItemRepo = new FakeSaleItemRepository(saleRepo)
-  appointmentServiceRepo = new FakeAppointmentServiceRepository(
-    appointmentRepo,
-  )
+  appointmentServiceRepo = new FakeAppointmentServiceRepository(appointmentRepo)
   profileRepo = new FakeProfilesRepository()
   const unit = { ...defaultUnit, totalBalance: options?.unitBalance ?? 0 }
   unitRepo = new FakeUnitRepository(unit)
 
-  const profile = { ...defaultProfile, totalBalance: 0, user: { ...defaultUser } }
+  const profile = {
+    ...defaultProfile,
+    totalBalance: 0,
+    user: { ...defaultUser },
+  }
   profileRepo.profiles.push(profile)
   const user = { ...defaultUser, profile, unit }
   barberRepo.users.push(user)
@@ -77,9 +81,12 @@ function setup(options?: { userBalance?: number; unitBalance?: number }) {
     user: defaultUser,
   }
 
-  const incrementProfileService = new IncrementBalanceProfileService(profileRepo)
+  const incrementProfileService = new IncrementBalanceProfileService(
+    profileRepo,
+  )
   const incrementUnitService = new IncrementBalanceUnitService(unitRepo)
-  const updateCashRegisterFinalAmountService = new UpdateCashRegisterFinalAmountService(cashRepo)
+  const updateCashRegisterFinalAmountService =
+    new UpdateCashRegisterFinalAmountService(cashRepo)
 
   const payUserCommissionService = new PayUserCommissionService(
     profileRepo,
@@ -110,18 +117,17 @@ function setup(options?: { userBalance?: number; unitBalance?: number }) {
     saleItemRepo,
     appointmentServiceRepo,
     appointmentRepo,
-    unitRepo,
     loanRepo,
   }
 }
-
-import { prisma } from '../../../src/lib/prisma'
 
 describe('Pay balance transaction service', () => {
   let ctx: ReturnType<typeof setup>
 
   beforeAll(() => {
-    vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) => fn(prisma))
+    vi.spyOn(prisma, '$transaction').mockImplementation(async (fn) =>
+      fn(prisma),
+    )
   })
 
   beforeEach(() => {
@@ -189,7 +195,9 @@ describe('Pay balance transaction service', () => {
       { unitId: ctx.unitRepo.unit.id } as any,
     )
 
-    const updatedProfile = ctx.profileRepo.profiles.find(p => p.id === profile.id)
+    const updatedProfile = ctx.profileRepo.profiles.find(
+      (p) => p.id === profile.id,
+    )
     expect(updatedProfile?.totalBalance).toBe(10)
     expect(ctx.unitRepo.unit.totalBalance).toBe(100)
     expect(ctx.transactionRepo.transactions).toHaveLength(1)
@@ -237,7 +245,9 @@ describe('Pay balance transaction service', () => {
       { unitId: ctx.unitRepo.unit.id } as any,
     )
 
-    const updatedProfile = ctx.profileRepo.profiles.find(p => p.id === profile.id)
+    const updatedProfile = ctx.profileRepo.profiles.find(
+      (p) => p.id === profile.id,
+    )
     expect(updatedProfile?.totalBalance).toBe(5)
     expect(ctx.transactionRepo.transactions).toHaveLength(2)
     expect((sale2.items[0] as any).commissionPaid).toBe(false)
@@ -334,9 +344,9 @@ describe('Pay balance transaction service', () => {
     )
 
     expect(ctx.transactionRepo.transactions).toHaveLength(1)
-    expect(
-      ctx.appointmentRepo.appointments[0].services[0].commissionPaid,
-    ).toBe(true)
+    expect(ctx.appointmentRepo.appointments[0].services[0].commissionPaid).toBe(
+      true,
+    )
   })
 
   it('throws when cash register is closed', async () => {
@@ -378,7 +388,11 @@ describe('Pay balance transaction service', () => {
     const other = makeUser('u9', profile, ctx.unitRepo.unit)
     ctx.barberRepo.users.push(other)
 
-    const sale = { ...makeSaleWithBarber(), id: 's-incons', paymentStatus: 'PAID' }
+    const sale = {
+      ...makeSaleWithBarber(),
+      id: 's-incons',
+      paymentStatus: 'PAID',
+    }
     sale.items[0].barberId = other.id
     sale.items[0].id = 'it-incons'
     sale.items[0].serviceId = 'svc-incons'

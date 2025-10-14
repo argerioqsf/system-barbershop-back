@@ -125,6 +125,8 @@ export class UpdateUserService {
       if (!unit) throw new UnitNotExistsError()
     }
 
+    // TODO: verificar se a role a ser adicionada no usuario editad pertence a
+    // unidade de quem esta criando esse usuario
     let permissionIds: string[] | undefined
     if (data.permissions) {
       const roleId = data.roleId ?? oldUser.profile?.roleId

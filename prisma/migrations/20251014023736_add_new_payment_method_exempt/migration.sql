@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `sales` MODIFY `method` ENUM('CASH', 'PIX', 'CREDIT_CARD', 'DEBIT_CARD', 'EXEMPT') NOT NULL;

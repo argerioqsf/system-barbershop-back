@@ -37,12 +37,14 @@ let cashRepo: FakeCashRegisterRepository
 
 function setup() {
   const orgRepo = new FakeOrganizationRepository({ ...defaultOrganization })
-  const profileRepo = new FakeProfilesRepository([{ ...barberProfile, user: barberUser }])
+  const profileRepo = new FakeProfilesRepository([
+    { ...barberProfile, user: barberUser },
+  ])
   const unitRepo = new FakeUnitRepository({ ...defaultUnit })
   transactionRepo = new FakeTransactionRepository()
   barberRepo = new FakeBarberUsersRepository()
   cashRepo = new FakeCashRegisterRepository()
-  barberRepo.users.push(barberUser)
+  barberRepo.users.push({ ...barberUser, profile: null })
   cashRepo.session = {
     id: 'sess1',
     openedById: barberUser.id,
@@ -56,7 +58,9 @@ function setup() {
     user: barberUser,
   }
   const appointmentRepo = new FakeAppointmentRepository()
-  const appointmentServiceRepo = new FakeAppointmentServiceRepository(appointmentRepo)
+  const appointmentServiceRepo = new FakeAppointmentServiceRepository(
+    appointmentRepo,
+  )
   const barberServiceRepo = new FakeBarberServiceRelRepository()
   const barberProductRepo = new FakeBarberProductRepository()
   const saleRepo = new FakeSaleRepository()
@@ -100,26 +104,28 @@ describe('distributeProfits', () => {
       openedAt: new Date(),
       closedAt: null,
       initialAmount: 0,
-      transactions: [],
-      sales: [],
       finalAmount: null,
-      user: barberUser,
     }
     sale.paymentStatus = 'PAID'
     sale.items[0].porcentagemBarbeiro = 50
     ctx.saleRepo.sales.push(sale)
 
-    const res = await distributeProfits(sale, defaultOrganization.id, barberUser.id, {
-      organizationRepository: ctx.orgRepo,
-      profileRepository: ctx.profileRepo,
-      unitRepository: ctx.unitRepo,
-      transactionRepository: ctx.transactionRepo,
-      appointmentRepository: ctx.appointmentRepo,
-      barberServiceRepository: ctx.barberServiceRepo,
-      barberProductRepository: ctx.barberProductRepo,
-      appointmentServiceRepository: ctx.appointmentServiceRepo,
-      saleItemRepository: ctx.saleItemRepo,
-    })
+    const res = await distributeProfits(
+      sale,
+      defaultOrganization.id,
+      barberUser.id,
+      {
+        organizationRepository: ctx.orgRepo,
+        profileRepository: ctx.profileRepo,
+        unitRepository: ctx.unitRepo,
+        transactionRepository: ctx.transactionRepo,
+        appointmentRepository: ctx.appointmentRepo,
+        barberServiceRepository: ctx.barberServiceRepo,
+        barberProductRepository: ctx.barberProductRepo,
+        appointmentServiceRepository: ctx.appointmentServiceRepo,
+        saleItemRepository: ctx.saleItemRepo,
+      },
+    )
 
     expect(res.transactions).toHaveLength(2)
   })

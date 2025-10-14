@@ -148,7 +148,8 @@ export class RegisterUserService {
     const password_hash = await hash(data.password, 6)
     const unit = await this.unitRepository.findById(data.unitId)
     if (!unit) throw new UnitNotExistsError()
-
+    // TODO: verificar se a role a ser adicionada no usuario criado pertence a
+    // unidade de quem esta criando esse usuario
     let permissionIds: string[] | undefined
     if (data.permissions) {
       const allowed = await this.permissionRepository.findManyByRole(

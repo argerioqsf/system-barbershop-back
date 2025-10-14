@@ -1,6 +1,8 @@
 import { CashRegisterRepository } from '@/repositories/cash-register-repository'
-import { CashRegisterSession } from '@prisma/client'
+import { SaleRepository } from '@/repositories/sale-repository'
+import { CashRegisterSession, SaleStatus } from '@prisma/client'
 import { CashRegisterNotOpenedError } from '@/services/@errors/cash-register/cash-register-not-opened-error'
+import { CashRegisterHasPendingSalesError } from '@/services/@errors/cash-register/cash-register-has-pending-sales-error'
 
 interface CloseSessionRequest {
   unitId: string
@@ -11,18 +13,29 @@ interface CloseSessionResponse {
 }
 
 export class CloseSessionService {
-  constructor(private repository: CashRegisterRepository) {}
-  // TODO: quando fechar o caixa criar um campo na tabela de caixa de lista que ira ter uma lista de
-  // todos os barbeiros e atendentes relacionando eles com suas comissoes do momento para deixar registrado
+  constructor(
+    private cashRegisterRepository: CashRegisterRepository,
+    private saleRepository: SaleRepository,
+  ) {}
+
   async execute({
     unitId,
   }: CloseSessionRequest): Promise<CloseSessionResponse> {
-    const sessionOpen = await this.repository.findOpenByUnit(unitId)
+    const sessionOpen = await this.cashRegisterRepository.findOpenByUnit(unitId)
     if (!sessionOpen) throw new CashRegisterNotOpenedError()
 
-    const session = await this.repository.close(sessionOpen.id, {
-      closedAt: new Date(),
+    const now = new Date()
+    const pendingSales = await this.saleRepository.findMany({
+      unitId,
+      status: { notIn: [SaleStatus.COMPLETED, SaleStatus.CANCELLED] },
+      createdAt: { gte: sessionOpen.openedAt, lte: now },
     })
+    if (pendingSales.length > 0) throw new CashRegisterHasPendingSalesError()
+
+    const session = await this.cashRegisterRepository.close(sessionOpen.id, {
+      closedAt: now,
+    })
+
     return { session }
   }
 }

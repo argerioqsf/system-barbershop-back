@@ -13,6 +13,7 @@ interface UpdateServiceResponse {
 export class UpdateServiceService {
   constructor(private repository: ServiceRepository) {}
 
+  // TODO: verificar qual o inpacto de deletar um serviço nos outros fluxos do sistema
   async execute({
     id,
     data,

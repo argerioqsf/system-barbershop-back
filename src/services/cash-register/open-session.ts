@@ -1,10 +1,10 @@
 import { UserToken } from '@/http/controllers/authenticate-controller'
 import { CashRegisterRepository } from '@/repositories/cash-register-repository'
 import { ProfilesRepository } from '@/repositories/profiles-repository'
-import { TransactionRepository } from '@/repositories/transaction-repository'
 import { UserNotFoundError } from '@/services/@errors/user/user-not-found-error'
 import { CashRegisterAlreadyOpenError } from '@/services/@errors/cash-register/cash-register-already-open-error'
-import { CashRegisterSession, RoleName, TransactionType } from '@prisma/client'
+import { CashRegisterSession, RoleName } from '@prisma/client'
+import { IncrementBalanceUnitService } from '../unit/increment-balance'
 
 interface OpenSessionRequest {
   user: UserToken
@@ -18,8 +18,8 @@ interface OpenSessionResponse {
 export class OpenSessionService {
   constructor(
     private repository: CashRegisterRepository,
-    private transactionRepository: TransactionRepository,
     private profilesRepository: ProfilesRepository,
+    private incrementBalanceUnit: IncrementBalanceUnitService,
   ) {}
 
   async execute({
@@ -53,14 +53,15 @@ export class OpenSessionService {
     })
 
     if (initialAmount > 0) {
-      await this.transactionRepository.create({
-        user: { connect: { id: user.sub } },
-        unit: { connect: { id: user.unitId } },
-        session: { connect: { id: session.id } },
-        type: TransactionType.ADDITION,
-        description: 'Initial amount',
-        amount: initialAmount,
-      })
+      await this.incrementBalanceUnit.execute(
+        user.unitId,
+        user.sub,
+        initialAmount,
+        undefined,
+        false,
+        undefined,
+        'Initial amount',
+      )
     }
 
     return { session }

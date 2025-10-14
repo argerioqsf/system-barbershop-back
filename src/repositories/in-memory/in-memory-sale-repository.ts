@@ -276,6 +276,71 @@ export class InMemorySaleRepository implements SaleRepository {
     return this.sales
       .filter((s) => {
         if (where.unitId && s.unitId !== where.unitId) return false
+        if (where.status) {
+          const statusFilter = where.status as
+            | SaleStatus
+            | {
+                equals?: SaleStatus | null
+                in?: SaleStatus[]
+                notIn?: SaleStatus[]
+              }
+          if (typeof statusFilter === 'string') {
+            if (s.status !== statusFilter) return false
+          } else {
+            if (
+              statusFilter.equals &&
+              s.status !== (statusFilter.equals as SaleStatus)
+            ) {
+              return false
+            }
+            if (
+              statusFilter.in &&
+              !statusFilter.in.includes(s.status as SaleStatus)
+            ) {
+              return false
+            }
+            if (
+              statusFilter.notIn &&
+              statusFilter.notIn.includes(s.status as SaleStatus)
+            ) {
+              return false
+            }
+          }
+        }
+        if (where.createdAt) {
+          const createdAtFilter = where.createdAt as {
+            gte?: Date
+            gt?: Date
+            lte?: Date
+            lt?: Date
+          }
+          const saleCreatedAt =
+            s.createdAt instanceof Date ? s.createdAt : new Date(s.createdAt)
+          if (
+            createdAtFilter.gte &&
+            saleCreatedAt.getTime() < createdAtFilter.gte.getTime()
+          ) {
+            return false
+          }
+          if (
+            createdAtFilter.gt &&
+            saleCreatedAt.getTime() <= createdAtFilter.gt.getTime()
+          ) {
+            return false
+          }
+          if (
+            createdAtFilter.lte &&
+            saleCreatedAt.getTime() > createdAtFilter.lte.getTime()
+          ) {
+            return false
+          }
+          if (
+            createdAtFilter.lt &&
+            saleCreatedAt.getTime() >= createdAtFilter.lt.getTime()
+          ) {
+            return false
+          }
+        }
         if (
           where.unit &&
           'organizationId' in (where.unit as { organizationId: string })

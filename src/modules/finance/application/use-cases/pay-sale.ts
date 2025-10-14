@@ -13,6 +13,7 @@ import {
 } from '@/repositories/profiles-repository'
 import { UnitRepository } from '@/repositories/unit-repository'
 import {
+  PaymentMethod,
   PaymentStatus,
   PlanProfileStatus,
   Prisma,
@@ -251,6 +252,10 @@ export class PaySaleUseCase {
 
     const updateCashRegisterFinalAmount =
       new UpdateCashRegisterFinalAmountService(this.cashRegisterRepository)
+
+    if (sale.method === PaymentMethod.EXEMPT && sale.total > 0) {
+      throw new Error('invalid payment method for this sale')
+    }
 
     const run = async (tx: Prisma.TransactionClient) => {
       const updatedSale = await this.saleRepository.update(
