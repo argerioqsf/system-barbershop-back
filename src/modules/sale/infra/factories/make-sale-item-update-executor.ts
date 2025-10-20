@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma'
+import { defaultTransactionRunner } from '@/infra/prisma/transaction-runner'
 import { PrismaCouponRepository } from '@/repositories/prisma/prisma-coupon-repository'
 import { PrismaSaleItemRepository } from '@/repositories/prisma/prisma-sale-item-repository'
 import { PrismaSaleRepository } from '@/repositories/prisma/prisma-sale-repository'
@@ -18,7 +18,7 @@ export function makeSaleItemUpdateExecutor() {
     saleItemRepository,
     saleRepository,
     saleTotalsService,
-    runInTransaction: (fn) => prisma.$transaction(fn),
+    transactionRunner: defaultTransactionRunner,
   })
 
   return {

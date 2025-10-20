@@ -34,7 +34,6 @@ import { SaleItemRepository } from '@/repositories/sale-item-repository'
 import { PlanProfileRepository } from '@/repositories/plan-profile-repository'
 import { PlanAlreadyLinkedError } from '@/services/@errors/plan/plan-already-linked-error'
 import { UserNotFoundError } from '@/services/@errors/user/user-not-found-error'
-import { prisma } from '@/lib/prisma'
 import {
   updateCouponsStock,
   updateProductsStock,
@@ -50,10 +49,18 @@ import {
 import { SaleCommissionService } from '@/modules/finance/application/services/sale-commission-service'
 import { SaleProfitDistributionService } from '@/modules/finance/application/services/sale-profit-distribution-service'
 import { SaleTelemetry } from '@/modules/sale/application/contracts/sale-telemetry'
+import { TransactionRunner } from '@/core/application/ports/transaction-runner'
+import {
+  TransactionRunnerLike,
+  normalizeTransactionRunner,
+} from '@/core/application/utils/transaction-runner'
+import { defaultTransactionRunner } from '@/infra/prisma/transaction-runner'
 import { logger } from '@/lib/logger'
 import { UpdateCashRegisterFinalAmountService } from '@/services/cash-register/update-cash-register-final-amount'
 
 export class PaySaleUseCase {
+  private readonly transactionRunner: TransactionRunner
+
   constructor(
     private readonly saleRepository: SaleRepository,
     private readonly barberUserRepository: BarberUsersRepository,
@@ -73,8 +80,14 @@ export class PaySaleUseCase {
     private readonly typeRecurrenceRepository: TypeRecurrenceRepository,
     private readonly saleCommissionService: SaleCommissionService,
     private readonly saleProfitDistributionService: SaleProfitDistributionService,
+    transactionRunner?: TransactionRunnerLike,
     private readonly telemetry?: SaleTelemetry,
-  ) {}
+  ) {
+    this.transactionRunner = normalizeTransactionRunner(
+      transactionRunner,
+      defaultTransactionRunner,
+    )
+  }
 
   private async verifyAndCreatePlanProfile(
     item: DetailedSaleItem,
@@ -298,7 +311,8 @@ export class PaySaleUseCase {
     // após o commit, mantendo na transação apenas as operações estritamente
     // necessárias (pagar a venda, concluir agendamentos, criar PlanProfile
     // e atualizar estoques). Avaliar compensações/retentativas.
-    const updatedSale = await prisma.$transaction((tx) => run(tx))
+    // MIGRATION-TODO: alinhar este caso de uso ao padrão UseCaseCtx quando o módulo Finance for migrado
+    const updatedSale = await this.transactionRunner.run((tx) => run(tx))
 
     if (updatedSale) {
       this.telemetry?.record({

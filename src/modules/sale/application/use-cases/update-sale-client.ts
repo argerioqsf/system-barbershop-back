@@ -20,7 +20,12 @@ import {
   DiscountOrigin,
   SaleStatus,
 } from '@prisma/client'
-import { TransactionRunner } from '../services/sale-item-update-executor'
+import { TransactionRunner } from '@/core/application/ports/transaction-runner'
+import {
+  TransactionRunnerLike,
+  normalizeTransactionRunner,
+} from '@/core/application/utils/transaction-runner'
+import { defaultTransactionRunner } from '@/infra/prisma/transaction-runner'
 import { UpdateSaleRequest } from '@/services/sale/types'
 import { SaleTelemetry } from '@/modules/sale/application/contracts/sale-telemetry'
 
@@ -29,6 +34,8 @@ export interface UpdateSaleClientOutput {
 }
 
 export class UpdateSaleClientUseCase {
+  private readonly transactionRunner: TransactionRunner
+
   constructor(
     private readonly saleRepository: SaleRepository,
     private readonly profileRepository: ProfilesRepository,
@@ -36,9 +43,14 @@ export class UpdateSaleClientUseCase {
     private readonly planRepository: PlanRepository,
     private readonly planProfileRepository: PlanProfileRepository,
     private readonly getItemsBuildService: GetItemsBuildService,
-    private readonly runInTransaction: TransactionRunner,
+    transactionRunner?: TransactionRunnerLike,
     private readonly telemetry?: SaleTelemetry,
-  ) {}
+  ) {
+    this.transactionRunner = normalizeTransactionRunner(
+      transactionRunner,
+      defaultTransactionRunner,
+    )
+  }
 
   async execute(input: UpdateSaleRequest): Promise<UpdateSaleClientOutput> {
     const { id, clientId } = input
@@ -85,7 +97,7 @@ export class UpdateSaleClientUseCase {
 
     const totalCurrentSaleItems = calculateTotal(saleItemsWithDiscountPlan)
 
-    const saleUpdate = await this.runInTransaction(async (tx) => {
+    const saleUpdate = await this.transactionRunner.run(async (tx) => {
       await this.updateSaleItems(saleItemsWithDiscountPlan, tx)
 
       return this.saleRepository.update(

@@ -8,6 +8,7 @@ import { PrismaProductRepository } from '@/repositories/prisma/prisma-product-re
 import { PrismaAppointmentRepository } from '@/repositories/prisma/prisma-appointment-repository'
 import { PrismaBarberUsersRepository } from '@/repositories/prisma/prisma-barber-users-repository'
 import { RecalculateUserSalesService } from '@/modules/sale/application/use-cases/recalculate-user-sales'
+import { defaultTransactionRunner } from '@/infra/prisma/transaction-runner'
 import { SaleItemsBuildService } from '@/modules/sale/application/services/sale-items-build-service'
 
 export function makeRecalculateUserSales() {
@@ -36,5 +37,6 @@ export function makeRecalculateUserSales() {
     saleRepository,
     saleItemRepository,
     saleItemsBuildService,
+    defaultTransactionRunner,
   )
 }

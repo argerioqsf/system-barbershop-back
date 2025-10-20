@@ -22,7 +22,12 @@ import { AmountsUserInconsistentError } from '../@errors/user/amounts-user-incon
 import { UpdateCashRegisterFinalAmountService } from '../cash-register/update-cash-register-final-amount'
 import { logger } from '@/lib/logger'
 import { round, toCents } from '@/utils/format-currency'
-import { prisma } from '@/lib/prisma'
+import { TransactionRunner } from '@/core/application/ports/transaction-runner'
+import {
+  TransactionRunnerLike,
+  normalizeTransactionRunner,
+} from '@/core/application/utils/transaction-runner'
+import { defaultTransactionRunner } from '@/infra/prisma/transaction-runner'
 import { NegativeValuesNotAllowedError } from '../@errors/transaction/negative-values-not-allowed-error'
 import { UnitRepository } from '@/repositories/unit-repository'
 import { UnitNotFoundError } from '../@errors/unit/unit-not-found-error'
@@ -42,7 +47,11 @@ interface PayBalanceTransactionRequest {
 interface PayBalanceTransactionResponse {
   transactions: Transaction[]
 }
+// MIGRATION-TODO: mover este serviço para modules/finance e alinhar a assinatura
+// execute(input, ctx?: UseCaseCtx) usando TransactionRunner/UseCaseCtx de forma consistente.
 export class WithdrawalBalanceTransactionService {
+  private readonly transactionRunner: TransactionRunner
+
   constructor(
     private barberUserRepository: BarberUsersRepository,
     private cashRegisterRepository: CashRegisterRepository,
@@ -52,7 +61,13 @@ export class WithdrawalBalanceTransactionService {
     private updateCashRegisterFinalAmountService: UpdateCashRegisterFinalAmountService,
     private unitRepository: UnitRepository,
     private decrementBalance: IncrementBalanceUnitService,
-  ) {}
+    transactionRunner?: TransactionRunnerLike,
+  ) {
+    this.transactionRunner = normalizeTransactionRunner(
+      transactionRunner,
+      defaultTransactionRunner,
+    )
+  }
 
   private async totalCommissionCalculatorForUser(
     affectedUserId: string,
@@ -97,7 +112,7 @@ export class WithdrawalBalanceTransactionService {
       throw new InsufficientBalanceError()
     }
 
-    const transaction = await prisma.$transaction(async (tx) => {
+    const transaction = await this.transactionRunner.run(async (tx) => {
       const txs = await this.decrementBalance.execute(
         unitId,
         userId,
@@ -168,7 +183,7 @@ export class WithdrawalBalanceTransactionService {
       throw new NegativeValuesNotAllowedError()
     }
 
-    const transactions = await prisma.$transaction(async (tx) => {
+    const transactions = await this.transactionRunner.run(async (tx) => {
       const txs: Transaction[] = []
 
       if (discountLoans) {

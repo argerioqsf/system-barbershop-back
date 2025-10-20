@@ -1,4 +1,3 @@
-import { prisma } from '@/lib/prisma'
 import { CannotEditPaidSaleItemError } from '@/services/@errors/sale/cannot-edit-paid-sale-item-error'
 import { SaleTotalsService } from '@/modules/sale/application/services/sale-totals-service'
 import { CreateSaleItem, SaleItemUpdateFields } from '@/services/sale/types'
@@ -10,16 +9,19 @@ import {
 } from '@/repositories/sale-item-repository'
 import { SaleRepository, DetailedSale } from '@/repositories/sale-repository'
 import { PaymentStatus, Prisma, SaleItem, SaleStatus } from '@prisma/client'
-
-export type TransactionRunner = <T>(
-  fn: (tx: Prisma.TransactionClient) => Promise<T>,
-) => Promise<T>
+import { TransactionRunner } from '@/core/application/ports/transaction-runner'
+import {
+  TransactionRunnerLike,
+  normalizeTransactionRunner,
+} from '@/core/application/utils/transaction-runner'
+import { defaultTransactionRunner } from '@/infra/prisma/transaction-runner'
 
 export interface SaleItemUpdateExecutorDeps {
   saleItemRepository: SaleItemRepository
   saleRepository: SaleRepository
   saleTotalsService: SaleTotalsService
-  runInTransaction?: TransactionRunner
+  transactionRunner?: TransactionRunnerLike
+  runInTransaction?: TransactionRunnerLike
 }
 
 export interface SaleItemUpdateHookContext {
@@ -62,11 +64,15 @@ export interface SaleItemUpdateExecutorResult {
 }
 
 export class SaleItemUpdateExecutor {
-  private readonly runInTransaction: TransactionRunner
+  private readonly transactionRunner: TransactionRunner
 
   constructor(private readonly deps: SaleItemUpdateExecutorDeps) {
-    this.runInTransaction =
-      deps.runInTransaction ?? ((fn) => prisma.$transaction(fn))
+    const runner = deps.transactionRunner ?? deps.runInTransaction ?? undefined
+
+    this.transactionRunner = normalizeTransactionRunner(
+      runner,
+      defaultTransactionRunner,
+    )
   }
 
   async execute({
@@ -110,7 +116,7 @@ export class SaleItemUpdateExecutor {
     let saleUpdate: DetailedSale | undefined
     let saleItemsUpdate: SaleItem[] | undefined
 
-    await this.runInTransaction(async (tx) => {
+    await this.transactionRunner.run(async (tx) => {
       saleItemsUpdate = await saleItemRepository.updateManyIndividually(
         saleItemUpdates,
         tx,

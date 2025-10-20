@@ -185,12 +185,12 @@ Controllers e rotas dentro do módulo: controllers/rotas podem residir em `src/m
 - Entidades: User, Role, Permission, Session.
 - Casos de uso: RegisterUser, Authenticate, SetUserUnit, UpdateUser, ListClients, RBAC checks.
 - Adapters: `UsersRepository`, `PasswordResetTokenRepository`, `RoleRepository`, `PermissionRepository`.
-
+ 
 2) Organization
-- Escopo: Organization, Units, OpeningHours, Profiles (perfil do barbeiro/colaborador).
+- Escopo: Organization, Units, OpeningHours, Profiles (perfil operacional de todos os usuários da unidade).
 - Entidades: Organization, Unit, OpeningHour, Profile, WorkHour, BlockedHour.
 - Casos de uso: CRUD de Organization/Unit; Gerenciar horários da unidade e do perfil; Vincular usuário à unidade.
-- Nota sobre Profile: manter uma entidade `Profile` única com diferenciação por papéis/tipos (RBAC) cobre a maioria dos casos e evita duplicação. Caso diferentes perfis (client, barber, admin, owner) passem a ter invariantes muito distintos, avaliar especialização (subtipos) ou agregado separado. Até lá, preferir `Profile` único + `Role`/`Permission` para capacidades.
+- Nota sobre Profile: manter uma entidade `Profile` única com diferenciação por papéis/tipos (RBAC) cobre a maioria dos casos e evita duplicação. Todos os usuários (client, barber, attendant, admin, owner) possuem um `Profile` vinculado; caso algumas categorias passem a ter invariantes muito distintos, avaliar especialização (subtipos) ou agregado separado. Até lá, preferir `Profile` único + `Role`/`Permission` para capacidades.
 
 3) Catalog
 - Escopo: Services, Products, Categories, Coupons, Benefits.
@@ -212,6 +212,9 @@ Controllers e rotas dentro do módulo: controllers/rotas podem residir em `src/m
 - Escopo: Transações, Comissões, Caixa (Cash Register Sessions), Empréstimos (Loans), Dívidas (Debts), Distribuição de Lucro, Pagamento de Vendas, Regras de cobrança recorrente.
 - Entidades: Transaction, Commission (proposta), CashSession, Loan, Debt, (opcional) BillingRule.
 - Casos de uso: PaySale (já em módulos), ListPendingCommissions, Pay/Withdrawal Transactions (pagamentos/retiradas), PayLoan, UpdateLoanStatus, CreateDebt/PayDebt, CashSession Open/Close/List/GetOpen.
+- Notas recentes:
+  - `LoanStatus.VALUE_TRANSFERRED` agora representa empréstimos cujo valor já saiu do caixa, mas ainda depende de acerto com o colaborador; a liquidação efetiva muda para `PAID_OFF`. O caso de uso de atualização de status deve validar essa transição explicitamente.
+  - `Transaction.reason` passou a ser obrigatório (`ReasonTransaction`). Ao migrar o módulo Finance, os ports e casos de uso precisam receber o motivo explícito (ex.: `PAY_LOAN`, `PAY_COMMISSION`, `PAY_PLAN_DEBT`, `ADD_COMMISSION`, `LOAN`, `OTHER`) para eliminar fallback implícito no adapter legado.
 
 7) Plans (Assinaturas)
 - Escopo: Planos comerciais e o vínculo do usuário ao plano.
@@ -376,15 +379,32 @@ Princípios:
 Fases sugeridas:
 
 Fase 0 — Fundações (baixo risco)
-- Introduzir portas cross-cutting: `TransactionRunner`, `Clock`, `IdGenerator`.
-- Adicionar adapters Prisma para `TransactionRunner`.
-- Padronizar factories por domínio (manter padrão de `modules/sale` e `modules/finance`).
+- Checklist operacional: [docs/migracao-arquitetura/fase-00-fundacoes.md](docs/migracao-arquitetura/fase-00-fundacoes.md)
+- Objetivo: isolar infraestrutura transversal (transações, tempo, IDs) para reduzir acoplamento e permitir migração por módulos sem retrabalho.
+- Entregáveis:
+  - Portas cross-cutting: `TransactionRunner`, `Clock`, `IdGenerator` (interfaces em `src/core/...`).
+  - Adapter Prisma para `TransactionRunner` (ex.: `src/infra/prisma/transaction-runner-prisma.ts`).
+  - Tipo `UseCaseCtx { tx? }` central (já mapeado) e guideline de propagação de `tx`.
+  - Factories por domínio padronizadas (alinhar com `modules/sale`; preparar `modules/finance`).
+- Impacto esperado (muitos arquivos, baixo risco):
+  - Criação de 3–5 arquivos core/adapters.
+  - Pequenos ajustes de construtores/assinaturas em serviços/use-cases para aceitar `tx?` e/ou `TransactionRunner` (sem mudar regra de negócio).
+  - Reescritas de import mínimas (preferir re-exports temporários para evitar churn).
+- Estratégia de adoção:
+  - Não substituir chamadas diretas a `prisma.$transaction` em todo o codebase de uma vez. Em novos casos de uso, usar `TransactionRunner`. Nos legados, apenas aceitar `tx?` e propagar.
+  - Fornecer um `DefaultTransactionRunner` que delega ao `prisma` atual, permitindo injeção fácil em locais antigos sem refactor profundo.
+- Critérios de aceite (Fase 0):
+  - Build, testes e typecheck passam sem alterar comportamento funcional.
+  - Novos casos de uso/factories usam `TransactionRunner`; serviços legados continuam funcionando aceitando `tx?`.
+  - Uma verificação automatizada simples (grep) identifica pontos com `// MIGRATION-TODO` para rastrear o rollout.
 
 Fase 1 — Sales (consolidar o que já existe)
+- Checklist operacional: [docs/migracao-arquitetura/fase-01-sales.md](docs/migracao-arquitetura/fase-01-sales.md)
 - Revisar `src/modules/sale/*` para alinhar nomenclaturas, portas e patterns com este documento.
 - Substituir utilidades antigas de sale em `src/services/sale/utils/*` por serviços de aplicação/domínio equivalentes (quando duplicadas). Onde ainda houver dependência antiga, criar adapter de compatibilidade temporário.
 
 Fase 2 — Finance (Transações/Comissões/Caixa/Empréstimos/Dívidas)
+- Checklist operacional: [docs/migracao-arquitetura/fase-02-finance.md](docs/migracao-arquitetura/fase-02-finance.md)
 - Migrar `withdrawal-balance-transaction` e `pay-balance-transaction` para `src/modules/finance/application/use-cases/*`:
   - Casos de uso propostos: `WithdrawBalanceUseCase`, `PayBalanceUseCase`, `ListPendingCommissionsUseCase`.
   - Portas: `UsersRepository`, `SaleItemRepository`, `CashRegisterRepository`, `UnitRepository`, `TransactionsRepository`, `LoansRepository`, `DebtsRepository`, `TransactionRunner`.
@@ -394,37 +414,48 @@ Fase 2 — Finance (Transações/Comissões/Caixa/Empréstimos/Dívidas)
   - Adapters temporários para quaisquer chamadas que ainda toquem lógica antiga (marcar com `// MIGRATION-TODO`).
 - Caixa (cash-register): extrair casos de uso: `OpenSession`, `CloseSession`, `GetOpenSession`, `ListSessions`, `UpdateCashFinalAmount` com `TransactionRunner`.
 - Empréstimos/Dívidas: criar casos de uso alinhados (Create/Get/List/Update/Pay/Delete) e seus adapters Prisma, mantendo rotas.
+ - Critérios de aceite (Fase 2):
+   - Rotas atuais de transação continuam com o mesmo contrato.
+   - `ReasonTransaction` explicitado em todos os caminhos de criação de transação (sem fallback para `OTHER` exceto exceções documentadas).
+   - Liquidação de empréstimos consolidada: transição `VALUE_TRANSFERRED` → `PAID_OFF` padronizada e testada.
 
 Fase 3 — Scheduling (Appointments)
+- Checklist operacional: [docs/migracao-arquitetura/fase-03-scheduling.md](docs/migracao-arquitetura/fase-03-scheduling.md)
 - Já existem serviços/aplicação em `src/modules/appointment/application/*` (e factories em `infra`).
 - Verificar controllers: migrar para factories dos módulos.
 - Consolidar `CheckBarberAvailability` e `ValidateAppointmentWindow` como serviços de domínio; garantir testes unitários.
 
 Fase 4 — Catalog (Products/Services/Categories/Coupons/Benefits)
+- Checklist operacional: [docs/migracao-arquitetura/fase-04-catalog.md](docs/migracao-arquitetura/fase-04-catalog.md)
 - Definir entidades e invariantes (ex.: estoque não negativo, preço mínimo, validade de cupom).
 - Criar casos de uso CRUD e serviços auxiliares (estoque, desconto) como serviços de domínio.
 - Extrair utilidades de `src/services/sale/utils/*` para novos serviços do domínio onde fizer sentido.
 
 Fase 4b — Plans & Recurrence (Plans/PlanProfiles/TypeRecurrence)
+- Checklist operacional: [docs/migracao-arquitetura/fase-04b-plans.md](docs/migracao-arquitetura/fase-04b-plans.md)
 - Migrar casos de uso de Plan/PlanProfile para `modules/plans` (Create/List/Get/Update/Delete, Cancel/Renew).
 - Reposicionar `TypeRecurrence` sob Plans (ou sob Finance-Billing, se preferir), como fonte de verdade para a periodicidade das cobranças.
 - Integrar com Finance/Debts para geração e reconciliação de débitos recorrentes e renovações.
 
 Fase 5 — Organization (Org/Unit/OpeningHour/Profile e horas de trabalho/bloqueio)
+- Checklist operacional: [docs/migracao-arquitetura/fase-05-organization.md](docs/migracao-arquitetura/fase-05-organization.md)
 - Unificar regra de horário em serviços de domínio (interseção de agendas, validações, etc.).
 - Criar casos de uso com portas para repositórios atuais de Profile/OpeningHour/Unit.
 - Adaptar controllers a factories.
 
 Fase 6 — IAM (Users, Roles, Permissions, Sessions)
+- Checklist operacional: [docs/migracao-arquitetura/fase-06-iam.md](docs/migracao-arquitetura/fase-06-iam.md)
 - Consolidar RBAC como serviço de domínio simples (checagem por escopo).
 - Casos de uso: Register, Authenticate, SetUserUnit, UpdateUser, ListClients.
 - Factories e adapters Prisma; controllers passam a usar factories.
 
 Fase 7 — Reporting e Config
+- Checklist operacional: [docs/migracao-arquitetura/fase-07-reporting-config.md](docs/migracao-arquitetura/fase-07-reporting-config.md)
 - Separar queries de leitura como Application Query Handlers com repositórios voltados a leitura (pode reutilizar Prisma direto aqui).
 - Manter rotas idênticas; apenas mover a lógica para casos de uso de consulta.
 
 Fase 8 — Remoção de código legado
+- Checklist operacional: [docs/migracao-arquitetura/fase-08-remocao-legado.md](docs/migracao-arquitetura/fase-08-remocao-legado.md)
 - Apagar gradualmente serviços em `src/services/*` que ficaram sem uso.
 - Atualizar testes que ainda dependam de implementações antigas.
 
@@ -439,6 +470,8 @@ Fase 8 — Remoção de código legado
   ```
 - Evitar “comentar chamadas” em controllers; preferir manter controllers chamando factories novas, e as factories usam adapters de compatibilidade. Isso mantém as rotas funcionando e deixa o ponto de troca concentrado.
 - Centralizar transações no `TransactionRunner` para reduzir impacto quando a camada de persistência mudar.
+ - Preferir re-exports temporários (ex.: `src/services/transaction/index.ts` reexportando novas factories) para reduzir mudanças em imports; remover ao final.
+ - Em testes, introduzir fakes para `TransactionRunner`/`Clock` e manter um adapter Prisma real para E2E.
 
 ---
 
@@ -448,6 +481,7 @@ Fase 8 — Remoção de código legado
 - Integration: Adapters Prisma (quando necessário).
 - E2E: Rotas Fastify exercitando controllers + factories.
 - Sempre rodar `npm test`, `npm run typecheck` e `npm run lint` antes de abrir PR.
+ - Critérios de não-regressão para Fase 0: nenhum teste existente deve ser atualizado por conta de portas/TransactionRunner; apenas adição de fakes/stubs quando necessário.
 
 ---
 
@@ -462,6 +496,8 @@ Sales (consolidação)
 
 Finance
 - [ ] Extrair `WithdrawBalanceUseCase` e `PayBalanceUseCase` de `src/services/transaction/*`.
+- [ ] Tratar `ReasonTransaction` como campo obrigatório nas portas/adapters de transação e revisar cálculos de saldo para evitar uso do motivo `OTHER`.
+- [ ] Garantir fluxo único de liquidação de empréstimos (`PayLoan` x `PayUserLoansService`), consolidando a transição `VALUE_TRANSFERRED` → `PAID_OFF` e removendo lógica duplicada.
 - [ ] Portas + adapters Prisma (Transactions, CashRegister, Users, Loans, Debts, Unit).
 - [ ] Serviço de domínio `CommissionCalculator`.
 - [ ] Factories e controllers atualizados.
@@ -504,9 +540,9 @@ Reporting/Config
 
 Modelagem de Usuário vs Profile entre contextos
 - IAM: `User`, `Role`, `Permission` representam identidade/autorização do sistema (IDs usados por todos os módulos).
-- Organization: `Profile` agrega atributos operacionais do usuário na organização/unidade (ex.: comissões, workHours, blockedHours, vínculos com serviços/produtos, planos). Um único `Profile` com `roleId` (RBAC) evita duplicação; especializações só se invariantes divergirem muito.
-- Sales: não precisa conhecer detalhes de `Profile`. Use `userId` do vendedor/colaborador e `clientId` do comprador (ambos `User`). Se necessário, mapeie um DTO de leitura (ex.: `CustomerView`, `CollaboratorView`) a partir de `User+Profile` via portas de leitura. Regras como “usuário pertence à unidade” devem ser verificadas no use case via repositórios (sem acoplar o domínio a Profile).
-- Tipos de perfil (client, barber, admin, owner) são tratados via `Role`/permissões. Entidades e serviços de domínio condicionam comportamento por papel quando necessário, sem multiplicar entidades.
+- Organization: `Profile` agrega atributos operacionais do usuário na organização/unidade (ex.: comissões, workHours, blockedHours, vínculos com serviços/produtos, planos). Um único `Profile` com `roleId` (RBAC) evita duplicação; especializações só se invariantes divergirem muito. O fluxo de criação de usuário deve garantir o vínculo imediato com um `Profile`.
+- Sales: assume que todo `User` possui `Profile`. Use `userId` do vendedor/colaborador e `clientId` do comprador (ambos `User`) e recupere dados operacionais via portas que retornem `User+Profile` quando necessário. Regras como “usuário pertence à unidade” devem ser verificadas no use case via repositórios (sem acoplar o domínio a Profile).
+- Tipos de perfil (client, barber, attendant, admin, owner) são tratados via `Role`/permissões. Entidades e serviços de domínio condicionam comportamento por papel quando necessário, sem multiplicar entidades.
 
 Políticas adicionais (quando aplicável)
 - Timezone: padronizar domínio em UTC e converter na borda HTTP/clients. Unificar uso de `getUTC*` para cálculos de disponibilidade e datas recorrentes.
@@ -526,7 +562,7 @@ Políticas adicionais (quando aplicável)
 
 1) Criar `core/application/transaction-runner.ts` e adapter Prisma em `infra` compartilhada.
 2) Consolidar `modules/sale` (Fase 1) e alinhar controllers para factories em todos os endpoints de venda.
-3) Migrar `withdrawal-balance-transaction` e `pay-balance-transaction` para `modules/finance` (Fase 2) com `CommissionCalculator` no domínio.
+3) Migrar `withdrawal-balance-transaction` e `pay-balance-transaction` para `modules/finance` (Fase 2) com `CommissionCalculator` no domínio, amarrando `ReasonTransaction` explícito nas portas e consolidando liquidação de empréstimos (`VALUE_TRANSFERRED` → `PAID_OFF`).
 4) Adicionar adapters de compatibilidade e marcar com `// MIGRATION-TODO`.
 5) Iniciar migração de `cash-register` para casos de uso com `TransactionRunner`.
 6) Definir timeline das fases restantes (Scheduling → Catalog → Plans & Recurrence → Organization → IAM → Reporting).

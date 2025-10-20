@@ -5,7 +5,6 @@ import { Prisma, ReasonTransaction, Transaction } from '@prisma/client'
 import { IncrementBalanceProfileService } from '../profile/increment-balance'
 import { PaymentItems } from '../users/utils/calculatePendingCommissions'
 import { round } from '@/utils/format-currency'
-import { logger } from '@/lib/logger'
 
 interface PayUserCommissionRequest {
   commissionToBePaid?: number

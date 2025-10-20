@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma'
+import { defaultTransactionRunner } from '@/infra/prisma/transaction-runner'
 import { PrismaSaleRepository } from '@/repositories/prisma/prisma-sale-repository'
 import {
   PrismaCouponRepository,
@@ -50,7 +50,7 @@ export function makeUpdateSaleCoupon() {
     barberRepository,
     saleItemRepository,
     getItemsBuildService,
-    (fn) => prisma.$transaction(fn),
+    defaultTransactionRunner,
     telemetry,
   )
 }

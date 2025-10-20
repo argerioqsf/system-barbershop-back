@@ -1,27 +1,31 @@
 import { SaleRepository, DetailedSale } from '@/repositories/sale-repository'
 import { UpdateSaleRequest } from '@/services/sale/types'
-import {
-  PaymentMethod,
-  PaymentStatus,
-  Prisma,
-  SaleStatus,
-} from '@prisma/client'
+import { PaymentMethod, PaymentStatus, SaleStatus } from '@prisma/client'
 import { SaleTelemetry } from '@/modules/sale/application/contracts/sale-telemetry'
-
-export type TransactionRunner = <T>(
-  fn: (tx: Prisma.TransactionClient) => Promise<T>,
-) => Promise<T>
+import { TransactionRunner } from '@/core/application/ports/transaction-runner'
+import {
+  TransactionRunnerLike,
+  normalizeTransactionRunner,
+} from '@/core/application/utils/transaction-runner'
+import { defaultTransactionRunner } from '@/infra/prisma/transaction-runner'
 
 export interface UpdateSaleUseCaseOutput {
   sale?: DetailedSale
 }
 
 export class UpdateSaleUseCase {
+  private readonly transactionRunner: TransactionRunner
+
   constructor(
     private readonly saleRepository: SaleRepository,
-    private readonly runInTransaction: TransactionRunner,
+    transactionRunner?: TransactionRunnerLike,
     private readonly telemetry?: SaleTelemetry,
-  ) {}
+  ) {
+    this.transactionRunner = normalizeTransactionRunner(
+      transactionRunner,
+      defaultTransactionRunner,
+    )
+  }
 
   async execute(input: UpdateSaleRequest): Promise<UpdateSaleUseCaseOutput> {
     const { id, observation, method } = input
@@ -45,7 +49,7 @@ export class UpdateSaleUseCase {
       throw new Error('No sale changes provided')
     }
 
-    const sale = await this.runInTransaction((tx) =>
+    const sale = await this.transactionRunner.run((tx) =>
       this.saleRepository.update(
         id,
         {

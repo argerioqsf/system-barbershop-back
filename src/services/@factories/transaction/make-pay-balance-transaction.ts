@@ -10,6 +10,7 @@ import { PayUserCommissionService } from '@/services/transaction/pay-user-comiss
 import { IncrementBalanceProfileService } from '@/services/profile/increment-balance'
 import { PayUserLoansService } from '@/services/loan/pay-user-loans'
 import { UpdateCashRegisterFinalAmountService } from '@/services/cash-register/update-cash-register-final-amount'
+import { defaultTransactionRunner } from '@/infra/prisma/transaction-runner'
 
 export function makePayBalanceTransaction() {
   const profileRepository = new PrismaProfilesRepository()
@@ -43,5 +44,7 @@ export function makePayBalanceTransaction() {
     payUserCommissionService,
     payLoansService,
     updateCashRegisterFinalAmountService,
+    // MIGRATION-TODO: após mover para modules/finance, injetar TransactionRunner/UseCaseCtx via factories do módulo
+    defaultTransactionRunner,
   )
 }

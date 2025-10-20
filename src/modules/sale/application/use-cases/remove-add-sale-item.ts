@@ -28,10 +28,12 @@ import {
 import { SaleTelemetry } from '@/modules/sale/application/contracts/sale-telemetry'
 import { logger } from '@/lib/logger'
 import { AppointmentAlreadyLinkedError } from '@/services/@errors/appointment/appointment-already-linked-error'
-
-export type TransactionRunner = <T>(
-  fn: (tx: Prisma.TransactionClient) => Promise<T>,
-) => Promise<T>
+import { TransactionRunner } from '@/core/application/ports/transaction-runner'
+import {
+  TransactionRunnerLike,
+  normalizeTransactionRunner,
+} from '@/core/application/utils/transaction-runner'
+import { defaultTransactionRunner } from '@/infra/prisma/transaction-runner'
 
 interface UpdateSaleResponse {
   sale?: DetailedSale
@@ -40,6 +42,8 @@ interface UpdateSaleResponse {
 type ProductsToRestore = { id: string; quantity: number }
 
 export class RemoveAddSaleItemUseCase {
+  private readonly transactionRunner: TransactionRunner
+
   constructor(
     private readonly saleRepository: SaleRepository,
     private readonly productRepository: ProductRepository,
@@ -47,9 +51,14 @@ export class RemoveAddSaleItemUseCase {
     private readonly barberUserRepository: BarberUsersRepository,
     private readonly saleItemRepository: SaleItemRepository,
     private readonly saleItemsBuildService: SaleItemsBuildService,
-    private readonly runInTransaction: TransactionRunner,
+    transactionRunner?: TransactionRunnerLike,
     private readonly telemetry?: SaleTelemetry,
-  ) {}
+  ) {
+    this.transactionRunner = normalizeTransactionRunner(
+      transactionRunner,
+      defaultTransactionRunner,
+    )
+  }
 
   private async getItemsBuild(
     saleItems: SaleItemBuildItem[],
@@ -302,7 +311,7 @@ export class RemoveAddSaleItemUseCase {
       currentSaleItemsRebuild,
     )
 
-    await this.runInTransaction(async (tx) => {
+    await this.transactionRunner.run(async (tx) => {
       if (removeItemIds?.length) {
         await this.removingRelationshipsFromRemovedSaleItems(removeItemIds, tx)
       }

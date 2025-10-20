@@ -9,7 +9,6 @@ import {
 import { makeCreateTransaction } from '../@factories/transaction/make-create-transaction'
 import { round } from '@/utils/format-currency'
 import { UserNotFoundError } from '../@errors/user/user-not-found-error'
-import { logger } from '@/lib/logger'
 
 interface IncrementBalanceProfileResponse {
   profile: Profile | null

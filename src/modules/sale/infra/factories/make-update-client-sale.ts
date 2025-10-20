@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma'
+import { defaultTransactionRunner } from '@/infra/prisma/transaction-runner'
 import { PrismaSaleRepository } from '@/repositories/prisma/prisma-sale-repository'
 import { PrismaProfilesRepository } from '@/repositories/prisma/prisma-profile-repository'
 import { PrismaSaleItemRepository } from '@/repositories/prisma/prisma-sale-item-repository'
@@ -48,7 +48,7 @@ export function makeUpdateClientSale() {
     planRepository,
     planProfileRepository,
     getItemsBuildService,
-    (fn) => prisma.$transaction(fn),
+    defaultTransactionRunner,
     telemetry,
   )
 }

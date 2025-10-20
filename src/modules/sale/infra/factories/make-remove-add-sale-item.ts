@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma'
+import { defaultTransactionRunner } from '@/infra/prisma/transaction-runner'
 import { PrismaSaleRepository } from '@/repositories/prisma/prisma-sale-repository'
 import { PrismaServiceRepository } from '@/repositories/prisma/prisma-service-repository'
 import { PrismaProductRepository } from '@/repositories/prisma/prisma-product-repository'
@@ -8,10 +8,7 @@ import { PrismaBarberUsersRepository } from '@/repositories/prisma/prisma-barber
 import { PrismaSaleItemRepository } from '@/repositories/prisma/prisma-sale-item-repository'
 import { PrismaPlanRepository } from '@/repositories/prisma/prisma-plan-repository'
 import { PrismaPlanProfileRepository } from '@/repositories/prisma/prisma-plan-profile-repository'
-import {
-  RemoveAddSaleItemUseCase,
-  TransactionRunner,
-} from '@/modules/sale/application/use-cases/remove-add-sale-item'
+import { RemoveAddSaleItemUseCase } from '@/modules/sale/application/use-cases/remove-add-sale-item'
 import { SaleItemsBuildService } from '@/modules/sale/application/services/sale-items-build-service'
 import { makeSaleTelemetry } from '@/modules/sale/infra/factories/make-sale-telemetry'
 
@@ -25,8 +22,6 @@ export function makeRemoveAddSaleItem() {
   const planRepository = new PrismaPlanRepository()
   const planProfileRepository = new PrismaPlanProfileRepository()
   const serviceRepository = new PrismaServiceRepository()
-  const runInTransaction: TransactionRunner = (fn) => prisma.$transaction(fn)
-
   const saleItemsBuildService = new SaleItemsBuildService({
     serviceRepository,
     productRepository,
@@ -47,7 +42,7 @@ export function makeRemoveAddSaleItem() {
     barberUserRepository,
     saleItemRepository,
     saleItemsBuildService,
-    runInTransaction,
+    defaultTransactionRunner,
     telemetry,
   )
 }

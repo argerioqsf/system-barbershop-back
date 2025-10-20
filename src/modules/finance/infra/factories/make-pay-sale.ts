@@ -18,6 +18,7 @@ import { SaleCommissionService } from '@/modules/finance/application/services/sa
 import { SaleProfitDistributionService } from '@/modules/finance/application/services/sale-profit-distribution-service'
 import { PaySaleUseCase } from '@/modules/finance/application/use-cases/pay-sale'
 import { makeSaleTelemetry } from '@/modules/sale/infra/factories/make-sale-telemetry'
+import { defaultTransactionRunner } from '@/infra/prisma/transaction-runner'
 
 export function makePaySaleUseCase() {
   const saleRepository = new PrismaSaleRepository()
@@ -76,6 +77,7 @@ export function makePaySaleUseCase() {
     typeRecurrenceRepository,
     saleCommissionService,
     saleProfitDistributionService,
+    defaultTransactionRunner,
     telemetry,
   )
 }

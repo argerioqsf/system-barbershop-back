@@ -1,24 +1,37 @@
 import { PaymentStatus, Prisma } from '@prisma/client'
 import { SaleRepository } from '@/repositories/sale-repository'
 import { SaleItemRepository } from '@/repositories/sale-item-repository'
-import { prisma } from '@/lib/prisma'
 import { calculateTotal } from '@/services/sale/utils/sale'
 import {
   updateDiscountsOnSaleItem,
   ReturnBuildItemData,
 } from '@/services/sale/utils/item'
 import { SaleItemsBuildService } from '@/modules/sale/application/services/sale-items-build-service'
+import { TransactionRunner } from '@/core/application/ports/transaction-runner'
+import {
+  TransactionRunnerLike,
+  normalizeTransactionRunner,
+} from '@/core/application/utils/transaction-runner'
+import { defaultTransactionRunner } from '@/infra/prisma/transaction-runner'
 
 interface RecalculateUserSalesRequest {
   userIds: string[]
 }
 
 export class RecalculateUserSalesService {
+  private readonly transactionRunner: TransactionRunner
+
   constructor(
     private readonly saleRepository: SaleRepository,
     private readonly saleItemRepository: SaleItemRepository,
     private readonly saleItemsBuildService: SaleItemsBuildService,
-  ) {}
+    transactionRunner?: TransactionRunnerLike,
+  ) {
+    this.transactionRunner = normalizeTransactionRunner(
+      transactionRunner,
+      defaultTransactionRunner,
+    )
+  }
 
   async execute(
     { userIds }: RecalculateUserSalesRequest,
@@ -63,7 +76,7 @@ export class RecalculateUserSalesService {
       if (tx) {
         await run(tx)
       } else {
-        await prisma.$transaction(async (trx) => {
+        await this.transactionRunner.run(async (trx) => {
           await run(trx)
         })
       }
