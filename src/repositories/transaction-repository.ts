@@ -1,5 +1,10 @@
-import { Prisma, Transaction } from '@prisma/client'
+import { Prisma, Transaction, User } from '@prisma/client'
 import { TransactionFull } from './prisma/prisma-transaction-repository'
+
+export type ResponseTransactionsFindMany = {
+  items: (TransactionFull & { user: User | null; affectedUser: User | null })[]
+  count: number
+}
 
 export interface TransactionRepository {
   create(

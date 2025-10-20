@@ -24,15 +24,22 @@ let cashRepo: FakeCashRegisterRepository
 let service: UpdateLoanStatusService
 let user: ReturnType<typeof makeUser>
 
-vi.mock('../../../src/services/@factories/transaction/make-create-transaction', () => ({
-  makeCreateTransaction: () =>
-    new CreateTransactionService(txRepo, barberRepo, cashRepo),
-}))
+vi.mock(
+  '../../../src/services/@factories/transaction/make-create-transaction',
+  () => ({
+    makeCreateTransaction: () =>
+      new CreateTransactionService(txRepo, barberRepo, cashRepo),
+  }),
+)
 
 function setup(unitId = 'unit-1') {
   txRepo = new FakeTransactionRepository()
   loanRepo = new FakeLoanRepository()
-  unitRepo = new FakeUnitRepository({ ...defaultUnit, id: unitId, totalBalance: 100 })
+  unitRepo = new FakeUnitRepository({
+    ...defaultUnit,
+    id: unitId,
+    totalBalance: 100,
+  })
   barberRepo = new FakeBarberUsersRepository()
   cashRepo = new FakeCashRegisterRepository()
   const profile = makeProfile('p1', 'u1')
@@ -53,7 +60,6 @@ function makeLoan(id: string, amount: number) {
     status: LoanStatus.PENDING,
     createdAt: new Date('2024-01-01'),
     paidAt: null,
-    fullyPaid: false,
     updatedById: null,
     transactions: [],
   }
@@ -68,10 +74,15 @@ describe('Update loan status service', () => {
     await expect(
       service.execute({
         loanId: 'nope',
-        status: LoanStatus.PAID,
+        status: LoanStatus.VALUE_TRANSFERRED,
         updatedById: user.id,
-        user: { sub: user.id, role: RoleName.ADMIN, unitId: user.unitId, organizationId: user.organizationId },
-      })
+        user: {
+          sub: user.id,
+          role: RoleName.ADMIN,
+          unitId: user.unitId,
+          organizationId: user.organizationId,
+        },
+      }),
     ).rejects.toThrow('Loan not found')
   })
 
@@ -80,10 +91,15 @@ describe('Update loan status service', () => {
     await expect(
       service.execute({
         loanId: 'l1',
-        status: LoanStatus.PAID,
+        status: LoanStatus.VALUE_TRANSFERRED,
         updatedById: user.id,
-        user: { sub: 'm1', role: RoleName.MANAGER, unitId: 'other', organizationId: user.organizationId },
-      })
+        user: {
+          sub: 'm1',
+          role: RoleName.MANAGER,
+          unitId: 'other',
+          organizationId: user.organizationId,
+        },
+      }),
     ).rejects.toThrow('Unauthorized')
   })
 
@@ -91,9 +107,14 @@ describe('Update loan status service', () => {
     loanRepo.loans.push(makeLoan('l1', 30))
     await service.execute({
       loanId: 'l1',
-      status: LoanStatus.PAID,
+      status: LoanStatus.VALUE_TRANSFERRED,
       updatedById: user.id,
-      user: { sub: user.id, role: RoleName.ADMIN, unitId: user.unitId, organizationId: user.organizationId },
+      user: {
+        sub: user.id,
+        role: RoleName.ADMIN,
+        unitId: user.unitId,
+        organizationId: user.organizationId,
+      },
     })
     expect(txRepo.transactions).toHaveLength(1)
     expect(txRepo.transactions[0].type).toBe(TransactionType.WITHDRAWAL)

@@ -1,21 +1,43 @@
 import { ProfilesRepository } from '@/repositories/profiles-repository'
 import { SaleItemRepository } from '@/repositories/sale-item-repository'
 import { AppointmentServiceRepository } from '@/repositories/appointment-service-repository'
-import { Prisma, Transaction } from '@prisma/client'
+import { Prisma, ReasonTransaction, Transaction } from '@prisma/client'
 import { IncrementBalanceProfileService } from '../profile/increment-balance'
 import { PaymentItems } from '../users/utils/calculatePendingCommissions'
 import { round } from '@/utils/format-currency'
+import { logger } from '@/lib/logger'
 
 interface PayUserCommissionRequest {
   commissionToBePaid?: number
   userId: string
+  affectedUserId: string
   description?: string
   allUserUnpaidSalesItemsFormatted: PaymentItems[]
   itemsToBePaid?: PaymentItems[]
+  reason?: ReasonTransaction
 }
 
 interface PayUserCommissionResponse {
   transactions: Transaction[]
+}
+
+type PayCommissionWithItemsParams = {
+  affectedUserId: string
+  userId: string
+  itemsToBePaid: PaymentItems[]
+  description?: string
+  reason?: ReasonTransaction
+  tx?: Prisma.TransactionClient
+}
+
+type PayCommissionWithValueParams = {
+  ammount: number
+  allUserUnpaidSalesItemsFormatted: PaymentItems[]
+  affectedUserId: string
+  userId: string
+  description?: string
+  reason?: ReasonTransaction
+  tx?: Prisma.TransactionClient
 }
 
 export class PayUserCommissionService {
@@ -52,13 +74,15 @@ export class PayUserCommissionService {
       )
   }
 
-  private async payCommissionWithValue(
-    ammount: number,
-    allUserUnpaidSalesItemsFormatted: PaymentItems[],
-    affectedUserId: string,
-    description?: string,
-    tx?: Prisma.TransactionClient,
-  ) {
+  private async payCommissionWithValue({
+    ammount,
+    allUserUnpaidSalesItemsFormatted,
+    affectedUserId,
+    userId,
+    description,
+    reason,
+    tx,
+  }: PayCommissionWithValueParams) {
     let remaining = ammount
     const transactions: Transaction[] = []
     for (const item of allUserUnpaidSalesItemsFormatted) {
@@ -73,7 +97,7 @@ export class PayUserCommissionService {
         item.appointmentServiceId ? undefined : item.saleItemId,
         item.appointmentServiceId,
         undefined,
-        tx,
+        { reason: reason ?? ReasonTransaction.PAY_COMMISSION, tx, userId },
       )
       transactions.push(txDecrement.transaction)
       remaining -= value
@@ -84,12 +108,14 @@ export class PayUserCommissionService {
     return transactions
   }
 
-  private async payCommissionWithItems(
-    affectedUserId: string,
-    itemsToBePaid: PaymentItems[],
-    description?: string,
-    tx?: Prisma.TransactionClient,
-  ) {
+  private async payCommissionWithItems({
+    affectedUserId,
+    userId,
+    itemsToBePaid,
+    description,
+    reason,
+    tx,
+  }: PayCommissionWithItemsParams) {
     const transactions: Transaction[] = []
     for (const item of itemsToBePaid) {
       const value = item.amount
@@ -102,7 +128,7 @@ export class PayUserCommissionService {
         item.appointmentServiceId ? undefined : item.saleItemId,
         item.appointmentServiceId,
         undefined,
-        tx,
+        { reason: reason ?? ReasonTransaction.PAY_COMMISSION, tx, userId },
       )
       transactions.push(txDecrement.transaction)
 
@@ -111,15 +137,15 @@ export class PayUserCommissionService {
     return transactions
   }
 
-  // TODO: quando tento pagar passando apenas um item do barabeiro a api ta
-  // pagando todos os itens pendentes dele, verificar o pq e corrigir
   async execute(
     {
       commissionToBePaid,
       userId,
+      affectedUserId,
       description,
       allUserUnpaidSalesItemsFormatted,
       itemsToBePaid,
+      reason,
     }: PayUserCommissionRequest,
     tx?: Prisma.TransactionClient,
   ): Promise<PayUserCommissionResponse> {
@@ -127,23 +153,27 @@ export class PayUserCommissionService {
       throw new Error('Negative values not allowed')
     }
     if (itemsToBePaid) {
-      const transactions = await this.payCommissionWithItems(
+      const transactions = await this.payCommissionWithItems({
+        affectedUserId,
         userId,
         itemsToBePaid,
         description,
+        reason,
         tx,
-      )
+      })
       return { transactions }
     }
 
     if (commissionToBePaid) {
-      const transactions = await this.payCommissionWithValue(
-        commissionToBePaid,
+      const transactions = await this.payCommissionWithValue({
+        ammount: commissionToBePaid,
         allUserUnpaidSalesItemsFormatted,
+        affectedUserId,
         userId,
         description,
+        reason,
         tx,
-      )
+      })
       return { transactions }
     }
 

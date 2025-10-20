@@ -1,8 +1,15 @@
 import { ProfilesRepository } from '@/repositories/profiles-repository'
-import { Prisma, Profile, Transaction, TransactionType } from '@prisma/client'
+import {
+  Prisma,
+  Profile,
+  ReasonTransaction,
+  Transaction,
+  TransactionType,
+} from '@prisma/client'
 import { makeCreateTransaction } from '../@factories/transaction/make-create-transaction'
 import { round } from '@/utils/format-currency'
 import { UserNotFoundError } from '../@errors/user/user-not-found-error'
+import { logger } from '@/lib/logger'
 
 interface IncrementBalanceProfileResponse {
   profile: Profile | null
@@ -13,7 +20,7 @@ export class IncrementBalanceProfileService {
   constructor(private repository: ProfilesRepository) {}
 
   async execute(
-    userId: string,
+    affectedUserId: string,
     amount: number,
     saleId?: string,
     isLoan?: boolean,
@@ -21,11 +28,18 @@ export class IncrementBalanceProfileService {
     saleItemId?: string,
     appointmentServiceId?: string,
     loanId?: string,
-    tx?: Prisma.TransactionClient,
+    options?: {
+      reason?: ReasonTransaction
+      tx?: Prisma.TransactionClient
+      userId: string
+    },
   ): Promise<IncrementBalanceProfileResponse> {
     const createTransactionService = makeCreateTransaction()
 
-    const profileToUpdate = await this.repository.findByUserId(userId, tx)
+    const profileToUpdate = await this.repository.findByUserId(
+      affectedUserId,
+      options?.tx,
+    )
 
     if (!profileToUpdate) {
       throw new UserNotFoundError() // Or a more specific ProfileNotFoundError
@@ -39,22 +53,23 @@ export class IncrementBalanceProfileService {
       {
         totalBalance: newBalance,
       },
-      tx,
+      options?.tx,
     )
 
     const transaction = await createTransactionService.execute({
       type: amount < 0 ? TransactionType.WITHDRAWAL : TransactionType.ADDITION,
       description: description ?? 'Increment Balance Profile',
       amount: Math.abs(amount),
-      userId,
+      userId: options?.userId ?? affectedUserId,
       receiptUrl: undefined,
       saleId,
       saleItemId,
       appointmentServiceId,
       isLoan: isLoan ?? false,
-      affectedUserId: userId,
+      affectedUserId,
       loanId,
-      tx,
+      tx: options?.tx,
+      reason: options?.reason ?? ReasonTransaction.OTHER,
     })
 
     return { profile, transaction: transaction.transaction }

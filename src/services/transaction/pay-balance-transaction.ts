@@ -2,7 +2,7 @@ import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { CashRegisterRepository } from '@/repositories/cash-register-repository'
 import { SaleItemRepository } from '@/repositories/sale-item-repository'
 import { PayUserLoansService } from '../loan/pay-user-loans'
-import { Transaction } from '@prisma/client'
+import { ReasonTransaction, Transaction } from '@prisma/client'
 import { CashRegisterClosedError } from '@/services/@errors/cash-register/cash-register-closed-error'
 import { AffectedUserNotFoundError } from '@/services/@errors/transaction/affected-user-not-found-error'
 import { InsufficientBalanceError } from '@/services/@errors/transaction/insufficient-balance-error'
@@ -193,10 +193,12 @@ export class PayBalanceTransactionService {
         const { transactions: transactionsPayUser } =
           await this.payUserCommissionService.execute(
             {
-              userId: affectedUser.id,
+              userId: data.userId,
+              affectedUserId: affectedUser.id,
               description: data.description,
               allUserUnpaidSalesItemsFormatted,
               itemsToBePaid,
+              reason: ReasonTransaction.PAY_COMMISSION,
             },
             tx,
           )
@@ -209,9 +211,11 @@ export class PayBalanceTransactionService {
           await this.payUserCommissionService.execute(
             {
               commissionToBePaid,
-              userId: affectedUser.id,
+              userId: data.userId,
+              affectedUserId: affectedUser.id,
               description: data.description,
               allUserUnpaidSalesItemsFormatted,
+              reason: ReasonTransaction.PAY_COMMISSION,
             },
             tx,
           )

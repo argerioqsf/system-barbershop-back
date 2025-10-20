@@ -10,11 +10,13 @@ import { IncrementBalanceUnitService } from '../unit/increment-balance'
 import { NegativeValuesNotAllowedError } from '../@errors/transaction/negative-values-not-allowed-error'
 import { InsufficientBalanceError } from '../@errors/transaction/insufficient-balance-error'
 import { LoanPaymentGreaterThanRemainingError } from '../@errors/loan/loan-payment-greater-than-remaining-error'
-import { LoanStatus, Transaction } from '@prisma/client'
+import { LoanStatus, ReasonTransaction, Transaction } from '@prisma/client'
+import { UserToken } from '@/http/controllers/authenticate-controller'
 
 interface PayLoanRequest {
   loanId: string
   amount: number
+  user: UserToken
 }
 
 interface PayLoanResponse {
@@ -37,14 +39,20 @@ export class PayLoanService {
     )
   }
 
-  async execute({ loanId, amount }: PayLoanRequest): Promise<PayLoanResponse> {
+  // TODO: unificar logica de pagar emprestimos com o src/services/loan/pay-loan.ts
+  async execute({
+    loanId,
+    amount,
+    user,
+  }: PayLoanRequest): Promise<PayLoanResponse> {
     if (amount <= 0) throw new NegativeValuesNotAllowedError()
 
     const loan = await this.loanRepository.findById(loanId)
     if (!loan) throw new Error('Loan not found')
 
-    const user = await this.barberUsersRepository.findById(loan.userId)
-    if (!user || !user.profile) throw new Error('User not found')
+    const affectedUser = await this.barberUsersRepository.findById(loan.userId)
+    if (!affectedUser || !affectedUser.profile)
+      throw new Error('User not found')
 
     const paidAmount = this.getPaidAmount(loan)
     const remainingLoan = loan.amount - paidAmount
@@ -53,7 +61,8 @@ export class PayLoanService {
       throw new LoanPaymentGreaterThanRemainingError()
     }
 
-    if (amount > user.profile.totalBalance) throw new InsufficientBalanceError()
+    if (amount > affectedUser.profile.totalBalance)
+      throw new InsufficientBalanceError()
 
     const decProfile = new IncrementBalanceProfileService(
       this.profileRepository,
@@ -61,7 +70,7 @@ export class PayLoanService {
     const incUnit = new IncrementBalanceUnitService(this.unitRepository)
 
     const txProfile = await decProfile.execute(
-      user.id,
+      affectedUser.id,
       -amount,
       undefined,
       true,
@@ -69,23 +78,25 @@ export class PayLoanService {
       undefined,
       undefined,
       loan.id,
+      { reason: ReasonTransaction.PAY_LOAN, userId: user.sub },
     )
     const txUnit = await incUnit.execute(
       loan.unitId,
-      user.id,
+      affectedUser.id,
       amount,
       undefined,
       true,
       loan.id,
+      undefined,
+      { reason: ReasonTransaction.PAY_LOAN },
     )
 
     const newPaid = paidAmount + amount
     const fully = newPaid >= loan.amount
     if (fully) {
       await this.loanRepository.update(loan.id, {
-        fullyPaid: true,
         paidAt: new Date(),
-        status: LoanStatus.PAID,
+        status: LoanStatus.PAID_OFF,
       })
     }
 

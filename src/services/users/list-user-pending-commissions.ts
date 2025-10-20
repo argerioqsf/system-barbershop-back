@@ -35,8 +35,7 @@ export class ListUserPendingCommissionsService {
 
     const loans = await this.loanRepository.findMany({
       userId,
-      status: LoanStatus.PAID,
-      fullyPaid: false,
+      status: LoanStatus.VALUE_TRANSFERRED,
     })
 
     const { totalCommission, allUserUnpaidSalesItemsFormatted } =

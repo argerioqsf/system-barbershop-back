@@ -1,6 +1,11 @@
 import { TransactionRepository } from '@/repositories/transaction-repository'
 import { OrganizationRepository } from '@/repositories/organization-repository'
-import { Organization, Transaction, TransactionType } from '@prisma/client'
+import {
+  Organization,
+  ReasonTransaction,
+  Transaction,
+  TransactionType,
+} from '@prisma/client'
 import { makeCreateTransaction } from '../@factories/transaction/make-create-transaction'
 
 interface IncrementBalanceOrganizationResponse {
@@ -20,6 +25,7 @@ export class IncrementBalanceOrganizationService {
     amount: number,
     saleId?: string,
     isLoan?: boolean,
+    reason?: ReasonTransaction,
   ): Promise<IncrementBalanceOrganizationResponse> {
     const createTransactionService = makeCreateTransaction()
     try {
@@ -34,6 +40,8 @@ export class IncrementBalanceOrganizationService {
         receiptUrl: undefined,
         saleId,
         isLoan: isLoan ?? false,
+        reason:
+          reason ?? (isLoan ? ReasonTransaction.LOAN : ReasonTransaction.OTHER),
       })
       return { organization, transaction: transaction.transaction }
     } catch (error) {

@@ -124,7 +124,8 @@ enum LoanStatus {
   APPROVED
   REJECTED
   CANCELED
-  PAID
+  VALUE_TRANSFERRED
+  PAID_OFF
 }
 
 enum PlanProfileStatus {
@@ -133,6 +134,17 @@ enum PlanProfileStatus {
   CANCELED_EXPIRED
   DEFAULTED
   EXPIRED
+}
+
+enum ReasonTransaction {
+  OTHER
+  UNIT_MAINTENANCE
+  LOAN
+  CASH_OPENING
+  PAY_LOAN
+  PAY_COMMISSION
+  PAY_PLAN_DEBT
+  ADD_COMMISSION
 }
 
 model Role {
@@ -327,9 +339,10 @@ model Transaction {
   type                  TransactionType
   description           String
   amount                Float
-  isLoan                Boolean         @default(false)
+  isLoan                Boolean            @default(false)
   receiptUrl            String?
-  createdAt             DateTime        @default(now())
+  createdAt             DateTime           @default(now())
+  reason                ReasonTransaction  @default(OTHER)
 
   saleId               String?
   sale                 Sale?               @relation(fields: [saleId], references: [id])
@@ -447,7 +460,6 @@ model Loan {
   amount      Float
   createdAt   DateTime   @default(now())
   paidAt      DateTime?
-  fullyPaid   Boolean    @default(false)
   updatedById String?
 
   user         User                @relation(fields: [userId], references: [id])

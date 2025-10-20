@@ -23,11 +23,7 @@ export class ListTransactionsService {
 
     let where: Prisma.TransactionWhereInput = {}
 
-    if (actor.role === 'OWNER') {
-      where = { unit: { organizationId: actor.organizationId } }
-    } else if (actor.role !== 'ADMIN') {
-      where = { unitId: actor.unitId }
-    }
+    where = { unitId: actor.unitId }
 
     const { items, count } = await this.repository.findMany(where, {
       page,

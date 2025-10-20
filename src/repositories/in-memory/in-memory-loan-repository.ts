@@ -15,7 +15,6 @@ export class InMemoryLoanRepository implements LoanRepository {
       amount: data.amount ?? 0,
       createdAt: new Date(),
       paidAt: null,
-      fullyPaid: false,
       updatedById: data.updatedById ?? null,
     }
     this.loans.push({ ...loan, transactions: [] })
@@ -36,7 +35,6 @@ export class InMemoryLoanRepository implements LoanRepository {
         sessionId: (data.sessionId ?? current.sessionId) as string,
         status: (data.status ?? current.status) as LoanStatus,
         amount: (data.amount ?? current.amount) as number,
-        fullyPaid: (data.fullyPaid ?? current.fullyPaid) as boolean,
         updatedById: (data.updatedById ?? current.updatedById) as string | null,
         paidAt: (data.paidAt ?? current.paidAt) as Date | null,
       }
@@ -53,7 +51,6 @@ export class InMemoryLoanRepository implements LoanRepository {
   async findMany(
     where: Prisma.LoanWhereInput = {},
   ): Promise<LoanWithTransactions[]> {
-    // simple filter by userId, unitId, status, fullyPaid and createdAt range
     return this.loans.filter((l) => {
       const uid = where.userId && (where.userId as Prisma.StringFilter).equals
       if (uid && l.userId !== uid) return false
@@ -63,10 +60,6 @@ export class InMemoryLoanRepository implements LoanRepository {
       const status =
         where.status && (where.status as Prisma.EnumLoanStatusFilter).equals
       if (status && l.status !== status) return false
-      const fullyPaid =
-        where.fullyPaid && (where.fullyPaid as Prisma.BoolFilter).equals
-      if (typeof fullyPaid === 'boolean' && l.fullyPaid !== fullyPaid)
-        return false
       const createdAt = where.createdAt as Prisma.DateTimeFilter | undefined
       if (createdAt?.gte && l.createdAt < createdAt.gte) return false
       if (createdAt?.lt && l.createdAt >= createdAt.lt) return false

@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { UserToken } from '../authenticate-controller'
 import { makeWithdrawalBalanceTransaction } from '@/services/@factories/transaction/make-withdrawal-balance-transaction'
 import { assertPermission } from '@/utils/permissions'
+import { ReasonTransaction } from '@prisma/client'
 
 export const WithdrawalBalanceTransactionController = async (
   request: FastifyRequest,
@@ -12,6 +13,7 @@ export const WithdrawalBalanceTransactionController = async (
     description: z.string(),
     amount: z.coerce.number(),
     affectedUserId: z.string().optional(),
+    reason: z.nativeEnum(ReasonTransaction).optional(),
     discountLoans: z
       .union([z.boolean(), z.string()])
       .transform((val) => {
@@ -39,6 +41,7 @@ export const WithdrawalBalanceTransactionController = async (
       amount: data.amount,
       receiptUrl,
       discountLoans: data.discountLoans,
+      reason: data.reason ?? ReasonTransaction.OTHER,
     },
     user,
   )

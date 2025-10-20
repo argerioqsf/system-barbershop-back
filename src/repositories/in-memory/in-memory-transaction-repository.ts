@@ -1,4 +1,9 @@
-import { Prisma, Transaction, TransactionType } from '@prisma/client'
+import {
+  Prisma,
+  ReasonTransaction,
+  Transaction,
+  TransactionType,
+} from '@prisma/client'
 import { TransactionRepository } from '../transaction-repository'
 import { randomUUID } from 'crypto'
 import { TransactionFull } from '../prisma/prisma-transaction-repository'
@@ -31,6 +36,9 @@ export class InMemoryTransactionRepository implements TransactionRepository {
       amount: data.amount as number,
       isLoan: (data.isLoan as boolean | undefined) ?? false,
       receiptUrl: (data.receiptUrl as string | null | undefined) ?? null,
+      reason:
+        (data.reason as ReasonTransaction | undefined) ??
+        ReasonTransaction.OTHER,
       createdAt: new Date(),
       saleId:
         (data.sale as { connect: { id: string } } | undefined)?.connect.id ??

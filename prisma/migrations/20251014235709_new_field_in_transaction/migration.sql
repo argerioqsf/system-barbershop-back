@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `transactions` ADD COLUMN `reason` ENUM('PAYMENT', 'OTHER', 'UNIT_MAINTENANCE', 'LOAN') NOT NULL DEFAULT 'OTHER';

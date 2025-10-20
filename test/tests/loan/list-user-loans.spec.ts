@@ -13,10 +13,9 @@ function makeLoan(id: string, amount: number, paid: number) {
     unitId: 'unit-1',
     sessionId: 's1',
     amount,
-    status: LoanStatus.PAID,
+    status: LoanStatus.VALUE_TRANSFERRED,
     createdAt: new Date('2024-01-01'),
     paidAt: null,
-    fullyPaid: false,
     updatedById: null,
     transactions: paid > 0 ? [{ amount: paid } as any] : [],
   }

@@ -11,6 +11,7 @@ import {
   BarberProduct,
   BarberService,
   Prisma,
+  ReasonTransaction,
   Transaction,
 } from '@prisma/client'
 import { DetailedAppointment } from '@/repositories/appointment-repository'
@@ -152,33 +153,39 @@ export async function distributeProfits(
     const userBarber = sale.items.find((item) => item.id === saleItemId)?.barber
     if (!userBarber) throw new BarberNotFoundError()
     if (!userBarber.profile) throw new BarberProfileNotFoundError()
-
-    if (userBarber.profile.totalBalance < 0) {
-      const balanceBarber = userBarber.profile.totalBalance
-      const valueCalculated = balanceBarber + amount
-      const amountToPay = valueCalculated <= 0 ? amount : -balanceBarber
-      const transactionUnit = await incrementUnit.execute(
-        sale.unitId,
-        userBarber.id,
-        amountToPay,
-        sale.id,
-        true,
-        undefined,
-        undefined,
-        tx,
-      )
-      transactions.push(transactionUnit.transaction)
+    const userIsInDebt = userBarber.profile.totalBalance < 0
+    // TODO: analisar se ainda faz sentido ter lógica de balanço negativo para comissões
+    // pois ja tem a lógica de empréstimos que cobre essa necessidade de saldo negativo
+    if (userIsInDebt) {
+      // const balanceBarber = userBarber.profile.totalBalance
+      // const valueCalculated = balanceBarber + amount
+      // const amountToPay = valueCalculated <= 0 ? amount : -balanceBarber
+      // const transactionUnit = await incrementUnit.execute(
+      //   sale.unitId,
+      //   userBarber.id,
+      //   amountToPay,
+      //   sale.id,
+      //   true,
+      //   undefined,
+      //   undefined,
+      //   { reason: ReasonTransaction.PAY_LOAN, tx },
+      // )
+      // transactions.push(transactionUnit.transaction)
     }
     const transactionProfile = await incrementProfile.execute(
       userBarber.id,
       amount,
       sale.id,
-      userBarber.profile.totalBalance < 0,
+      userIsInDebt,
       undefined,
       undefined,
       undefined,
       undefined,
-      tx,
+      {
+        reason: ReasonTransaction.ADD_COMMISSION,
+        tx,
+        userId,
+      },
     )
     transactions.push(transactionProfile.transaction)
     if (appointmentServiceId) {
@@ -214,7 +221,7 @@ export async function distributeProfits(
     false,
     undefined,
     undefined,
-    tx,
+    { reason: ReasonTransaction.ADD_COMMISSION, tx },
   )
   transactions.push(transactionUnit.transaction)
 

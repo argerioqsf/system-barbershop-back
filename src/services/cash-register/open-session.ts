@@ -3,7 +3,11 @@ import { CashRegisterRepository } from '@/repositories/cash-register-repository'
 import { ProfilesRepository } from '@/repositories/profiles-repository'
 import { UserNotFoundError } from '@/services/@errors/user/user-not-found-error'
 import { CashRegisterAlreadyOpenError } from '@/services/@errors/cash-register/cash-register-already-open-error'
-import { CashRegisterSession, RoleName } from '@prisma/client'
+import {
+  CashRegisterSession,
+  ReasonTransaction,
+  RoleName,
+} from '@prisma/client'
 import { IncrementBalanceUnitService } from '../unit/increment-balance'
 
 interface OpenSessionRequest {
@@ -61,6 +65,7 @@ export class OpenSessionService {
         false,
         undefined,
         'Initial amount',
+        { reason: ReasonTransaction.CASH_OPENING },
       )
     }
 

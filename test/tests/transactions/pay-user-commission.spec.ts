@@ -18,8 +18,6 @@ import {
   makeCashSession,
   defaultUnit,
 } from '../../helpers/default-values'
-import { NegativeValuesNotAllowedError } from '../../../src/services/@errors/transaction/negative-values-not-allowed-error'
-import { InsufficientBalanceError } from '../../../src/services/@errors/transaction/insufficient-balance-error'
 import type { PaymentItems } from '../../../src/services/users/utils/calculatePendingCommissions'
 import { IncrementBalanceProfileService } from '../../../src/services/profile/increment-balance'
 
@@ -150,6 +148,7 @@ describe('Pay user commission service', () => {
     const res = await service.execute({
       commissionToBePaid: 35,
       userId: user.id,
+      affectedUserId: user.id,
       description: 'pay',
       allUserUnpaidSalesItemsFormatted: items,
     })
@@ -168,6 +167,7 @@ describe('Pay user commission service', () => {
     const res = await service.execute({
       commissionToBePaid: 25,
       userId: user.id,
+      affectedUserId: user.id,
       description: '',
       allUserUnpaidSalesItemsFormatted: items,
     })
@@ -185,6 +185,7 @@ describe('Pay user commission service', () => {
       service.execute({
         commissionToBePaid: -5,
         userId: user.id,
+        affectedUserId: user.id,
         description: '',
         allUserUnpaidSalesItemsFormatted: [],
       }),

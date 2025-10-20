@@ -2,6 +2,7 @@ import { makeCreateTransaction } from '@/services/@factories/transaction/make-cr
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { UserToken } from '../authenticate-controller'
+import { ReasonTransaction } from '@prisma/client'
 
 export const CreateTransactionController = async (
   request: FastifyRequest,
@@ -12,6 +13,7 @@ export const CreateTransactionController = async (
     description: z.string(),
     amount: z.coerce.number(),
     affectedUserId: z.string().optional(),
+    reason: z.nativeEnum(ReasonTransaction).optional(),
   })
   const data = bodySchema.parse(request.body)
   const receiptUrl = request.file
@@ -27,6 +29,7 @@ export const CreateTransactionController = async (
     userId,
     affectedUserId: data.affectedUserId,
     receiptUrl,
+    reason: data.reason ?? ReasonTransaction.OTHER,
   })
   return reply.status(201).send({ transaction })
 }

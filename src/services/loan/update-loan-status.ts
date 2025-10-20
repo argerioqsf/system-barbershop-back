@@ -1,6 +1,11 @@
 import { LoanRepository } from '@/repositories/loan-repository'
 import { UnitRepository } from '@/repositories/unit-repository'
-import { LoanStatus, RoleName, Transaction } from '@prisma/client'
+import {
+  LoanStatus,
+  ReasonTransaction,
+  RoleName,
+  Transaction,
+} from '@prisma/client'
 import { IncrementBalanceUnitService } from '../unit/increment-balance'
 import { UnauthorizedError } from '../@errors/auth/unauthorized-error'
 import { UserToken } from '@/http/controllers/authenticate-controller'
@@ -38,13 +43,16 @@ export class UpdateLoanStatusService {
 
     const transactions: Transaction[] = []
 
-    if (status === LoanStatus.PAID) {
+    if (status === LoanStatus.VALUE_TRANSFERRED) {
       const txUnit = await incUnit.execute(
         loan.unitId,
         loan.userId,
         -loan.amount,
         undefined,
         true,
+        loan.id,
+        undefined,
+        { reason: ReasonTransaction.PAY_LOAN },
       )
       transactions.push(txUnit.transaction)
     }

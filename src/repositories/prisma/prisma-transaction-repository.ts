@@ -1,6 +1,9 @@
 import { prisma } from '@/lib/prisma'
 import { Prisma, Transaction } from '@prisma/client'
-import { TransactionRepository } from '../transaction-repository'
+import {
+  ResponseTransactionsFindMany,
+  TransactionRepository,
+} from '../transaction-repository'
 
 export type TransactionFull = Prisma.TransactionGetPayload<{
   include: {
@@ -75,7 +78,7 @@ export class PrismaTransactionRepository implements TransactionRepository {
   async findMany(
     where: Prisma.TransactionWhereInput = {},
     pagination?: { page: number; perPage: number },
-  ): Promise<{ items: TransactionFull[]; count: number }> {
+  ): Promise<ResponseTransactionsFindMany> {
     const { page = 1, perPage = 10 } = pagination || {}
     const skip = (page - 1) * perPage
 
@@ -105,6 +108,8 @@ export class PrismaTransactionRepository implements TransactionRepository {
               },
             },
           },
+          user: true,
+          affectedUser: true,
         },
         orderBy: {
           createdAt: 'desc',

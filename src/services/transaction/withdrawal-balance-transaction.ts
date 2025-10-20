@@ -8,7 +8,7 @@ import {
 } from '@/repositories/cash-register-repository'
 import { SaleItemRepository } from '@/repositories/sale-item-repository'
 import { PayUserLoansService } from '../loan/pay-user-loans'
-import { Transaction } from '@prisma/client'
+import { ReasonTransaction, Transaction } from '@prisma/client'
 import { CashRegisterClosedError } from '@/services/@errors/cash-register/cash-register-closed-error'
 import { AffectedUserNotFoundError } from '@/services/@errors/transaction/affected-user-not-found-error'
 import { InsufficientBalanceError } from '@/services/@errors/transaction/insufficient-balance-error'
@@ -36,6 +36,7 @@ interface PayBalanceTransactionRequest {
   amount?: number
   receiptUrl?: string | null
   discountLoans?: boolean
+  reason: ReasonTransaction
 }
 
 interface PayBalanceTransactionResponse {
@@ -105,7 +106,7 @@ export class WithdrawalBalanceTransactionService {
         undefined,
         undefined,
         data.description,
-        tx,
+        { reason: data.reason, tx },
       )
       logger.debug('updated cash with the value', {
         value: -valueToWithdrawn,
@@ -190,9 +191,11 @@ export class WithdrawalBalanceTransactionService {
         await this.payUserCommissionService.execute(
           {
             commissionToBePaid,
-            userId: affectedUser.id,
+            userId: data.userId,
+            affectedUserId: affectedUser.id,
             description: data.description,
             allUserUnpaidSalesItemsFormatted,
+            reason: data.reason,
           },
           tx,
         )
@@ -212,6 +215,13 @@ export class WithdrawalBalanceTransactionService {
     return transactions
   }
 
+  // TODO: mudar totalmente a logica de controle de comissao
+  // criar uma tabela de comissoes q vai esta vinculada a um usario
+  // tera o campo ispaid para dizer se ja foi paga aquela comissao
+  // tera o campo value, que dira o valor da comissao
+  // tera o campo already_paid, que dira o quanto ja foi pago daquela comissao
+  // data de criaco
+  // criar sempre que finalizar uma venda, pode ser em distributeprfits a lógica
   async execute(
     data: PayBalanceTransactionRequest,
     userToken: UserToken,

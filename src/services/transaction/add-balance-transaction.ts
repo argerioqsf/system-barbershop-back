@@ -1,6 +1,6 @@
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { CashRegisterRepository } from '@/repositories/cash-register-repository'
-import { Transaction } from '@prisma/client'
+import { ReasonTransaction, Transaction } from '@prisma/client'
 import { IncrementBalanceUnitService } from '../unit/increment-balance'
 import { IncrementBalanceProfileService } from '../profile/increment-balance'
 import { UserNotFoundError } from '@/services/@errors/user/user-not-found-error'
@@ -17,6 +17,7 @@ interface AddBalanceTransactionRequest {
   description: string
   amount: number
   receiptUrl?: string | null
+  reason?: ReasonTransaction
 }
 
 interface AddBalanceTransactionResponse {
@@ -50,6 +51,7 @@ export class AddBalanceTransactionService {
 
     const transactions = await prisma.$transaction(async (tx) => {
       const txs: Transaction[] = []
+      const baseReason = data.reason ?? ReasonTransaction.ADD_COMMISSION
 
       if (data.affectedUserId) {
         const affectedUser = await this.barberUserRepository.findById(
@@ -76,7 +78,7 @@ export class AddBalanceTransactionService {
               undefined,
               undefined,
               undefined,
-              tx,
+              { reason: ReasonTransaction.PAY_LOAN, tx, userId: user.id },
             )
             // 2. Increment unit's balance (as it's getting its loaned money back)
             const unitTx = await this.incrementUnitService.execute(
@@ -87,7 +89,7 @@ export class AddBalanceTransactionService {
               true, // isLoan
               `Debt payment received: ${data.description}`,
               undefined,
-              tx,
+              { reason: ReasonTransaction.PAY_LOAN, tx },
             )
             txs.push(profileTx.transaction, unitTx.transaction)
           }
@@ -104,7 +106,7 @@ export class AddBalanceTransactionService {
               undefined,
               undefined,
               undefined,
-              tx,
+              { reason: baseReason, tx, userId: user.id },
             )
             txs.push(profileTx.transaction)
           }
@@ -119,7 +121,7 @@ export class AddBalanceTransactionService {
             undefined,
             undefined,
             undefined,
-            tx,
+            { reason: baseReason, tx, userId: user.id },
           )
           txs.push(profileTx.transaction)
         }
@@ -133,7 +135,7 @@ export class AddBalanceTransactionService {
           false, // isLoan
           data.description,
           undefined,
-          tx,
+          { reason: baseReason, tx },
         )
         txs.push(unitTx.transaction)
       }

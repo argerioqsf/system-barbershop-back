@@ -3,7 +3,12 @@ import {
   LoanWithTransactions,
 } from '@/repositories/loan-repository'
 import { UnitRepository } from '@/repositories/unit-repository'
-import { LoanStatus, Prisma, Transaction } from '@prisma/client'
+import {
+  LoanStatus,
+  Prisma,
+  ReasonTransaction,
+  Transaction,
+} from '@prisma/client'
 import { IncrementBalanceUnitService } from '../unit/increment-balance'
 import { UserFindById } from '@/repositories/barber-users-repository'
 
@@ -31,6 +36,8 @@ export class PayUserLoansService {
     )
   }
 
+  // TODO: unificar logica de pagar emprestimos com o src/services/loan/pay-user-loans.ts
+  // essa logica nao precisa retirar do balanco de usuario pq onde é chamada ja faz isso antes
   async execute(
     { affectedUser, amount }: PayUserLoansRequest,
     tx?: Prisma.TransactionClient,
@@ -38,8 +45,7 @@ export class PayUserLoansService {
     const loans = await this.loanRepository.findMany(
       {
         userId: affectedUser.id,
-        status: { equals: LoanStatus.PAID },
-        fullyPaid: { equals: false },
+        status: { equals: LoanStatus.VALUE_TRANSFERRED },
       },
       tx,
     )
@@ -59,9 +65,8 @@ export class PayUserLoansService {
         await this.loanRepository.update(
           loan.id,
           {
-            fullyPaid: true,
             paidAt: new Date(),
-            status: LoanStatus.PAID,
+            status: LoanStatus.PAID_OFF,
           },
           tx,
         )
@@ -76,7 +81,7 @@ export class PayUserLoansService {
         true,
         loan.id,
         undefined,
-        tx,
+        { reason: ReasonTransaction.PAY_LOAN, tx },
       )
       transactions.push(txUnit.transaction)
       totalPaid += toPay
@@ -87,9 +92,8 @@ export class PayUserLoansService {
         await this.loanRepository.update(
           loan.id,
           {
-            fullyPaid: fully,
             paidAt: new Date(),
-            status: LoanStatus.PAID,
+            status: LoanStatus.PAID_OFF,
           },
           tx,
         )

@@ -9,7 +9,12 @@ import {
   FakeCashRegisterRepository,
 } from '../../helpers/fake-repositories'
 import { LoanStatus, TransactionType } from '@prisma/client'
-import { makeProfile, makeUser, defaultUnit, makeCashSession } from '../../helpers/default-values'
+import {
+  makeProfile,
+  makeUser,
+  defaultUnit,
+  makeCashSession,
+} from '../../helpers/default-values'
 
 let loanRepo: FakeLoanRepository
 let unitRepo: FakeUnitRepository
@@ -19,10 +24,13 @@ let cashRepo: FakeCashRegisterRepository
 let service: PayUserLoansService
 let user: ReturnType<typeof makeUser>
 
-vi.mock('../../../src/services/@factories/transaction/make-create-transaction', () => ({
-  makeCreateTransaction: () =>
-    new CreateTransactionService(txRepo, barberRepo, cashRepo),
-}))
+vi.mock(
+  '../../../src/services/@factories/transaction/make-create-transaction',
+  () => ({
+    makeCreateTransaction: () =>
+      new CreateTransactionService(txRepo, barberRepo, cashRepo),
+  }),
+)
 
 function setup() {
   txRepo = new FakeTransactionRepository()
@@ -45,12 +53,13 @@ function makeLoan(id: string, amount: number, paid = 0) {
     unitId: user.unitId,
     sessionId: 's1',
     amount,
-    status: LoanStatus.PAID,
+    status: LoanStatus.VALUE_TRANSFERRED,
     createdAt: new Date('2024-01-01'),
     paidAt: null,
-    fullyPaid: false,
     updatedById: null,
-    transactions: paid ? [{ amount: paid, type: TransactionType.ADDITION } as any] : [],
+    transactions: paid
+      ? [{ amount: paid, type: TransactionType.ADDITION } as any]
+      : [],
   }
 }
 
@@ -69,8 +78,8 @@ describe('Pay user loans service', () => {
     expect(txRepo.transactions).toHaveLength(2)
     expect(unitRepo.unit.totalBalance).toBe(60)
     const [loan1, loan2] = loanRepo.loans
-    expect(loan1.fullyPaid).toBe(true)
-    expect(loan2.fullyPaid).toBe(false)
+    expect(loan1.status).toBe(LoanStatus.PAID_OFF)
+    expect(loan2.status).toBe(LoanStatus.VALUE_TRANSFERRED)
   })
 
   it('returns remaining amount when payment exceeds debts', async () => {
@@ -82,6 +91,6 @@ describe('Pay user loans service', () => {
     expect(res.remaining).toBe(20)
     expect(txRepo.transactions).toHaveLength(1)
     expect(unitRepo.unit.totalBalance).toBe(40)
-    expect(loanRepo.loans[0].fullyPaid).toBe(true)
+    expect(loanRepo.loans[0].status).toBe(LoanStatus.PAID_OFF)
   })
 })

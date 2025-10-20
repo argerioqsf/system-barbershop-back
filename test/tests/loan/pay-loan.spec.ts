@@ -9,7 +9,12 @@ import {
   FakeBarberUsersRepository,
   FakeCashRegisterRepository,
 } from '../../helpers/fake-repositories'
-import { makeProfile, makeUser, defaultUnit, makeCashSession } from '../../helpers/default-values'
+import {
+  makeProfile,
+  makeUser,
+  defaultUnit,
+  makeCashSession,
+} from '../../helpers/default-values'
 import { LoanStatus, TransactionType } from '@prisma/client'
 import { NegativeValuesNotAllowedError } from '../../../src/services/@errors/transaction/negative-values-not-allowed-error'
 import { InsufficientBalanceError } from '../../../src/services/@errors/transaction/insufficient-balance-error'
@@ -24,9 +29,13 @@ let cashRepo: FakeCashRegisterRepository
 let service: PayLoanService
 let user: ReturnType<typeof makeUser>
 
-vi.mock('../../../src/services/@factories/transaction/make-create-transaction', () => ({
-  makeCreateTransaction: () => new CreateTransactionService(txRepo, barberRepo, cashRepo),
-}))
+vi.mock(
+  '../../../src/services/@factories/transaction/make-create-transaction',
+  () => ({
+    makeCreateTransaction: () =>
+      new CreateTransactionService(txRepo, barberRepo, cashRepo),
+  }),
+)
 
 function setup(balance = 100) {
   txRepo = new FakeTransactionRepository()
@@ -51,12 +60,13 @@ function makeLoan(id: string, amount: number, paid = 0) {
     unitId: user.unitId,
     sessionId: 's1',
     amount,
-    status: LoanStatus.PAID,
+    status: LoanStatus.VALUE_TRANSFERRED,
     createdAt: new Date('2024-01-01'),
     paidAt: null,
-    fullyPaid: false,
     updatedById: null,
-    transactions: paid ? [{ amount: paid, type: TransactionType.ADDITION } as any] : [],
+    transactions: paid
+      ? [{ amount: paid, type: TransactionType.ADDITION } as any]
+      : [],
   }
 }
 
@@ -68,38 +78,44 @@ describe('Pay loan service', () => {
   it('pays part of a loan', async () => {
     loanRepo.loans.push(makeLoan('l1', 50))
 
-    const res = await service.execute({ loanId: 'l1', amount: 30 })
+    const res = await service.execute({ loanId: 'l1', amount: 30, user })
 
     expect(res.remaining).toBe(20)
     expect(profileRepo.profiles[0].totalBalance).toBe(70)
     expect(unitRepo.unit.totalBalance).toBe(30)
     expect(txRepo.transactions).toHaveLength(2)
-    expect(loanRepo.loans[0].fullyPaid).toBe(false)
+    expect(loanRepo.loans[0].status).toBe(LoanStatus.VALUE_TRANSFERRED)
   })
 
   it('marks loan as fully paid when remaining amount is paid', async () => {
     loanRepo.loans.push(makeLoan('l1', 40))
 
-    const res = await service.execute({ loanId: 'l1', amount: 40 })
+    const res = await service.execute({ loanId: 'l1', amount: 40, user })
 
     expect(res.remaining).toBe(0)
-    expect(loanRepo.loans[0].fullyPaid).toBe(true)
+    expect(loanRepo.loans[0].status).toBe(LoanStatus.PAID_OFF)
     expect(txRepo.transactions).toHaveLength(2)
   })
 
   it('throws when amount is negative', async () => {
     loanRepo.loans.push(makeLoan('l1', 30))
-    await expect(service.execute({ loanId: 'l1', amount: -10 })).rejects.toThrow(NegativeValuesNotAllowedError)
+    await expect(
+      service.execute({ loanId: 'l1', amount: -10, user }),
+    ).rejects.toThrow(NegativeValuesNotAllowedError)
   })
 
   it('throws when user has insufficient balance', async () => {
     setup(20)
     loanRepo.loans.push(makeLoan('l1', 30))
-    await expect(service.execute({ loanId: 'l1', amount: 30 })).rejects.toThrow(InsufficientBalanceError)
+    await expect(
+      service.execute({ loanId: 'l1', amount: 30, user }),
+    ).rejects.toThrow(InsufficientBalanceError)
   })
 
   it('throws when amount exceeds remaining debt', async () => {
     loanRepo.loans.push(makeLoan('l1', 50, 30))
-    await expect(service.execute({ loanId: 'l1', amount: 25 })).rejects.toThrow(LoanPaymentGreaterThanRemainingError)
+    await expect(
+      service.execute({ loanId: 'l1', amount: 25, user }),
+    ).rejects.toThrow(LoanPaymentGreaterThanRemainingError)
   })
 })

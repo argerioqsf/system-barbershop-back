@@ -6,7 +6,12 @@ import {
   IncrementBalanceUnitResponse,
   IncrementBalanceUnitService,
 } from '../unit/increment-balance'
-import { PaymentStatus, Transaction, PlanProfileStatus } from '@prisma/client'
+import {
+  PaymentStatus,
+  PlanProfileStatus,
+  ReasonTransaction,
+  Transaction,
+} from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { PlanRepository } from '@/repositories/plan-repository'
 import { getLastDebtPaid, hasPendingDebts } from './utils/helpers'
@@ -74,7 +79,7 @@ export class PayDebtService {
         false,
         undefined,
         'Pay plan debt',
-        tx,
+        { reason: ReasonTransaction.PAY_PLAN_DEBT, tx },
       )
       transactionIncrementUnit = transaction
 
@@ -103,7 +108,7 @@ export class PayDebtService {
         }
       }
 
-      // verificar se é mais vantagem implementar logo toda a logica de debitos recorrentes ou não
+      // TODO: verificar se é mais vantagem implementar logo toda a logica de debitos recorrentes ou não
 
       if (planProfile.status === PlanProfileStatus.EXPIRED) {
         const hasDebtsPending = hasPendingDebts(updatedDebts)

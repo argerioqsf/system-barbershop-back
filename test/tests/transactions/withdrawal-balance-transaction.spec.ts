@@ -27,6 +27,7 @@ import { IncrementBalanceUnitService } from '../../../src/services/unit/incremen
 import { UpdateCashRegisterFinalAmountService } from '../../../src/services/cash-register/update-cash-register-final-amount'
 
 import { prisma } from '../../../src/lib/prisma'
+import { ReasonTransaction } from '@prisma/client'
 
 import { PayUserCommissionService } from '../../../src/services/transaction/pay-user-comission'
 import { PayUserLoansService } from '../../../src/services/loan/pay-user-loans'
@@ -119,7 +120,7 @@ function setup(options?: {
     appRepo,
     incrementProfileService,
   )
-  const payLoansService = new PayUserLoansService(loanRepo, transactionRepo)
+  const payLoansService = new PayUserLoansService(loanRepo, unitRepo)
 
   const service = new WithdrawalBalanceTransactionService(
     barberRepo,
@@ -151,7 +152,12 @@ describe('Withdrawal balance transaction service', () => {
   it('throws when passing negative value', async () => {
     await expect(
       ctx.service.execute(
-        { userId: ctx.user.id, description: '', amount: -5 },
+        {
+          userId: ctx.user.id,
+          description: '',
+          amount: -5,
+          reason: ReasonTransaction.PAY_COMMISSION,
+        },
         ctx.user,
       ),
     ).rejects.toThrow('Negative values not allowed')
@@ -161,7 +167,12 @@ describe('Withdrawal balance transaction service', () => {
     ctx = setup({ userBalance: -20 })
     await expect(
       ctx.service.execute(
-        { userId: ctx.user.id, description: '', amount: 10 },
+        {
+          userId: ctx.user.id,
+          description: '',
+          amount: 10,
+          reason: ReasonTransaction.PAY_COMMISSION,
+        },
         ctx.user,
       ),
     ).rejects.toThrow('Insufficient balance for withdrawal')
@@ -176,6 +187,7 @@ describe('Withdrawal balance transaction service', () => {
         affectedUserId: ctx.user.id,
         description: '',
         amount: 20,
+        reason: ReasonTransaction.PAY_COMMISSION,
       },
       ctx.user,
     )
@@ -192,6 +204,7 @@ describe('Withdrawal balance transaction service', () => {
           affectedUserId: 'user-1',
           description: '',
           amount: 30,
+          reason: ReasonTransaction.PAY_COMMISSION,
         },
         ctx.user,
       ),
@@ -204,7 +217,12 @@ describe('Withdrawal balance transaction service', () => {
     ctx = setup({ userBalance: 10, unitBalance: 20, allowsLoan: true })
     await expect(
       ctx.service.execute(
-        { userId: ctx.user.id, description: '', amount: 50 },
+        {
+          userId: ctx.user.id,
+          description: '',
+          amount: 50,
+          reason: ReasonTransaction.PAY_COMMISSION,
+        },
         ctx.user,
       ),
     ).rejects.toThrow('Insufficient balance for withdrawal')
@@ -225,6 +243,7 @@ describe('Withdrawal balance transaction service', () => {
         affectedUserId: other.id,
         description: '',
         amount: 30,
+        reason: ReasonTransaction.PAY_COMMISSION,
       },
       ctx.user,
     )

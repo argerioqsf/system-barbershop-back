@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { UserToken } from '../authenticate-controller'
 import { makeAddBalanceTransaction } from '@/services/@factories/transaction/make-add-balance-transaction'
 import { assertPermission } from '@/utils/permissions'
+import { ReasonTransaction } from '@prisma/client'
 
 export const AddBalanceTransactionController = async (
   request: FastifyRequest,
@@ -12,6 +13,7 @@ export const AddBalanceTransactionController = async (
     description: z.string(),
     amount: z.coerce.number(),
     affectedUserId: z.string().optional(),
+    reason: z.nativeEnum(ReasonTransaction).optional(),
   })
   const user = request.user as UserToken
   const data = bodySchema.parse(request.body)
@@ -32,6 +34,7 @@ export const AddBalanceTransactionController = async (
     userId,
     affectedUserId: data.affectedUserId,
     receiptUrl,
+    reason: data.reason ?? ReasonTransaction.OTHER,
   })
   return reply.status(201).send({ transactions })
 }
