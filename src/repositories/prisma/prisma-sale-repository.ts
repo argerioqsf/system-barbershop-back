@@ -28,8 +28,12 @@ export class PrismaSaleRepository implements SaleRepository {
     }
   }
 
-  async create(data: Prisma.SaleCreateInput): Promise<DetailedSale> {
-    const sale = await prisma.sale.create({
+  async create(
+    data: Prisma.SaleCreateInput,
+    tx?: Prisma.TransactionClient,
+  ): Promise<DetailedSale> {
+    const prismaClient = tx || prisma
+    const sale = await prismaClient.sale.create({
       data,
       include: {
         items: {
@@ -303,8 +307,13 @@ export class PrismaSaleRepository implements SaleRepository {
     return detailed.map((sale) => this.sanitizeSale(sale))
   }
 
-  async updateStatus(id: string, status: PaymentStatus): Promise<DetailedSale> {
-    const sale = await prisma.sale.update({
+  async updateStatus(
+    id: string,
+    status: PaymentStatus,
+    tx?: Prisma.TransactionClient,
+  ): Promise<DetailedSale> {
+    const prismaClient = tx || prisma
+    const sale = await prismaClient.sale.update({
       where: { id },
       data: { paymentStatus: status },
       include: {

@@ -1,5 +1,8 @@
 import { GetItemsBuildRequest, GetItemsBuildResponse } from './types'
-import { ProductToUpdate, ReturnBuildItemData } from './utils/item'
+import {
+  ProductToUpdate,
+  ReturnBuildItemData,
+} from '@/modules/sale/application/dto/sale-item-dto'
 import { GetItemBuildService } from './get-item-build'
 
 export class GetItemsBuildService {

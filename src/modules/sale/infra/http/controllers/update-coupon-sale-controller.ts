@@ -1,7 +1,7 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { makeUpdateSaleCoupon } from '@/modules/sale/infra/factories/make-update-sale-coupon'
-import { PrismaCouponRepository } from '@/repositories/prisma/prisma-coupon-repository'
+import { PrismaCouponRepository } from '@/modules/sale/infra/repositories/prisma/prisma-coupon-repository'
 
 export const UpdateCouponSaleController = async (
   request: FastifyRequest,

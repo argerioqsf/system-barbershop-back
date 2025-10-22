@@ -1,10 +1,7 @@
-import { ProductRepository } from '@/repositories/product-repository'
-import { SaleItemUpdateFields } from '@/services/sale/types'
-import {
-  ProductToUpdate,
-  verifyStockProducts,
-} from '@/services/sale/utils/item'
-import { updateProductsStock } from '@/services/sale/utils/sale'
+import { ProductRepository } from '@/modules/sale/application/ports/product-repository'
+import { SaleItemUpdateFields } from '@/modules/sale/application/dto/sale'
+import { ProductToUpdate } from '@/modules/sale/application/dto/sale-item-dto'
+import { StockService } from '@/modules/sale/application/services/stock-service'
 import {
   SaleItemUpdateExecutor,
   SaleItemUpdateExecutorResult,
@@ -16,7 +13,7 @@ import {
   validateSaleItemQuantity,
   validateSaleItemQuantityChanged,
 } from '../validators/sale-item-payload'
-import { SaleTelemetry } from '@/modules/sale/application/contracts/sale-telemetry'
+import { SaleTelemetry } from '@/modules/sale/application/ports/sale-telemetry'
 
 interface ProductAdjustmentMetadata {
   productsToUpdate: ProductToUpdate[]
@@ -32,11 +29,15 @@ export interface UpdateSaleItemQuantityInput {
 export type UpdateSaleItemQuantityOutput = SaleItemUpdateExecutorResult
 
 export class UpdateSaleItemQuantityUseCase {
+  private readonly stockService: StockService
+
   constructor(
     private readonly executor: SaleItemUpdateExecutor,
     private readonly productRepository: ProductRepository,
     private readonly telemetry?: SaleTelemetry,
-  ) {}
+  ) {
+    this.stockService = new StockService(productRepository)
+  }
 
   async execute(
     input: UpdateSaleItemQuantityInput,
@@ -54,8 +55,7 @@ export class UpdateSaleItemQuantityUseCase {
       beforeRebuild: async (context: SaleItemUpdateHookContext) => {
         const adjustments = await this.computeProductAdjustments(context)
         if (adjustments.productsToUpdate.length > 0) {
-          await verifyStockProducts(
-            this.productRepository,
+          await this.stockService.ensureAvailability(
             adjustments.productsToUpdate,
           )
         }
@@ -72,8 +72,7 @@ export class UpdateSaleItemQuantityUseCase {
           | undefined
         if (adjustments) {
           if (adjustments.productsToUpdate.length > 0) {
-            await updateProductsStock(
-              this.productRepository,
+            await this.stockService.adjust(
               adjustments.productsToUpdate,
               'decrement',
               tx,
@@ -81,8 +80,7 @@ export class UpdateSaleItemQuantityUseCase {
           }
 
           if (adjustments.productsToRestore.length > 0) {
-            await updateProductsStock(
-              this.productRepository,
+            await this.stockService.adjust(
               adjustments.productsToRestore,
               'increment',
               tx,

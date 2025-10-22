@@ -1,6 +1,9 @@
-import { SaleRepository } from '@/repositories/sale-repository'
-import { GetSaleRequest, GetSaleResponse } from '@/services/sale/types'
-import { SaleTelemetry } from '@/modules/sale/application/contracts/sale-telemetry'
+import { SaleRepository } from '@/modules/sale/application/ports/sale-repository'
+import {
+  GetSaleRequest,
+  GetSaleResponse,
+} from '@/modules/sale/application/dto/sale'
+import { SaleTelemetry } from '@/modules/sale/application/ports/sale-telemetry'
 import { ValidateSaleError } from '../../domain/errors/validate-sale-erros'
 
 export class GetSaleUseCase {

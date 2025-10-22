@@ -1,7 +1,7 @@
 import { defaultTransactionRunner } from '@/infra/prisma/transaction-runner'
-import { PrismaCouponRepository } from '@/repositories/prisma/prisma-coupon-repository'
-import { PrismaSaleItemRepository } from '@/repositories/prisma/prisma-sale-item-repository'
-import { PrismaSaleRepository } from '@/repositories/prisma/prisma-sale-repository'
+import { PrismaCouponRepository } from '@/modules/sale/infra/repositories/prisma/prisma-coupon-repository'
+import { PrismaSaleItemRepository } from '@/modules/sale/infra/repositories/prisma/prisma-sale-item-repository'
+import { PrismaSaleRepository } from '@/modules/sale/infra/repositories/prisma/prisma-sale-repository'
 import { SaleItemUpdateExecutor } from '@/modules/sale/application/services/sale-item-update-executor'
 import { SaleTotalsService } from '@/modules/sale/application/services/sale-totals-service'
 

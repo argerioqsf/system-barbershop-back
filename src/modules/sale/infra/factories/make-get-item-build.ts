@@ -1,12 +1,13 @@
-import { PrismaAppointmentRepository } from '@/repositories/prisma/prisma-appointment-repository'
-import { PrismaBarberUsersRepository } from '@/repositories/prisma/prisma-barber-users-repository'
-import { PrismaCouponRepository } from '@/repositories/prisma/prisma-coupon-repository'
-import { PrismaPlanProfileRepository } from '@/repositories/prisma/prisma-plan-profile-repository'
-import { PrismaPlanRepository } from '@/repositories/prisma/prisma-plan-repository'
-import { PrismaProductRepository } from '@/repositories/prisma/prisma-product-repository'
-import { PrismaSaleRepository } from '@/repositories/prisma/prisma-sale-repository'
-import { PrismaServiceRepository } from '@/repositories/prisma/prisma-service-repository'
-import { GetItemBuildService } from '@/services/sale/get-item-build'
+import { PrismaAppointmentRepository } from '@/modules/sale/infra/repositories/prisma/prisma-appointment-repository'
+import { PrismaBarberUsersRepository } from '@/modules/sale/infra/repositories/prisma/prisma-barber-users-repository'
+import { PrismaCouponRepository } from '@/modules/sale/infra/repositories/prisma/prisma-coupon-repository'
+import { PrismaPlanProfileRepository } from '@/modules/sale/infra/repositories/prisma/prisma-plan-profile-repository'
+import { PrismaPlanRepository } from '@/modules/sale/infra/repositories/prisma/prisma-plan-repository'
+import { PrismaProductRepository } from '@/modules/sale/infra/repositories/prisma/prisma-product-repository'
+import { PrismaSaleRepository } from '@/modules/sale/infra/repositories/prisma/prisma-sale-repository'
+import { PrismaServiceRepository } from '@/modules/sale/infra/repositories/prisma/prisma-service-repository'
+import { SaleItemsBuildService } from '@/modules/sale/application/services/sale-items-build-service'
+import { SaleItemBuildItem } from '@/modules/sale/application/dto/sale-item-dto'
 
 export function makeGetItemBuildService() {
   const serviceRepository = new PrismaServiceRepository()
@@ -18,7 +19,7 @@ export function makeGetItemBuildService() {
   const saleRepository = new PrismaSaleRepository()
   const planProfileRepository = new PrismaPlanProfileRepository()
 
-  return new GetItemBuildService(
+  const saleItemsBuildService = new SaleItemsBuildService({
     serviceRepository,
     productRepository,
     appointmentRepository,
@@ -27,5 +28,23 @@ export function makeGetItemBuildService() {
     planRepository,
     saleRepository,
     planProfileRepository,
-  )
+  })
+
+  return {
+    async execute({
+      saleItem,
+      unitId,
+    }: {
+      saleItem: SaleItemBuildItem
+      unitId: string
+    }) {
+      const { saleItemsBuild, productsToUpdate } =
+        await saleItemsBuildService.buildSaleItemsForUnit([saleItem], unitId)
+
+      return {
+        saleItemBuild: saleItemsBuild[0],
+        productsToUpdate,
+      }
+    },
+  }
 }

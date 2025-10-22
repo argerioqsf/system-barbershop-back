@@ -47,8 +47,26 @@ describe('coupon utilities', () => {
     repo.coupons.push(coupon)
 
     const items = [
-      { price: 100, ownDiscount: false, discounts: [] },
-      { price: 50, ownDiscount: false, discounts: [] },
+      {
+        id: 'item-1',
+        saleId: 'sale-1',
+        price: 100,
+        basePrice: 100,
+        quantity: 1,
+        ownDiscount: false,
+        discounts: [],
+        commissionPaid: false,
+      },
+      {
+        id: 'item-2',
+        saleId: 'sale-1',
+        price: 50,
+        basePrice: 50,
+        quantity: 1,
+        ownDiscount: false,
+        discounts: [],
+        commissionPaid: false,
+      },
     ]
 
     await applyCouponSale(items as any, coupon.id, repo, 'unit-1')

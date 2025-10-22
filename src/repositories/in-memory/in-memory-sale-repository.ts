@@ -50,7 +50,11 @@ export class InMemorySaleRepository implements SaleRepository {
     }
   }
 
-  async create(data: Prisma.SaleCreateInput): Promise<DetailedSale> {
+  async create(
+    data: Prisma.SaleCreateInput,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _tx?: Prisma.TransactionClient,
+  ): Promise<DetailedSale> {
     const saleId = randomUUID()
     const unitId = (data.unit as { connect: { id: string } }).connect.id
     type SaleItemData = {
@@ -602,7 +606,12 @@ export class InMemorySaleRepository implements SaleRepository {
     return this.sanitizeSale(sale)
   }
 
-  async updateStatus(id: string, status: PaymentStatus): Promise<DetailedSale> {
+  async updateStatus(
+    id: string,
+    status: PaymentStatus,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _tx?: Prisma.TransactionClient,
+  ): Promise<DetailedSale> {
     const sale = this.sales.find((s) => s.id === id)
     if (!sale) {
       throw new Error('Sale not found')

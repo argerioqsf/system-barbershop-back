@@ -1,7 +1,10 @@
 import { Prisma, Coupon } from '@prisma/client'
 
 export interface CouponRepository {
-  create(data: Prisma.CouponCreateInput): Promise<Coupon>
+  create(
+    data: Prisma.CouponCreateInput,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Coupon>
   findMany(where?: Prisma.CouponWhereInput): Promise<Coupon[]>
   findManyPaginated(
     where: Prisma.CouponWhereInput,
@@ -15,5 +18,5 @@ export interface CouponRepository {
     data: Prisma.CouponUpdateInput,
     tx?: Prisma.TransactionClient,
   ): Promise<Coupon>
-  delete(id: string): Promise<void>
+  delete(id: string, tx?: Prisma.TransactionClient): Promise<void>
 }

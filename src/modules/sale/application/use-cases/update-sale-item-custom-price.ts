@@ -1,4 +1,4 @@
-import { SaleItemUpdateFields } from '@/services/sale/types'
+import { SaleItemUpdateFields } from '@/modules/sale/application/dto/sale'
 import {
   SaleItemUpdateExecutor,
   SaleItemUpdateExecutorResult,
@@ -8,7 +8,7 @@ import {
   ensureSaleItemIdProvided,
   validateSaleItemCustomPrice,
 } from '../validators/sale-item-payload'
-import { SaleTelemetry } from '@/modules/sale/application/contracts/sale-telemetry'
+import { SaleTelemetry } from '@/modules/sale/application/ports/sale-telemetry'
 
 export interface UpdateSaleItemCustomPriceInput {
   saleItemId: string

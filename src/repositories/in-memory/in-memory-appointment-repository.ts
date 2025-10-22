@@ -22,6 +22,8 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
   async create(
     data: Prisma.AppointmentCreateInput,
     services: Service[] = [],
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _tx?: Prisma.TransactionClient,
   ): Promise<Appointment> {
     const typed = data as Partial<CreateInput>
     if (services.length === 0 && 'service' in data) {
@@ -154,6 +156,8 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
   async update(
     id: string,
     data: Prisma.AppointmentUpdateInput,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _tx?: Prisma.TransactionClient,
   ): Promise<Appointment> {
     const appointment = this.appointments.find((a) => a.id === id)
     if (!appointment) throw new Error('Appointment not found')

@@ -1,7 +1,6 @@
-import { CreateSaleItem } from '@/services/sale/types'
-import { SaleItem } from '../../domain/sale-item'
+import { CreateSaleItem } from '@/modules/sale/application/dto/sale'
 import { SaleItemValidationError } from '../errors/sale-item-validation-error'
-import { DetailedSaleItemFindById } from '@/repositories/sale-item-repository'
+import { DetailedSaleItemFindById } from '@/modules/sale/application/ports/sale-item-repository'
 
 export interface SaleItemTypePayload {
   serviceId?: string | null
@@ -20,7 +19,11 @@ export function ensureSaleItemIdProvided(id: string | undefined): string {
 
 export function validateSaleItemQuantity(quantity?: number): void {
   if (quantity === undefined) return
-  SaleItem.create({ quantity })
+  if (!Number.isFinite(quantity) || quantity <= 0) {
+    throw new SaleItemValidationError(
+      'Sale item quantity must be greater than zero',
+    )
+  }
 }
 
 export function validateSaleItemQuantityChanged(
@@ -34,7 +37,11 @@ export function validateSaleItemQuantityChanged(
 
 export function validateSaleItemCustomPrice(customPrice?: number | null): void {
   if (customPrice === undefined) return
-  SaleItem.create({ customPrice })
+  if (!Number.isFinite(customPrice ?? 0) || (customPrice ?? 0) < 0) {
+    throw new SaleItemValidationError(
+      'Sale item custom price must be greater than or equal to zero',
+    )
+  }
 }
 
 export function ensureSingleItemType(payload: SaleItemTypePayload): void {

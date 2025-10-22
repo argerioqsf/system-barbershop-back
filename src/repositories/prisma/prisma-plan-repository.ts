@@ -52,8 +52,9 @@ export class PrismaPlanRepository implements PlanRepository {
     })
   }
 
-  create(data: Prisma.PlanCreateInput) {
-    return prisma.plan.create({ data })
+  create(data: Prisma.PlanCreateInput, tx?: Prisma.TransactionClient) {
+    const prismaClient = tx || prisma
+    return prismaClient.plan.create({ data })
   }
 
   update(
@@ -84,7 +85,8 @@ export class PrismaPlanRepository implements PlanRepository {
     })
   }
 
-  async delete(id: string): Promise<void> {
-    await prisma.plan.delete({ where: { id } })
+  async delete(id: string, tx?: Prisma.TransactionClient): Promise<void> {
+    const prismaClient = tx || prisma
+    await prismaClient.plan.delete({ where: { id } })
   }
 }

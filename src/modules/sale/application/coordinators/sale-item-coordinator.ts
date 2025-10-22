@@ -19,7 +19,7 @@ import {
   UpdateSaleItemDetailsUseCase,
   UpdateSaleItemDetailsInput,
 } from '../use-cases/update-sale-item-details'
-import { SaleItemCoordinator as SaleItemCoordinatorContract } from '../contracts/sale-item-coordinator'
+import { SaleItemCoordinator as SaleItemCoordinatorContract } from '../ports/sale-item-coordinator'
 
 export class SaleItemCoordinator implements SaleItemCoordinatorContract {
   constructor(

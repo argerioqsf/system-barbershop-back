@@ -1,8 +1,9 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
+
 import { makeSaleItemCoordinator } from '@/modules/sale/infra/factories/make-sale-item-coordinator'
 
-export const UpdateSaleItemQuantityController = async (
+export const updateSaleItemQuantityController = async (
   request: FastifyRequest,
   reply: FastifyReply,
 ) => {

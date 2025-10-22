@@ -1,5 +1,5 @@
-import { PrismaSaleRepository } from '@/repositories/prisma/prisma-sale-repository'
-import { PrismaBarberUsersRepository } from '@/repositories/prisma/prisma-barber-users-repository'
+import { PrismaSaleRepository } from '@/modules/sale/infra/repositories/prisma/prisma-sale-repository'
+import { PrismaBarberUsersRepository } from '@/modules/sale/infra/repositories/prisma/prisma-barber-users-repository'
 import { CreateSaleUseCase } from '@/modules/sale/application/use-cases/create-sale'
 import { makeSaleTelemetry } from '@/modules/sale/infra/factories/make-sale-telemetry'
 

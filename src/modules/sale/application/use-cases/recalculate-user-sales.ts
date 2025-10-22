@@ -1,11 +1,9 @@
 import { PaymentStatus, Prisma } from '@prisma/client'
-import { SaleRepository } from '@/repositories/sale-repository'
-import { SaleItemRepository } from '@/repositories/sale-item-repository'
-import { calculateTotal } from '@/services/sale/utils/sale'
-import {
-  updateDiscountsOnSaleItem,
-  ReturnBuildItemData,
-} from '@/services/sale/utils/item'
+import { SaleRepository } from '@/modules/sale/application/ports/sale-repository'
+import { SaleItemRepository } from '@/modules/sale/application/ports/sale-item-repository'
+import { calculateTotal } from '@/modules/sale/application/services/sale-totals-calculator'
+import { ReturnBuildItemData } from '@/modules/sale/application/dto/sale-item-dto'
+import { DiscountSyncService } from '@/modules/sale/application/services/discount-sync-service'
 import { SaleItemsBuildService } from '@/modules/sale/application/services/sale-items-build-service'
 import { TransactionRunner } from '@/core/application/ports/transaction-runner'
 import {
@@ -13,6 +11,7 @@ import {
   normalizeTransactionRunner,
 } from '@/core/application/utils/transaction-runner'
 import { defaultTransactionRunner } from '@/infra/prisma/transaction-runner'
+import { UseCaseCtx } from '@/core/application/use-case-ctx'
 
 interface RecalculateUserSalesRequest {
   userIds: string[]
@@ -35,7 +34,7 @@ export class RecalculateUserSalesService {
 
   async execute(
     { userIds }: RecalculateUserSalesRequest,
-    tx?: Prisma.TransactionClient,
+    ctx?: UseCaseCtx,
   ): Promise<void> {
     if (userIds.length === 0) return
     const sales = await this.saleRepository.findMany({
@@ -58,14 +57,10 @@ export class RecalculateUserSalesService {
       const total = calculateTotal(rebuilt)
 
       const run = async (trx: Prisma.TransactionClient) => {
+        const discountSync = new DiscountSyncService(this.saleItemRepository)
         for (const item of rebuilt) {
           if (item.id) {
-            await updateDiscountsOnSaleItem(
-              item,
-              item.id,
-              this.saleItemRepository,
-              trx,
-            )
+            await discountSync.sync(item, item.id, trx)
           }
         }
         if (total !== sale.total) {
@@ -73,8 +68,8 @@ export class RecalculateUserSalesService {
         }
       }
 
-      if (tx) {
-        await run(tx)
+      if (ctx?.tx) {
+        await run(ctx.tx)
       } else {
         await this.transactionRunner.run(async (trx) => {
           await run(trx)

@@ -1,31 +1,38 @@
-import { SaleRepository, DetailedSale } from '@/repositories/sale-repository'
-import { ProductRepository } from '@/repositories/product-repository'
-import { AppointmentRepository } from '@/repositories/appointment-repository'
+import {
+  SaleRepository,
+  DetailedSale,
+} from '@/modules/sale/application/ports/sale-repository'
+import { ProductRepository } from '@/modules/sale/application/ports/product-repository'
+import { AppointmentRepository } from '@/modules/sale/application/ports/appointment-repository'
 import {
   BarberUsersRepository,
   UserFindById,
-} from '@/repositories/barber-users-repository'
-import { SaleItemRepository } from '@/repositories/sale-item-repository'
+} from '@/modules/sale/application/ports/barber-users-repository'
+import { SaleItemRepository } from '@/modules/sale/application/ports/sale-item-repository'
 import {
   ProductToUpdate,
   ReturnBuildItemData,
   SaleItemBuildItem,
-  updateDiscountsOnSaleItem,
-  verifyStockProducts,
-} from '@/services/sale/utils/item'
+} from '@/modules/sale/application/dto/sale-item-dto'
 import {
-  mapToSaleItems,
   calculateTotal,
-  updateProductsStock,
   calculateGrossTotal,
-} from '@/services/sale/utils/sale'
-import { CreateSaleItem, RemoveAddSaleItemRequest } from '@/services/sale/types'
+} from '@/modules/sale/application/services/sale-totals-calculator'
+import {
+  mapSaleItemToPrismaCreate,
+  mapDetailedSaleItemToBuild,
+} from '@/modules/sale/infra/mappers/sale-item-mapper'
+import { StockService } from '@/modules/sale/application/services/stock-service'
+import {
+  CreateSaleItem,
+  RemoveAddSaleItemRequest,
+} from '@/modules/sale/application/dto/sale'
 import { PaymentStatus, Prisma, SaleStatus } from '@prisma/client'
 import {
   BuildItemsResult,
   SaleItemsBuildService,
 } from '../services/sale-items-build-service'
-import { SaleTelemetry } from '@/modules/sale/application/contracts/sale-telemetry'
+import { SaleTelemetry } from '@/modules/sale/application/ports/sale-telemetry'
 import { logger } from '@/lib/logger'
 import { AppointmentAlreadyLinkedError } from '@/services/@errors/appointment/appointment-already-linked-error'
 import { TransactionRunner } from '@/core/application/ports/transaction-runner'
@@ -34,6 +41,8 @@ import {
   normalizeTransactionRunner,
 } from '@/core/application/utils/transaction-runner'
 import { defaultTransactionRunner } from '@/infra/prisma/transaction-runner'
+import { DiscountSyncService } from '@/modules/sale/application/services/discount-sync-service'
+import { UseCaseCtx } from '@/core/application/use-case-ctx'
 
 interface UpdateSaleResponse {
   sale?: DetailedSale
@@ -43,6 +52,7 @@ type ProductsToRestore = { id: string; quantity: number }
 
 export class RemoveAddSaleItemUseCase {
   private readonly transactionRunner: TransactionRunner
+  private readonly stockService: StockService
 
   constructor(
     private readonly saleRepository: SaleRepository,
@@ -58,6 +68,7 @@ export class RemoveAddSaleItemUseCase {
       transactionRunner,
       defaultTransactionRunner,
     )
+    this.stockService = new StockService(productRepository)
   }
 
   private async getItemsBuild(
@@ -129,7 +140,11 @@ export class RemoveAddSaleItemUseCase {
       (item) => !removeItemIds.includes(item.id),
     )
 
-    return (await this.getItemsBuild(saleCurrentRemovedItems, unitId))
+    const saleItemsBuildPayload = saleCurrentRemovedItems.map((item) =>
+      mapDetailedSaleItemToBuild(saleCurrent.id, item),
+    )
+
+    return (await this.getItemsBuild(saleItemsBuildPayload, unitId))
       .saleItemsBuild
   }
 
@@ -147,14 +162,10 @@ export class RemoveAddSaleItemUseCase {
     saleItems: ReturnBuildItemData[],
     tx: Prisma.TransactionClient,
   ) {
+    const discountSync = new DiscountSyncService(this.saleItemRepository)
     for (const saleItem of saleItems) {
       if (saleItem.id) {
-        await updateDiscountsOnSaleItem(
-          saleItem,
-          saleItem.id,
-          this.saleItemRepository,
-          tx,
-        )
+        await discountSync.sync(saleItem, saleItem.id, tx)
       }
 
       if (saleItem.appointment) {
@@ -220,27 +231,19 @@ export class RemoveAddSaleItemUseCase {
     productsToUpdate: ProductToUpdate[],
     tx: Prisma.TransactionClient,
   ) {
-    await updateProductsStock(
-      this.productRepository,
-      productsToUpdate,
-      'decrement',
-      tx,
-    )
+    if (productsToUpdate.length > 0) {
+      await this.stockService.adjust(productsToUpdate, 'decrement', tx)
+    }
 
-    await updateProductsStock(
-      this.productRepository,
-      productsToRestore,
-      'increment',
-      tx,
-    )
+    if (productsToRestore.length > 0) {
+      await this.stockService.adjust(productsToRestore, 'increment', tx)
+    }
   }
 
-  async execute({
-    id,
-    addItems,
-    removeItemIds,
-    performedBy,
-  }: RemoveAddSaleItemRequest): Promise<UpdateSaleResponse> {
+  async execute(
+    { id, addItems, removeItemIds, performedBy }: RemoveAddSaleItemRequest,
+    ctx?: UseCaseCtx,
+  ): Promise<UpdateSaleResponse> {
     let saleUpdate: DetailedSale | undefined
     let newSaleItems: ReturnBuildItemData[] = []
     const productsToUpdate: ProductToUpdate[] = []
@@ -263,8 +266,18 @@ export class RemoveAddSaleItemUseCase {
 
     if (addItems?.length) {
       const addItemsFormatted: SaleItemBuildItem[] = addItems.map((item) => ({
-        ...item,
         saleId: id,
+        id: item.id,
+        serviceId: item.serviceId ?? undefined,
+        productId: item.productId ?? undefined,
+        appointmentId: item.appointmentId ?? undefined,
+        planId: item.planId ?? undefined,
+        barberId: item.barberId ?? undefined,
+        couponId: item.couponId ?? undefined,
+        quantity: item.quantity,
+        price: item.price,
+        customPrice:
+          item.customPrice === undefined ? undefined : item.customPrice,
       }))
       const haveAppointmentItems = this.checkIfHaveAppointmentItems(addItems)
 
@@ -278,8 +291,7 @@ export class RemoveAddSaleItemUseCase {
       )
 
       if (newItemsBuild.productsToUpdate.length > 0) {
-        await verifyStockProducts(
-          this.productRepository,
+        await this.stockService.ensureAvailability(
           newItemsBuild.productsToUpdate,
         )
       }
@@ -304,14 +316,28 @@ export class RemoveAddSaleItemUseCase {
       (saleItem) => saleItem.id,
     )
 
-    const newSaleItemsMapped = mapToSaleItems(newSaleItems)
+    const newSaleItemsMapped = newSaleItems.map(mapSaleItemToPrismaCreate)
 
     const totalSaleItemsRebuild = calculateTotal(currentSaleItemsRebuild)
     const grossTotalSaleItemsRebuild = calculateGrossTotal(
       currentSaleItemsRebuild,
     )
 
-    await this.transactionRunner.run(async (tx) => {
+    const runner: TransactionRunner = ctx?.tx
+      ? {
+          run: <T>(handler: (tx: Prisma.TransactionClient) => Promise<T>) => {
+            const tx = ctx.tx
+            if (!tx) {
+              throw new Error(
+                'Transaction context is missing transaction client',
+              )
+            }
+            return handler(tx)
+          },
+        }
+      : this.transactionRunner
+
+    await runner.run(async (tx) => {
       if (removeItemIds?.length) {
         await this.removingRelationshipsFromRemovedSaleItems(removeItemIds, tx)
       }

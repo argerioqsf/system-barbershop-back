@@ -1,11 +1,11 @@
-import { SaleItemUpdateFields } from '@/services/sale/types'
+import { SaleItemUpdateFields } from '@/modules/sale/application/dto/sale'
 import {
   SaleItemUpdateExecutor,
   SaleItemUpdateExecutorResult,
   SaleItemUpdateTransactionContext,
 } from '../services/sale-item-update-executor'
 import { ensureSaleItemIdProvided } from '../validators/sale-item-payload'
-import { SaleTelemetry } from '@/modules/sale/application/contracts/sale-telemetry'
+import { SaleTelemetry } from '@/modules/sale/application/ports/sale-telemetry'
 
 export interface UpdateSaleItemBarberInput {
   saleItemId: string

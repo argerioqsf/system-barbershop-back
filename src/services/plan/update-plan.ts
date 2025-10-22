@@ -33,7 +33,7 @@ export class UpdatePlanService {
         tx,
       )
 
-      await this.recalcService.execute({ userIds }, tx)
+      await this.recalcService.execute({ userIds }, { tx })
     })
   }
 

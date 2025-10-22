@@ -1,5 +1,5 @@
 import { DiscountOrigin, DiscountType } from '@prisma/client'
-import { InvalidSaleItemError } from './errors/invalid-sale-item-error'
+import { InvalidSaleItemError } from '../errors/invalid-sale-item-error'
 
 export interface SaleDiscountProps {
   amount: number

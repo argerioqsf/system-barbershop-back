@@ -19,10 +19,9 @@ import {
   defaultClient,
 } from '../../helpers/default-values'
 import { DiscountOrigin, DiscountType, type Service } from '@prisma/client'
-import { GetItemBuildService } from '../../../src/services/sale/get-item-build'
-import { GetItemsBuildService } from '../../../src/services/sale/get-items-build'
 import { TransactionRunner } from '../../../src/modules/sale/application/services/sale-item-update-executor'
-import { calculateRealValueSaleItem } from '../../../src/services/sale/utils/item'
+import { SaleItemsBuildService } from '../../../src/modules/sale/application/services/sale-items-build-service'
+import { SaleItemPrice } from '../../../src/modules/sale/domain/entities/sale-item-price'
 import { PlanWithBenefits } from '../../../src/repositories/plan-repository'
 
 let saleRepo: FakeSaleRepository
@@ -77,18 +76,16 @@ beforeEach(() => {
   })
   const newClient = { ...defaultClient, id: 'c2' }
   profileRepo.profiles = [{ ...makeProfile('p-c2', 'c2'), user: newClient }]
-  const getItemBuildService = new GetItemBuildService(
-    serviceRepo,
-    productRepo,
-    appointmentRepo,
-    couponRepo,
-    barberRepo,
-    planRepo,
-    saleRepo,
-    planProfileRepo,
-  )
-
-  const getItemsBuildService = new GetItemsBuildService(getItemBuildService)
+  const saleItemsBuildService = new SaleItemsBuildService({
+    serviceRepository: serviceRepo,
+    productRepository: productRepo,
+    appointmentRepository: appointmentRepo,
+    couponRepository: couponRepo,
+    barberUserRepository: barberRepo,
+    planRepository: planRepo,
+    saleRepository: saleRepo,
+    planProfileRepository: planProfileRepo,
+  })
 
   runInTransaction = async (fn) =>
     fn({
@@ -102,7 +99,7 @@ beforeEach(() => {
     saleItemRepo,
     planRepo,
     planProfileRepo,
-    getItemsBuildService,
+    saleItemsBuildService,
     runInTransaction,
   )
 })
@@ -156,7 +153,18 @@ describe('Update client sale service', () => {
     const result = await service.execute({ id: 'sale-1', clientId: 'c2' })
 
     const item = result.sale!.items[0]
-    const realPriceItem = calculateRealValueSaleItem(item.price, item.discounts)
+    const price = SaleItemPrice.create({
+      basePrice: item.price,
+      quantity: item.quantity,
+      customPrice: item.customPrice ?? undefined,
+      discounts: item.discounts.map(({ amount, type, origin, order }) => ({
+        amount,
+        type,
+        origin,
+        order,
+      })),
+    })
+    const realPriceItem = price.netTotal
     expect(item.discounts[0]).toEqual(
       expect.objectContaining({ origin: DiscountOrigin.PLAN }),
     )

@@ -390,7 +390,11 @@ export class InMemoryPlanRepository implements PlanRepository {
     }
   }
 
-  async create(data: Prisma.PlanCreateInput): Promise<Plan> {
+  async create(
+    data: Prisma.PlanCreateInput,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _tx?: Prisma.TransactionClient,
+  ): Promise<Plan> {
     const unitId = this.extractConnectedId(
       data.unit as { connect?: { id: string } } | undefined,
     )
@@ -503,7 +507,8 @@ export class InMemoryPlanRepository implements PlanRepository {
       })
   }
 
-  async delete(id: string): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async delete(id: string, _tx?: Prisma.TransactionClient): Promise<void> {
     this.plans = this.plans.filter((plan) => plan.id !== id)
   }
 }

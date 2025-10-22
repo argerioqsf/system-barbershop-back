@@ -5,7 +5,11 @@ import { randomUUID } from 'crypto'
 export class InMemoryProductRepository implements ProductRepository {
   constructor(public products: Product[] = []) {}
 
-  async create(data: Prisma.ProductCreateInput): Promise<Product> {
+  async create(
+    data: Prisma.ProductCreateInput,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _tx?: Prisma.TransactionClient,
+  ): Promise<Product> {
     const product: Product = {
       id: randomUUID(),
       name: data.name,
@@ -71,7 +75,12 @@ export class InMemoryProductRepository implements ProductRepository {
     return this.products.find((p) => p.id === id) ?? null
   }
 
-  async update(id: string, data: Prisma.ProductUpdateInput): Promise<Product> {
+  async update(
+    id: string,
+    data: Prisma.ProductUpdateInput,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _tx?: Prisma.TransactionClient,
+  ): Promise<Product> {
     const product = this.products.find((p) => p.id === id)
     if (!product) throw new Error('Product not found')
     if (data.quantity && typeof data.quantity === 'object') {
@@ -94,7 +103,8 @@ export class InMemoryProductRepository implements ProductRepository {
     return product
   }
 
-  async delete(id: string): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async delete(id: string, _tx?: Prisma.TransactionClient): Promise<void> {
     this.products = this.products.filter((p) => p.id !== id)
   }
 }

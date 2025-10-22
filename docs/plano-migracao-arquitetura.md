@@ -250,6 +250,104 @@ Jobs & agendamentos (Plans)
 - Transações: centralizar via `TransactionRunner` (porta) para não acoplar `prisma.$transaction` dentro do caso de uso.
 - Telemetry/Logger: portas + adapters (já existe padrão em `modules/*/infra/telemetry`).
 
+---
+
+## Template Padrão de Módulo (estrutura + convenções)
+
+Estrutura por contexto em `src/modules/<contexto>/` seguindo Clean Architecture + Hexagonal. Utilize este template ao migrar ou criar módulos:
+
+```
+src/modules/<contexto>/
+  domain/
+    // Regras de negócio puras (sem ORM/http)
+    entities/            // Entidades/agregados (ex.: Sale, SaleItem)
+    value-objects/       // VOs (ex.: Money, Percentage)
+    services/            // Serviços de domínio (poucos, estáveis)
+    errors/              // Erros de domínio
+    events/              // (opcional) eventos de domínio
+
+  application/
+    // Orquestração de casos de uso (sem dependência de infra)
+    use-cases/           // Casos de uso (ex.: CreateSale, UpdateSale)
+    ports/               // Interfaces (ex.: Repositórios, Telemetry, Clock)
+    dto/                 // DTOs de entrada/saída dos use-cases
+    validators/          // Validadores específicos de aplicação
+    errors/              // Erros de aplicação (ex.: conflito/estado inválido)
+    services/            // Serviços de aplicação (coordenação não trivial)
+
+  infra/
+    // Adapters de entrada/saída (bordas do sistema)
+    repositories/
+      prisma/            // Implementações Prisma das ports
+    http/
+      controllers/       // Controllers + mapeamento HTTP ↔ DTO/use-case
+      route.ts           // Registro de rotas do módulo
+      middlewares/       // (opcional) middlewares específicos
+    factories/           // make<UseCase|Service>() injeta dependências (ports, runner, clock)
+    mappers/             // Prisma ↔ Domain / Domain ↔ DTO
+    telemetry/           // Adapters de logging/metrics para a port Telemetry
+    schedulers/          // (opcional) jobs/cron do módulo (ex.: Plans)
+
+  // (opcional) presentation/ se precisar de DTOs específicos da borda
+```
+
+Convenções e regras (aplicam-se a todos os módulos):
+- Camadas e dependências:
+  - domain não depende de application/infra.
+  - application depende de domain e ports. Não conhece adapters/ORM.
+  - infra implementa ports e expõe factories, controllers, mappers, etc.
+
+- Transações:
+  - Injete `TransactionRunner` via factories dos use-cases/serviços de aplicação.
+  - Propague `tx?: Prisma.TransactionClient` pelas ports de repositório.
+  - Use o padrão `execute(input, ctx?: UseCaseCtx)` quando for compor use-cases.
+
+- Ports e naming:
+  - Repositórios por agregado principal (ex.: `SaleRepository`, `SaleItemRepository`).
+  - Outras ports cross-cutting: `Clock`, `IdGenerator`, `Telemetry`, `Authorization` (quando aplicável).
+  - Nomeie factories como `make<UseCase|Service>()` e expor apenas o necessário.
+
+- DTOs e validação:
+  - Zod/validação na borda HTTP; application pode ter validadores leves.
+  - Mapeie Request/Response ↔ DTOs no controller; DTO ↔ domínio nos mappers/services de application.
+
+- Erros:
+  - Erros de domínio em `domain/errors` (sem status HTTP).
+  - Controllers traduzem para status adequados (422/409/404/401/403/500).
+
+- Telemetry/Logger:
+  - Defina uma port `Telemetry` (ex.: `SaleTelemetry`) em `application/ports` e adapters em `infra/telemetry`.
+
+- Tests:
+  - Unit: domain/services puros; application com fakes/mocks de ports.
+  - Integration: adapters Prisma (SQLite/MySQL); E2E pelas rotas do módulo.
+
+- Migração e compatibilidade (durante refactors):
+  - Quando precisar chamar lógica legada, crie um adapter de compatibilidade em `infra` que implementa a port nova e delega ao serviço antigo; marque com `// MIGRATION-TODO`.
+  - Evite importar utilidades legadas diretamente de application/domain.
+
+Exemplo mínimo de wiring (factory):
+```
+// src/modules/<contexto>/infra/factories/make-update-foo.ts
+import { PrismaFooRepository } from '@/repositories/prisma/prisma-foo-repository'
+import { UpdateFooUseCase } from '@/modules/<contexto>/application/use-cases/update-foo'
+import { defaultTransactionRunner } from '@/infra/prisma/transaction-runner'
+
+export function makeUpdateFoo() {
+  const repo = new PrismaFooRepository()
+  return new UpdateFooUseCase(repo, defaultTransactionRunner)
+}
+```
+
+Checklist de conformidade rápida por módulo:
+- [ ] domain só contém entidades/VOs/serviços/erros/eventos.
+- [ ] application só depende de domain + ports; sem import de ORM/adapters.
+- [ ] infra implementa ports e concentra adapters (HTTP/Prisma/telemetry/jobs).
+- [ ] use-cases recebem `TransactionRunner`; ports aceitam `tx?`.
+- [ ] controllers validam com Zod e mapeiam erros de domínio.
+- [ ] sem utilidades legadas importadas diretamente (usar adapters com MIGRATION-TODO quando necessário).
+
+
 Exemplo de portas (pseudo-código):
 ```ts
 // application/contracts

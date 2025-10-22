@@ -5,7 +5,7 @@ import { UpdateSaleItemQuantityUseCase } from '@/modules/sale/application/use-ca
 import { UpdateSaleItemCustomPriceUseCase } from '@/modules/sale/application/use-cases/update-sale-item-custom-price'
 import { UpdateSaleItemDetailsUseCase } from '@/modules/sale/application/use-cases/update-sale-item-details'
 import { makeSaleItemUpdateExecutor } from './make-sale-item-update-executor'
-import { PrismaProductRepository } from '@/repositories/prisma/prisma-product-repository'
+import { PrismaProductRepository } from '@/modules/sale/infra/repositories/prisma/prisma-product-repository'
 import { makeSaleTelemetry } from '@/modules/sale/infra/factories/make-sale-telemetry'
 
 export function makeSaleItemCoordinator() {

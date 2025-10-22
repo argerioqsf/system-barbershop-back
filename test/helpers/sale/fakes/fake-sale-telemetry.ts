@@ -1,7 +1,7 @@
 import {
   SaleTelemetry,
   SaleTelemetryEvent,
-} from '../../../src/modules/sale/application/contracts/sale-telemetry'
+} from '../../../src/modules/sale/application/ports/sale-telemetry'
 
 export class FakeSaleTelemetry implements SaleTelemetry {
   public events: SaleTelemetryEvent[] = []
@@ -10,4 +10,3 @@ export class FakeSaleTelemetry implements SaleTelemetry {
     this.events.push(event)
   }
 }
-

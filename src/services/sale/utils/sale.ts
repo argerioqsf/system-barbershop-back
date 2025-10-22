@@ -7,45 +7,20 @@ import {
 import { PlanProfileRepository } from '@/repositories/plan-profile-repository'
 import { PlanRepository } from '@/repositories/plan-repository'
 import { Prisma } from '@prisma/client'
-import { calculateRealValueSaleItem, ReturnBuildItemData } from './item'
+import { calculateRealValueSaleItem } from './item'
 import { applyCouponSale } from './coupon'
+import { StockService } from '@/modules/sale/application/services/stock-service'
+import { mapSaleItemToPrismaCreate } from '@/modules/sale/infra/mappers/sale-item-mapper'
 import { DetailedSaleItemFindById } from '@/repositories/sale-item-repository'
-import { CreateSaleItem } from '../types'
+import { CreateSaleItem } from '@/modules/sale/application/dto/sale'
 import { SaleTotalsService } from '@/modules/sale/application/services/sale-totals-service'
+import { ReturnBuildItemData } from '@/modules/sale/application/dto/sale-item-dto'
 
 export function mapToSaleItem(
   saleItem: ReturnBuildItemData,
 ): Prisma.SaleItemCreateWithoutSaleInput {
-  return {
-    coupon: saleItem.coupon
-      ? { connect: { id: saleItem.coupon.id } }
-      : undefined,
-    quantity: saleItem.quantity,
-    service: saleItem.service
-      ? { connect: { id: saleItem.service.id } }
-      : undefined,
-    product: saleItem.product
-      ? { connect: { id: saleItem.product.id } }
-      : undefined,
-    plan: saleItem.plan ? { connect: { id: saleItem.plan.id } } : undefined,
-    barber: saleItem.barber
-      ? { connect: { id: saleItem.barber.id } }
-      : undefined,
-    price: saleItem.price,
-    customPrice: saleItem.customPrice,
-    discounts: {
-      create: saleItem.discounts.map((d) => ({
-        amount: d.amount,
-        type: d.type,
-        origin: d.origin,
-        order: d.order,
-      })),
-    },
-    appointment: saleItem.appointment
-      ? { connect: { id: saleItem.appointment.id } }
-      : undefined,
-    commissionPaid: false,
-  }
+  // MIGRATION-TODO: remover wrapper quando todos os consumidores usarem o mapper do módulo
+  return mapSaleItemToPrismaCreate(saleItem)
 }
 
 export function mapToSaleItemForUpdate(
@@ -88,11 +63,11 @@ export function mapToSaleItemForUpdate(
     customPrice: saleItem.customPrice,
     discounts: {
       deleteMany: {},
-      create: saleItem.discounts.map((d) => ({
-        amount: d.amount,
-        type: d.type,
-        origin: d.origin,
-        order: d.order,
+      create: saleItem.discounts.map((discount) => ({
+        amount: discount.amount,
+        type: discount.type,
+        origin: discount.origin,
+        order: discount.order,
       })),
     },
     appointment:
@@ -140,15 +115,8 @@ export async function updateProductsStock(
   mode: 'increment' | 'decrement' = 'decrement',
   tx?: Prisma.TransactionClient,
 ): Promise<void> {
-  for (const prod of products) {
-    await repository.update(
-      prod.id,
-      {
-        quantity: { [mode]: prod.quantity },
-      },
-      tx,
-    )
-  }
+  const stockService = new StockService(repository)
+  await stockService.adjust(products, mode, tx)
 }
 
 export async function updateCouponsStock(

@@ -24,7 +24,7 @@ import { CashRegisterClosedError } from '@/services/@errors/cash-register/cash-r
 import {
   SetSaleStatusRequest,
   SetSaleStatusResponse,
-} from '@/services/sale/types'
+} from '@/modules/sale/application/dto/sale'
 import { ProfileNotFoundError } from '@/services/@errors/profile/profile-not-found-error'
 import { BarberServiceRepository } from '@/repositories/barber-service-repository'
 import { BarberProductRepository } from '@/repositories/barber-product-repository'
@@ -42,13 +42,11 @@ import { CouponRepository } from '@/repositories/coupon-repository'
 import { ProductRepository } from '@/repositories/product-repository'
 import { TypeRecurrenceRepository } from '@/repositories/type-recurrence-repository'
 import { calculateNextDueDate } from '@/services/plan/utils/helpers'
-import {
-  calculateRealValueSaleItem,
-  ProductToUpdate,
-} from '@/services/sale/utils/item'
+import { calculateRealValueSaleItem } from '@/services/sale/utils/item'
+import { ProductToUpdate } from '@/modules/sale/application/dto/sale-item-dto'
 import { SaleCommissionService } from '@/modules/finance/application/services/sale-commission-service'
 import { SaleProfitDistributionService } from '@/modules/finance/application/services/sale-profit-distribution-service'
-import { SaleTelemetry } from '@/modules/sale/application/contracts/sale-telemetry'
+import { SaleTelemetry } from '@/modules/sale/application/ports/sale-telemetry'
 import { TransactionRunner } from '@/core/application/ports/transaction-runner'
 import {
   TransactionRunnerLike,

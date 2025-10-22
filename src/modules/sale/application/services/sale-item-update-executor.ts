@@ -1,13 +1,17 @@
 import { CannotEditPaidSaleItemError } from '@/services/@errors/sale/cannot-edit-paid-sale-item-error'
 import { SaleTotalsService } from '@/modules/sale/application/services/sale-totals-service'
-import { CreateSaleItem, SaleItemUpdateFields } from '@/services/sale/types'
-import { mountSaleItemUpdate } from '@/services/sale/utils/item'
-import { mapToSaleItemsForUpdate } from '@/services/sale/utils/sale'
+import {
+  CreateSaleItem,
+  SaleItemUpdateFields,
+} from '@/modules/sale/application/dto/sale'
 import {
   SaleItemRepository,
   DetailedSaleItemFindById,
-} from '@/repositories/sale-item-repository'
-import { SaleRepository, DetailedSale } from '@/repositories/sale-repository'
+} from '@/modules/sale/application/ports/sale-item-repository'
+import {
+  SaleRepository,
+  DetailedSale,
+} from '@/modules/sale/application/ports/sale-repository'
 import { PaymentStatus, Prisma, SaleItem, SaleStatus } from '@prisma/client'
 import { TransactionRunner } from '@/core/application/ports/transaction-runner'
 import {
@@ -15,6 +19,7 @@ import {
   normalizeTransactionRunner,
 } from '@/core/application/utils/transaction-runner'
 import { defaultTransactionRunner } from '@/infra/prisma/transaction-runner'
+import { mapSaleItemToPrismaUpdate } from '@/modules/sale/infra/mappers/sale-item-mapper'
 
 export interface SaleItemUpdateExecutorDeps {
   saleItemRepository: SaleItemRepository
@@ -86,7 +91,7 @@ export class SaleItemUpdateExecutor {
     if (!saleItemCurrent) throw new Error('Sale Item not found')
     this.ensureSaleItemIsEditable(saleItemCurrent)
 
-    const saleItemUpdated = mountSaleItemUpdate(patch, saleItemCurrent)
+    const saleItemUpdated = this.mergeSaleItemUpdate(patch, saleItemCurrent)
     const hookContext: SaleItemUpdateHookContext = {
       saleItemCurrent,
       saleItemUpdated,
@@ -106,11 +111,11 @@ export class SaleItemUpdateExecutor {
       updatedItem: saleItemUpdated,
     })
 
-    const saleItemUpdates = mapToSaleItemsForUpdate(rebuild.itemsForUpdate)
+    const saleItemUpdates = rebuild.itemsForUpdate
       .filter((saleItem) => saleItem.id)
       .map((saleItem) => ({
         id: saleItem.id as string,
-        data: saleItem,
+        data: mapSaleItemToPrismaUpdate(saleItem),
       }))
 
     let saleUpdate: DetailedSale | undefined
@@ -158,6 +163,42 @@ export class SaleItemUpdateExecutor {
       saleItem.sale.status === SaleStatus.CANCELLED
     ) {
       throw new Error('Cannot edit a paid, completed, or cancelled sale.')
+    }
+  }
+
+  private mergeSaleItemUpdate(
+    patch: SaleItemUpdateFields,
+    current: NonNullable<DetailedSaleItemFindById>,
+  ): CreateSaleItem {
+    const quantity =
+      patch.quantity !== undefined ? patch.quantity : current.quantity
+    const appointmentId =
+      patch.appointmentId !== undefined
+        ? patch.appointmentId
+        : current.appointmentId
+    const barberId =
+      patch.barberId !== undefined ? patch.barberId : current.barberId
+    const couponId =
+      patch.couponId !== undefined ? patch.couponId : current.couponId
+    const customPrice =
+      patch.customPrice !== undefined ? patch.customPrice : current.customPrice
+    const planId = patch.planId !== undefined ? patch.planId : current.planId
+    const productId =
+      patch.productId !== undefined ? patch.productId : current.productId
+    const serviceId =
+      patch.serviceId !== undefined ? patch.serviceId : current.serviceId
+
+    return {
+      id: current.id,
+      price: current.price,
+      quantity,
+      appointmentId,
+      barberId,
+      couponId,
+      customPrice,
+      planId,
+      productId,
+      serviceId,
     }
   }
 }

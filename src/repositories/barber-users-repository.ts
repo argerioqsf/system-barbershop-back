@@ -34,12 +34,14 @@ export interface BarberUsersRepository {
     data: Prisma.UserCreateInput,
     profile: Omit<Prisma.ProfileUncheckedCreateInput, 'userId'>,
     permissionIds?: string[],
+    tx?: Prisma.TransactionClient,
   ): Promise<{ user: Omit<User, 'password'>; profile: Profile }>
   update(
     id: string,
     userData: Prisma.UserUpdateInput,
     profileData: Prisma.ProfileUncheckedUpdateInput,
     permissionIds?: string[],
+    tx?: Prisma.TransactionClient,
   ): Promise<{
     user: User
     profile: (Profile & { role: Role; permissions: Permission[] }) | null
@@ -83,5 +85,5 @@ export interface BarberUsersRepository {
       })
     | null
   >
-  delete(id: string): Promise<void>
+  delete(id: string, tx?: Prisma.TransactionClient): Promise<void>
 }

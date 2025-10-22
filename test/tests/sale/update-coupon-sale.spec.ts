@@ -23,9 +23,8 @@ import {
   barberProfile,
 } from '../../helpers/default-values'
 import { DiscountOrigin } from '@prisma/client'
-import { GetItemBuildService } from '../../../src/services/sale/get-item-build'
-import { GetItemsBuildService } from '../../../src/services/sale/get-items-build'
 import { TransactionRunner } from '../../../src/modules/sale/application/services/sale-item-update-executor'
+import { SaleItemsBuildService } from '../../../src/modules/sale/application/services/sale-items-build-service'
 
 let saleRepo: FakeSaleRepository
 let serviceRepo: FakeServiceRepository
@@ -66,18 +65,16 @@ beforeEach(() => {
     },
     { ...barberUser, profile: barberProfile as any },
   )
-  const getItemBuildService = new GetItemBuildService(
-    serviceRepo,
-    productRepo,
-    appointmentRepo,
-    couponRepo,
-    barberRepo,
-    planRepo,
-    saleRepo,
-    planProfileRepo,
-  )
-
-  const getItemsBuildService = new GetItemsBuildService(getItemBuildService)
+  const saleItemsBuildService = new SaleItemsBuildService({
+    serviceRepository: serviceRepo,
+    productRepository: productRepo,
+    appointmentRepository: appointmentRepo,
+    couponRepository: couponRepo,
+    barberUserRepository: barberRepo,
+    planRepository: planRepo,
+    saleRepository: saleRepo,
+    planProfileRepository: planProfileRepo,
+  })
 
   runInTransaction = async (fn) =>
     fn({
@@ -90,7 +87,7 @@ beforeEach(() => {
     couponRepo,
     barberRepo,
     saleItemRepo,
-    getItemsBuildService,
+    saleItemsBuildService,
     runInTransaction,
   )
 })

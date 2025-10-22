@@ -29,9 +29,11 @@ export class PrismaBarberUsersRepository implements BarberUsersRepository {
     data: Prisma.UserCreateInput,
     profileData: Omit<Prisma.ProfileUncheckedCreateInput, 'userId'>,
     permissionIds?: string[],
+    tx?: Prisma.TransactionClient,
   ): Promise<{ user: Omit<User, 'password'>; profile: Profile }> {
-    const user = await prisma.user.create({ data })
-    const profile = await prisma.profile.create({
+    const prismaClient = tx || prisma
+    const user = await prismaClient.user.create({ data })
+    const profile = await prismaClient.profile.create({
       data: {
         ...profileData,
         userId: user.id,
@@ -48,6 +50,7 @@ export class PrismaBarberUsersRepository implements BarberUsersRepository {
     userData: Prisma.UserUpdateInput,
     profileData: Prisma.ProfileUncheckedUpdateInput,
     permissionIds?: string[],
+    tx?: Prisma.TransactionClient,
   ): Promise<{
     user: User
     profile:
@@ -59,7 +62,8 @@ export class PrismaBarberUsersRepository implements BarberUsersRepository {
         })
       | null
   }> {
-    const user = await prisma.user.update({
+    const prismaClient = tx || prisma
+    const user = await prismaClient.user.update({
       where: { id },
       data: {
         ...userData,
@@ -205,7 +209,8 @@ export class PrismaBarberUsersRepository implements BarberUsersRepository {
     return user ? this.sanitizeUser(user) : null
   }
 
-  async delete(id: string): Promise<void> {
-    await prisma.user.delete({ where: { id } })
+  async delete(id: string, tx?: Prisma.TransactionClient): Promise<void> {
+    const prismaClient = tx || prisma
+    await prismaClient.user.delete({ where: { id } })
   }
 }

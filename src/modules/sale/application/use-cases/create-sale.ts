@@ -1,10 +1,13 @@
 import { PaymentMethod, PaymentStatus, PermissionName } from '@prisma/client'
-import { SaleRepository } from '@/repositories/sale-repository'
-import { BarberUsersRepository } from '@/repositories/barber-users-repository'
-import { CreateSaleRequest, CreateSaleResponse } from '@/services/sale/types'
+import { SaleRepository } from '@/modules/sale/application/ports/sale-repository'
+import { BarberUsersRepository } from '@/modules/sale/application/ports/barber-users-repository'
+import {
+  CreateSaleRequest,
+  CreateSaleResponse,
+} from '@/modules/sale/application/dto/sale'
 import { assertPermission } from '@/utils/permissions'
 import { UserNotFoundError } from '@/services/@errors/user/user-not-found-error'
-import { SaleTelemetry } from '@/modules/sale/application/contracts/sale-telemetry'
+import { SaleTelemetry } from '@/modules/sale/application/ports/sale-telemetry'
 
 export class CreateSaleUseCase {
   constructor(

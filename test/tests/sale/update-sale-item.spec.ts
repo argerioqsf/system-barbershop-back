@@ -8,8 +8,8 @@ import {
   TransactionRunner,
 } from '../../../src/modules/sale/application/services/sale-item-update-executor'
 import { SaleTotalsService } from '../../../src/modules/sale/application/services/sale-totals-service'
-import { GetItemBuildService } from '../../../src/services/sale/get-item-build'
-import { GetItemsBuildService } from '../../../src/services/sale/get-items-build'
+import { SaleItemsBuildService } from '../../../src/modules/sale/application/services/sale-items-build-service'
+import { SaleItemBuildItem } from '../../../src/modules/sale/application/dto/sale-item-dto'
 import {
   FakeSaleRepository,
   FakeServiceRepository,
@@ -35,7 +35,7 @@ import {
   barberProfile,
 } from '../../helpers/default-values'
 import { DiscountOrigin, DiscountType } from '@prisma/client'
-import { calculateRealValueSaleItem } from '../../../src/services/sale/utils/item'
+import { SaleItemPrice } from '../../../src/modules/sale/domain/entities/sale-item-price'
 
 let saleRepo: FakeSaleRepository
 let serviceRepo: FakeServiceRepository
@@ -89,18 +89,57 @@ beforeEach(() => {
       },
     },
   )
-  const getItemBuildService = new GetItemBuildService(
-    serviceRepo,
-    productRepo,
-    appointmentRepo,
-    couponRepo,
-    barberRepo,
-    planRepo,
-    saleRepo,
-    planProfileRepo,
-  )
+  const saleItemsBuildService = new SaleItemsBuildService({
+    serviceRepository: serviceRepo,
+    productRepository: productRepo,
+    appointmentRepository: appointmentRepo,
+    couponRepository: couponRepo,
+    barberUserRepository: barberRepo,
+    planRepository: planRepo,
+    saleRepository: saleRepo,
+    planProfileRepository: planProfileRepo,
+  })
 
-  const getItemsBuildService = new GetItemsBuildService(getItemBuildService)
+  const getItemBuildService = {
+    execute: async ({
+      saleItem,
+      unitId,
+    }: {
+      saleItem: SaleItemBuildItem
+      unitId: string
+    }) => {
+      const { saleItemsBuild, productsToUpdate } =
+        await saleItemsBuildService.buildSaleItemsForUnit([saleItem], unitId)
+
+      return {
+        saleItemBuild: saleItemsBuild[0],
+        productsToUpdate,
+      }
+    },
+  }
+
+  const getItemsBuildService = {
+    execute: async ({
+      saleItems,
+      unitId,
+    }: {
+      saleItems: SaleItemBuildItem[]
+      unitId: string
+    }) => {
+      const { saleItemsBuild, productsToUpdate } =
+        await saleItemsBuildService.buildSaleItemsForUnit(saleItems, unitId)
+
+      const newAppointmentsToLink = saleItems
+        .map((item) => item.appointmentId)
+        .filter((id): id is string => Boolean(id))
+
+      return {
+        saleItemsBuild,
+        newAppointmentsToLink,
+        productsToUpdate,
+      }
+    },
+  }
 
   const saleTotalsService = new SaleTotalsService(saleRepo, couponRepo, {
     createGetItemBuildService: () => getItemBuildService,
@@ -197,7 +236,17 @@ describe('Update sale item service', () => {
       expect.objectContaining({ origin: DiscountOrigin.COUPON_SALE_ITEM }),
     )
     expect(item.price).toBe(100)
-    const realPriceItem = calculateRealValueSaleItem(item.price, item.discounts)
+    const realPriceItem = SaleItemPrice.create({
+      basePrice: item.price,
+      quantity: item.quantity,
+      customPrice: item.customPrice ?? undefined,
+      discounts: item.discounts.map(({ amount, type, origin, order }) => ({
+        amount,
+        type,
+        origin,
+        order,
+      })),
+    }).netTotal
     expect(realPriceItem).toBe(90)
     expect(result.sale?.total).toBe(90)
   })
@@ -272,7 +321,17 @@ describe('Update sale item service', () => {
     })
 
     const item = result.saleItems![0]
-    const realPriceItem = calculateRealValueSaleItem(item.price, item.discounts)
+    const realPriceItem = SaleItemPrice.create({
+      basePrice: item.price,
+      quantity: item.quantity,
+      customPrice: item.customPrice ?? undefined,
+      discounts: item.discounts.map(({ amount, type, origin, order }) => ({
+        amount,
+        type,
+        origin,
+        order,
+      })),
+    }).netTotal
     expect(item.discounts[0]).toEqual(
       expect.objectContaining({ origin: DiscountOrigin.PLAN }),
     )

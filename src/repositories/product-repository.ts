@@ -1,7 +1,10 @@
 import { Prisma, Product } from '@prisma/client'
 
 export interface ProductRepository {
-  create(data: Prisma.ProductCreateInput): Promise<Product>
+  create(
+    data: Prisma.ProductCreateInput,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Product>
   findMany(where?: Prisma.ProductWhereInput): Promise<Product[]>
   findManyPaginated(
     where: Prisma.ProductWhereInput,
@@ -14,5 +17,5 @@ export interface ProductRepository {
     data: Prisma.ProductUpdateInput,
     tx?: Prisma.TransactionClient,
   ): Promise<Product>
-  delete(id: string): Promise<void>
+  delete(id: string, tx?: Prisma.TransactionClient): Promise<void>
 }

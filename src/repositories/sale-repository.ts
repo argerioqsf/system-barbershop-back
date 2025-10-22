@@ -42,7 +42,10 @@ export type DetailedSale = Sale & {
 }
 
 export interface SaleRepository {
-  create(data: Prisma.SaleCreateInput): Promise<DetailedSale>
+  create(
+    data: Prisma.SaleCreateInput,
+    tx?: Prisma.TransactionClient,
+  ): Promise<DetailedSale>
   findMany(where?: Prisma.SaleWhereInput): Promise<DetailedSale[]>
   findManyPaginated(
     where: Prisma.SaleWhereInput,
@@ -55,7 +58,11 @@ export interface SaleRepository {
     data: Prisma.SaleUpdateInput,
     tx?: Prisma.TransactionClient,
   ): Promise<DetailedSale>
-  updateStatus(id: string, status: PaymentStatus): Promise<DetailedSale>
+  updateStatus(
+    id: string,
+    status: PaymentStatus,
+    tx?: Prisma.TransactionClient,
+  ): Promise<DetailedSale>
   findManyByDateRange(start: Date, end: Date): Promise<DetailedSale[]>
   findManyByUser(userId: string): Promise<DetailedSale[]>
   findManyByBarber(

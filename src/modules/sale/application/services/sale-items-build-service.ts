@@ -1,22 +1,22 @@
 import {
   SaleRepository,
-  DetailedSaleItem,
   DetailedSale,
-} from '@/repositories/sale-repository'
-import { ServiceRepository } from '@/repositories/service-repository'
-import { ProductRepository } from '@/repositories/product-repository'
-import { AppointmentRepository } from '@/repositories/appointment-repository'
-import { CouponRepository } from '@/repositories/coupon-repository'
-import { BarberUsersRepository } from '@/repositories/barber-users-repository'
-import { PlanRepository } from '@/repositories/plan-repository'
-import { PlanProfileRepository } from '@/repositories/plan-profile-repository'
+} from '@/modules/sale/application/ports/sale-repository'
+import { ServiceRepository } from '@/modules/sale/application/ports/service-repository'
+import { ProductRepository } from '@/modules/sale/application/ports/product-repository'
+import { AppointmentRepository } from '@/modules/sale/application/ports/appointment-repository'
+import { CouponRepository } from '@/modules/sale/application/ports/coupon-repository'
+import { BarberUsersRepository } from '@/modules/sale/application/ports/barber-users-repository'
+import { PlanRepository } from '@/modules/sale/application/ports/plan-repository'
+import { PlanProfileRepository } from '@/modules/sale/application/ports/plan-profile-repository'
 import {
-  buildItemData,
   ProductToUpdate,
   ReturnBuildItemData,
   SaleItemBuildItem,
-} from '@/services/sale/utils/item'
-import { applyCouponSale } from '@/services/sale/utils/coupon'
+} from '@/modules/sale/application/dto/sale-item-dto'
+import { SaleItemDataBuilder } from '@/modules/sale/application/services/sale-item-data-builder'
+import { CouponService } from '@/modules/sale/application/services/coupon-service'
+import { mapDetailedSaleItemToBuild } from '@/modules/sale/infra/mappers/sale-item-mapper'
 
 export interface BuildItemsResult {
   saleItemsBuild: ReturnBuildItemData[]
@@ -35,7 +35,15 @@ export interface SaleItemsBuildServiceDeps {
 }
 
 export class SaleItemsBuildService {
-  constructor(private readonly deps: SaleItemsBuildServiceDeps) {}
+  private readonly saleItemDataBuilder: SaleItemDataBuilder
+  private readonly couponService: CouponService
+
+  constructor(private readonly deps: SaleItemsBuildServiceDeps) {
+    this.saleItemDataBuilder = new SaleItemDataBuilder(deps)
+    this.couponService = new CouponService({
+      couponRepository: deps.couponRepository,
+    })
+  }
 
   async buildSaleItemsForUnit(
     saleItems: SaleItemBuildItem[],
@@ -45,18 +53,9 @@ export class SaleItemsBuildService {
     const productsToUpdate: ProductToUpdate[] = []
 
     for (const saleItem of saleItems) {
-      const built = await buildItemData({
-        saleItem,
-        serviceRepository: this.deps.serviceRepository,
-        productRepository: this.deps.productRepository,
-        appointmentRepository: this.deps.appointmentRepository,
-        couponRepository: this.deps.couponRepository,
+      const built = await this.saleItemDataBuilder.build(saleItem, {
         userUnitId: unitId,
         productsToUpdate,
-        barberUserRepository: this.deps.barberUserRepository,
-        planRepository: this.deps.planRepository,
-        saleRepository: this.deps.saleRepository,
-        planProfileRepository: this.deps.planProfileRepository,
       })
       saleItemsBuild.push(built)
     }
@@ -69,7 +68,7 @@ export class SaleItemsBuildService {
     unitId: string,
   ): Promise<BuildItemsResult> {
     const saleItemsPayload = sale.items.map((item) =>
-      this.mapDetailedSaleItemToBuild(sale.id, item),
+      mapDetailedSaleItemToBuild(sale.id, item),
     )
     return this.buildSaleItemsForUnit(saleItemsPayload, unitId)
   }
@@ -80,32 +79,12 @@ export class SaleItemsBuildService {
   ): Promise<ReturnBuildItemData[]> {
     if (!sale.coupon?.id) return items
 
-    const { saleItems } = await applyCouponSale(
-      items,
-      sale.coupon.id,
-      this.deps.couponRepository,
-      sale.unitId,
-    )
+    const { saleItems } = await this.couponService.applyToSale({
+      saleItems: items,
+      couponId: sale.coupon.id,
+      userUnitId: sale.unitId,
+    })
 
     return saleItems
-  }
-
-  private mapDetailedSaleItemToBuild(
-    saleId: string,
-    item: DetailedSaleItem,
-  ): SaleItemBuildItem {
-    return {
-      saleId,
-      id: item.id,
-      serviceId: item.serviceId ?? undefined,
-      productId: item.productId ?? undefined,
-      appointmentId: item.appointmentId ?? undefined,
-      planId: item.planId ?? undefined,
-      barberId: item.barberId ?? undefined,
-      couponId: item.couponId ?? undefined,
-      quantity: item.quantity,
-      price: item.price,
-      customPrice: item.customPrice ?? undefined,
-    }
   }
 }

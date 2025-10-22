@@ -9,14 +9,13 @@ import { DetailedSaleItemFindById } from '../../../src/repositories/sale-item-re
 import {
   ReturnBuildItemData,
   SaleItemBuildItem,
-} from '../../../src/services/sale/utils/item'
+} from '../../../src/modules/sale/application/dto/sale-item-dto'
 import { CouponRepository } from '../../../src/repositories/coupon-repository'
 import {
   makeSaleWithBarber,
   makeService,
   defaultUnit,
 } from '../../helpers/default-values'
-import * as couponUtils from '../../../src/services/sale/utils/coupon'
 
 class StubSaleRepository implements SaleRepository {
   constructor(private readonly sale: DetailedSale) {}
@@ -371,37 +370,25 @@ describe('SaleTotalsService - recalculateSaleTotalsOnItemChange', () => {
       saleItemsBuild: saleItemsBuildAfterRebuild,
     }))
 
-    const applyCouponSaleSpy = vi
-      .spyOn(couponUtils, 'applyCouponSale')
-      .mockResolvedValue({
-        couponIdConnect: 'coupon-sale',
-        saleItems: saleItemsAfterCoupon,
-      })
+    const saleTotalsService = new SaleTotalsService(
+      saleRepository,
+      couponRepository,
+      {
+        createGetItemBuildService: () => ({ execute: getItemBuildExecute }),
+        createGetItemsBuildService: () => ({ execute: getItemsBuildExecute }),
+      },
+    )
 
-    try {
-      const saleTotalsService = new SaleTotalsService(
-        saleRepository,
-        couponRepository,
-        {
-          createGetItemBuildService: () => ({ execute: getItemBuildExecute }),
-          createGetItemsBuildService: () => ({ execute: getItemsBuildExecute }),
-        },
-      )
+    const result = await saleTotalsService.recalculateSaleTotalsOnItemChange({
+      currentItem,
+      updatedItem,
+    })
 
-      const result = await saleTotalsService.recalculateSaleTotalsOnItemChange({
-        currentItem,
-        updatedItem,
-      })
-
-      expect(result.totalSale).toBe(190)
-      expect(result.grossTotalSale).toBe(200)
-      expect(result.itemsForUpdate[0].discounts.at(-1)).toMatchObject({
-        origin: DiscountOrigin.COUPON_SALE,
-        type: DiscountType.VALUE,
-      })
-      // expect(applyCouponSaleSpy).toHaveBeenCalledOnce()
-    } finally {
-      applyCouponSaleSpy.mockRestore()
-    }
+    expect(result.totalSale).toBe(190)
+    expect(result.grossTotalSale).toBe(200)
+    expect(result.itemsForUpdate[0].discounts.at(-1)).toMatchObject({
+      origin: DiscountOrigin.COUPON_SALE,
+      type: DiscountType.VALUE,
+    })
   })
 })

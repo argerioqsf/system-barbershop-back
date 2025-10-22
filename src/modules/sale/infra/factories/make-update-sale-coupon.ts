@@ -1,20 +1,19 @@
 import { defaultTransactionRunner } from '@/infra/prisma/transaction-runner'
-import { PrismaSaleRepository } from '@/repositories/prisma/prisma-sale-repository'
+import { PrismaSaleRepository } from '@/modules/sale/infra/repositories/prisma/prisma-sale-repository'
 import {
   PrismaCouponRepository,
   PrismaCouponRepository as CouponRepo,
-} from '@/repositories/prisma/prisma-coupon-repository'
-import { PrismaBarberUsersRepository } from '@/repositories/prisma/prisma-barber-users-repository'
-import { PrismaSaleItemRepository } from '@/repositories/prisma/prisma-sale-item-repository'
-import { PrismaServiceRepository } from '@/repositories/prisma/prisma-service-repository'
-import { PrismaProductRepository } from '@/repositories/prisma/prisma-product-repository'
-import { PrismaAppointmentRepository } from '@/repositories/prisma/prisma-appointment-repository'
-import { PrismaPlanRepository } from '@/repositories/prisma/prisma-plan-repository'
-import { PrismaPlanProfileRepository } from '@/repositories/prisma/prisma-plan-profile-repository'
-import { GetItemBuildService } from '@/services/sale/get-item-build'
-import { GetItemsBuildService } from '@/services/sale/get-items-build'
+} from '@/modules/sale/infra/repositories/prisma/prisma-coupon-repository'
+import { PrismaBarberUsersRepository } from '@/modules/sale/infra/repositories/prisma/prisma-barber-users-repository'
+import { PrismaSaleItemRepository } from '@/modules/sale/infra/repositories/prisma/prisma-sale-item-repository'
+import { PrismaServiceRepository } from '@/modules/sale/infra/repositories/prisma/prisma-service-repository'
+import { PrismaProductRepository } from '@/modules/sale/infra/repositories/prisma/prisma-product-repository'
+import { PrismaAppointmentRepository } from '@/modules/sale/infra/repositories/prisma/prisma-appointment-repository'
+import { PrismaPlanRepository } from '@/modules/sale/infra/repositories/prisma/prisma-plan-repository'
+import { PrismaPlanProfileRepository } from '@/modules/sale/infra/repositories/prisma/prisma-plan-profile-repository'
 import { UpdateSaleCouponUseCase } from '@/modules/sale/application/use-cases/update-sale-coupon'
 import { makeSaleTelemetry } from '@/modules/sale/infra/factories/make-sale-telemetry'
+import { SaleItemsBuildService } from '@/modules/sale/application/services/sale-items-build-service'
 
 export function makeUpdateSaleCoupon() {
   const saleRepository = new PrismaSaleRepository()
@@ -29,18 +28,16 @@ export function makeUpdateSaleCoupon() {
   const planProfileRepository = new PrismaPlanProfileRepository()
   const couponRepoForItems = new CouponRepo()
 
-  const getItemBuildService = new GetItemBuildService(
+  const saleItemsBuildService = new SaleItemsBuildService({
     serviceRepository,
     productRepository,
     appointmentRepository,
-    couponRepoForItems,
-    barberRepository,
+    couponRepository: couponRepoForItems,
+    barberUserRepository: barberRepository,
     planRepository,
     saleRepository,
     planProfileRepository,
-  )
-
-  const getItemsBuildService = new GetItemsBuildService(getItemBuildService)
+  })
 
   const telemetry = makeSaleTelemetry()
 
@@ -49,7 +46,7 @@ export function makeUpdateSaleCoupon() {
     couponRepository,
     barberRepository,
     saleItemRepository,
-    getItemsBuildService,
+    saleItemsBuildService,
     defaultTransactionRunner,
     telemetry,
   )

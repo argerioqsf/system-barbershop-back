@@ -25,6 +25,7 @@ export interface AppointmentRepository {
   create(
     data: Prisma.AppointmentCreateInput,
     services: Service[],
+    tx?: Prisma.TransactionClient,
   ): Promise<Appointment>
   findManyByUnit(unitId: string): Promise<DetailedAppointment[]>
   findMany(where?: Prisma.AppointmentWhereInput): Promise<DetailedAppointment[]>

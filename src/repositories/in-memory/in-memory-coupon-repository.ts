@@ -5,7 +5,11 @@ import { randomUUID } from 'crypto'
 export class InMemoryCouponRepository implements CouponRepository {
   constructor(public coupons: Coupon[] = []) {}
 
-  async create(data: Prisma.CouponCreateInput): Promise<Coupon> {
+  async create(
+    data: Prisma.CouponCreateInput,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _tx?: Prisma.TransactionClient,
+  ): Promise<Coupon> {
     const coupon: Coupon = {
       id: randomUUID(),
       code: data.code,
@@ -73,7 +77,12 @@ export class InMemoryCouponRepository implements CouponRepository {
     return { items, count }
   }
 
-  async update(id: string, data: Prisma.CouponUpdateInput): Promise<Coupon> {
+  async update(
+    id: string,
+    data: Prisma.CouponUpdateInput,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _tx?: Prisma.TransactionClient,
+  ): Promise<Coupon> {
     const coupon = this.coupons.find((c) => c.id === id)
     if (!coupon) throw new Error('Coupon not found')
     if (
@@ -86,7 +95,8 @@ export class InMemoryCouponRepository implements CouponRepository {
     return coupon
   }
 
-  async delete(id: string): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async delete(id: string, _tx?: Prisma.TransactionClient): Promise<void> {
     this.coupons = this.coupons.filter((c) => c.id !== id)
   }
 }

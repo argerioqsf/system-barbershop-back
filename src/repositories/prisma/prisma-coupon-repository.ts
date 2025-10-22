@@ -3,8 +3,12 @@ import { Prisma, Coupon } from '@prisma/client'
 import { CouponRepository } from '../coupon-repository'
 
 export class PrismaCouponRepository implements CouponRepository {
-  async create(data: Prisma.CouponCreateInput): Promise<Coupon> {
-    return prisma.coupon.create({ data })
+  async create(
+    data: Prisma.CouponCreateInput,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Coupon> {
+    const prismaClient = tx || prisma
+    return prismaClient.coupon.create({ data })
   }
 
   async findMany(where: Prisma.CouponWhereInput = {}): Promise<Coupon[]> {
@@ -44,7 +48,8 @@ export class PrismaCouponRepository implements CouponRepository {
     return prismaClient.coupon.update({ where: { id }, data })
   }
 
-  async delete(id: string): Promise<void> {
-    await prisma.coupon.delete({ where: { id } })
+  async delete(id: string, tx?: Prisma.TransactionClient): Promise<void> {
+    const prismaClient = tx || prisma
+    await prismaClient.coupon.delete({ where: { id } })
   }
 }

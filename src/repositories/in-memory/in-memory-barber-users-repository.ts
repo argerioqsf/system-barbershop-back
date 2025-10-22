@@ -38,6 +38,8 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
     data: Prisma.UserCreateInput,
     profileData: Omit<Prisma.ProfileUncheckedCreateInput, 'userId'>,
     permissionIds?: string[],
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _tx?: Prisma.TransactionClient,
   ): Promise<{ user: Omit<User, 'password'>; profile: Profile }> {
     const user: User = {
       id: randomUUID(),
@@ -117,6 +119,8 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
     userData: Prisma.UserUpdateInput,
     profileData: Prisma.ProfileUncheckedUpdateInput,
     permissionIds?: string[],
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _tx?: Prisma.TransactionClient,
   ): Promise<{
     user: User
     profile:
@@ -329,7 +333,8 @@ export class InMemoryBarberUsersRepository implements BarberUsersRepository {
     }
   }
 
-  async delete(id: string): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async delete(id: string, _tx?: Prisma.TransactionClient): Promise<void> {
     this.users = this.users.filter((u) => u.id !== id)
   }
 }

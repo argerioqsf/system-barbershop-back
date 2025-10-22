@@ -78,7 +78,7 @@ export class RenewPlanProfileService {
         tx,
       )
 
-      await this.recalcService.execute({ userIds: [userId] }, tx)
+      await this.recalcService.execute({ userIds: [userId] }, { tx })
     })
 
     const updated = await this.planProfileRepo.findById(planProfile.id)

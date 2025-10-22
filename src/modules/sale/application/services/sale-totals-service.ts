@@ -1,22 +1,23 @@
 import { SaleNotFoundError } from '@/services/@errors/sale/sale-not-found-error'
 import { makeGetItemBuildService } from '@/modules/sale/infra/factories/make-get-item-build'
-import { CreateSaleItem } from '@/services/sale/types'
+import { CreateSaleItem } from '@/modules/sale/application/dto/sale'
 import {
-  calculateRealValueSaleItem,
   ReturnBuildItemData,
   SaleItemBuildItem,
-} from '@/services/sale/utils/item'
-import { applyCouponSale } from '@/services/sale/utils/coupon'
-import { CouponRepository } from '@/repositories/coupon-repository'
-import { DetailedSaleItemFindById } from '@/repositories/sale-item-repository'
+} from '@/modules/sale/application/dto/sale-item-dto'
+import { CouponService } from '@/modules/sale/application/services/coupon-service'
+import { CouponRepository } from '@/modules/sale/application/ports/coupon-repository'
+import { DetailedSaleItemFindById } from '@/modules/sale/application/ports/sale-item-repository'
 import {
   DetailedSale,
   SaleRepository,
   DetailedSaleItem,
-} from '@/repositories/sale-repository'
+} from '@/modules/sale/application/ports/sale-repository'
 import { DiscountType } from '@prisma/client'
 import { makeGetItemsBuildService } from '@/modules/sale/infra/factories/make-get-items-build'
 import { logger } from '@/lib/logger'
+import { SaleItem } from '@/modules/sale/domain/entities/sale-item'
+import { calculateItemNetTotal } from '@/modules/sale/application/services/sale-totals-calculator'
 
 type SaleItemSourceForBuild =
   | CreateSaleItem
@@ -39,10 +40,11 @@ type CreateGetItemBuildService = typeof makeGetItemBuildService
 export class SaleTotalsService {
   private readonly createGetItemBuildService: CreateGetItemBuildService
   private readonly createGetItemsBuildService: typeof makeGetItemsBuildService
+  private readonly couponService: CouponService
 
   constructor(
     private readonly saleRepository: SaleRepository,
-    private readonly couponRepository: CouponRepository,
+    couponRepository: CouponRepository,
     factories?: {
       createGetItemBuildService?: CreateGetItemBuildService
       createGetItemsBuildService?: typeof makeGetItemsBuildService
@@ -52,6 +54,9 @@ export class SaleTotalsService {
       factories?.createGetItemBuildService ?? makeGetItemBuildService
     this.createGetItemsBuildService =
       factories?.createGetItemsBuildService ?? makeGetItemsBuildService
+    this.couponService = new CouponService({
+      couponRepository,
+    })
   }
 
   async recalculateSaleTotalsOnItemChange({
@@ -72,12 +77,11 @@ export class SaleTotalsService {
 
     if (sale.couponId) {
       logger.debug('Sale have a coupon', { couponId: sale.couponId })
-      const { saleItems } = await applyCouponSale(
-        [currentItemBuilt],
-        sale.couponId,
-        this.couponRepository,
-        sale.unitId,
-      )
+      const { saleItems } = await this.couponService.applyToSale({
+        saleItems: [currentItemBuilt],
+        couponId: sale.couponId,
+        userUnitId: sale.unitId,
+      })
       itemCurrentWithAllDiscounts = saleItems[0]
 
       if (sale.coupon?.discountType === DiscountType.VALUE) {
@@ -101,12 +105,11 @@ export class SaleTotalsService {
       }
       if (sale.coupon?.discountType === DiscountType.PERCENTAGE) {
         logger.debug('Has coupon percentage discount')
-        const { saleItems } = await applyCouponSale(
-          [updatedItemBuilt],
-          sale.couponId,
-          this.couponRepository,
-          sale.unitId,
-        )
+        const { saleItems } = await this.couponService.applyToSale({
+          saleItems: [updatedItemBuilt],
+          couponId: sale.couponId,
+          userUnitId: sale.unitId,
+        })
         itemForUpdateWithAllDiscounts = saleItems[0]
       }
     }
@@ -146,8 +149,18 @@ export class SaleTotalsService {
   private getEffectivePrice(
     saleItem: ReturnBuildItemData | NonNullable<DetailedSaleItemFindById>,
   ): number {
-    const base = saleItem.price
-    return calculateRealValueSaleItem(base, saleItem.discounts)
+    const domainItem = SaleItem.create({
+      id: 'id' in saleItem ? saleItem.id : undefined,
+      couponId: 'coupon' in saleItem ? saleItem.coupon?.id ?? null : null,
+      basePrice: 'basePrice' in saleItem ? saleItem.basePrice : saleItem.price,
+      quantity: saleItem.quantity,
+      customPrice:
+        'customPrice' in saleItem
+          ? saleItem.customPrice ?? undefined
+          : saleItem.customPrice ?? undefined,
+      discounts: saleItem.discounts,
+    })
+    return domainItem.netTotal
   }
 
   private mapToSaleItemBuildInput(
@@ -324,12 +337,11 @@ export class SaleTotalsService {
       }
     }
 
-    const { saleItems } = await applyCouponSale(
-      saleItemsBuild,
-      sale.couponId,
-      this.couponRepository,
-      sale.unitId,
-    )
+    const { saleItems } = await this.couponService.applyToSale({
+      saleItems: saleItemsBuild,
+      couponId: sale.couponId,
+      userUnitId: sale.unitId,
+    })
 
     return {
       items: saleItems,
@@ -338,13 +350,7 @@ export class SaleTotalsService {
   }
 
   private calculateTotal(items: ReturnBuildItemData[]): number {
-    return items.reduce((total, item) => {
-      const effectivePrice = calculateRealValueSaleItem(
-        item.price,
-        item.discounts,
-      )
-      return total + effectivePrice
-    }, 0)
+    return items.reduce((total, item) => total + calculateItemNetTotal(item), 0)
   }
 
   private calculateGrossTotal(items: ReturnBuildItemData[]): number {

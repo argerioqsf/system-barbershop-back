@@ -4,10 +4,13 @@ import {
   PermissionName,
   RoleName,
 } from '@prisma/client'
-import { DetailedSale, SaleRepository } from '@/repositories/sale-repository'
+import {
+  DetailedSale,
+  SaleRepository,
+} from '@/modules/sale/application/ports/sale-repository'
 import { assertPermission } from '@/utils/permissions'
 import { UserNotFoundError } from '@/services/@errors/user/user-not-found-error'
-import { SaleTelemetry } from '@/modules/sale/application/contracts/sale-telemetry'
+import { SaleTelemetry } from '@/modules/sale/application/ports/sale-telemetry'
 
 export interface ListSalesActor {
   id: string

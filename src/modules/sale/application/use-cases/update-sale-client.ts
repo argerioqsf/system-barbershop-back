@@ -1,18 +1,15 @@
-import { SaleRepository, DetailedSale } from '@/repositories/sale-repository'
+import {
+  SaleRepository,
+  DetailedSale,
+} from '@/modules/sale/application/ports/sale-repository'
 import {
   ProfilesRepository,
   ResponseFindByUserId,
-} from '@/repositories/profiles-repository'
-import { SaleItemRepository } from '@/repositories/sale-item-repository'
-import { PlanRepository } from '@/repositories/plan-repository'
-import { PlanProfileRepository } from '@/repositories/plan-profile-repository'
-import { GetItemsBuildService } from '@/services/sale/get-items-build'
-import {
-  ReturnBuildItemData,
-  updateDiscountsOnSaleItem,
-} from '@/services/sale/utils/item'
-import { applyPlanDiscounts } from '@/services/sale/utils/plan'
-import { calculateTotal } from '@/services/sale/utils/sale'
+} from '@/modules/sale/application/ports/profiles-repository'
+import { SaleItemRepository } from '@/modules/sale/application/ports/sale-item-repository'
+import { PlanRepository } from '@/modules/sale/application/ports/plan-repository'
+import { PlanProfileRepository } from '@/modules/sale/application/ports/plan-profile-repository'
+import { ReturnBuildItemData } from '@/modules/sale/application/dto/sale-item-dto'
 import { ProfileNotFoundError } from '@/services/@errors/profile/profile-not-found-error'
 import {
   PaymentStatus,
@@ -26,8 +23,13 @@ import {
   normalizeTransactionRunner,
 } from '@/core/application/utils/transaction-runner'
 import { defaultTransactionRunner } from '@/infra/prisma/transaction-runner'
-import { UpdateSaleRequest } from '@/services/sale/types'
-import { SaleTelemetry } from '@/modules/sale/application/contracts/sale-telemetry'
+import { UpdateSaleRequest } from '@/modules/sale/application/dto/sale'
+import { SaleTelemetry } from '@/modules/sale/application/ports/sale-telemetry'
+import { UseCaseCtx } from '@/core/application/use-case-ctx'
+import { SaleItemsBuildService } from '@/modules/sale/application/services/sale-items-build-service'
+import { PlanDiscountService } from '@/modules/sale/application/services/plan-discount-service'
+import { calculateTotal } from '@/modules/sale/application/services/sale-totals-calculator'
+import { DiscountSyncService } from '@/modules/sale/application/services/discount-sync-service'
 
 export interface UpdateSaleClientOutput {
   sale?: DetailedSale
@@ -42,7 +44,7 @@ export class UpdateSaleClientUseCase {
     private readonly saleItemRepository: SaleItemRepository,
     private readonly planRepository: PlanRepository,
     private readonly planProfileRepository: PlanProfileRepository,
-    private readonly getItemsBuildService: GetItemsBuildService,
+    private readonly saleItemsBuildService: SaleItemsBuildService,
     transactionRunner?: TransactionRunnerLike,
     private readonly telemetry?: SaleTelemetry,
   ) {
@@ -50,9 +52,18 @@ export class UpdateSaleClientUseCase {
       transactionRunner,
       defaultTransactionRunner,
     )
+    this.planDiscountService = new PlanDiscountService({
+      planRepository: this.planRepository,
+      planProfileRepository: this.planProfileRepository,
+    })
   }
 
-  async execute(input: UpdateSaleRequest): Promise<UpdateSaleClientOutput> {
+  private readonly planDiscountService: PlanDiscountService
+
+  async execute(
+    input: UpdateSaleRequest,
+    ctx?: UseCaseCtx,
+  ): Promise<UpdateSaleClientOutput> {
     const { id, clientId } = input
 
     if (!id) throw new Error('Sale ID is required')
@@ -75,10 +86,10 @@ export class UpdateSaleClientUseCase {
       await this.profileRepository.findByUserId(clientId)
     if (!newClientProfile) throw new ProfileNotFoundError()
 
-    const { saleItemsBuild } = await this.getItemsBuildService.execute({
-      saleItems: saleCurrent.items,
-      unitId: saleCurrent.unitId,
-    })
+    const { saleItemsBuild } = await this.saleItemsBuildService.buildFromSale(
+      saleCurrent,
+      saleCurrent.unitId,
+    )
 
     for (const item of saleItemsBuild) {
       item.price = item.basePrice
@@ -87,17 +98,29 @@ export class UpdateSaleClientUseCase {
       )
     }
 
-    const saleItemsWithDiscountPlan = await applyPlanDiscounts(
+    const saleItemsWithDiscountPlan = await this.planDiscountService.apply(
       saleItemsBuild,
       newClientProfile.userId,
-      this.planProfileRepository,
-      this.planRepository,
       saleCurrent.unitId,
     )
 
     const totalCurrentSaleItems = calculateTotal(saleItemsWithDiscountPlan)
 
-    const saleUpdate = await this.transactionRunner.run(async (tx) => {
+    const runner: TransactionRunner = ctx?.tx
+      ? {
+          run: <T>(handler: (tx: Prisma.TransactionClient) => Promise<T>) => {
+            const tx = ctx.tx
+            if (!tx) {
+              throw new Error(
+                'Transaction context is missing transaction client',
+              )
+            }
+            return handler(tx)
+          },
+        }
+      : this.transactionRunner
+
+    const saleUpdate = await runner.run(async (tx) => {
       await this.updateSaleItems(saleItemsWithDiscountPlan, tx)
 
       return this.saleRepository.update(
@@ -131,14 +154,10 @@ export class UpdateSaleClientUseCase {
     saleItems: ReturnBuildItemData[],
     tx: Prisma.TransactionClient,
   ) {
+    const discountSync = new DiscountSyncService(this.saleItemRepository)
     for (const saleItem of saleItems) {
       if (!saleItem.id) continue
-      await updateDiscountsOnSaleItem(
-        saleItem,
-        saleItem.id,
-        this.saleItemRepository,
-        tx,
-      )
+      await discountSync.sync(saleItem, saleItem.id, tx)
     }
   }
 }

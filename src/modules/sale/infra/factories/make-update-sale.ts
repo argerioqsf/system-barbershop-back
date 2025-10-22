@@ -1,5 +1,5 @@
 import { defaultTransactionRunner } from '@/infra/prisma/transaction-runner'
-import { PrismaSaleRepository } from '@/repositories/prisma/prisma-sale-repository'
+import { PrismaSaleRepository } from '@/modules/sale/infra/repositories/prisma/prisma-sale-repository'
 import { UpdateSaleUseCase } from '@/modules/sale/application/use-cases/update-sale'
 import { makeSaleTelemetry } from '@/modules/sale/infra/factories/make-sale-telemetry'
 

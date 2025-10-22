@@ -136,7 +136,9 @@ vi.mock(
 )
 
 async function buildApp() {
-  const { saleRoute } = await import('../../../src/http/controllers/sale/route')
+  const { saleRoute } = await import(
+    '../../../src/modules/sale/infra/http/route.ts'
+  )
   const instance = fastify()
   await instance.register(saleRoute)
   return instance

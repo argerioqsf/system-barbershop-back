@@ -1,8 +1,9 @@
-import { makeListSales } from '@/modules/sale/infra/factories/make-list-sales'
-import { FastifyReply, FastifyRequest } from 'fastify'
-import { UserToken } from '../authenticate-controller'
-import { z } from 'zod'
 import { PaymentMethod, PaymentStatus } from '@prisma/client'
+import { FastifyReply, FastifyRequest } from 'fastify'
+import { z } from 'zod'
+
+import { UserToken } from '@/http/controllers/authenticate-controller'
+import { makeListSales } from '@/modules/sale/infra/factories/make-list-sales'
 
 export const ListSalesController = async (
   request: FastifyRequest,

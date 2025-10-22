@@ -27,8 +27,8 @@ export const RemoveAddSaleItemController = async (
   const { id } = paramsSchema.parse(request.params)
   const { addItems, removeItemIds } = bodySchema.parse(request.body)
   const performedBy = request.user.sub
-  const service = makeRemoveAddSaleItem()
-  const { sale } = await service.execute({
+  const useCase = makeRemoveAddSaleItem()
+  const { sale } = await useCase.execute({
     id,
     addItems,
     removeItemIds,

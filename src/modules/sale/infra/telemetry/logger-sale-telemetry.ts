@@ -2,7 +2,7 @@ import { logger } from '@/lib/logger'
 import {
   SaleTelemetry,
   SaleTelemetryEvent,
-} from '@/modules/sale/application/contracts/sale-telemetry'
+} from '@/modules/sale/application/ports/sale-telemetry'
 
 export class LoggerSaleTelemetry implements SaleTelemetry {
   async record(event: SaleTelemetryEvent): Promise<void> {

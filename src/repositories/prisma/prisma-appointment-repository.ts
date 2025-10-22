@@ -9,8 +9,10 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
   async create(
     data: Prisma.AppointmentCreateInput,
     services: Service[],
+    tx?: Prisma.TransactionClient,
   ): Promise<Appointment> {
-    const appointment = await prisma.appointment.create({
+    const prismaClient = tx || prisma
+    const appointment = await prismaClient.appointment.create({
       data: {
         ...data,
         services: {
