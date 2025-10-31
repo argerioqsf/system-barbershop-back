@@ -2,6 +2,13 @@
 
 Este documento apresenta uma visão geral do projeto, catálogo completo de rotas atuais, proposição de domínios/subdomínios e um plano incremental de migração para uma arquitetura mais sustentável baseada em Clean Architecture, DDD e Arquitetura Hexagonal (Ports & Adapters), com uso de factories para composição e injeção de dependências.
 
+ Sumário (rápido)
+- Guia e Índice das Fases: `docs/refactor-arquitetura/README.md`
+- Regras de Slicing e Estratégia de Legado: seção "Slicing/Adapters" abaixo
+- Template de fase: `docs/refactor-arquitetura/fases/_template.md`
+- Rotas completas (referência): `docs/backend-endpoints.md` (mantemos lista aqui como apêndice)
+ - Backlog XS (MIGRATION-TODO): `docs/refactor-arquitetura/backlog-xs.md`
+
 Observações do contexto atual:
 - Node.js 20, TypeScript, Fastify, Prisma.
 - Testes com Vitest.
@@ -9,6 +16,37 @@ Observações do contexto atual:
 - Controllers Fastify em `src/http/controllers/*` organizados por recurso, com rotas registradas em `src/app.ts`.
 
 ---
+
+## Slicing/Adapters (tarefas pequenas e mínimo impacto)
+
+Regras para dividir trabalho:
+- Preferir tarefas XS/S (15–90 min) ou M (≤ meio dia), focadas e com blast radius pequeno.
+- Evitar mudanças de contrato HTTP; quando inevitável, versionar/encapsular no controller.
+- Usar `// MIGRATION-TODO` e re-exports temporários para manter o legado operando.
+- Conectar novo ↔ antigo via adapters em `infra` (Strangler): borda fala com o legado ou o novo sem knowledge cross‑layer.
+- Cada tarefa deve listar passos, critérios de aceite, riscos e backout simples.
+
+Gates de segurança (sempre):
+- `npm test` (Vitest), `npm run typecheck` (tsc), `npm run lint` (ESLint).
+- Atualizar `.env.example`, `test/setup.ts` e `src/env/index.ts` se variáveis novas forem introduzidas.
+
+Fluxo por task:
+1) Implementar porta/serviço/caso de uso no módulo alvo.
+2) Expor via factory e conectar no controller/adapter mantendo contrato HTTP.
+3) Cobrir com testes (unit para domínio/aplicação; E2E quando for endpoint).
+4) Marcar MIGRATION‑TODO e planejar remoção no fim da fase.
+
+Estratégia de legado (Strangler):
+- Quando módulo migrado precisa de algo do legado, criar adapter em `infra` e encapsular chamada.
+- Quando legado precisa usar regra nova, amarrar factory do novo no controller legado.
+- Remover adapters/re-exports na Fase 8 (remoção do legado).
+
+Independência das fases e handoffs
+- Cada fase deve ser executável isoladamente, sem bloquear por outra fase. Sempre que houver dependência cruzada:
+  - Adicionar uma port (no módulo da fase vigente) representando a necessidade externa.
+  - Implementar um adapter de compatibilidade que chame o serviço/consulta legados correspondentes.
+  - Marcar `// MIGRATION-TODO` no adapter e na factory para troca futura pela implementação nativa do módulo dependente quando sua fase chegar.
+- Handoffs: documentar no fim de cada fase quais adapters/ports ficam “engatados” para substituição posterior.
 
 ## Rotas Atuais (catálogo)
 
@@ -211,7 +249,7 @@ Controllers e rotas dentro do módulo: controllers/rotas podem residir em `src/m
 6) Finance
 - Escopo: Transações, Comissões, Caixa (Cash Register Sessions), Empréstimos (Loans), Dívidas (Debts), Distribuição de Lucro, Pagamento de Vendas, Regras de cobrança recorrente.
 - Entidades: Transaction, Commission (proposta), CashSession, Loan, Debt, (opcional) BillingRule.
-- Casos de uso: PaySale (já em módulos), ListPendingCommissions, Pay/Withdrawal Transactions (pagamentos/retiradas), PayLoan, UpdateLoanStatus, CreateDebt/PayDebt, CashSession Open/Close/List/GetOpen.
+- Casos de uso: PaySale (já em módulos, alinhar ao UseCaseCtx), ListPendingCommissions, Pay/Withdrawal/AddBalance Transactions (pagamentos/retiradas/entradas), ListTransactions (leitura), PayCommission, PayLoan, UpdateLoanStatus, CreateDebt/PayDebt, CashSession Open/Close/List/GetOpen/UpdateCashFinalAmount, ProfitDistribution (serviço de domínio).
 - Notas recentes:
   - `LoanStatus.VALUE_TRANSFERRED` agora representa empréstimos cujo valor já saiu do caixa, mas ainda depende de acerto com o colaborador; a liquidação efetiva muda para `PAID_OFF`. O caso de uso de atualização de status deve validar essa transição explicitamente.
   - `Transaction.reason` passou a ser obrigatório (`ReasonTransaction`). Ao migrar o módulo Finance, os ports e casos de uso precisam receber o motivo explícito (ex.: `PAY_LOAN`, `PAY_COMMISSION`, `PAY_PLAN_DEBT`, `ADD_COMMISSION`, `LOAN`, `OTHER`) para eliminar fallback implícito no adapter legado.

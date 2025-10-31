@@ -3,6 +3,40 @@
 Objetivo
 - Consolidar o módulo de vendas, alinhando portas, factories e serviços ao padrão definido.
 
+Macro objetivos (O1, O2, ...)
+- O1 — Ports padronizadas em `application/ports` (telemetry incluído), sem dependência de ORM/utils.
+- O2 — Agregado `Sale` e entidades/VOs de item/discount/price modeladas no domínio.
+- O3 — Serviços de aplicação `CouponService` e `StockService` substituem utils legadas; adapters temporários só na borda.
+- O4 — Use-cases com `UseCaseCtx` e `TransactionRunner` injetado via factories.
+- O5 — Mappers isolados em `infra/mappers` (Prisma ↔ Domínio; Domínio ↔ DTO).
+- O6 — Controllers/rotas do módulo Sales chamam factories do próprio módulo (contratos HTTP estáveis).
+- O7 — Cobertura unitária dos appliers e VO de preço/desconto.
+- O8 — Legado de utils removido (planejado para Fase 8), módulo sem imports diretos de utils de `src/services/sale/utils/*`.
+
+Slicing (tarefas pequenas)
+- [x] XS — Renomear `application/contracts` → `application/ports` e mover `SaleTelemetry` [O1].
+  - Critérios: imports atualizados; sem side effects.
+  - Backout: revert rename.
+- [x] S — Criar `application/services/coupon-service.ts` e wrappers legados delegando para ele [O3].
+  - Critérios: `applyCouponSale`/`applyCouponSaleItem` chamam serviço do módulo; testes passantes.
+  - Backout: wrappers voltam à implementação antiga.
+- [x] S — Criar `application/services/stock-service.ts` e delegar `updateProductsStock`/`verifyStockProducts` [O3].
+  - Critérios: uso nos use-cases `remove-add-sale-item` e `update-sale-item-*`.
+  - Backout: revert uso no use-case.
+- [x] XS — Adicionar `infra/mappers/` para Sale/SaleItem e centralizar mapeamentos Prisma ↔ Domínio [O5].
+  - Critérios: use-cases não importam mais ORM.
+  - Backout: mapeamento anterior ainda disponível.
+- [x] S — Adotar `UseCaseCtx` e `TransactionRunner` nos casos de uso compostos [O4].
+  - Critérios: assinatura `execute(input, ctx?)`; factories injetam runner.
+  - Backout: manter fallback transacional interno.
+- [x] S — Substituir usos dos utils de cupom nos use-cases por `CouponService` (remover imports diretos) [O3,O8].
+  - Critérios: nenhum import de `src/services/sale/utils/coupon.ts` em `modules/sale`.
+  - Backout: restaurar import pontual.
+- [x] S — Substituir usos dos utils de estoque por `StockService` [O3,O8].
+  - Critérios: `remove-add-sale-item` e `update-sale-item-*` usam serviço.
+  - Backout: restaurar chamadas antigas.
+
+
 Tarefas
 - [x] Mapear portas necessárias (`SaleRepository`, `SaleItemRepository`, `CouponRepository`, `ProductRepository`, etc.).
 - [x] Revisar `src/modules/sale/*` e alinhar nomenclaturas/contratos.
@@ -59,9 +93,8 @@ Próximos passos recomendados (refino de domínio)
   - [x] `coupon-service.ts` e `plan-discount-service.ts` passam a buscar dados/validar e delegar aos appliers de domínio.
   - [x] `sale-totals-service.ts` orquestra builders e repositórios; cálculos ficam em `sale-totals-calculator.ts`/VOs.
 - [x] Garantir que builders retornem dados completos para o domínio (basePrice, quantity, discounts) e remover dependências de utils legados.
-- [x] Atualizar imports/factories e cobrir com testes unitários dos appliers (cupom e benefícios) e de `SaleItemPrice`.
-- [ ] Deprecar e remover utilitários restantes de `src/services/sale/utils/*` após migração total dos consumidores.
-- [ ] Documentar o uso de `UseCaseCtx`/`TransactionRunner` em todos os casos de uso que persistem alterações.
+- [x] Atualizar imports/factories e cobrir com testes unitários dos appliers (cupom e benefícios) e de `SaleItemPrice` [O7].
+
 
 Plano de ação (prioritário)
 1) Renomear `application/contracts` → `application/ports` e ajustar imports (telemetry).
@@ -83,3 +116,8 @@ Arquivos‑chave para revisão
 MIGRATION‑TODOs mapeados
 - Duplicidade de `ensureSingleType`: manter apenas a versão do módulo após migração total.
 - `applyCouponSale`, `applyCouponSaleItem`, `updateProductsStock`, `verifyStockProducts`: wrappers legados agora delegam para `CouponService` e `StockService`; remover definitivamente após módulos que ainda importam utils serem migrados.
+
+Independência & Handoff
+- Sem bloqueio de outros módulos: expor ports (`ProductRepository`, `ServiceRepository`, `CouponRepository`, `PlanRepository`, `PlanProfileRepository`, `ProfilesRepository`, `AppointmentRepository`) e manter adapters de compatibilidade dentro do módulo Sales (Prisma/Legacy) até que Catalog/Plans/Organization/Scheduling migrem.
+- Controllers e contratos HTTP ficam inalterados; troca é via factory/binding interno ao módulo.
+- Handoffs: quando Catalog/Plans/Organization/Scheduling migrarem, substituir adapters de compatibilidade por implementações nativas dos respectivos módulos; apagar `// MIGRATION-TODO` associados.

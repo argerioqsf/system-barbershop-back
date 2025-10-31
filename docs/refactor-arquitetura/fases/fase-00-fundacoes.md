@@ -3,6 +3,34 @@
 Objetivo
 - Isolar infraestrutura transversal (transações, tempo, IDs) para reduzir acoplamento e permitir migração por módulos sem retrabalho.
 
+Macro objetivos (O1, O2, ...)
+- O1 — Portas cross‑cutting criadas (`TransactionRunner`, `Clock`, `IdGenerator`) e centralizadas no core.
+- O2 — Adapter Prisma para transações disponível e reutilizável.
+- O3 — `UseCaseCtx { tx? }` definido e adotado como convenção de composição.
+- O4 — Factories usam `defaultTransactionRunner` em vez de `prisma.$transaction` direto.
+- O5 — Fakes de `TransactionRunner`/`Clock` para testes unitários.
+- O6 — Diretrizes de propagação de `tx` documentadas no core.
+
+Slicing (tarefas pequenas)
+- [x] XS — Criar interfaces `TransactionRunner`, `Clock`, `IdGenerator` em `src/core` [O1].
+  - Critérios: tipos estritos; sem dependências de ORM/HTTP; docs breves.
+  - Backout: remover arquivos; sem impacto em runtime.
+- [x] S — Implementar `PrismaTransactionRunner` (`src/infra/prisma/transaction-runner.ts`) [O2].
+  - Critérios: executa função recebendo `tx`; testes unitários com fake.
+  - Backout: retornar ao uso direto de `prisma.$transaction`.
+- [x] XS — Introduzir `UseCaseCtx { tx? }` em `src/core/application/use-case-ctx.ts` [O3].
+  - Critérios: export central e sem refs cíclicas.
+  - Backout: manter tipos locais nos módulos.
+- [x] S — Ajustar factories para usar `defaultTransactionRunner` [O4].
+  - Critérios: nenhuma factory chamando `prisma.$transaction` direto.
+  - Backout: revert factory individual.
+- [x] S — Fakes para testes (`fake-clock`, `fake-transaction-runner`) [O5].
+  - Critérios: usados por testes unitários de módulos.
+  - Backout: manter testes que não usam fakes.
+- [ ] XS — Documentar a convenção de `tx`/`UseCaseCtx` no core (README curto) [O6].
+  - Critérios: exemplos simples; linkado nas fases.
+  - Backout: n/a (doc-only).
+
 Entregáveis
 - Portas cross-cutting: `TransactionRunner`, `Clock`, `IdGenerator` (interfaces em `src/core/...`).
 - Adapter Prisma para `TransactionRunner` (ex.: `src/infra/prisma/transaction-runner-prisma.ts`).
