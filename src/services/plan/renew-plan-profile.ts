@@ -6,7 +6,7 @@ import { RecalculateUserSalesService } from '@/modules/sale/application/use-case
 import { PaymentStatus, PlanProfileStatus, PlanProfile } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { calculateNextDueDate, getLastDebtPaid } from './utils/helpers'
-import { UserNotFoundError } from '../@errors/user/user-not-found-error'
+import { UserNotFoundError } from '@/core/application/errors/user-not-found-error'
 
 interface RenewPlanProfileRequest {
   id: string

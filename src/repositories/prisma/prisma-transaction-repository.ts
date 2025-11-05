@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { Prisma, Transaction } from '@prisma/client'
 import {
   ResponseTransactionsFindMany,
+  TransactionCreateInput,
   TransactionRepository,
 } from '../transaction-repository'
 
@@ -35,7 +36,7 @@ export type TransactionFull = Prisma.TransactionGetPayload<{
 }>
 export class PrismaTransactionRepository implements TransactionRepository {
   async create(
-    data: Prisma.TransactionCreateInput,
+    data: TransactionCreateInput,
     tx?: Prisma.TransactionClient,
   ): Promise<Transaction> {
     const prismaClient = tx || prisma

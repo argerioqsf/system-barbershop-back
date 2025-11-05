@@ -1,5 +1,5 @@
 import { AppointmentRepository } from '@/repositories/appointment-repository'
-import { AppointmentTelemetry } from '@/modules/appointment/application/contracts/appointment-telemetry'
+import { AppointmentTelemetry } from '@/modules/appointment/application/ports/appointment-telemetry'
 import { Appointment, Prisma } from '@prisma/client'
 
 export interface UpdateAppointmentInput {

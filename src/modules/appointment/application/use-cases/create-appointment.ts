@@ -7,7 +7,7 @@ import {
   Service,
   PermissionName,
 } from '@prisma/client'
-import { AppointmentTelemetry } from '../contracts/appointment-telemetry'
+import { AppointmentTelemetry } from '../ports/appointment-telemetry'
 import { ValidateAppointmentWindowService } from '../services/validate-appointment-window-service'
 import { CheckBarberAvailabilityService } from '../services/check-barber-availability-service'
 import { SyncAppointmentSaleService } from '../services/sync-appointment-sale-service'
@@ -15,7 +15,7 @@ import { BarberNotFoundError } from '@/services/@errors/barber/barber-not-found-
 import { ProfileNotFoundError } from '@/services/@errors/profile/profile-not-found-error'
 import { BarberNotFromUserUnitError } from '@/services/@errors/barber/barber-not-from-user-unit-error'
 import { ServiceNotFoundError } from '@/services/@errors/service/service-not-found-error'
-import { UserNotFoundError } from '@/services/@errors/user/user-not-found-error'
+import { UserNotFoundError } from '@/core/application/errors/user-not-found-error'
 import { BarberDoesNotHaveThisServiceError } from '@/services/@errors/barber/barber-does-not-have-this-service'
 import { assertPermission } from '@/utils/permissions'
 

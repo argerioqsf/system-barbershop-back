@@ -1,7 +1,7 @@
 import { PasswordResetTokenRepository } from '@/repositories/password-reset-token-repository'
 import { UsersRepository } from '@/repositories/users-repository'
 import { hash } from 'bcryptjs'
-import { UserNotFoundError } from '../@errors/user/user-not-found-error'
+import { UserNotFoundError } from '@/core/application/errors/user-not-found-error'
 import { ResourceNotFoundError } from '../@errors/common/resource-not-found-error'
 
 interface ResetPasswordWithTokenRequest {

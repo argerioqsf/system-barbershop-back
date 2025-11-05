@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { ListTransactionsService } from '../../../src/services/transaction/list-transactions'
+import { ListTransactionsQuery } from '../../../src/modules/finance/application/query-handlers/list-transactions'
 import { FakeTransactionRepository } from '../../helpers/fake-repositories'
 import { defaultSale, makeTransaction } from '../../helpers/default-values'
 
 describe('List transactions service', () => {
   let repo: FakeTransactionRepository
-  let service: ListTransactionsService
+  let query: ListTransactionsQuery
 
   beforeEach(() => {
     repo = new FakeTransactionRepository()
@@ -28,6 +28,7 @@ describe('List transactions service', () => {
         saleItemId: null,
         appointmentServiceId: null,
         loanId: null,
+        reason: 'OTHER',
       }),
     )
     repo.transactions.push(
@@ -49,13 +50,14 @@ describe('List transactions service', () => {
         saleItemId: null,
         appointmentServiceId: null,
         loanId: null,
+        reason: 'OTHER',
       }),
     )
-    service = new ListTransactionsService(repo)
+    query = new ListTransactionsQuery(repo)
   })
 
   it('lists transactions for admin', async () => {
-    const res = await service.execute({
+    const res = await query.execute({
       actor: {
         sub: '1',
         role: 'ADMIN',
@@ -69,7 +71,7 @@ describe('List transactions service', () => {
   })
 
   it('filters by organization for owner', async () => {
-    const res = await service.execute({
+    const res = await query.execute({
       actor: {
         sub: '1',
         role: 'OWNER',
@@ -84,7 +86,7 @@ describe('List transactions service', () => {
   })
 
   it('filters by unit for others', async () => {
-    const res = await service.execute({
+    const res = await query.execute({
       actor: {
         sub: '1',
         role: 'BARBER',
@@ -100,7 +102,7 @@ describe('List transactions service', () => {
 
   it('throws if user not found', async () => {
     await expect(
-      service.execute({
+      query.execute({
         actor: {
           sub: '',
           role: 'ADMIN',

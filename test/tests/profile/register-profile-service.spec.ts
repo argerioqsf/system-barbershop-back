@@ -5,7 +5,7 @@ import {
   FakeProfilesRepository,
   InMemoryPermissionRepository,
 } from '../../helpers/fake-repositories'
-import { UserNotFoundError } from '../../../src/services/@errors/user/user-not-found-error'
+import { UserNotFoundError } from '../../../src/core/application/errors/user-not-found-error'
 import { PermissionCategory, PermissionName } from '@prisma/client'
 
 describe('Create profile service', () => {

@@ -14,7 +14,9 @@ export { InMemoryBarberUsersRepository as FakeBarberUsersRepository } from '../.
 export { InMemoryPermissionRepository } from '../../src/repositories/in-memory/in-memory-permission-repository'
 export { InMemoryRoleRepository } from '../../src/repositories/in-memory/in-memory-role-repository'
 export { InMemoryCashRegisterRepository } from '../../src/repositories/in-memory/in-memory-cash-register-repository'
-export { InMemoryTransactionRepository as FakeTransactionRepository } from '../../src/repositories/in-memory/in-memory-transaction-repository'
+export { InMemoryCashRegisterRepositoryAdapter } from '../../src/modules/finance/infra/repositories/in-memory/in-memory-cash-register-repository'
+export { CompatFakeTransactionRepository as FakeTransactionRepository } from './compat-fake-transaction-repository'
+export { InMemoryTransactionsRepository as FinanceTransactionsRepository } from '../../src/modules/finance/infra/repositories/in-memory/in-memory-transactions-repository'
 export { InMemoryOrganizationRepository as FakeOrganizationRepository } from '../../src/repositories/in-memory/in-memory-organization-repository'
 export { InMemoryLoanRepository as FakeLoanRepository } from '../../src/repositories/in-memory/in-memory-loan-repository'
 

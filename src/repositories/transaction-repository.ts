@@ -1,4 +1,4 @@
-import { Prisma, Transaction, User } from '@prisma/client'
+import { Prisma, ReasonTransaction, Transaction, User } from '@prisma/client'
 import { TransactionFull } from './prisma/prisma-transaction-repository'
 
 export type ResponseTransactionsFindMany = {
@@ -6,9 +6,13 @@ export type ResponseTransactionsFindMany = {
   count: number
 }
 
+export type TransactionCreateInput = Prisma.TransactionCreateInput & {
+  reason: ReasonTransaction
+}
+
 export interface TransactionRepository {
   create(
-    data: Prisma.TransactionCreateInput,
+    data: TransactionCreateInput,
     tx?: Prisma.TransactionClient,
   ): Promise<Transaction>
   findManyByUser(userId: string): Promise<TransactionFull[]>

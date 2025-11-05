@@ -280,6 +280,15 @@ Jobs & agendamentos (Plans)
 
 ## Padrões de Implementação
 
+### Command Query Responsibility Segregation (CQRS)
+
+O padrão CQRS separa as operações que modificam dados (Comandos) das operações que leem dados (Consultas). Isso permite otimizar cada lado de forma independente, melhorando a performance, escalabilidade e manutenibilidade.
+
+*   **Comandos (`use-cases`)**: Representam intenções de mudança de estado no sistema. São classes que encapsulam a lógica de negócios para criar, atualizar ou deletar dados. Eles não retornam dados diretamente, apenas o resultado da operação (sucesso/falha). No nosso projeto, são encontrados na pasta `application/use-cases/`.
+*   **Consultas (`query-handlers`)**: São responsáveis por recuperar dados do sistema sem causar efeitos colaterais. Eles não modificam o estado da aplicação e podem ser otimizados para leitura, utilizando modelos de dados específicos para consulta. No nosso projeto, são encontrados na pasta `application/query-handlers/`.
+
+Essa separação garante que a lógica de escrita e leitura seja clara e desacoplada, facilitando o desenvolvimento e a evolução do sistema.
+
 - Use-cases puros em `application` recebem apenas interfaces (ports) e valores primitivos/DTOs; retornam DTOs.
 - Entidades/VOs no `domain` encapsulam invariantes (ex.: cálculo de comissão, validações de estoque, regras de desconto).
 - Repositórios Prisma em `infra` implementam as portas e mapeiam para o banco.
@@ -394,6 +403,26 @@ export interface UsersRepository { findById(id: string): Promise<User | null> }
 export interface CashRegisterRepository { findOpenByUnit(unitId: string): Promise<CashSession | null> }
 export interface TransactionsRepository { create(t: NewTransaction, tx?: DbTx): Promise<Transaction> }
 ```
+
+### Modelagem de Domínio entre Módulos (Contextos)
+
+Para garantir a autonomia e o isolamento de cada módulo (Bounded Context), é proibido o compartilhamento direto de entidades de domínio entre eles. Um módulo não deve importar e utilizar diretamente uma entidade definida no domínio de outro módulo.
+
+- **Criação de Modelos Locais:** Quando um módulo (ex: `Sales`) precisa de um conceito que pertence a outro (ex: `Product` de `Catalog`), ele deve criar sua própria representação local desse conceito.
+- **Foco no Contexto:** Esse modelo local (seja uma Entidade ou, mais comumente, um Objeto de Valor - VO) deve conter **apenas** os atributos e comportamentos que são relevantes para o contexto atual. Por exemplo, o `Product` do `Catalog` pode ter dezenas de campos relacionados a estoque, fornecedor, dimensões, etc. Já a representação de `Product` dentro de `Sales` pode ter apenas `id`, `price` e `commissionPercentage`.
+- **Anti-Corruption Layer (ACL):** Essa prática é um pilar do padrão Anti-Corruption Layer. O modelo local protege o domínio do seu módulo contra mudanças que ocorrem no domínio de outros módulos. Se `Catalog` adicionar um novo campo a `Product`, o módulo `Sales` não quebra, pois ele não conhece esse campo.
+- **Mapeamento na Infraestrutura:** A "tradução" da entidade completa do módulo de origem para o modelo local do módulo consumidor deve ocorrer na camada de infraestrutura (em um Adaptador, como descrito na seção de Comunicação). O domínio permanece puro, recebendo apenas os modelos que ele mesmo define.
+
+### Comunicação entre Módulos (Contextos)
+
+Para manter o baixo acoplamento e as fronteiras entre os contextos delimitados, a comunicação para busca de dados deve seguir o padrão de Portas e Adaptadores, respeitando a posse dos dados de cada módulo.
+
+- **Definição da Necessidade (Porta):** O módulo que precisa da informação (ex: `Sales` precisando de um produto) deve definir em sua camada de aplicação uma porta (`application/ports`) que descreve a sua necessidade. Ex: `IProductsForSaleRepository`.
+- **Contrato Local:** Os métodos dessa porta devem retornar modelos locais (entidades ou VOs do próprio módulo, ex: `SoldProduct`), e não as entidades completas do módulo externo.
+- **Implementação da Ponte (Adaptador):** Na camada de infraestrutura (`infra/repositories/adapters`), um adaptador implementará essa porta. Este adaptador é o único componente que pode ter dependência de outro módulo.
+- **Respeito à Fonte da Verdade:** O adaptador deve, preferencialmente, chamar o repositório oficial do módulo dono da informação (ex: o adaptador de `Sales` chama o `ProductsRepository` de `Catalog`). É **proibido** que um adaptador acesse diretamente as tabelas do banco de dados de outro módulo, pois isso viola o encapsulamento e ignora regras de negócio que possam existir no repositório oficial.
+
+Este padrão garante que cada módulo seja uma "caixa-preta" para os outros, expondo apenas os contratos (portas) de que necessita e protegendo seus detalhes internos de implementação.
 
 ### Repositórios e Ports (focados no domínio)
 - Definir ports específicas por agregado (ex.: `SaleRepository`, `CashRegisterRepository`), evitando repositórios genéricos.

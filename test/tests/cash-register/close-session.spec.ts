@@ -1,13 +1,16 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { CloseSessionService } from '../../../src/services/cash-register/close-session'
+import { CloseCashSessionUseCase } from '../../../src/modules/finance/application/use-cases/close-cash-session'
 import {
   InMemoryCashRegisterRepository,
   FakeSaleRepository,
 } from '../../helpers/fake-repositories'
+import { InMemoryCashRegisterRepositoryAdapter } from '../../../src/modules/finance/infra/repositories/in-memory/in-memory-cash-register-repository'
 import { SaleStatus, TransactionType } from '@prisma/client'
 import { defaultSale, defaultUser } from '../../helpers/default-values'
 import { CompleteCashSession } from '../../../src/repositories/cash-register-repository'
 import { CashRegisterHasPendingSalesError } from '../../../src/services/@errors/cash-register/cash-register-has-pending-sales-error'
+import { TransactionRunner } from '../../../src/core/application/ports/transaction-runner'
+import { CashRegisterNotOpenedError } from '../../../src/modules/finance/application/errors/cash-register-not-opened-error'
 
 function makeSession(): CompleteCashSession {
   return {
@@ -37,7 +40,7 @@ function makeSession(): CompleteCashSession {
         saleItemId: null,
         appointmentServiceId: null,
         loanId: null,
-      },
+      } as any,
       {
         id: 't2',
         userId: 'u1',
@@ -59,33 +62,38 @@ function makeSession(): CompleteCashSession {
   }
 }
 
-describe('Close session service', () => {
-  let repo: InMemoryCashRegisterRepository
+describe('Close session use case', () => {
+  let adapter: InMemoryCashRegisterRepositoryAdapter
   let saleRepo: FakeSaleRepository
-  let service: CloseSessionService
+  let useCase: CloseCashSessionUseCase
+  let legacyRepo: InMemoryCashRegisterRepository
 
   beforeEach(() => {
-    repo = new InMemoryCashRegisterRepository()
+    legacyRepo = new InMemoryCashRegisterRepository()
+    adapter = new InMemoryCashRegisterRepositoryAdapter(legacyRepo)
     saleRepo = new FakeSaleRepository()
-    service = new CloseSessionService(repo, saleRepo)
+    const runner: TransactionRunner = {
+      run: async (fn) => fn(undefined as never),
+    }
+    useCase = new CloseCashSessionUseCase(adapter, saleRepo, runner)
   })
 
   it('closes an open session', async () => {
     const session = makeSession()
     session.finalAmount = 60 // Pre-set the final amount as it's now a running total
-    repo.sessions.push(session)
+    legacyRepo.sessions.push(session)
 
-    const res = await service.execute({ unitId: 'unit-1' })
+    const res = await useCase.execute({ unitId: 'unit-1' })
 
     // The service should now just close the session, not calculate the amount.
     // We expect the finalAmount to be the one that was already in the session.
     expect(res.session.finalAmount).toBe(60)
-    expect(repo.sessions[0].closedAt).toBeInstanceOf(Date)
+    expect(legacyRepo.sessions[0].closedAt).toBeInstanceOf(Date)
   })
 
   it('throws when there is no open session', async () => {
-    await expect(service.execute({ unitId: 'unit-1' })).rejects.toThrow(
-      'Cash register not opened',
+    await expect(useCase.execute({ unitId: 'unit-1' })).rejects.toThrow(
+      CashRegisterNotOpenedError,
     )
   })
 
@@ -93,7 +101,7 @@ describe('Close session service', () => {
     const session = makeSession()
     session.openedAt = new Date('2024-01-01T10:00:00.000Z')
     session.finalAmount = 60
-    repo.sessions.push(session)
+    legacyRepo.sessions.push(session)
 
     const pendingSale = {
       ...defaultSale,
@@ -120,7 +128,7 @@ describe('Close session service', () => {
     saleRepo.sales.push(pendingSale)
 
     await expect(
-      service.execute({ unitId: session.unitId }),
+      useCase.execute({ unitId: session.unitId }),
     ).rejects.toBeInstanceOf(CashRegisterHasPendingSalesError)
   })
 })

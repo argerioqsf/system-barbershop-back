@@ -11,7 +11,6 @@ import {
   BarberProduct,
   BarberService,
   Prisma,
-  ReasonTransaction,
   Transaction,
 } from '@prisma/client'
 import { DetailedAppointment } from '@/repositories/appointment-repository'
@@ -20,6 +19,7 @@ import { AppointmentNotFoundError } from '@/services/@errors/appointment/appoint
 import { ProfileNotFoundError } from '@/services/@errors/profile/profile-not-found-error'
 import { ItemNeedsServiceOrProductOrAppointmentError } from '@/services/@errors/sale/item-needs-service-or-product-error'
 import { calculateRealValueSaleItem } from './item'
+import { TransactionReason } from '@/modules/finance/domain/entities/transaction'
 
 export async function distributeProfits(
   sale: DetailedSale,
@@ -168,24 +168,24 @@ export async function distributeProfits(
       //   true,
       //   undefined,
       //   undefined,
-      //   { reason: ReasonTransaction.PAY_LOAN, tx },
+      //   { reason: TransactionReason.PAY_LOAN, tx },
       // )
       // transactions.push(transactionUnit.transaction)
     }
     const transactionProfile = await incrementProfile.execute(
       userBarber.id,
       amount,
+      {
+        reason: TransactionReason.ADD_COMMISSION,
+        tx,
+        userId,
+      },
       sale.id,
       userIsInDebt,
       undefined,
       undefined,
       undefined,
       undefined,
-      {
-        reason: ReasonTransaction.ADD_COMMISSION,
-        tx,
-        userId,
-      },
     )
     transactions.push(transactionProfile.transaction)
     if (appointmentServiceId) {
@@ -217,11 +217,11 @@ export async function distributeProfits(
     sale.unitId,
     userId,
     ownerShare,
+    { reason: TransactionReason.ADD_COMMISSION, tx },
     sale.id,
     false,
     undefined,
     undefined,
-    { reason: ReasonTransaction.ADD_COMMISSION, tx },
   )
   transactions.push(transactionUnit.transaction)
 

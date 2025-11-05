@@ -3,7 +3,7 @@ import { TransactionFull } from '@/repositories/prisma/prisma-transaction-reposi
 import { RoleName } from '@prisma/client'
 import { CollaboratorNotFoundError } from '../errors/collaborator-not-found.error'
 import { UnauthorizedAccessError } from '../errors/unauthorized-access.error'
-import { CollaboratorTelemetry } from '../contracts/collaborator-telemetry'
+import { CollaboratorTelemetry } from '../ports/collaborator-telemetry'
 import { logger } from '@/lib/logger'
 import {
   DetailedSaleItemFindMany,

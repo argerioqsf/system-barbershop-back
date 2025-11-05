@@ -3,7 +3,7 @@ import { BarberServiceRepository } from '@/repositories/barber-service-repositor
 import { BarberProductRepository } from '@/repositories/barber-product-repository'
 import { PermissionRepository } from '@/repositories/permission-repository'
 import { UnitRepository } from '@/repositories/unit-repository'
-import { UserNotFoundError } from '@/services/@errors/user/user-not-found-error'
+import { UserNotFoundError } from '@/core/application/errors/user-not-found-error'
 import { UnitNotExistsError } from '@/services/@errors/unit/unit-not-exists-error'
 import { InvalidPermissionError } from '@/services/@errors/permission/invalid-permission-error'
 import { PermissionsNotAllowedError } from '@/services/@errors/permission/permissions-not-allowed-error'

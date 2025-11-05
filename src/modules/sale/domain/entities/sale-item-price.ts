@@ -1,7 +1,7 @@
 import { InvalidSaleItemError } from '../errors/invalid-sale-item-error'
 import { SaleDiscount, SaleDiscountProps } from './sale-discount'
-import { Money } from '../value-objects/money'
-import { Percentage } from '../value-objects/percentage'
+import { Money } from '@/core/domain/value-objects/money'
+import { Percentage } from '@/core/domain/value-objects/percentage'
 
 export interface SaleItemPriceProps {
   basePrice: number

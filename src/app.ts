@@ -17,14 +17,11 @@ import { serviceRoute } from './http/controllers/service/route'
 import { appointmentRoute } from './http/controllers/appointment/route'
 import { barberUserRoute } from './http/controllers/barber-user/route'
 import { couponRoute } from './http/controllers/coupon/route'
-import { cashRegisterRoute } from './http/controllers/cash-register/route'
 import { saleRoute } from '@/modules/sale/infra/http/route'
-import { transactionRoute } from './http/controllers/transaction/route'
 import { reportRoute } from './http/controllers/report/route'
 import { configRoute } from './http/controllers/config/route'
 import { permissionRoute } from './http/controllers/permission/route'
 import { roleRoute } from './http/controllers/role/route'
-import { loanRoute } from './http/controllers/loan/route'
 import { authRoute } from './http/controllers/auth/route'
 import { organizationRoute } from './http/controllers/organization/route'
 import { unitRoute } from './http/controllers/unit/route'
@@ -34,10 +31,11 @@ import { categoryRoute } from './http/controllers/category/route'
 import { collaboratorRoute } from './http/controllers/collaborators/route'
 import { planRoute } from './http/controllers/plan/route'
 import { planProfileRoute } from './http/controllers/plan-profile/route'
-import { debtRoute } from './http/controllers/debt/route'
 import { benefitRoute } from './http/controllers/benefit/route'
 import { typeRecurrenceRoute } from './http/controllers/type-recurrence/route'
 import { userRoute } from './http/controllers/user/route'
+
+import { financeRoutes } from './modules/finance/infra/http/routes'
 
 export const app = fastify()
 
@@ -156,9 +154,7 @@ app.register(barberShopServiceRoute)
 app.register(appointmentRoute)
 app.register(barberUserRoute)
 app.register(couponRoute)
-app.register(cashRegisterRoute)
-app.register(loanRoute)
-app.register(transactionRoute)
+app.register(financeRoutes) // Register all finance routes
 app.register(permissionRoute)
 app.register(roleRoute)
 app.register(organizationRoute)
@@ -166,7 +162,6 @@ app.register(unitRoute)
 app.register(unitOpeningHourRoute)
 app.register(planRoute)
 app.register(planProfileRoute)
-app.register(debtRoute)
 app.register(benefitRoute)
 app.register(typeRecurrenceRoute)
 app.register(saleRoute)

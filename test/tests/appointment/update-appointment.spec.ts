@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { UpdateAppointmentUseCase } from '../../../src/modules/appointment/application/use-cases/update-appointment'
-import { AppointmentTelemetryEvent } from '../../../src/modules/appointment/application/contracts/appointment-telemetry'
+import { AppointmentTelemetryEvent } from '../../../src/modules/appointment/application/ports/appointment-telemetry'
 import { FakeAppointmentRepository } from '../../helpers/fake-repositories'
 import { makeAppointment, makeService } from '../../helpers/default-values'
 

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { TransactionType } from '@prisma/client'
+import { TransactionType, ReasonTransaction } from '@prisma/client'
 import { CreateTransactionService } from '../../../src/services/transaction/create-transaction'
 import {
   FakeTransactionRepository,
@@ -52,6 +52,7 @@ describe('Create transaction service', () => {
         type: TransactionType.ADDITION,
         description: '',
         amount: 10,
+        reason: ReasonTransaction.ADD_COMMISSION,
       }),
     ).rejects.toThrow('User not found')
   })
@@ -65,6 +66,7 @@ describe('Create transaction service', () => {
         type: TransactionType.ADDITION,
         description: '',
         amount: 10,
+        reason: ReasonTransaction.ADD_COMMISSION,
       }),
     ).rejects.toThrow('Cash register closed')
   })
@@ -77,6 +79,7 @@ describe('Create transaction service', () => {
         type: TransactionType.ADDITION,
         description: '',
         amount: 10,
+        reason: ReasonTransaction.ADD_COMMISSION,
       }),
     ).rejects.toThrow('Affected user not found')
   })
@@ -87,6 +90,7 @@ describe('Create transaction service', () => {
       type: TransactionType.ADDITION,
       description: 'test',
       amount: 20,
+      reason: ReasonTransaction.ADD_COMMISSION,
     })
 
     expect(transaction.userId).toBe(ctx.user.id)
@@ -103,6 +107,7 @@ describe('Create transaction service', () => {
       type: TransactionType.ADDITION,
       description: '',
       amount: 15,
+      reason: ReasonTransaction.ADD_COMMISSION,
     })
 
     expect(transaction.affectedUserId).toBe(other.id)
@@ -116,6 +121,7 @@ describe('Create transaction service', () => {
       description: '',
       amount: 5,
       receiptUrl: '/uploads/test.png',
+      reason: ReasonTransaction.ADD_COMMISSION,
     })
 
     expect(ctx.transactionRepo.transactions[0].receiptUrl).toBe(

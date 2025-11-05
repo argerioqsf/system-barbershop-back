@@ -2,7 +2,7 @@ import { ProfilesRepository } from '@/repositories/profiles-repository'
 import { UsersRepository } from '@/repositories/users-repository'
 import { PermissionRepository } from '@/repositories/permission-repository'
 import { Profile } from '@prisma/client'
-import { UserNotFoundError } from '../@errors/user/user-not-found-error'
+import { UserNotFoundError } from '@/core/application/errors/user-not-found-error'
 import { InvalidPermissionError } from '../@errors/permission/invalid-permission-error'
 
 interface CreateProfileServiceRequest {

@@ -4,7 +4,10 @@ import {
   Transaction,
   TransactionType,
 } from '@prisma/client'
-import { TransactionRepository } from '../transaction-repository'
+import {
+  TransactionCreateInput,
+  TransactionRepository,
+} from '../transaction-repository'
 import { randomUUID } from 'crypto'
 import { TransactionFull } from '../prisma/prisma-transaction-repository'
 
@@ -12,7 +15,7 @@ export class InMemoryTransactionRepository implements TransactionRepository {
   public transactions: TransactionFull[] = []
 
   async create(
-    data: Prisma.TransactionCreateInput & {
+    data: TransactionCreateInput & {
       saleItemId?: string | null
       appointmentServiceId?: string | null
       loanId?: string | null
@@ -36,9 +39,7 @@ export class InMemoryTransactionRepository implements TransactionRepository {
       amount: data.amount as number,
       isLoan: (data.isLoan as boolean | undefined) ?? false,
       receiptUrl: (data.receiptUrl as string | null | undefined) ?? null,
-      reason:
-        (data.reason as ReasonTransaction | undefined) ??
-        ReasonTransaction.OTHER,
+      reason: data.reason as ReasonTransaction,
       createdAt: new Date(),
       saleId:
         (data.sale as { connect: { id: string } } | undefined)?.connect.id ??

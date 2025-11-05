@@ -1,16 +1,25 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { Prisma, Transaction } from '@prisma/client'
+import { PayUserLoansUseCase } from '@/modules/finance/application/use-cases/pay-user-loans'
+import { PrismaLoansRepositoryAdapter } from '@/modules/finance/infra/repositories/prisma/prisma-loans-repository'
+import { PrismaUnitRepository } from '@/repositories/prisma/prisma-unit-repository'
+import { IncrementBalanceUnitService } from '@/services/unit/increment-balance'
+import { Money } from '@/core/domain/value-objects/money'
+import { UserFindById } from '@/repositories/barber-users-repository'
+import {
+  LoansRepositoryPort,
+  LoanRecord,
+  LoanWithTransactionsRecord,
+  LoanQueryFilters,
+  LoanUpdateData,
+  CreateLoanInput,
+} from '@/modules/finance/application/ports/loans-repository'
 import {
   LoanRepository,
   LoanWithTransactions,
 } from '@/repositories/loan-repository'
+import { LoanStatus } from '@/modules/finance/domain/types/status'
 import { UnitRepository } from '@/repositories/unit-repository'
-import {
-  LoanStatus,
-  Prisma,
-  ReasonTransaction,
-  Transaction,
-} from '@prisma/client'
-import { IncrementBalanceUnitService } from '../unit/increment-balance'
-import { UserFindById } from '@/repositories/barber-users-repository'
 
 interface PayUserLoansRequest {
   affectedUser: NonNullable<UserFindById>
@@ -24,85 +33,121 @@ interface PayUserLoansResponse {
 }
 
 export class PayUserLoansService {
-  constructor(
-    private loanRepository: LoanRepository,
-    private unitRepository: UnitRepository,
-  ) {}
+  // TODO: Remover este adapter legado assim que todos os fluxos passarem a usar o PayUserLoansUseCase diretamente.
+  private readonly useCase: PayUserLoansUseCase
 
-  private getAmountPaidForTransactions(loan: LoanWithTransactions) {
-    return loan.transactions.reduce(
-      (s: number, t: Transaction) => (t.amount > 0 ? s + t.amount : s),
-      0,
+  constructor(
+    loansRepository: LoansRepositoryPort = new PrismaLoansRepositoryAdapter(),
+    incrementUnitService: IncrementBalanceUnitService = new IncrementBalanceUnitService(
+      new PrismaUnitRepository(),
+    ),
+  ) {
+    this.useCase = new PayUserLoansUseCase(
+      loansRepository,
+      incrementUnitService,
     )
   }
 
-  // TODO: unificar logica de pagar emprestimos com o src/services/loan/pay-user-loans.ts
-  // essa logica nao precisa retirar do balanco de usuario pq onde é chamada ja faz isso antes
   async execute(
     { affectedUser, amount }: PayUserLoansRequest,
     tx?: Prisma.TransactionClient,
   ): Promise<PayUserLoansResponse> {
-    const loans = await this.loanRepository.findMany(
-      {
-        userId: affectedUser.id,
-        status: { equals: LoanStatus.VALUE_TRANSFERRED },
-      },
+    const result = await this.useCase.execute({
+      affectedUser,
+      amount: Money.from(amount),
       tx,
-    )
-    loans.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+    })
 
-    const incUnit = new IncrementBalanceUnitService(this.unitRepository)
-
-    let remaining = amount
-    const transactions: Transaction[] = []
-    let totalPaid = 0
-    for (const loan of loans) {
-      if (remaining <= 0) break
-      const amountPaidForTransactions = this.getAmountPaidForTransactions(loan)
-      const toPay = Math.min(loan.amount - amountPaidForTransactions, remaining)
-
-      if (toPay <= 0) {
-        await this.loanRepository.update(
-          loan.id,
-          {
-            paidAt: new Date(),
-            status: LoanStatus.PAID_OFF,
-          },
-          tx,
-        )
-        continue
-      }
-
-      const txUnit = await incUnit.execute(
-        loan.unitId,
-        affectedUser.id,
-        toPay,
-        undefined,
-        true,
-        loan.id,
-        undefined,
-        { reason: ReasonTransaction.PAY_LOAN, tx },
-      )
-      transactions.push(txUnit.transaction)
-      totalPaid += toPay
-      remaining -= toPay
-
-      const fully = amountPaidForTransactions + toPay >= loan.amount
-      if (fully) {
-        await this.loanRepository.update(
-          loan.id,
-          {
-            paidAt: new Date(),
-            status: LoanStatus.PAID_OFF,
-          },
-          tx,
-        )
-      }
-    }
     return {
-      transactions,
-      remaining: Math.floor(remaining * 100) / 100,
-      totalPaid: Math.floor(totalPaid * 100) / 100,
+      transactions: result.transactions,
+      remaining: result.remaining.toNumber(),
+      totalPaid: result.totalPaid.toNumber(),
     }
+  }
+}
+
+export class LoanRepositoryAdapter implements LoansRepositoryPort {
+  constructor(private readonly repo: LoanRepository) {}
+
+  async create(
+    _data: CreateLoanInput,
+    _ctx?: Prisma.TransactionClient,
+  ): Promise<LoanRecord> {
+    return Promise.reject(new Error('Legacy adaptor does not support create'))
+  }
+
+  async findById(
+    id: string,
+    _ctx?: Prisma.TransactionClient,
+  ): Promise<LoanWithTransactionsRecord | null> {
+    const loan = await this.repo.findById(id)
+    return loan ? convertLoan(loan) : null
+  }
+
+  async findMany(
+    filters: LoanQueryFilters = {},
+    _ctx?: Prisma.TransactionClient,
+  ): Promise<LoanWithTransactionsRecord[]> {
+    const where: Prisma.LoanWhereInput = {
+      userId: filters.userId ? { equals: filters.userId } : undefined,
+      unitId: filters.unitId ? { equals: filters.unitId } : undefined,
+      status: filters.status ? { equals: filters.status } : undefined,
+    }
+
+    const loans = await this.repo.findMany(where)
+    return loans.map(convertLoan)
+  }
+
+  async update(
+    id: string,
+    data: LoanUpdateData,
+    _ctx?: Prisma.TransactionClient,
+  ): Promise<LoanRecord> {
+    const updated = await this.repo.update(id, {
+      status: data.status,
+      paidAt: data.paidAt ?? undefined,
+      updatedById: data.updatedById ?? undefined,
+    })
+
+    const current = await this.repo.findById(id)
+    const merged: LoanWithTransactions = {
+      ...updated,
+      transactions: current?.transactions ?? [],
+    }
+
+    return toLoanRecord(merged)
+  }
+}
+
+function convertLoan(loan: LoanWithTransactions): LoanWithTransactionsRecord {
+  return {
+    id: loan.id,
+    unitId: loan.unitId,
+    userId: loan.userId,
+    sessionId: loan.sessionId,
+    amount: Money.from(loan.amount),
+    status: loan.status as LoanStatus,
+    createdAt: loan.createdAt,
+    paidAt: loan.paidAt,
+    updatedById: loan.updatedById ?? null,
+    transactions: loan.transactions.map((tx) => ({
+      id: tx.id,
+      amount: Money.from(tx.amount),
+      createdAt: tx.createdAt,
+    })),
+  }
+}
+
+function toLoanRecord(loan: LoanWithTransactions): LoanRecord {
+  return {
+    id: loan.id,
+    unitId: loan.unitId,
+    userId: loan.userId,
+    sessionId: loan.sessionId,
+    amount: Money.from(loan.amount),
+    status: loan.status as LoanStatus,
+    createdAt: loan.createdAt,
+    paidAt: loan.paidAt,
+    updatedById: loan.updatedById ?? null,
   }
 }

@@ -1,7 +1,7 @@
 import { ProfilesRepository } from '@/repositories/profiles-repository'
 import { UsersRepository } from '@/repositories/users-repository'
 import { Profile, User } from '@prisma/client'
-import { UserNotFoundError } from '../@errors/user/user-not-found-error'
+import { UserNotFoundError } from '@/core/application/errors/user-not-found-error'
 import { ProfileNotFoundError } from '../@errors/profile/profile-not-found-error'
 
 interface UpdateProfileUserRequest {

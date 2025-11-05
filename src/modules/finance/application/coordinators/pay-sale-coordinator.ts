@@ -2,7 +2,7 @@ import {
   PaySaleCoordinator,
   PaySaleInput,
   PaySaleOutput,
-} from '../contracts/pay-sale-coordinator'
+} from '../ports/pay-sale-coordinator'
 import { PaySaleUseCase } from '@/modules/finance/application/use-cases/pay-sale'
 import { RecalculateUserSalesService } from '@/modules/sale/application/use-cases/recalculate-user-sales'
 import { logger } from '@/lib/logger'

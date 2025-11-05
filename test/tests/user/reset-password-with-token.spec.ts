@@ -3,7 +3,7 @@ import { ResetPasswordWithTokenService } from '../../../src/services/users/reset
 import { InMemoryUserRepository } from '../../../src/repositories/in-memory/in-memory-users-repository'
 import { FakePasswordResetTokenRepository } from '../../helpers/fake-repositories'
 import { ResourceNotFoundError } from '../../../src/services/@errors/common/resource-not-found-error'
-import { UserNotFoundError } from '../../../src/services/@errors/user/user-not-found-error'
+import { UserNotFoundError } from '../../../src/core/application/errors/user-not-found-error'
 import { compare } from 'bcryptjs'
 import { User } from '@prisma/client'
 
