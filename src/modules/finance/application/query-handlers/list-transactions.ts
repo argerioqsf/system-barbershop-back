@@ -1,11 +1,15 @@
-import { TransactionRepository } from '@/repositories/transaction-repository'
 import { UserNotFoundError } from '@/core/application/errors/user-not-found-error'
 import { Money } from '@/core/domain/value-objects/money'
-import { Prisma } from '@prisma/client'
 import { ListTransactionsQueryInput } from '../dto/list-transactions.dto'
+import {
+  TransactionReadRepository,
+  TransactionReadFilter,
+} from '@/modules/finance/application/ports/transaction-read-repository'
 
 export class ListTransactionsQuery {
-  constructor(private readonly transactionRepository: TransactionRepository) {}
+  constructor(
+    private readonly transactionRepository: TransactionReadRepository,
+  ) {}
 
   async execute({ actor, filters = {} }: ListTransactionsQueryInput) {
     if (!actor || !actor.sub) {
@@ -14,18 +18,18 @@ export class ListTransactionsQuery {
 
     const { page = 1, perPage = 10 } = filters
 
-    let where: Prisma.TransactionWhereInput = {}
+    const filter: TransactionReadFilter = {
+      unitId: actor.unitId,
+    }
 
-    where = { unitId: actor.unitId }
-
-    const { items, count } = await this.transactionRepository.findMany(where, {
+    const { items, count } = await this.transactionRepository.findMany(filter, {
       page,
       perPage,
     })
 
     const normalizedItems = items.map((item) => ({
       ...item,
-      amount: Money.from(item.amount).toNumber(),
+      amount: Money.from(Number(item.amount)).toNumber(),
     }))
 
     return {

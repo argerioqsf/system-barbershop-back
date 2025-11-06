@@ -33,14 +33,14 @@ Legenda
 ## Sales (Adapters InMemory/Prisma a mover)
 - [ ] Mover para módulo Plans & Recurrence — src/modules/sale/infra/repositories/in-memory/in-memory-plan-repository.ts
 - [ ] Mover para módulo Plans & Recurrence — src/modules/sale/infra/repositories/in-memory/in-memory-plan-profile-repository.ts
-- [ ] Mover para módulo Scheduling — src/modules/sale/infra/repositories/in-memory/in-memory-appointment-repository.ts
+- [x] Mover para módulo Scheduling — src/modules/sale/infra/repositories/in-memory/in-memory-appointment-repository.ts
 - [ ] Mover para módulo Organization/IAM — src/modules/sale/infra/repositories/in-memory/in-memory-barber-users-repository.ts
 - [ ] Mover para módulo Catalog — src/modules/sale/infra/repositories/in-memory/in-memory-product-repository.ts
 - [ ] Mover para módulo Catalog — src/modules/sale/infra/repositories/in-memory/in-memory-service-repository.ts
 - [ ] Mover para módulo Catalog — src/modules/sale/infra/repositories/in-memory/in-memory-coupon-repository.ts
 - [ ] Mover para módulo Plans & Recurrence — src/modules/sale/infra/repositories/prisma/prisma-plan-repository.ts
 - [ ] Mover para módulo Plans & Recurrence — src/modules/sale/infra/repositories/prisma/prisma-plan-profile-repository.ts
-- [ ] Mover para módulo Scheduling — src/modules/sale/infra/repositories/prisma/prisma-appointment-repository.ts
+- [x] Mover para módulo Scheduling — src/modules/sale/infra/repositories/prisma/prisma-appointment-repository.ts
 - [ ] Mover para módulo Organization/IAM — src/modules/sale/infra/repositories/prisma/prisma-profiles-repository.ts
 - [ ] Mover para módulo Organization/IAM — src/modules/sale/infra/repositories/prisma/prisma-barber-users-repository.ts
 - [ ] Mover para módulo Catalog — src/modules/sale/infra/repositories/prisma/prisma-product-repository.ts

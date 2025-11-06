@@ -5,7 +5,7 @@ import { PrismaPlanProfileRepository } from '@/modules/sale/infra/repositories/p
 import { PrismaCouponRepository } from '@/modules/sale/infra/repositories/prisma/prisma-coupon-repository'
 import { PrismaServiceRepository } from '@/modules/sale/infra/repositories/prisma/prisma-service-repository'
 import { PrismaProductRepository } from '@/modules/sale/infra/repositories/prisma/prisma-product-repository'
-import { PrismaAppointmentRepository } from '@/modules/sale/infra/repositories/prisma/prisma-appointment-repository'
+import { PrismaAppointmentRepository } from '@/modules/appointment/infra/repositories/prisma/prisma-appointment-repository'
 import { PrismaBarberUsersRepository } from '@/modules/sale/infra/repositories/prisma/prisma-barber-users-repository'
 import { RecalculateUserSalesService } from '@/modules/sale/application/use-cases/recalculate-user-sales'
 import { defaultTransactionRunner } from '@/infra/prisma/transaction-runner'

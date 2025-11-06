@@ -46,3 +46,12 @@ Riscos & Mitigações
 
 Rollout
 - PRs por caso de uso e um para agendadores.
+
+---
+
+Conformidade com o Guia de Arquitetura
+- [ ] Separação domain/application/infra conforme `docs/arquitetura/guia-arquitetura.md`.
+- [ ] Ports por agregado (`PlanRepository`, `PlanProfileRepository`, `TypeRecurrenceRepository`) com `tx?` e adapters Prisma em `infra`.
+- [ ] Controllers com validação (Zod) e mapeamento de erros.
+- [ ] Sem compartilhamento de entidades; consumo via ports.
+- [ ] Testes unitários dos cálculos/renovações e integração para jobs.

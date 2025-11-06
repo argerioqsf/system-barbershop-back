@@ -143,6 +143,12 @@ Ports e adapters (pequenos)
 - [x] S — Integrar `WithdrawBalanceUseCase`/`PayBalanceUseCase` ao `TransactionsRepository` (emissão de `Transaction` com `reason`) [O1,O4,O9].
    - Critérios: criação de transações via port (não direto no ORM); invariantes de `reason` e `amount` aplicadas; logs mantidos.
    - Backout: continuar usando serviços legados de incremento e update de caixa, mantendo compatibilidade.
+- [x] XS — Expor `TransactionReadRepository` para Reporting (consulta por usuário/unidade/período) [O9].
+   - Critérios: interface de leitura dedicada; adapter Prisma isolado; testes de leitura.
+   - Backout: adapter de compat lendo consulta legada.
+ - [ ] XS — Consolidar `ListPendingCommissionsQuery` no Finance (ou Sales) e expor porta de leitura para Reporting/Colaborador [O11].
+   - Critérios: contrato de leitura claro; sem efeitos colaterais; testes cobrindo filtros.
+   - Backout: manter endpoint atual sob collaborator até migração.
 
 Binding de controllers (fatiar por endpoint)
 - [x] XS — Ligar controller `add-balance-transaction` à nova factory [O8].
@@ -173,3 +179,13 @@ Riscos & Mitigações
 Rollout
 - PRs por caso de uso (withdraw, pay-balance, cash-session, loans/debts). Adapters temporários com `// MIGRATION-TODO`.
  - PR específico para O13: introduzir `Money/Percentage` em core + ajuste dos imports em Sales/Finance/Cash diretamente para o core (sem re-export). Documentar impactos e plano de rollback.
+
+---
+
+Conformidade com o Guia de Arquitetura
+- [ ] Separação domain/application/infra conforme `docs/arquitetura/guia-arquitetura.md`.
+- [ ] Ports por agregado (`TransactionsRepository`, `CashRegisterRepository`, `LoansRepository`, `DebtsRepository`) com `tx?` e adapters Prisma em `infra`.
+- [ ] Controllers com validação (Zod) e mapeamento de erros.
+- [ ] Uso de `TransactionRunner`/`UseCaseCtx` para coordenação transacional.
+- [ ] Sem compartilhamento de entidades; consumo via ports.
+- [ ] Testes unitários de regras (cálculos, transições de status) e E2E de endpoints.

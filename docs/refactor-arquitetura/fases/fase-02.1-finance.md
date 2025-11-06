@@ -41,3 +41,11 @@ Critérios de aceite (fase)
 - [x] As pastas `application/dto` e `application/errors` do módulo de finanças estão populadas.
 - [x] Os casos de uso e queries importam seus DTOs e Erros dos novos arquivos, em vez de defini-los inline.
 - [x] Testes de unidade são atualizados para usar os novos DTOs e para esperar os novos tipos de erro.
+
+---
+
+Conformidade com o Guia de Arquitetura
+- [ ] Pastas e camadas seguem `docs/arquitetura/guia-arquitetura.md`.
+- [ ] DTOs/Erros residem em `application/*`; sem dependência de ORM/adapters.
+- [ ] Controllers mapeiam erros para HTTP; application lança erros específicos.
+- [ ] Testes atualizados e typecheck verde.

@@ -24,6 +24,9 @@ Slicing (tarefas pequenas)
 - [ ] XS — Definir ports para Organization/Unit/OpeningHour/Profile e adapters mínimos [O4].
   - Critérios: interfaces estritas; mappers isolados.
   - Backout: repositórios legados.
+- [ ] XS — Expor dados de disponibilidade base para Scheduling via porta (ex.: `ProfilesAvailabilityReadRepository`) [O2].
+  - Critérios: retorna workHours/blockedHours normalizados (UTC); sem regras de appointments.
+  - Backout: adapter de compat lendo consultas atuais.
 - [ ] XS — Testes unitários de regras de horário e vínculos [O6].
   - Critérios: casos de sobreposição e criação de profile.
   - Backout: manter baseline anterior.
@@ -38,6 +41,7 @@ Tarefas
 - [ ] Serviços de domínio para regras de horário (interseções, validações).
 - [ ] Factories + controllers atualizados.
 - [ ] Garantir criação de `Profile` para todo `User` (vínculo imediato).
+- [ ] Expor porta de leitura para disponibilidade base consumida pelo módulo Scheduling.
 
 Critérios de aceite
 - [ ] Regras de horário cobertas por unit tests.
@@ -47,4 +51,13 @@ Riscos & Mitigações
 - Regressão em disponibilidade: alinhar com Scheduling e testes cruzados.
 
 Rollout
-- PRs por agregado (Unit, OpeningHour, Profile).
+ - PRs por agregado (Unit, OpeningHour, Profile).
+
+---
+
+Conformidade com o Guia de Arquitetura
+- [ ] Separação domain/application/infra conforme `docs/arquitetura/guia-arquitetura.md`.
+- [ ] Ports por agregado (`ProfilesRepository`, `UnitsRepository`, `OpeningHoursRepository`) com `tx?` e adapters Prisma em `infra`.
+- [ ] Controllers com validação (Zod) e mapeamento de erros.
+- [ ] Sem compartilhamento de entidades; exposição via ports para Scheduling/others.
+- [ ] Testes unitários de regras de horário e E2E de endpoints.

@@ -3,6 +3,7 @@
 Este documento apresenta uma visão geral do projeto, catálogo completo de rotas atuais, proposição de domínios/subdomínios e um plano incremental de migração para uma arquitetura mais sustentável baseada em Clean Architecture, DDD e Arquitetura Hexagonal (Ports & Adapters), com uso de factories para composição e injeção de dependências.
 
  Sumário (rápido)
+- Guia de Arquitetura (fonte de verdade de padrões): `docs/arquitetura/guia-arquitetura.md`
 - Guia e Índice das Fases: `docs/refactor-arquitetura/README.md`
 - Regras de Slicing e Estratégia de Legado: seção "Slicing/Adapters" abaixo
 - Template de fase: `docs/refactor-arquitetura/fases/_template.md`
@@ -14,6 +15,10 @@ Observações do contexto atual:
 - Testes com Vitest.
 - Mistura de estilos: `src/services/*` (estilo service layer atual) coexistindo com módulos mais alinhados ao DDD em `src/modules/*` (p.ex., `sale`, `finance`, `appointment`, `collaborator`).
 - Controllers Fastify em `src/http/controllers/*` organizados por recurso, com rotas registradas em `src/app.ts`.
+
+Módulos legados relevantes a migrar:
+- `src/modules/appointment` (pré-migração) → consolidar no contexto Scheduling (Appointments).
+- `src/modules/collaborator` (pré-migração) → consolidar como Queries no contexto Reporting.
 
 ---
 
@@ -214,6 +219,8 @@ Portas cross-cutting (reutilizáveis entre contextos):
 
 Controllers e rotas dentro do módulo: controllers/rotas podem residir em `src/modules/<contexto>/infra/http/` (ou estrutura equivalente) alinhado à Clean Architecture/Hexagonal. Enquanto houver partes legadas, é possível manter o registro central em `src/app.ts` importando as rotas expostas pelos módulos e migrando gradualmente.
 
+Nota: a referência normativa de padrões está em `docs/arquitetura/guia-arquitetura.md`. Evite duplicação aqui; este plano foca em estratégia e slicing.
+
 ---
 
 ## Domínios e Subdomínios (Bounded Contexts)
@@ -239,6 +246,7 @@ Controllers e rotas dentro do módulo: controllers/rotas podem residir em `src/m
 - Escopo: Agendamentos e disponibilidade.
 - Entidades: Appointment (+ vínculo com Service/Barber/Client).
 - Casos de uso: CreateAppointment, UpdateAppointment, ListAppointments, ListAvailableBarbers.
+ - De/Para (legado): migrar `src/modules/appointment/*` → `src/modules/scheduling/*` seguindo a estrutura do guia (domain/application/infra) e mantendo rotas/contratos.
 
 5) Sales
 - Escopo: Vendas e itens de venda (serviços/produtos/plano/agendamento), cupom na venda.
@@ -271,6 +279,7 @@ Jobs & agendamentos (Plans)
 8) Reporting
 - Escopo: Relatórios e consultas de leitura agregada.
 - Padrão: Application Query Handlers usando repositórios otimizados para leitura.
+ - De/Para (legado): migrar `src/modules/collaborator/*` (dashboard/consultas) → `src/modules/reporting/*` como Query Handlers, consumindo ports de leitura de Sales/Finance/Organization.
 
 9) Config/Storage
 - Escopo: Exportações e uploads.
@@ -589,6 +598,12 @@ Fase 3 — Scheduling (Appointments)
 - Já existem serviços/aplicação em `src/modules/appointment/application/*` (e factories em `infra`).
 - Verificar controllers: migrar para factories dos módulos.
 - Consolidar `CheckBarberAvailability` e `ValidateAppointmentWindow` como serviços de domínio; garantir testes unitários.
+ - De/Para (legado):
+   - `src/modules/appointment/application/use-cases/*` → `src/modules/scheduling/application/(use-cases|query-handlers)`
+   - `src/modules/appointment/application/services/*` → `src/modules/scheduling/(domain|application)/services`
+   - `src/modules/appointment/application/ports/*` → `src/modules/scheduling/application/ports`
+   - `src/modules/appointment/infra/*` → `src/modules/scheduling/infra/*`
+   - Controllers `src/http/controllers/appointment/*` → `src/modules/scheduling/infra/http/controllers/*` (rotas preservadas)
 
 Fase 4 — Catalog (Products/Services/Categories/Coupons/Benefits)
 - Checklist operacional: [docs/migracao-arquitetura/fase-04-catalog.md](docs/migracao-arquitetura/fase-04-catalog.md)
@@ -618,6 +633,10 @@ Fase 7 — Reporting e Config
 - Checklist operacional: [docs/migracao-arquitetura/fase-07-reporting-config.md](docs/migracao-arquitetura/fase-07-reporting-config.md)
 - Separar queries de leitura como Application Query Handlers com repositórios voltados a leitura (pode reutilizar Prisma direto aqui).
 - Manter rotas idênticas; apenas mover a lógica para casos de uso de consulta.
+ - De/Para (legado):
+   - `src/modules/collaborator/application/use-cases/get-collaborator-dashboard.use-case.ts` → `src/modules/reporting/application/query-handlers/get-collaborator-dashboard.ts`
+   - Ports/Telemetry do módulo → `src/modules/reporting/(application|infra)/{ports,telemetry}`
+   - Controllers `src/http/controllers/collaborators/*` → `src/modules/reporting/infra/http/controllers/*` (rotas preservadas)
 
 Fase 8 — Remoção de código legado
 - Checklist operacional: [docs/migracao-arquitetura/fase-08-remocao-legado.md](docs/migracao-arquitetura/fase-08-remocao-legado.md)
@@ -672,6 +691,8 @@ Scheduling
 - [ ] Consolidar serviços de disponibilidade/validação de agenda.
 - [ ] Factories e controllers alinhados.
 - [ ] Testes unitários.
+ - [ ] De/Para: migrar `modules/appointment` → `modules/scheduling` mantendo rotas/contratos.
+ - [ ] Conformidade com guia: domain/application/infra, ports com `tx?`, factories, Zod na borda, TransactionRunner, sem entidades de outro módulo.
 
 Catalog
 - [ ] Entidades (Product/Service/Coupon/Benefit/TypeRecurrence) e invariantes.
@@ -693,6 +714,8 @@ Reporting/Config
 - [ ] Query Handlers dedicados.
 - [ ] Factories + controllers.
 - [ ] Testes de leitura.
+ - [ ] De/Para: migrar `modules/collaborator` (dashboard) → `modules/reporting` como queries (ports de leitura para Sales/Finance/Organization).
+ - [ ] Conformidade com guia: leitura isolada, ports de leitura, sem ORM/adapters no application.
 
 ---
 

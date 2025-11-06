@@ -1,5 +1,7 @@
-import { TransactionRepository } from '@/repositories/transaction-repository'
-import { TransactionFull } from '@/repositories/prisma/prisma-transaction-repository'
+import {
+  CollaboratorTransaction,
+  CollaboratorTransactionsRepository,
+} from '@/modules/collaborator/application/ports/collaborator-transactions-repository'
 import { RoleName } from '@prisma/client'
 import { CollaboratorNotFoundError } from '../errors/collaborator-not-found.error'
 import { UnauthorizedAccessError } from '../errors/unauthorized-access.error'
@@ -18,14 +20,14 @@ interface GetCollaboratorDashboardUseCaseRequest {
 interface GetCollaboratorDashboardUseCaseResponse {
   totalBalance: number
   saleItems: DetailedSaleItemFindMany[]
-  transactions: TransactionFull[]
+  transactions: CollaboratorTransaction[]
 }
 
 export class GetCollaboratorDashboardUseCase {
   constructor(
     private profilesRepository: ProfilesRepository,
     private saleItemRepository: SaleItemRepository,
-    private transactionRepository: TransactionRepository,
+    private transactionRepository: CollaboratorTransactionsRepository,
     private telemetry?: CollaboratorTelemetry,
   ) {}
 
@@ -53,7 +55,7 @@ export class GetCollaboratorDashboardUseCase {
     )
 
     const transactions =
-      await this.transactionRepository.findManyByAffectedUser(collaboratorId)
+      await this.transactionRepository.findManyByCollaborator(collaboratorId)
 
     this.telemetry?.record({
       operation: 'get-collaborator-dashboard',

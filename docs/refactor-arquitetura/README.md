@@ -3,6 +3,7 @@
 Este diretório organiza o plano de migração para Clean Architecture + DDD + Hexagonal, com foco em tarefas pequenas, de baixo risco e mantendo o legado funcionando durante toda a transição.
 
 - Base: `docs/refactor-arquitetura/plano-migracao-arquitetura.md`
+- Guia de Arquitetura (fonte de verdade de padrões): `docs/arquitetura/guia-arquitetura.md`
 - Fases: `docs/refactor-arquitetura/fases/*`
 - Template de fase: `docs/refactor-arquitetura/fases/_template.md`
 - Catálogo de rotas (referência): `docs/backend-endpoints.md`
