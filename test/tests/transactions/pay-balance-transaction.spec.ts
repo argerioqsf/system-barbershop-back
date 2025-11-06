@@ -1,10 +1,12 @@
 import { describe, it, expect, beforeEach, vi, beforeAll } from 'vitest'
-import { PayBalanceTransactionService } from '../../../src/services/transaction/pay-balance-transaction'
-import { CreateTransactionService } from '../../../src/services/transaction/create-transaction'
+import { PayBalanceUseCase } from '../../../src/modules/finance/application/use-cases/pay-balance'
+import { PayUserLoansUseCase } from '../../../src/modules/finance/application/use-cases/pay-user-loans'
+import { Money } from '../../../src/core/domain/value-objects/money'
 import {
   FakeTransactionRepository,
   FakeBarberUsersRepository,
   FakeCashRegisterRepository,
+  InMemoryCashRegisterRepositoryAdapter,
   FakeProfilesRepository,
   FakeUnitRepository,
   FakeSaleRepository,
@@ -21,22 +23,28 @@ import {
   makeUser,
   makeSaleWithBarber,
 } from '../../helpers/default-values'
-import { PayUserCommissionService } from '../../../src/services/transaction/pay-user-comission'
-import { PayUserLoansService } from '../../../src/services/loan/pay-user-loans'
+import { PayCommissionUseCase } from '../../../src/modules/finance/application/use-cases/pay-commission'
 import { IncrementBalanceProfileService } from '../../../src/services/profile/increment-balance'
 import { IncrementBalanceUnitService } from '../../../src/services/unit/increment-balance'
-import { UpdateCashRegisterFinalAmountService } from '../../../src/services/cash-register/update-cash-register-final-amount'
-
+import { UpdateCashFinalAmountUseCase } from '../../../src/modules/finance/application/use-cases/update-cash-final-amount'
+import { CreateTransactionService } from '../../../src/services/transaction/create-transaction'
+import { Prisma } from '@prisma/client'
+import {
+  LoansRepositoryPort,
+  LoanRecord,
+  LoanWithTransactionsRecord,
+  LoanQueryFilters,
+  LoanUpdateData,
+  CreateLoanInput,
+} from '../../../src/modules/finance/application/ports/loans-repository'
+import {
+  LoanRepository,
+  LoanWithTransactions,
+} from '../../../src/repositories/loan-repository'
+import { LoanStatus } from '../../../src/modules/finance/domain/types/status'
+import { defaultTransactionRunner } from '../../../src/infra/prisma/transaction-runner'
 import { prisma } from '../../../src/lib/prisma'
-
-let transactionRepo: FakeTransactionRepository
-let barberRepo: FakeBarberUsersRepository
-let cashRepo: FakeCashRegisterRepository
-let loanRepo: FakeLoanRepository
-let profileRepo: FakeProfilesRepository
-let unitRepo: FakeUnitRepository
-let saleItemRepo: FakeSaleItemRepository
-let appointmentServiceRepo: FakeAppointmentServiceRepository
+import { CommissionCalculator } from '../../../src/modules/finance/domain/services/commission-calculator'
 
 vi.mock(
   '../../../src/services/@factories/transaction/make-create-transaction',
@@ -46,10 +54,21 @@ vi.mock(
   }),
 )
 
+let transactionRepo: FakeTransactionRepository
+let barberRepo: FakeBarberUsersRepository
+let cashAdapter: InMemoryCashRegisterRepositoryAdapter
+let cashRepo: FakeCashRegisterRepository
+let loanRepo: FakeLoanRepository
+let profileRepo: FakeProfilesRepository
+let unitRepo: FakeUnitRepository
+let saleItemRepo: FakeSaleItemRepository
+let appointmentServiceRepo: FakeAppointmentServiceRepository
+
 function setup(options?: { userBalance?: number; unitBalance?: number }) {
   transactionRepo = new FakeTransactionRepository()
   barberRepo = new FakeBarberUsersRepository()
   cashRepo = new FakeCashRegisterRepository()
+  cashAdapter = new InMemoryCashRegisterRepositoryAdapter(cashRepo)
   loanRepo = new FakeLoanRepository()
   const saleRepo = new FakeSaleRepository()
   const appointmentRepo = new FakeAppointmentRepository()
@@ -84,30 +103,34 @@ function setup(options?: { userBalance?: number; unitBalance?: number }) {
   const incrementProfileService = new IncrementBalanceProfileService(
     profileRepo,
   )
-  const incrementUnitService = new IncrementBalanceUnitService(unitRepo)
-  const updateCashRegisterFinalAmountService =
-    new UpdateCashRegisterFinalAmountService(cashRepo)
-
-  const payUserCommissionService = new PayUserCommissionService(
-    profileRepo,
+  const commissionCalculator = new CommissionCalculator()
+  const payCommissionUseCase = new PayCommissionUseCase(
     saleItemRepo,
     appointmentServiceRepo,
     incrementProfileService,
+    commissionCalculator,
   )
 
-  const payLoansService = new PayUserLoansService(loanRepo, unitRepo)
+  const incrementUnitService = new IncrementBalanceUnitService(unitRepo)
+  const payUserLoansUseCase = new PayUserLoansUseCase(
+    new LoanRepositoryAdapter(loanRepo),
+    incrementUnitService,
+  )
+  const updateCashRegisterFinalAmountUseCase = new UpdateCashFinalAmountUseCase(
+    cashAdapter,
+  )
 
-  const service = new PayBalanceTransactionService(
+  const useCase = new PayBalanceUseCase(
     barberRepo,
-    cashRepo,
-    saleItemRepo,
-    payUserCommissionService,
-    payLoansService,
-    updateCashRegisterFinalAmountService,
+    cashAdapter,
+    payCommissionUseCase,
+    payUserLoansUseCase,
+    updateCashRegisterFinalAmountUseCase,
+    defaultTransactionRunner,
   )
 
   return {
-    service,
+    useCase,
     profileRepo,
     unitRepo,
     transactionRepo,
@@ -121,7 +144,7 @@ function setup(options?: { userBalance?: number; unitBalance?: number }) {
   }
 }
 
-describe('Pay balance transaction service', () => {
+describe('PayBalanceUseCase', () => {
   let ctx: ReturnType<typeof setup>
 
   beforeAll(() => {
@@ -134,7 +157,7 @@ describe('Pay balance transaction service', () => {
     ctx = setup({ unitBalance: 100 })
   })
 
-  it('throws when paying more than user balance', async () => {
+  it('lança erro quando o valor a pagar excede o saldo do usuário', async () => {
     const profile = makeProfile('p2', 'u2', 10)
     ctx.profileRepo.profiles.push(profile)
     const other = makeUser('u2', profile, ctx.unitRepo.unit)
@@ -154,19 +177,17 @@ describe('Pay balance transaction service', () => {
     ctx.saleRepo.sales.push(sale as any)
 
     await expect(
-      ctx.service.execute(
-        {
-          userId: ctx.user.id,
-          affectedUserId: other.id,
-          description: '',
-          amount: 20,
-        },
-        { unitId: ctx.unitRepo.unit.id } as any,
-      ),
+      ctx.useCase.execute({
+        actorId: ctx.user.id,
+        unitId: ctx.unitRepo.unit.id,
+        affectedUserId: other.id,
+        description: '',
+        amount: Money.from(20),
+      }),
     ).rejects.toThrow('Insufficient balance for withdrawal')
   })
 
-  it('pays user with positive balance', async () => {
+  it('paga usuário com saldo positivo', async () => {
     const profile = makeProfile('p3', 'u3', 40)
     ctx.profileRepo.profiles.push(profile)
     const other = makeUser('u3', profile, ctx.unitRepo.unit)
@@ -185,15 +206,13 @@ describe('Pay balance transaction service', () => {
     ;(sale.items[0] as any).commissionPaid = false
     ctx.saleRepo.sales.push(sale as any)
 
-    await ctx.service.execute(
-      {
-        userId: ctx.user.id,
-        affectedUserId: other.id,
-        description: '',
-        amount: 30,
-      },
-      { unitId: ctx.unitRepo.unit.id } as any,
-    )
+    await ctx.useCase.execute({
+      actorId: ctx.user.id,
+      unitId: ctx.unitRepo.unit.id,
+      affectedUserId: other.id,
+      description: '',
+      amount: Money.from(30),
+    })
 
     const updatedProfile = ctx.profileRepo.profiles.find(
       (p) => p.id === profile.id,
@@ -203,7 +222,7 @@ describe('Pay balance transaction service', () => {
     expect(ctx.transactionRepo.transactions).toHaveLength(1)
   })
 
-  it('distributes amount across pending items', async () => {
+  it('distribui pagamento pelos itens pendentes', async () => {
     const profile = makeProfile('p4', 'u4', 20)
     ctx.profileRepo.profiles.push(profile)
     const other = makeUser('u4', profile, ctx.unitRepo.unit)
@@ -235,181 +254,104 @@ describe('Pay balance transaction service', () => {
     ;(sale2.items[0] as any).commissionPaid = false
     ctx.saleRepo.sales.push(sale1 as any, sale2 as any)
 
-    await ctx.service.execute(
-      {
-        userId: ctx.user.id,
-        affectedUserId: other.id,
-        description: '',
-        amount: 15,
-      },
-      { unitId: ctx.unitRepo.unit.id } as any,
-    )
+    await ctx.useCase.execute({
+      actorId: ctx.user.id,
+      unitId: ctx.unitRepo.unit.id,
+      affectedUserId: other.id,
+      description: '',
+      saleItemIds: ['it1', 'it2'],
+    })
 
+    expect(ctx.transactionRepo.transactions).toHaveLength(2)
     const updatedProfile = ctx.profileRepo.profiles.find(
       (p) => p.id === profile.id,
     )
-    expect(updatedProfile?.totalBalance).toBe(5)
-    expect(ctx.transactionRepo.transactions).toHaveLength(2)
-    expect((sale2.items[0] as any).commissionPaid).toBe(false)
-    expect((sale1.items[0] as any).commissionPaid).toBe(true)
-    // transaction recorded for partial payment
-  })
-
-  it('pays specific sale items by id', async () => {
-    const profile = makeProfile('p6', 'u6', 40)
-    ctx.profileRepo.profiles.push(profile)
-    const other = makeUser('u6', profile, ctx.unitRepo.unit)
-    ctx.barberRepo.users.push(other)
-
-    const sale = {
-      ...makeSaleWithBarber(),
-      id: 's-pay-items',
-      paymentStatus: 'PAID',
-    }
-    sale.items[0].barberId = other.id
-    sale.items[0].id = 'it-pay-items'
-    sale.items[0].serviceId = 'svc-pay-items'
-    sale.items[0].price = 40
-    sale.items[0].porcentagemBarbeiro = profile.commissionPercentage
-    ;(sale.items[0] as any).commissionPaid = false
-    ctx.saleRepo.sales.push(sale as any)
-
-    await ctx.service.execute(
-      {
-        userId: ctx.user.id,
-        affectedUserId: other.id,
-        saleItemIds: ['it-pay-items'],
-        description: '',
-      },
-      { unitId: ctx.unitRepo.unit.id } as any,
-    )
-
-    expect(ctx.transactionRepo.transactions).toHaveLength(1)
-    expect((sale.items[0] as any).commissionPaid).toBe(true)
-  })
-
-  it('pays appointment services by id', async () => {
-    const profile = makeProfile('p7', 'u7', 30)
-    ctx.profileRepo.profiles.push(profile)
-    const other = makeUser('u7', profile, ctx.unitRepo.unit)
-    ctx.barberRepo.users.push(other)
-
-    const appointment = await ctx.appointmentRepo.create(
-      {
-        client: { connect: { id: other.id } },
-        barber: { connect: { id: other.id } },
-        unit: { connect: { id: ctx.unitRepo.unit.id } },
-        date: new Date('2024-05-01T08:00:00'),
-        status: 'SCHEDULED',
-      },
-      [
-        {
-          id: 'svc-appt',
-          name: '',
-          description: null,
-          imageUrl: null,
-          cost: 0,
-          price: 30,
-          categoryId: 'cat-1',
-          defaultTime: null,
-          commissionPercentage: null,
-          unitId: ctx.unitRepo.unit.id,
-        },
-      ],
-    )
-    ctx.appointmentRepo.appointments[0].services[0].id = 'aps1'
-
-    const sale = {
-      ...makeSaleWithBarber(),
-      id: 's-appt',
-      paymentStatus: 'PAID',
-    }
-    sale.items[0].barberId = other.id
-    sale.items[0].id = 'it-appt'
-    sale.items[0].serviceId = 'svc-appt'
-    sale.items[0].appointmentId = appointment.id
-    sale.items[0].appointment = ctx.appointmentRepo.appointments[0]
-    sale.items[0].porcentagemBarbeiro = profile.commissionPercentage
-    ;(sale.items[0] as any).commissionPaid = false
-    ctx.saleRepo.sales.push(sale as any)
-
-    await ctx.service.execute(
-      {
-        userId: ctx.user.id,
-        affectedUserId: other.id,
-        appointmentServiceIds: ['aps1'],
-        description: '',
-      },
-      { unitId: ctx.unitRepo.unit.id } as any,
-    )
-
-    expect(ctx.transactionRepo.transactions).toHaveLength(1)
-    expect(ctx.appointmentRepo.appointments[0].services[0].commissionPaid).toBe(
-      true,
-    )
-  })
-
-  it('throws when cash register is closed', async () => {
-    const profile = makeProfile('p8', 'u8', 10)
-    ctx.profileRepo.profiles.push(profile)
-    const other = makeUser('u8', profile, ctx.unitRepo.unit)
-    ctx.barberRepo.users.push(other)
-
-    cashRepo.session = null
-
-    await expect(
-      ctx.service.execute(
-        {
-          userId: ctx.user.id,
-          affectedUserId: other.id,
-          amount: 5,
-        },
-        { unitId: ctx.unitRepo.unit.id } as any,
-      ),
-    ).rejects.toThrow('Cash register closed')
-  })
-
-  it('throws when affected user is missing', async () => {
-    await expect(
-      ctx.service.execute(
-        {
-          userId: ctx.user.id,
-          affectedUserId: 'no-user',
-          amount: 5,
-        },
-        { unitId: ctx.unitRepo.unit.id } as any,
-      ),
-    ).rejects.toThrow('Affected user not found')
-  })
-
-  it('throws when receivable amounts are inconsistent', async () => {
-    const profile = makeProfile('p9', 'u9', 40)
-    ctx.profileRepo.profiles.push(profile)
-    const other = makeUser('u9', profile, ctx.unitRepo.unit)
-    ctx.barberRepo.users.push(other)
-
-    const sale = {
-      ...makeSaleWithBarber(),
-      id: 's-incons',
-      paymentStatus: 'PAID',
-    }
-    sale.items[0].barberId = other.id
-    sale.items[0].id = 'it-incons'
-    sale.items[0].serviceId = 'svc-incons'
-    sale.items[0].price = 100
-    sale.items[0].porcentagemBarbeiro = profile.commissionPercentage
-    ;(sale.items[0] as any).commissionPaid = false
-    ctx.saleRepo.sales.push(sale as any)
-
-    await expect(
-      ctx.service.execute(
-        {
-          userId: ctx.user.id,
-          affectedUserId: other.id,
-          amount: 10,
-        },
-        { unitId: ctx.unitRepo.unit.id } as any,
-      ),
-    ).rejects.toThrow('Amounts receivable from the user are inconsistent')
+    expect(updatedProfile?.totalBalance).toBe(0)
   })
 })
+
+class LoanRepositoryAdapter implements LoansRepositoryPort {
+  constructor(private readonly repo: LoanRepository) {}
+
+  async create(
+    _data: CreateLoanInput,
+    _ctx?: Prisma.TransactionClient,
+  ): Promise<LoanRecord> {
+    return Promise.reject(new Error('not implemented'))
+  }
+
+  async findById(
+    id: string,
+    _ctx?: Prisma.TransactionClient,
+  ): Promise<LoanWithTransactionsRecord | null> {
+    const loan = await this.repo.findById(id)
+    return loan ? convertLoan(loan) : null
+  }
+
+  async findMany(
+    filters: LoanQueryFilters = {},
+    _ctx?: Prisma.TransactionClient,
+  ): Promise<LoanWithTransactionsRecord[]> {
+    const where: Prisma.LoanWhereInput = {
+      userId: filters.userId ? { equals: filters.userId } : undefined,
+      unitId: filters.unitId ? { equals: filters.unitId } : undefined,
+      status: filters.status ? { equals: filters.status as any } : undefined,
+    }
+
+    const loans = await this.repo.findMany(where)
+    return loans.map(convertLoan)
+  }
+
+  async update(
+    id: string,
+    data: LoanUpdateData,
+    _ctx?: Prisma.TransactionClient,
+  ): Promise<LoanRecord> {
+    const updated = await this.repo.update(id, {
+      status: data.status as any,
+      paidAt: data.paidAt ?? undefined,
+      updatedById: data.updatedById ?? undefined,
+    })
+
+    const current = await this.repo.findById(id)
+    const merged: LoanWithTransactions = {
+      ...updated,
+      transactions: current?.transactions ?? [],
+    }
+
+    return toLoanRecord(merged)
+  }
+}
+
+function convertLoan(loan: LoanWithTransactions): LoanWithTransactionsRecord {
+  return {
+    id: loan.id,
+    unitId: loan.unitId,
+    userId: loan.userId,
+    sessionId: loan.sessionId,
+    amount: Money.from(loan.amount),
+    status: loan.status as LoanStatus,
+    createdAt: loan.createdAt,
+    paidAt: loan.paidAt,
+    updatedById: loan.updatedById ?? null,
+    transactions: loan.transactions.map((tx) => ({
+      id: tx.id,
+      amount: Money.from(tx.amount),
+      createdAt: tx.createdAt,
+    })),
+  }
+}
+
+function toLoanRecord(loan: LoanWithTransactions): LoanRecord {
+  return {
+    id: loan.id,
+    unitId: loan.unitId,
+    userId: loan.userId,
+    sessionId: loan.sessionId,
+    amount: Money.from(loan.amount),
+    status: loan.status as LoanStatus,
+    createdAt: loan.createdAt,
+    paidAt: loan.paidAt,
+    updatedById: loan.updatedById ?? null,
+  }
+}

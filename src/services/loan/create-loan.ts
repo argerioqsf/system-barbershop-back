@@ -3,7 +3,7 @@ import { CashRegisterRepository } from '@/repositories/cash-register-repository'
 import { LoanRepository } from '@/repositories/loan-repository'
 import { LoanStatus } from '@prisma/client'
 import { startOfMonth, addMonths } from 'date-fns'
-import { UserNotFoundError } from '../@errors/user/user-not-found-error'
+import { UserNotFoundError } from '@/core/application/errors/user-not-found-error'
 import { CashRegisterClosedError } from '../@errors/cash-register/cash-register-closed-error'
 import { LoanMonthlyLimitExceededError } from '../@errors/loan/loan-monthly-limit-exceeded-error'
 

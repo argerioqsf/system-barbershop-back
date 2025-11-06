@@ -1,17 +1,22 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { ListUserPendingCommissionsService } from '../../../src/services/users/list-user-pending-commissions'
+import { ListPendingCommissionsUseCase } from '../../../src/modules/finance/application/use-cases/list-pending-commissions'
 import {
   FakeSaleRepository,
   FakeSaleItemRepository,
   FakeLoanRepository,
 } from '../../helpers/fake-repositories'
-import { makeSaleWithBarber, makeProfile, makeUser, defaultUnit } from '../../helpers/default-values'
+import {
+  makeSaleWithBarber,
+  makeProfile,
+  makeUser,
+  defaultUnit,
+} from '../../helpers/default-values'
 
 function setup() {
   const saleRepo = new FakeSaleRepository()
   const saleItemRepo = new FakeSaleItemRepository(saleRepo)
   const loanRepo = new FakeLoanRepository()
-  const service = new ListUserPendingCommissionsService(saleItemRepo, loanRepo)
+  const service = new ListPendingCommissionsUseCase(saleItemRepo, loanRepo)
   return { saleRepo, saleItemRepo, loanRepo, service }
 }
 
@@ -36,7 +41,12 @@ describe('List user pending commissions', () => {
     sale1.items[0].id = 'it1'
     sale1.items[0].serviceId = 'svc1'
     ;(sale1.items[0] as any).commissionPaid = false
-    const sale2 = { ...makeSaleWithBarber(), id: 's2', paymentStatus: 'PAID', createdAt: new Date('2024-01-02') }
+    const sale2 = {
+      ...makeSaleWithBarber(),
+      id: 's2',
+      paymentStatus: 'PAID',
+      createdAt: new Date('2024-01-02'),
+    }
     sale2.items[0].barberId = user.id
     sale2.items[0].id = 'it2'
     sale2.items[0].serviceId = 'svc2'
@@ -71,8 +81,6 @@ describe('List user pending commissions', () => {
       status: 'SCHEDULED',
       durationService: null,
       observation: null,
-      discount: 0,
-      value: null,
       services: [
         {
           id: 'aps1',

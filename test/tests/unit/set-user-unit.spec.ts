@@ -5,7 +5,7 @@ import {
 } from '../../../src/services/users/set-user-unit'
 import { InMemoryUserRepository } from '../../../src/repositories/in-memory/in-memory-users-repository'
 import { FakeUnitRepository } from '../../helpers/fake-repositories'
-import { UserNotFoundError } from '../../../src/services/@errors/user/user-not-found-error'
+import { UserNotFoundError } from '../../../src//core/application/errors/user-not-found-error'
 import { UnitNotFoundError } from '../../../src/services/@errors/unit/unit-not-found-error'
 import { namedUser, makeUnit } from '../../helpers/default-values'
 

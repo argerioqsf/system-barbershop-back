@@ -6,18 +6,14 @@ import {
   IncrementBalanceUnitResponse,
   IncrementBalanceUnitService,
 } from '../unit/increment-balance'
-import {
-  PaymentStatus,
-  PlanProfileStatus,
-  ReasonTransaction,
-  Transaction,
-} from '@prisma/client'
+import { PaymentStatus, PlanProfileStatus, Transaction } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { PlanRepository } from '@/repositories/plan-repository'
 import { getLastDebtPaid, hasPendingDebts } from './utils/helpers'
 import { checkAndRecalculateAffectedSales } from '../sale/utils/item'
 import { RecalculateUserSalesService } from '@/modules/sale/application/use-cases/recalculate-user-sales'
 import { ProfilesRepository } from '@/repositories/profiles-repository'
+import { TransactionReason } from '@/modules/finance/domain/entities/transaction'
 
 interface PayDebtRequest {
   debtId: string
@@ -75,11 +71,11 @@ export class PayDebtService {
         saleItem.sale.unitId,
         userId,
         amountToCredit,
+        { reason: TransactionReason.PAY_PLAN_DEBT, tx },
         undefined,
         false,
         undefined,
         'Pay plan debt',
-        { reason: ReasonTransaction.PAY_PLAN_DEBT, tx },
       )
       transactionIncrementUnit = transaction
 

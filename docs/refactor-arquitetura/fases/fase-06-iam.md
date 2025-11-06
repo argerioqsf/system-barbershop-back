@@ -28,6 +28,12 @@ Slicing (tarefas pequenas)
 - [ ] XS — Migrar controllers de IAM para factories [O3].
   - Critérios: contratos estáveis; E2E ok.
   - Backout: reverter binding.
+- [ ] XS — Criar porta `Authorization` (checagens de escopo/permissões) consumível por módulos como Scheduling/Reporting [O2].
+  - Critérios: expõe `hasPermission(user, permission)` e `scopeFor(user)`; implementação via dados de IAM; testes unitários.
+  - Backout: continuar usando preHandlers atuais.
+- [ ] XS — Reposicionar utilidades `assertUser`, `getScope`, `buildUnitWhere` para borda HTTP/porta `Authorization` (remover uso em application de outros módulos) [O2].
+  - Critérios: grep sem referências em `application` fora de IAM; controllers migram para o helper/guard.
+  - Backout: manter utilidades enquanto houver consumidores.
 
 Independência & Handoff
 - Sem bloqueio de Organization/Scheduling: exposições de `authGuard(permissions)` e ports de IAM não exigem mudanças nos módulos consumidores; apenas binding dos controllers.
@@ -47,3 +53,12 @@ Riscos & Mitigações
 
 Rollout
 - PR único ou por caso de uso, priorizando segurança.
+
+---
+
+Conformidade com o Guia de Arquitetura
+- [ ] Separação domain/application/infra conforme `docs/arquitetura/guia-arquitetura.md`.
+- [ ] Ports (`UsersRepository`, `RoleRepository`, `PermissionRepository`, `SessionRepository`) com `tx?` e adapters Prisma em `infra`.
+- [ ] Guards/middlewares na borda HTTP; application sem dependência de Fastify.
+- [ ] Sem compartilhamento de entidades; consumo via ports.
+- [ ] Testes unitários e E2E de autenticação/autorização.

@@ -40,3 +40,10 @@ Riscos & Mitigações
 
 Rollout
 - PRs pequenos, um por área removida, com checklist de impactos.
+
+---
+
+Conformidade com o Guia de Arquitetura
+- [ ] Após remoção, nenhum módulo `application` importa utilidades/adapters legados.
+- [ ] Ports/adapters restantes seguem `docs/arquitetura/guia-arquitetura.md`.
+- [ ] Testes verdes após cada remoção.

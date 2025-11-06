@@ -2,7 +2,7 @@ import { logger } from '@/lib/logger'
 import {
   CollaboratorTelemetry,
   CollaboratorTelemetryEvent,
-} from '@/modules/collaborator/application/contracts/collaborator-telemetry'
+} from '@/modules/collaborator/application/ports/collaborator-telemetry'
 
 export class LoggerCollaboratorTelemetry implements CollaboratorTelemetry {
   async record(event: CollaboratorTelemetryEvent): Promise<void> {

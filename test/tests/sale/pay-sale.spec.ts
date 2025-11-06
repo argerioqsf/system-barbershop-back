@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { DefaultPaySaleCoordinator } from '../../../src/modules/finance/application/coordinators/pay-sale-coordinator'
+import { CommissionResolutionService } from '../../../src/modules/sale/domain/services/commission-resolution-service'
+import { ProfitDistributionService } from '../../../src/modules/sale/domain/services/profit-distribution'
 import { SaleCommissionService } from '../../../src/modules/finance/application/services/sale-commission-service'
 import { SaleProfitDistributionService } from '../../../src/modules/finance/application/services/sale-profit-distribution-service'
 import { PaySaleUseCase } from '../../../src/modules/finance/application/use-cases/pay-sale'
@@ -39,7 +41,7 @@ import {
   makeBarberServiceRel,
   makeBarberProductRel,
 } from '../../helpers/default-values'
-import { PaymentStatus } from '@prisma/client'
+import { PaymentStatus, Prisma } from '@prisma/client'
 import { prisma } from '../../../src/lib/prisma'
 
 let transactionRepo: FakeTransactionRepository
@@ -102,21 +104,21 @@ describe('Pay sale service', () => {
       { id: 'rec1', period: 1 },
     ] as any)
 
+    const commissionResolutionService = new CommissionResolutionService()
     saleCommissionService = new SaleCommissionService(
       barberRepo,
       barberServiceRepo,
       barberProductRepo,
+      commissionResolutionService,
     )
+    const profitDistributionDomainService = new ProfitDistributionService()
     saleProfitDistributionService = new SaleProfitDistributionService(
-      orgRepo,
-      profileRepo,
-      unitRepo,
       transactionRepo,
-      appointmentRepo,
       barberServiceRepo,
       barberProductRepo,
-      appointmentServiceRepo,
       saleItemRepo,
+      appointmentServiceRepo,
+      profitDistributionDomainService,
     )
 
     cashRepo.session = {
@@ -265,5 +267,17 @@ describe('Pay sale service', () => {
     const result = await execute('sale-1')
 
     expect(result.sale.items[0].porcentagemBarbeiro).toBe(35)
+  })
+
+  it('uses provided transaction context without opening a new transaction', async () => {
+    const tx = {} as Prisma.TransactionClient
+
+    const result = await service.execute(
+      { saleId: 'sale-1', userId: 'cashier' },
+      { tx },
+    )
+
+    expect(result.sale.paymentStatus).toBe(PaymentStatus.PAID)
+    expect(prisma.$transaction).not.toHaveBeenCalled()
   })
 })

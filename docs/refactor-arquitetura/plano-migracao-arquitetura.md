@@ -3,6 +3,7 @@
 Este documento apresenta uma visão geral do projeto, catálogo completo de rotas atuais, proposição de domínios/subdomínios e um plano incremental de migração para uma arquitetura mais sustentável baseada em Clean Architecture, DDD e Arquitetura Hexagonal (Ports & Adapters), com uso de factories para composição e injeção de dependências.
 
  Sumário (rápido)
+- Guia de Arquitetura (fonte de verdade de padrões): `docs/arquitetura/guia-arquitetura.md`
 - Guia e Índice das Fases: `docs/refactor-arquitetura/README.md`
 - Regras de Slicing e Estratégia de Legado: seção "Slicing/Adapters" abaixo
 - Template de fase: `docs/refactor-arquitetura/fases/_template.md`
@@ -14,6 +15,10 @@ Observações do contexto atual:
 - Testes com Vitest.
 - Mistura de estilos: `src/services/*` (estilo service layer atual) coexistindo com módulos mais alinhados ao DDD em `src/modules/*` (p.ex., `sale`, `finance`, `appointment`, `collaborator`).
 - Controllers Fastify em `src/http/controllers/*` organizados por recurso, com rotas registradas em `src/app.ts`.
+
+Módulos legados relevantes a migrar:
+- `src/modules/appointment` (pré-migração) → consolidar no contexto Scheduling (Appointments).
+- `src/modules/collaborator` (pré-migração) → consolidar como Queries no contexto Reporting.
 
 ---
 
@@ -214,6 +219,8 @@ Portas cross-cutting (reutilizáveis entre contextos):
 
 Controllers e rotas dentro do módulo: controllers/rotas podem residir em `src/modules/<contexto>/infra/http/` (ou estrutura equivalente) alinhado à Clean Architecture/Hexagonal. Enquanto houver partes legadas, é possível manter o registro central em `src/app.ts` importando as rotas expostas pelos módulos e migrando gradualmente.
 
+Nota: a referência normativa de padrões está em `docs/arquitetura/guia-arquitetura.md`. Evite duplicação aqui; este plano foca em estratégia e slicing.
+
 ---
 
 ## Domínios e Subdomínios (Bounded Contexts)
@@ -239,6 +246,7 @@ Controllers e rotas dentro do módulo: controllers/rotas podem residir em `src/m
 - Escopo: Agendamentos e disponibilidade.
 - Entidades: Appointment (+ vínculo com Service/Barber/Client).
 - Casos de uso: CreateAppointment, UpdateAppointment, ListAppointments, ListAvailableBarbers.
+ - De/Para (legado): migrar `src/modules/appointment/*` → `src/modules/scheduling/*` seguindo a estrutura do guia (domain/application/infra) e mantendo rotas/contratos.
 
 5) Sales
 - Escopo: Vendas e itens de venda (serviços/produtos/plano/agendamento), cupom na venda.
@@ -271,6 +279,7 @@ Jobs & agendamentos (Plans)
 8) Reporting
 - Escopo: Relatórios e consultas de leitura agregada.
 - Padrão: Application Query Handlers usando repositórios otimizados para leitura.
+ - De/Para (legado): migrar `src/modules/collaborator/*` (dashboard/consultas) → `src/modules/reporting/*` como Query Handlers, consumindo ports de leitura de Sales/Finance/Organization.
 
 9) Config/Storage
 - Escopo: Exportações e uploads.
@@ -279,6 +288,15 @@ Jobs & agendamentos (Plans)
 ---
 
 ## Padrões de Implementação
+
+### Command Query Responsibility Segregation (CQRS)
+
+O padrão CQRS separa as operações que modificam dados (Comandos) das operações que leem dados (Consultas). Isso permite otimizar cada lado de forma independente, melhorando a performance, escalabilidade e manutenibilidade.
+
+*   **Comandos (`use-cases`)**: Representam intenções de mudança de estado no sistema. São classes que encapsulam a lógica de negócios para criar, atualizar ou deletar dados. Eles não retornam dados diretamente, apenas o resultado da operação (sucesso/falha). No nosso projeto, são encontrados na pasta `application/use-cases/`.
+*   **Consultas (`query-handlers`)**: São responsáveis por recuperar dados do sistema sem causar efeitos colaterais. Eles não modificam o estado da aplicação e podem ser otimizados para leitura, utilizando modelos de dados específicos para consulta. No nosso projeto, são encontrados na pasta `application/query-handlers/`.
+
+Essa separação garante que a lógica de escrita e leitura seja clara e desacoplada, facilitando o desenvolvimento e a evolução do sistema.
 
 - Use-cases puros em `application` recebem apenas interfaces (ports) e valores primitivos/DTOs; retornam DTOs.
 - Entidades/VOs no `domain` encapsulam invariantes (ex.: cálculo de comissão, validações de estoque, regras de desconto).
@@ -394,6 +412,26 @@ export interface UsersRepository { findById(id: string): Promise<User | null> }
 export interface CashRegisterRepository { findOpenByUnit(unitId: string): Promise<CashSession | null> }
 export interface TransactionsRepository { create(t: NewTransaction, tx?: DbTx): Promise<Transaction> }
 ```
+
+### Modelagem de Domínio entre Módulos (Contextos)
+
+Para garantir a autonomia e o isolamento de cada módulo (Bounded Context), é proibido o compartilhamento direto de entidades de domínio entre eles. Um módulo não deve importar e utilizar diretamente uma entidade definida no domínio de outro módulo.
+
+- **Criação de Modelos Locais:** Quando um módulo (ex: `Sales`) precisa de um conceito que pertence a outro (ex: `Product` de `Catalog`), ele deve criar sua própria representação local desse conceito.
+- **Foco no Contexto:** Esse modelo local (seja uma Entidade ou, mais comumente, um Objeto de Valor - VO) deve conter **apenas** os atributos e comportamentos que são relevantes para o contexto atual. Por exemplo, o `Product` do `Catalog` pode ter dezenas de campos relacionados a estoque, fornecedor, dimensões, etc. Já a representação de `Product` dentro de `Sales` pode ter apenas `id`, `price` e `commissionPercentage`.
+- **Anti-Corruption Layer (ACL):** Essa prática é um pilar do padrão Anti-Corruption Layer. O modelo local protege o domínio do seu módulo contra mudanças que ocorrem no domínio de outros módulos. Se `Catalog` adicionar um novo campo a `Product`, o módulo `Sales` não quebra, pois ele não conhece esse campo.
+- **Mapeamento na Infraestrutura:** A "tradução" da entidade completa do módulo de origem para o modelo local do módulo consumidor deve ocorrer na camada de infraestrutura (em um Adaptador, como descrito na seção de Comunicação). O domínio permanece puro, recebendo apenas os modelos que ele mesmo define.
+
+### Comunicação entre Módulos (Contextos)
+
+Para manter o baixo acoplamento e as fronteiras entre os contextos delimitados, a comunicação para busca de dados deve seguir o padrão de Portas e Adaptadores, respeitando a posse dos dados de cada módulo.
+
+- **Definição da Necessidade (Porta):** O módulo que precisa da informação (ex: `Sales` precisando de um produto) deve definir em sua camada de aplicação uma porta (`application/ports`) que descreve a sua necessidade. Ex: `IProductsForSaleRepository`.
+- **Contrato Local:** Os métodos dessa porta devem retornar modelos locais (entidades ou VOs do próprio módulo, ex: `SoldProduct`), e não as entidades completas do módulo externo.
+- **Implementação da Ponte (Adaptador):** Na camada de infraestrutura (`infra/repositories/adapters`), um adaptador implementará essa porta. Este adaptador é o único componente que pode ter dependência de outro módulo.
+- **Respeito à Fonte da Verdade:** O adaptador deve, preferencialmente, chamar o repositório oficial do módulo dono da informação (ex: o adaptador de `Sales` chama o `ProductsRepository` de `Catalog`). É **proibido** que um adaptador acesse diretamente as tabelas do banco de dados de outro módulo, pois isso viola o encapsulamento e ignora regras de negócio que possam existir no repositório oficial.
+
+Este padrão garante que cada módulo seja uma "caixa-preta" para os outros, expondo apenas os contratos (portas) de que necessita e protegendo seus detalhes internos de implementação.
 
 ### Repositórios e Ports (focados no domínio)
 - Definir ports específicas por agregado (ex.: `SaleRepository`, `CashRegisterRepository`), evitando repositórios genéricos.
@@ -560,6 +598,12 @@ Fase 3 — Scheduling (Appointments)
 - Já existem serviços/aplicação em `src/modules/appointment/application/*` (e factories em `infra`).
 - Verificar controllers: migrar para factories dos módulos.
 - Consolidar `CheckBarberAvailability` e `ValidateAppointmentWindow` como serviços de domínio; garantir testes unitários.
+ - De/Para (legado):
+   - `src/modules/appointment/application/use-cases/*` → `src/modules/scheduling/application/(use-cases|query-handlers)`
+   - `src/modules/appointment/application/services/*` → `src/modules/scheduling/(domain|application)/services`
+   - `src/modules/appointment/application/ports/*` → `src/modules/scheduling/application/ports`
+   - `src/modules/appointment/infra/*` → `src/modules/scheduling/infra/*`
+   - Controllers `src/http/controllers/appointment/*` → `src/modules/scheduling/infra/http/controllers/*` (rotas preservadas)
 
 Fase 4 — Catalog (Products/Services/Categories/Coupons/Benefits)
 - Checklist operacional: [docs/migracao-arquitetura/fase-04-catalog.md](docs/migracao-arquitetura/fase-04-catalog.md)
@@ -589,6 +633,10 @@ Fase 7 — Reporting e Config
 - Checklist operacional: [docs/migracao-arquitetura/fase-07-reporting-config.md](docs/migracao-arquitetura/fase-07-reporting-config.md)
 - Separar queries de leitura como Application Query Handlers com repositórios voltados a leitura (pode reutilizar Prisma direto aqui).
 - Manter rotas idênticas; apenas mover a lógica para casos de uso de consulta.
+ - De/Para (legado):
+   - `src/modules/collaborator/application/use-cases/get-collaborator-dashboard.use-case.ts` → `src/modules/reporting/application/query-handlers/get-collaborator-dashboard.ts`
+   - Ports/Telemetry do módulo → `src/modules/reporting/(application|infra)/{ports,telemetry}`
+   - Controllers `src/http/controllers/collaborators/*` → `src/modules/reporting/infra/http/controllers/*` (rotas preservadas)
 
 Fase 8 — Remoção de código legado
 - Checklist operacional: [docs/migracao-arquitetura/fase-08-remocao-legado.md](docs/migracao-arquitetura/fase-08-remocao-legado.md)
@@ -643,6 +691,8 @@ Scheduling
 - [ ] Consolidar serviços de disponibilidade/validação de agenda.
 - [ ] Factories e controllers alinhados.
 - [ ] Testes unitários.
+ - [ ] De/Para: migrar `modules/appointment` → `modules/scheduling` mantendo rotas/contratos.
+ - [ ] Conformidade com guia: domain/application/infra, ports com `tx?`, factories, Zod na borda, TransactionRunner, sem entidades de outro módulo.
 
 Catalog
 - [ ] Entidades (Product/Service/Coupon/Benefit/TypeRecurrence) e invariantes.
@@ -664,6 +714,8 @@ Reporting/Config
 - [ ] Query Handlers dedicados.
 - [ ] Factories + controllers.
 - [ ] Testes de leitura.
+ - [ ] De/Para: migrar `modules/collaborator` (dashboard) → `modules/reporting` como queries (ports de leitura para Sales/Finance/Organization).
+ - [ ] Conformidade com guia: leitura isolada, ports de leitura, sem ORM/adapters no application.
 
 ---
 

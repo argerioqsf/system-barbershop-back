@@ -3,7 +3,7 @@ import { PrismaBarberUsersRepository } from '@/repositories/prisma/prisma-barber
 import { PrismaBarberServiceRepository } from '@/repositories/prisma/prisma-barber-service-repository'
 import { PrismaBarberProductRepository } from '@/repositories/prisma/prisma-barber-product-repository'
 import { PrismaAppointmentRepository } from '@/repositories/prisma/prisma-appointment-repository'
-import { PrismaCashRegisterRepository } from '@/repositories/prisma/prisma-cash-register-repository'
+import { PrismaCashRegisterRepositoryAdapter } from '@/modules/finance/infra/repositories/prisma/prisma-cash-register-repository'
 import { PrismaTransactionRepository } from '@/repositories/prisma/prisma-transaction-repository'
 import { PrismaOrganizationRepository } from '@/repositories/prisma/prisma-organization-repository'
 import { PrismaProfilesRepository } from '@/repositories/prisma/prisma-profile-repository'
@@ -19,6 +19,9 @@ import { SaleProfitDistributionService } from '@/modules/finance/application/ser
 import { PaySaleUseCase } from '@/modules/finance/application/use-cases/pay-sale'
 import { makeSaleTelemetry } from '@/modules/sale/infra/factories/make-sale-telemetry'
 import { defaultTransactionRunner } from '@/infra/prisma/transaction-runner'
+import { ProfitDistributionService as ProfitDistributionDomainService } from '@/modules/sale/domain/services/profit-distribution'
+
+import { CommissionResolutionService } from '@/modules/sale/domain/services/commission-resolution-service'
 
 export function makePaySaleUseCase() {
   const saleRepository = new PrismaSaleRepository()
@@ -26,7 +29,7 @@ export function makePaySaleUseCase() {
   const barberServiceRepository = new PrismaBarberServiceRepository()
   const barberProductRepository = new PrismaBarberProductRepository()
   const appointmentRepository = new PrismaAppointmentRepository()
-  const cashRegisterRepository = new PrismaCashRegisterRepository()
+  const cashRegisterRepository = new PrismaCashRegisterRepositoryAdapter()
   const transactionRepository = new PrismaTransactionRepository()
   const organizationRepository = new PrismaOrganizationRepository()
   const profileRepository = new PrismaProfilesRepository()
@@ -38,22 +41,22 @@ export function makePaySaleUseCase() {
   const productRepository = new PrismaProductRepository()
   const typeRecurrenceRepository = new PrismaTypeRecurrenceRepository()
 
+  const commissionResolutionService = new CommissionResolutionService()
   const saleCommissionService = new SaleCommissionService(
     barberUserRepository,
     barberServiceRepository,
     barberProductRepository,
+    commissionResolutionService,
   )
 
+  const profitDistributionDomainService = new ProfitDistributionDomainService()
   const saleProfitDistributionService = new SaleProfitDistributionService(
-    organizationRepository,
-    profileRepository,
-    unitRepository,
     transactionRepository,
-    appointmentRepository,
     barberServiceRepository,
     barberProductRepository,
-    appointmentServiceRepository,
     saleItemRepository,
+    appointmentServiceRepository,
+    profitDistributionDomainService,
   )
 
   const telemetry = makeSaleTelemetry()

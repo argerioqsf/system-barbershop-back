@@ -39,6 +39,7 @@ Tarefas
 - [ ] Casos de uso CRUD + serviços auxiliares (estoque, desconto).
 - [ ] Factories + controllers revisados.
 - [ ] Migrar utilidades de `src/services/sale/utils/*` quando fizer sentido.
+- [ ] Expor `ServicesReadRepository` para consumo por Scheduling (tempo padrão, atributos relevantes de serviço) e Sales.
 
 Critérios de aceite
 - [ ] CRUD mantêm contrato HTTP; E2E ok.
@@ -49,3 +50,12 @@ Riscos & Mitigações
 
 Rollout
 - PRs por entidade (Product, Service, Category, Coupon, Benefit).
+
+---
+
+Conformidade com o Guia de Arquitetura
+- [ ] Separação domain/application/infra conforme `docs/arquitetura/guia-arquitetura.md`.
+- [ ] Ports de repositório com `tx?: Prisma.TransactionClient`; adapters Prisma em `infra`.
+- [ ] Controllers com validação (Zod) e mapeamento de erros.
+- [ ] Sem compartilhamento de entidades; consumo via ports e modelos locais.
+- [ ] Testes unitários (estoque/validações) e E2E (CRUD) estáveis.

@@ -1,132 +1,100 @@
-import { describe, it, expect, vi } from 'vitest'
-import { distributeProfits } from '../../../src/services/sale/utils/profit-distribution'
-import { CreateTransactionService } from '../../../src/services/transaction/create-transaction'
+import { describe, it, expect } from 'vitest'
 import {
-  FakeOrganizationRepository,
-  FakeProfilesRepository,
-  FakeUnitRepository,
   FakeTransactionRepository,
-  FakeBarberUsersRepository,
-  FakeCashRegisterRepository,
-  FakeAppointmentRepository,
   FakeBarberServiceRelRepository,
   FakeBarberProductRepository,
+  FakeSaleItemRepository,
   FakeAppointmentServiceRepository,
   FakeSaleRepository,
-  FakeSaleItemRepository,
 } from '../../helpers/fake-repositories'
 import {
   makeSaleWithBarber,
-  defaultOrganization,
   defaultUnit,
   barberProfile,
   barberUser,
 } from '../../helpers/default-values'
-
-vi.mock(
-  '../../../src/services/@factories/transaction/make-create-transaction',
-  () => ({
-    makeCreateTransaction: () =>
-      new CreateTransactionService(transactionRepo, barberRepo, cashRepo),
-  }),
-)
-
-let transactionRepo: FakeTransactionRepository
-let barberRepo: FakeBarberUsersRepository
-let cashRepo: FakeCashRegisterRepository
+import { SaleProfitDistributionService } from '@/modules/finance/application/services/sale-profit-distribution-service'
+import { ProfitDistributionService } from '@/modules/sale/domain/services/profit-distribution'
+import { DetailedSale } from '@/repositories/sale-repository'
+import { BarberService, Prisma, Service } from '@prisma/client'
 
 function setup() {
-  const orgRepo = new FakeOrganizationRepository({ ...defaultOrganization })
-  const profileRepo = new FakeProfilesRepository([
-    { ...barberProfile, user: barberUser },
-  ])
-  const unitRepo = new FakeUnitRepository({ ...defaultUnit })
-  transactionRepo = new FakeTransactionRepository()
-  barberRepo = new FakeBarberUsersRepository()
-  cashRepo = new FakeCashRegisterRepository()
-  barberRepo.users.push({ ...barberUser, profile: null })
-  cashRepo.session = {
-    id: 'sess1',
-    openedById: barberUser.id,
-    unitId: defaultUnit.id,
-    openedAt: new Date(),
-    closedAt: null,
-    initialAmount: 0,
-    transactions: [],
-    sales: [],
-    finalAmount: null,
-    user: barberUser,
-  }
-  const appointmentRepo = new FakeAppointmentRepository()
-  const appointmentServiceRepo = new FakeAppointmentServiceRepository(
-    appointmentRepo,
-  )
+  const transactionRepo = new FakeTransactionRepository()
   const barberServiceRepo = new FakeBarberServiceRelRepository()
   const barberProductRepo = new FakeBarberProductRepository()
   const saleRepo = new FakeSaleRepository()
   const saleItemRepo = new FakeSaleItemRepository(saleRepo)
-  return {
-    orgRepo,
-    profileRepo,
-    unitRepo,
+  const appointmentServiceRepo = new FakeAppointmentServiceRepository()
+
+  const profitDistributionDomainService = new ProfitDistributionService()
+  const saleProfitDistributionService = new SaleProfitDistributionService(
     transactionRepo,
-    barberRepo,
-    cashRepo,
-    appointmentRepo,
     barberServiceRepo,
     barberProductRepo,
-    appointmentServiceRepo,
-    saleRepo,
     saleItemRepo,
+    appointmentServiceRepo,
+    profitDistributionDomainService,
+  )
+
+  return {
+    transactionRepo,
+    barberServiceRepo,
+    saleRepo,
+    saleProfitDistributionService,
   }
 }
 
-describe('distributeProfits', () => {
+describe('SaleProfitDistributionService (Integration)', () => {
   it('distributes amounts between barber and unit', async () => {
-    const ctx = setup()
-    const sale = makeSaleWithBarber()
-    const service = { id: 'svc1', price: 100 }
+    const { transactionRepo, barberServiceRepo, saleRepo, saleProfitDistributionService } =
+      setup()
+
+    const sale = makeSaleWithBarber() as DetailedSale
+    const service: Service = {
+      id: 'svc1',
+      price: 100,
+      name: 'Corte',
+      description: '',
+      imageUrl: '',
+      cost: 50,
+      defaultTime: 60,
+      commissionPercentage: null,
+      unitId: defaultUnit.id,
+      categoryId: 'cat1',
+    }
     sale.items[0].serviceId = service.id
-    sale.items[0].service = service as any
-    ctx.barberServiceRepo.items.push({
+    sale.items[0].service = service
+
+    const barberServiceRelation: BarberService = {
       id: 'rel1',
       profileId: barberProfile.id,
       serviceId: service.id,
       commissionType: 'PERCENTAGE_OF_ITEM',
       commissionPercentage: 50,
       time: null,
-    } as any)
-    sale.sessionId = 'sess1'
-    sale.session = {
-      id: 'sess1',
-      openedById: barberUser.id,
-      unitId: defaultUnit.id,
-      openedAt: new Date(),
-      closedAt: null,
-      initialAmount: 0,
-      finalAmount: null,
     }
-    sale.paymentStatus = 'PAID'
-    sale.items[0].porcentagemBarbeiro = 50
-    ctx.saleRepo.sales.push(sale)
+    barberServiceRepo.items.push(barberServiceRelation)
+    saleRepo.sales.push(sale)
 
-    const res = await distributeProfits(
-      sale,
-      defaultOrganization.id,
-      barberUser.id,
+    await saleProfitDistributionService.distribute(
       {
-        organizationRepository: ctx.orgRepo,
-        profileRepository: ctx.profileRepo,
-        unitRepository: ctx.unitRepo,
-        transactionRepository: ctx.transactionRepo,
-        appointmentRepository: ctx.appointmentRepo,
-        barberServiceRepository: ctx.barberServiceRepo,
-        barberProductRepository: ctx.barberProductRepo,
-        appointmentServiceRepository: ctx.appointmentServiceRepo,
-        saleItemRepository: ctx.saleItemRepo,
+        sale,
+        userId: barberUser.id,
+        sessionId: 'sess1',
       },
+      {} as Prisma.TransactionClient, // Mock Prisma Transaction Client
     )
 
-    expect(res.transactions).toHaveLength(2)
+    expect(transactionRepo.transactions).toHaveLength(2)
+
+    const barberTransaction = transactionRepo.transactions.find(
+      (t) => t.affectedUserId === barberProfile.userId,
+    )
+    const unitTransaction = transactionRepo.transactions.find(
+      (t) => !t.affectedUserId,
+    )
+
+    expect(barberTransaction?.amount).toBe(50) // 50% of 100
+    expect(unitTransaction?.amount).toBe(50)
   })
 })

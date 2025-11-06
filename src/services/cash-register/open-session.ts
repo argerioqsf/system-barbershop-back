@@ -1,14 +1,11 @@
 import { UserToken } from '@/http/controllers/authenticate-controller'
 import { CashRegisterRepository } from '@/repositories/cash-register-repository'
 import { ProfilesRepository } from '@/repositories/profiles-repository'
-import { UserNotFoundError } from '@/services/@errors/user/user-not-found-error'
-import { CashRegisterAlreadyOpenError } from '@/services/@errors/cash-register/cash-register-already-open-error'
-import {
-  CashRegisterSession,
-  ReasonTransaction,
-  RoleName,
-} from '@prisma/client'
+import { UserNotFoundError } from '@/core/application/errors/user-not-found-error'
+import { CashRegisterAlreadyOpenError } from '@/modules/finance/application/errors/cash-register-already-open-error'
+import { CashRegisterSession, RoleName } from '@prisma/client'
 import { IncrementBalanceUnitService } from '../unit/increment-balance'
+import { TransactionReason } from '@/modules/finance/domain/entities/transaction'
 
 interface OpenSessionRequest {
   user: UserToken
@@ -61,11 +58,11 @@ export class OpenSessionService {
         user.unitId,
         user.sub,
         initialAmount,
+        { reason: TransactionReason.CASH_OPENING },
         undefined,
         false,
         undefined,
         'Initial amount',
-        { reason: ReasonTransaction.CASH_OPENING },
       )
     }
 

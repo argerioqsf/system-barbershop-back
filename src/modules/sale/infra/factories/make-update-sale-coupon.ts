@@ -8,7 +8,7 @@ import { PrismaBarberUsersRepository } from '@/modules/sale/infra/repositories/p
 import { PrismaSaleItemRepository } from '@/modules/sale/infra/repositories/prisma/prisma-sale-item-repository'
 import { PrismaServiceRepository } from '@/modules/sale/infra/repositories/prisma/prisma-service-repository'
 import { PrismaProductRepository } from '@/modules/sale/infra/repositories/prisma/prisma-product-repository'
-import { PrismaAppointmentRepository } from '@/modules/sale/infra/repositories/prisma/prisma-appointment-repository'
+import { PrismaAppointmentRepository } from '@/modules/appointment/infra/repositories/prisma/prisma-appointment-repository'
 import { PrismaPlanRepository } from '@/modules/sale/infra/repositories/prisma/prisma-plan-repository'
 import { PrismaPlanProfileRepository } from '@/modules/sale/infra/repositories/prisma/prisma-plan-profile-repository'
 import { UpdateSaleCouponUseCase } from '@/modules/sale/application/use-cases/update-sale-coupon'

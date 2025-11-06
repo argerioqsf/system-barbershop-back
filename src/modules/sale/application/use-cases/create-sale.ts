@@ -6,7 +6,7 @@ import {
   CreateSaleResponse,
 } from '@/modules/sale/application/dto/sale'
 import { assertPermission } from '@/utils/permissions'
-import { UserNotFoundError } from '@/services/@errors/user/user-not-found-error'
+import { UserNotFoundError } from '@/core/application/errors/user-not-found-error'
 import { SaleTelemetry } from '@/modules/sale/application/ports/sale-telemetry'
 
 export class CreateSaleUseCase {

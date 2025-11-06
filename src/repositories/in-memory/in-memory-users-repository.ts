@@ -8,7 +8,7 @@ import {
   Role,
   User,
 } from '@prisma/client'
-import { UserNotFoundError } from '@/services/@errors/user/user-not-found-error'
+import { UserNotFoundError } from '@/core/application/errors/user-not-found-error'
 import { UsersRepository } from '../users-repository'
 
 export class InMemoryUserRepository implements UsersRepository {

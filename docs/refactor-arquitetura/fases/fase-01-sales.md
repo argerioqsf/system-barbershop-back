@@ -47,6 +47,7 @@ Tarefas
 - [x] Criar adapters de compatibilidade quando ainda houver dependências legadas (com `// MIGRATION-TODO`).
 - [x] Atualizar controllers para factories (quando faltarem).
 - [x] Garantir `TransactionRunner` nos casos de uso que precisam de transação.
+- [x] Remover repositórios/adapters de `Appointment` do módulo Sales; quando necessário, consumir portas de leitura/escrita expostas por Scheduling (via adapters de compatibilidade até a Fase 3 concluir).
 
 Estrutura/nomeação (padrão do plano)
 - [x] Renomear `application/contracts` → `application/ports` e mover `SaleTelemetry` para lá.
@@ -121,3 +122,13 @@ Independência & Handoff
 - Sem bloqueio de outros módulos: expor ports (`ProductRepository`, `ServiceRepository`, `CouponRepository`, `PlanRepository`, `PlanProfileRepository`, `ProfilesRepository`, `AppointmentRepository`) e manter adapters de compatibilidade dentro do módulo Sales (Prisma/Legacy) até que Catalog/Plans/Organization/Scheduling migrem.
 - Controllers e contratos HTTP ficam inalterados; troca é via factory/binding interno ao módulo.
 - Handoffs: quando Catalog/Plans/Organization/Scheduling migrarem, substituir adapters de compatibilidade por implementações nativas dos respectivos módulos; apagar `// MIGRATION-TODO` associados.
+
+---
+
+Conformidade com o Guia de Arquitetura
+- [ ] Separação domain/application/infra conforme `docs/arquitetura/guia-arquitetura.md`.
+- [ ] Ports por agregado com `tx?: Prisma.TransactionClient` e adapters Prisma em `infra`.
+- [ ] Factories para wiring e controllers com validação/mapeamento de erros.
+- [ ] Uso de `TransactionRunner` em coordenação de transações (`UseCaseCtx`).
+- [ ] Sem compartilhamento de entidades de outros módulos; consumo via ports/ACL.
+- [ ] Testes unitários de serviços/casos de uso e E2E de rotas.

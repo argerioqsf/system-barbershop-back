@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { PayUserCommissionService } from '../../../src/services/transaction/pay-user-comission'
+import { PayCommissionUseCase } from '../../../src/modules/finance/application/use-cases/pay-commission'
 import { CreateTransactionService } from '../../../src/services/transaction/create-transaction'
 import {
   FakeProfilesRepository,
@@ -18,10 +18,14 @@ import {
   makeCashSession,
   defaultUnit,
 } from '../../helpers/default-values'
-import type { PaymentItems } from '../../../src/services/users/utils/calculatePendingCommissions'
 import { IncrementBalanceProfileService } from '../../../src/services/profile/increment-balance'
+import { TransactionReason } from '../../../src/modules/finance/domain/entities/transaction'
+import { Money } from '../../../src/core/domain/value-objects/money'
+import { CommissionCalculator } from '../../../src/modules/finance/domain/services/commission-calculator'
 
-let service: PayUserCommissionService
+import { NegativeValuesNotAllowedError } from '../../../src/modules/finance/application/errors/negative-values-not-allowed-error'
+
+let service: PayCommissionUseCase
 let profileRepo: FakeProfilesRepository
 let saleRepo: FakeSaleRepository
 let saleItemRepo: FakeSaleItemRepository
@@ -59,21 +63,23 @@ async function setup(balance = 100) {
     profileRepo,
   )
 
-  service = new PayUserCommissionService(
-    profileRepo,
+  const commissionCalculator = new CommissionCalculator()
+
+  service = new PayCommissionUseCase(
     saleItemRepo,
     appointmentServiceRepo,
     incrementBalanceProfileService,
+    commissionCalculator,
   )
 }
 
-async function makePaymentItems(): Promise<PaymentItems[]> {
+async function makePaymentItems() {
   const sale = { ...makeSaleWithBarber(), id: 's1', paymentStatus: 'PAID' }
   sale.items[0].id = 'it1'
   sale.items[0].barberId = user.id
   sale.items[0].serviceId = 'svc1'
   sale.items[0].price = 40
-  sale.items[0].porcentagemBarbeiro = user.profile!.commissionPercentage
+  sale.items[0].porcentagemBarbeiro = 50
   ;(sale.items[0] as any).commissionPaid = false
   saleRepo.sales.push(sale as any)
 
@@ -117,24 +123,18 @@ async function makePaymentItems(): Promise<PaymentItems[]> {
   sale2.items[0].serviceId = 'svc-appt'
   sale2.items[0].appointmentId = appointment.id
   sale2.items[0].appointment = appointmentRepo.appointments[0]
-  sale2.items[0].porcentagemBarbeiro = user.profile!.commissionPercentage
+  sale2.items[0].porcentagemBarbeiro = 50
   ;(sale2.items[0] as any).commissionPaid = false
   saleRepo.sales.push(sale2 as any)
 
   const apptSvc = appointmentRepo.appointments[0].services[0]
 
-  const apptRecord: PaymentItems = {
-    saleId: sale2.id,
-    saleItemId: sale2.items[0].id,
-    appointmentServiceId: apptSvc.id,
-    amount: 15,
-    item: sale2.items[0] as any,
-    service: apptSvc.service,
-    sale: sale2 as any,
-    transactions: [],
-  }
+  appointmentRepo.appointments[0].services[0].commissionPercentage = 50
 
-  return [saleRecord, apptRecord]
+  return {
+    saleItemId: sale.items[0].id,
+    appointmentServiceId: apptSvc.id,
+  }
 }
 
 describe('Pay user commission service', () => {
@@ -143,14 +143,18 @@ describe('Pay user commission service', () => {
   })
 
   it('pays multiple items and marks them as paid', async () => {
-    const items = await makePaymentItems()
+    await makePaymentItems()
+
+    const preview = await service.preview(user.id)
+    expect(preview.total.toNumber()).toBe(35)
+    expect(preview.items).toHaveLength(2)
 
     const res = await service.execute({
-      commissionToBePaid: 35,
-      userId: user.id,
+      actorId: user.id,
       affectedUserId: user.id,
       description: 'pay',
-      allUserUnpaidSalesItemsFormatted: items,
+      amount: Money.from(35),
+      reason: TransactionReason.PAY_COMMISSION,
     })
 
     expect(res.transactions).toHaveLength(2)
@@ -162,14 +166,14 @@ describe('Pay user commission service', () => {
   })
 
   it('handles partial payments', async () => {
-    const items = await makePaymentItems()
+    await makePaymentItems()
 
     const res = await service.execute({
-      commissionToBePaid: 25,
-      userId: user.id,
+      actorId: user.id,
       affectedUserId: user.id,
       description: '',
-      allUserUnpaidSalesItemsFormatted: items,
+      amount: Money.from(25),
+      reason: TransactionReason.PAY_COMMISSION,
     })
 
     expect(res.transactions).toHaveLength(2)
@@ -183,12 +187,12 @@ describe('Pay user commission service', () => {
   it('rejects negative totals', async () => {
     await expect(
       service.execute({
-        commissionToBePaid: -5,
-        userId: user.id,
+        actorId: user.id,
         affectedUserId: user.id,
         description: '',
-        allUserUnpaidSalesItemsFormatted: [],
+        amount: Money.from(-5),
+        reason: TransactionReason.PAY_COMMISSION,
       }),
-    ).rejects.toThrow('Negative values not allowed')
+    ).rejects.toBeInstanceOf(NegativeValuesNotAllowedError)
   })
 })

@@ -1,6 +1,6 @@
 import { InvalidCredentialsError } from '@/services/@errors/auth/invalid-credentials-error'
 import { UserInactiveError } from '@/services/@errors/user/user-inactive-error'
-import { UserNotFoundError } from '@/services/@errors/user/user-not-found-error'
+import { UserNotFoundError } from '@/core/application/errors/user-not-found-error'
 import { ResourceNotFoundError } from '@/services/@errors/common/resource-not-found-error'
 import { UnitNotFoundError } from '@/services/@errors/unit/unit-not-found-error'
 import { UserAlreadyExistsError } from '@/services/@errors/user/user-already-exists-error'
@@ -8,12 +8,11 @@ import { ProfileNotFoundError } from '@/services/@errors/profile/profile-not-fou
 import { OrganizationNotFoundError } from '@/services/@errors/organization/organization-not-found-error'
 import { UnitNotExistsError } from '@/services/@errors/unit/unit-not-exists-error'
 import { CashRegisterClosedError } from '@/services/@errors/cash-register/cash-register-closed-error'
-import { CashRegisterNotOpenedError } from '@/services/@errors/cash-register/cash-register-not-opened-error'
-import { CashRegisterAlreadyOpenError } from '@/services/@errors/cash-register/cash-register-already-open-error'
+import { CashRegisterNotOpenedError } from '@/modules/finance/application/errors/cash-register-not-opened-error'
+import { CashRegisterAlreadyOpenError } from '@/modules/finance/application/errors/cash-register-already-open-error'
 import { CouponNotFoundError } from '@/services/@errors/coupon/coupon-not-found-error'
 import { InsufficientStockError } from '@/services/@errors/product/insufficient-stock-error'
 import { ItemNeedsServiceOrProductOrAppointmentError } from '@/services/@errors/sale/item-needs-service-or-product-error'
-import { NegativeValuesNotAllowedError } from '@/services/@errors/transaction/negative-values-not-allowed-error'
 import { InsufficientBalanceError } from '@/services/@errors/transaction/insufficient-balance-error'
 import { WithdrawalGreaterThanUnitBalanceError } from '@/services/@errors/transaction/withdrawal-greater-than-unit-balance-error'
 import { AffectedUserNotFoundError } from '@/services/@errors/transaction/affected-user-not-found-error'
@@ -33,6 +32,7 @@ import { LoanPaymentGreaterThanRemainingError } from '@/services/@errors/loan/lo
 import { CollaboratorNotFoundError } from '@/modules/collaborator/application/errors/collaborator-not-found.error'
 import { UnauthorizedAccessError } from '@/modules/collaborator/application/errors/unauthorized-access.error'
 import { PlanNotFromUserUnitError } from '@/services/@errors/plan/plan-not-from-user-unit-error'
+import { NegativeValuesNotAllowedError } from '@/modules/finance/application/errors/negative-values-not-allowed-error'
 
 export function mapErrorToStatus(error: Error): number {
   if (

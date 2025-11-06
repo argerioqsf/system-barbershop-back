@@ -4,7 +4,6 @@ import {
   SaleRepository,
 } from '@/repositories/sale-repository'
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
-import { CashRegisterRepository } from '@/repositories/cash-register-repository'
 import { TransactionRepository } from '@/repositories/transaction-repository'
 import { OrganizationRepository } from '@/repositories/organization-repository'
 import {
@@ -21,10 +20,7 @@ import {
 } from '@prisma/client'
 import { SaleNotFoundError } from '@/services/@errors/sale/sale-not-found-error'
 import { CashRegisterClosedError } from '@/services/@errors/cash-register/cash-register-closed-error'
-import {
-  SetSaleStatusRequest,
-  SetSaleStatusResponse,
-} from '@/modules/sale/application/dto/sale'
+import { PaySaleDTO, PaySaleOutput } from '../dto/pay-sale.dto'
 import { ProfileNotFoundError } from '@/services/@errors/profile/profile-not-found-error'
 import { BarberServiceRepository } from '@/repositories/barber-service-repository'
 import { BarberProductRepository } from '@/repositories/barber-product-repository'
@@ -33,7 +29,11 @@ import { AppointmentServiceRepository } from '@/repositories/appointment-service
 import { SaleItemRepository } from '@/repositories/sale-item-repository'
 import { PlanProfileRepository } from '@/repositories/plan-profile-repository'
 import { PlanAlreadyLinkedError } from '@/services/@errors/plan/plan-already-linked-error'
-import { UserNotFoundError } from '@/services/@errors/user/user-not-found-error'
+import { InvalidPaymentMethodError } from '../errors/invalid-payment-method-error'
+import { SaleAlreadyPaidError } from '../errors/sale-already-paid-error'
+import { RecurrenceNotFoundError } from '../errors/recurrence-not-found-error'
+import { PlanNotFoundError } from '../errors/plan-not-found-error'
+import { UserNotFoundError } from '@/core/application/errors/user-not-found-error'
 import {
   updateCouponsStock,
   updateProductsStock,
@@ -54,7 +54,10 @@ import {
 } from '@/core/application/utils/transaction-runner'
 import { defaultTransactionRunner } from '@/infra/prisma/transaction-runner'
 import { logger } from '@/lib/logger'
-import { UpdateCashRegisterFinalAmountService } from '@/services/cash-register/update-cash-register-final-amount'
+import { CashRegisterRepositoryPort } from '@/modules/finance/application/ports/cash-register-repository'
+import { UpdateCashFinalAmountUseCase } from '@/modules/finance/application/use-cases/update-cash-final-amount'
+import { Money } from '@/core/domain/value-objects/money'
+import { UseCaseCtx } from '@/core/application/use-case-ctx'
 
 export class PaySaleUseCase {
   private readonly transactionRunner: TransactionRunner
@@ -65,7 +68,7 @@ export class PaySaleUseCase {
     private readonly barberServiceRepository: BarberServiceRepository,
     private readonly barberProductRepository: BarberProductRepository,
     private readonly appointmentRepository: AppointmentRepository,
-    private readonly cashRegisterRepository: CashRegisterRepository,
+    private readonly cashRegisterRepository: CashRegisterRepositoryPort,
     private readonly transactionRepository: TransactionRepository,
     private readonly organizationRepository: OrganizationRepository,
     private readonly profileRepository: ProfilesRepository,
@@ -108,12 +111,12 @@ export class PaySaleUseCase {
       }
       const currentDate = new Date()
       const dueDayDebt = currentDate.getDate()
-      if (!item.plan) throw new Error('Plan not found')
+      if (!item.plan) throw new PlanNotFoundError()
 
       const recurrence = await this.typeRecurrenceRepository.findById(
         item.plan.typeRecurrenceId,
       )
-      if (!recurrence) throw new Error('Recurrence not found')
+      if (!recurrence) throw new RecurrenceNotFoundError()
 
       const dueDate = calculateNextDueDate(currentDate, recurrence, dueDayDebt)
       const realValueItem = calculateRealValueSaleItem(
@@ -148,7 +151,7 @@ export class PaySaleUseCase {
     if (!sale) throw new SaleNotFoundError()
 
     if (sale.paymentStatus === PaymentStatus.PAID) {
-      throw new Error('Sale has already been paid')
+      throw new SaleAlreadyPaidError()
     }
     return sale
   }
@@ -235,16 +238,14 @@ export class PaySaleUseCase {
   private async distributeProfitsAndCommissions(
     sale: DetailedSale,
     userId: string,
-    organizationId: string,
     sessionId: string,
-    tx?: Prisma.TransactionClient,
+    tx: Prisma.TransactionClient, // tx is required here
   ) {
     await this.saleCommissionService.applyCommissionPercentages(sale)
     logger.debug('sale with commissions', { items: sale.items })
     await this.saleProfitDistributionService.distribute(
       {
         sale,
-        organizationId,
         userId,
         sessionId,
       },
@@ -252,23 +253,24 @@ export class PaySaleUseCase {
     )
   }
 
-  async execute({
-    saleId,
-    userId,
-  }: SetSaleStatusRequest): Promise<SetSaleStatusResponse> {
+  async execute(
+    { saleId, userId }: PaySaleDTO,
+    ctx?: UseCaseCtx,
+  ): Promise<PaySaleOutput> {
     const sale = await this.verifyAndReturnSale(saleId)
     const user = await this.getAndVerifyUserWhoIsChangingSale(userId)
     const session = await this.getAndVerifySession(user.unitId)
     const clientProfile = await this.getAndVerifySaleClient(sale.clientId)
 
-    const updateCashRegisterFinalAmount =
-      new UpdateCashRegisterFinalAmountService(this.cashRegisterRepository)
+    const updateCashRegisterFinalAmount = new UpdateCashFinalAmountUseCase(
+      this.cashRegisterRepository,
+    )
 
     if (sale.method === PaymentMethod.EXEMPT && sale.total > 0) {
-      throw new Error('invalid payment method for this sale')
+      throw new InvalidPaymentMethodError()
     }
 
-    const run = async (tx: Prisma.TransactionClient) => {
+    const runInTransaction = async (tx: Prisma.TransactionClient) => {
       const updatedSale = await this.saleRepository.update(
         saleId,
         {
@@ -292,25 +294,21 @@ export class PaySaleUseCase {
       await this.distributeProfitsAndCommissions(
         updatedSale,
         userId,
-        user.organizationId,
         session.id,
         tx,
       )
 
       await updateCashRegisterFinalAmount.execute(
-        { sessionId: session.id, amount: updatedSale.total },
+        { sessionId: session.id, amount: Money.from(updatedSale.total) },
         tx,
       )
 
       return updatedSale
     }
-    // TODO(opção A): reduzir o trabalho dentro da transação. Mover a
-    // distribuição de comissões/lucros para fora do callback e executar
-    // após o commit, mantendo na transação apenas as operações estritamente
-    // necessárias (pagar a venda, concluir agendamentos, criar PlanProfile
-    // e atualizar estoques). Avaliar compensações/retentativas.
-    // MIGRATION-TODO: alinhar este caso de uso ao padrão UseCaseCtx quando o módulo Finance for migrado
-    const updatedSale = await this.transactionRunner.run((tx) => run(tx))
+
+    const updatedSale = ctx?.tx
+      ? await runInTransaction(ctx.tx)
+      : await this.transactionRunner.run(runInTransaction)
 
     if (updatedSale) {
       this.telemetry?.record({

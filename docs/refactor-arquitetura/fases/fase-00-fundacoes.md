@@ -98,3 +98,11 @@ Progresso
 - [x] Factories de Sale trocadas para `defaultTransactionRunner`.
 - [x] RecalculateUserSales: fallback passou a usar runner (MIGRATION-TODO para injetar no construtor).
 - [x] PaySaleUseCase: marcado com MIGRATION-TODO para injeção de runner.
+
+---
+
+Conformidade com o Guia de Arquitetura
+- [ ] Separação domain/application/infra conforme `docs/arquitetura/guia-arquitetura.md`.
+- [ ] Ports transversais (`TransactionRunner`, `Clock`, `IdGenerator`) declaradas no core e adapters em `infra`.
+- [ ] Application sem dependência de ORM/adapters (somente ports).
+- [ ] Testes e typecheck passando.

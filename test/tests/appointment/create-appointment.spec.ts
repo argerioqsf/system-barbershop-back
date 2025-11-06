@@ -3,7 +3,7 @@ import { CreateAppointmentUseCase } from '../../../src/modules/appointment/appli
 import { CheckBarberAvailabilityService } from '../../../src/modules/appointment/application/services/check-barber-availability-service'
 import { SyncAppointmentSaleService } from '../../../src/modules/appointment/application/services/sync-appointment-sale-service'
 import { ValidateAppointmentWindowService } from '../../../src/modules/appointment/application/services/validate-appointment-window-service'
-import { AppointmentTelemetryEvent } from '../../../src/modules/appointment/application/contracts/appointment-telemetry'
+import { AppointmentTelemetryEvent } from '../../../src/modules/appointment/application/ports/appointment-telemetry'
 import {
   FakeAppointmentRepository,
   FakeBarberUsersRepository,

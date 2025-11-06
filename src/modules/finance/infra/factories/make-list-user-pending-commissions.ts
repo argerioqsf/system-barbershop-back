@@ -1,13 +1,10 @@
-import { PrismaSaleItemRepository } from '@/repositories/prisma/prisma-sale-item-repository'
+import { ListPendingCommissionsUseCase } from '@/modules/finance/application/use-cases/list-pending-commissions'
 import { PrismaLoanRepository } from '@/repositories/prisma/prisma-loan-repository'
-import { ListUserPendingCommissionsService } from '@/services/users/list-user-pending-commissions'
+import { PrismaSaleItemRepository } from '@/repositories/prisma/prisma-sale-item-repository'
 
 export function makeListUserPendingCommissions() {
   const saleItemRepository = new PrismaSaleItemRepository()
   const loanRepository = new PrismaLoanRepository()
 
-  return new ListUserPendingCommissionsService(
-    saleItemRepository,
-    loanRepository,
-  )
+  return new ListPendingCommissionsUseCase(saleItemRepository, loanRepository)
 }

@@ -1,15 +1,15 @@
 import { BarberUsersRepository } from '@/repositories/barber-users-repository'
 import { CashRegisterRepository } from '@/repositories/cash-register-repository'
-import { TransactionRepository } from '@/repositories/transaction-repository'
-import { UserNotFoundError } from '@/services/@errors/user/user-not-found-error'
+import { UserNotFoundError } from '@/core/application/errors/user-not-found-error'
 import { CashRegisterClosedError } from '@/services/@errors/cash-register/cash-register-closed-error'
 import { AffectedUserNotFoundError } from '@/services/@errors/transaction/affected-user-not-found-error'
+import { Prisma, Transaction, TransactionType } from '@prisma/client'
+import { Money } from '@/core/domain/value-objects/money'
 import {
-  Prisma,
-  ReasonTransaction,
-  Transaction,
-  TransactionType,
-} from '@prisma/client'
+  TransactionRecord,
+  TransactionsRepository,
+} from '@/modules/finance/application/ports/transactions-repository'
+import { TransactionReason } from '@/modules/finance/domain/entities/transaction'
 
 interface CreateTransactionRequest {
   userId: string
@@ -24,7 +24,7 @@ interface CreateTransactionRequest {
   isLoan?: boolean
   loanId?: string
   tx?: Prisma.TransactionClient
-  reason?: ReasonTransaction
+  reason: TransactionReason
 }
 
 interface CreateTransactionResponse {
@@ -33,9 +33,9 @@ interface CreateTransactionResponse {
 
 export class CreateTransactionService {
   constructor(
-    private repository: TransactionRepository,
-    private barberUserRepository: BarberUsersRepository,
-    private cashRegisterRepository: CashRegisterRepository,
+    private readonly transactionsRepository: TransactionsRepository,
+    private readonly barberUserRepository: BarberUsersRepository,
+    private readonly cashRegisterRepository: CashRegisterRepository,
   ) {}
 
   async execute(
@@ -60,33 +60,57 @@ export class CreateTransactionService {
 
     const effectiveUser = user
 
-    const reason = data.reason ?? ReasonTransaction.OTHER
+    const reason = data.reason
 
-    const prismaData: Prisma.TransactionCreateInput = {
-      user: { connect: { id: effectiveUser.id } },
-      unit: { connect: { id: effectiveUser.unitId } },
-      session: { connect: { id: session.id } },
-      sale: data.saleId ? { connect: { id: data.saleId } } : undefined,
-      ...(data.saleItemId && {
-        saleItem: { connect: { id: data.saleItemId } },
-      }),
-      ...(data.appointmentServiceId && {
-        appointmentService: { connect: { id: data.appointmentServiceId } },
-      }),
-      type: data.type,
-      description: data.description,
-      amount: data.amount,
-      isLoan: data.isLoan ?? false,
-      receiptUrl: data.receiptUrl ?? null,
-      reason,
-      ...(data.loanId && { loan: { connect: { id: data.loanId } } }),
-      affectedUser: affectedUser
-        ? { connect: { id: affectedUser.id } }
-        : undefined,
+    const amount = Money.from(data.amount)
+    const signedAmount =
+      data.type === TransactionType.WITHDRAWAL ? amount.negate() : amount
+
+    const transactionRecord = await this.transactionsRepository.create(
+      {
+        amount: signedAmount,
+        reason,
+        description: data.description,
+        userId: effectiveUser.id,
+        affectedUserId: affectedUser?.id,
+        saleId: data.saleId,
+        saleItemId: data.saleItemId,
+        appointmentServiceId: data.appointmentServiceId,
+        unitId: effectiveUser.unitId,
+        sessionId: session.id,
+        loanId: data.loanId,
+        receiptUrl: data.receiptUrl,
+        isLoan: data.isLoan,
+      },
+      data.tx,
+    )
+
+    return {
+      transaction: this.toPrismaTransaction(transactionRecord),
     }
+  }
 
-    const transaction = await this.repository.create(prismaData, data.tx)
-
-    return { transaction }
+  private toPrismaTransaction(record: TransactionRecord): Transaction {
+    return {
+      id: record.id,
+      userId: record.userId,
+      affectedUserId: record.affectedUserId ?? null,
+      unitId: record.unitId ?? '',
+      cashRegisterSessionId: record.sessionId ?? null,
+      type:
+        record.type === 'WITHDRAWAL'
+          ? TransactionType.WITHDRAWAL
+          : TransactionType.ADDITION,
+      description: record.description ?? '',
+      amount: record.amount.abs().toNumber(),
+      isLoan: record.isLoan,
+      receiptUrl: record.receiptUrl ?? null,
+      createdAt: record.createdAt,
+      reason: record.reason,
+      saleId: record.saleId ?? null,
+      saleItemId: record.saleItemId ?? null,
+      appointmentServiceId: record.appointmentServiceId ?? null,
+      loanId: record.loanId ?? null,
+    }
   }
 }

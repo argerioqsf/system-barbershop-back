@@ -3,13 +3,14 @@ import { DetailedSale, DetailedSaleItem } from '@/repositories/sale-repository'
 import { BarberServiceRepository } from '@/repositories/barber-service-repository'
 import { BarberProductRepository } from '@/repositories/barber-product-repository'
 import { ProfileNotFoundError } from '@/services/@errors/profile/profile-not-found-error'
-import { calculateBarberCommission } from '@/services/sale/utils/barber-commission'
+import { CommissionResolutionService } from '@/modules/sale/domain/services/commission-resolution-service'
 
 export class SaleCommissionService {
   constructor(
     private readonly barberUsersRepository: BarberUsersRepository,
     private readonly barberServiceRepository: BarberServiceRepository,
     private readonly barberProductRepository: BarberProductRepository,
+    private readonly commissionResolutionService: CommissionResolutionService,
   ) {}
 
   async applyCommissionPercentages(sale: DetailedSale): Promise<void> {
@@ -51,7 +52,9 @@ export class SaleCommissionService {
         item.serviceId,
       )
 
-      return calculateBarberCommission(item.service, barber.profile, relation)
+      return this.commissionResolutionService
+        .getPercentage(item.service, barber.profile, relation)
+        .toNumber()
     }
 
     if (item.productId && item.product) {
@@ -60,7 +63,9 @@ export class SaleCommissionService {
         item.productId,
       )
 
-      return calculateBarberCommission(item.product, barber.profile, relation)
+      return this.commissionResolutionService
+        .getPercentage(item.product, barber.profile, relation)
+        .toNumber()
     }
 
     return undefined

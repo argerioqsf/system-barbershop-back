@@ -26,3 +26,17 @@ Riscos & Mitigações
 
 Rollout
 - Estratégia de PRs pequenos e ordem sugerida.
+
+---
+
+Conformidade com o Guia de Arquitetura
+- [ ] Separação domain/application/infra conforme `docs/arquitetura/guia-arquitetura.md`.
+- [ ] Ports por agregado com `tx?: Prisma.TransactionClient` quando aplicável.
+- [ ] Factories em `infra/factories` para wiring de use-cases/serviços/queries.
+- [ ] Controllers com validação (Zod) e mapeamento de erros de domínio.
+- [ ] Uso de `TransactionRunner`/`UseCaseCtx` quando houver transações.
+- [ ] Sem compartilhamento de entidades entre módulos (usar ACL/ports e modelos locais).
+- [ ] Testes adequados (unit/integration/E2E) conforme o módulo.
+
+De/Para do Legado (se aplicável)
+- (listar aqui os caminhos legados e seus destinos no novo módulo)
