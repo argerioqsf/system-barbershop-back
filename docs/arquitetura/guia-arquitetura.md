@@ -81,6 +81,9 @@ src/modules/<contexto>/
 - Entidades: Transaction, Commission, CashSession, Loan, Debt.
 
 7) Plans (Assinaturas)
+
+``// TODO trazer Benefits para o modulo Plans, pois ele é o beneficio dos planos
+``
 - Escopo: Planos e vínculos de usuário ao plano (PlanProfile), recorrência (TypeRecurrence).
 
 8) Reporting
