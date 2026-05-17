@@ -5,6 +5,9 @@ Todas as mudanças notáveis deste projeto serão documentadas aqui.
 ## 1.3.0 - 2025-08-29
 
 ### Principais mudanças
+- Autenticação baseada em JWT passa a expirar tokens de forma explícita (access 2 min, refresh 30 dias) e depende apenas do fluxo de refresh para renovar credenciais, eliminando consultas ao banco por request para validar versões.
+- `/sessions` e `/sessions/refresh` agora devolvem `tokenExpiresIn` e `refreshTokenExpiresIn` (em segundos) para que o frontend saiba quando renovar o access token.
+- Rotas protegidas não invalidam access tokens imediatamente por mudança de `versionToken`; o access antigo pode permanecer válido até expirar. A invalidação por versão ocorre no refresh token e exige novo login quando `/sessions/refresh` retornar 401 `{ message: 'TOKEN_EXPIRED' }`.
 - Débitos recorrentes passam a ter data de vencimento explícita via `Debt.dueDate` (obrigatória).
 - `Debt.paymentDate` tornou-se opcional (apenas presente quando o débito está pago).
 - Campo de perfil de plano renomeado: `PlanProfile.dueDateDebt` → `dueDayDebt` (dia do vencimento recorrente).

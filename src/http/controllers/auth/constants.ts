@@ -1,0 +1,4 @@
+export const TOKEN_EXPIRED_MESSAGE = 'TOKEN_EXPIRED'
+
+export const ACCESS_TOKEN_EXPIRES_IN_SECONDS = 2 * 60 // 2 minutes
+export const REFRESH_TOKEN_EXPIRES_IN_SECONDS = 30 * 24 * 60 * 60 // 30 days

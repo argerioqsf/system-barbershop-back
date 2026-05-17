@@ -88,6 +88,9 @@ collection:
             	}
                 // Define o token como variável de ambiente
                 insomnia.environment.set(token_env, response.token);
+                insomnia.environment.set("refreshToken", response.refreshToken);
+                insomnia.environment.set("tokenExpiresIn", response.tokenExpiresIn);
+                insomnia.environment.set("refreshTokenExpiresIn", response.refreshTokenExpiresIn);
                 console.log("Token salvo como variável de ambiente.");
             } else if (response.user && response.user.token) {
                 // Caso o token esteja dentro de user.token
@@ -101,6 +104,48 @@ collection:
                 console.log("Token salvo como variável de ambiente a partir de user.token.");
             } else {
                 console.warn("Token não encontrado na resposta.");
+            }
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/sessions/refresh"
+        name: Refresh token
+        meta:
+          id: req_8d38b6b2d35945a792fb2c63610bd2b9
+          created: 1751331396295
+          modified: 1751331396295
+          isPrivate: false
+          description: "Renova access e refresh tokens. Access token expira em 2 minutos; refresh token expira em 30 dias. Se retornar TOKEN_EXPIRED, faça login novamente."
+          sortKey: -1751331396294.5
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "refreshToken": "{{ refreshToken }}"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        scripts:
+          preRequest: ""
+          afterResponse: >-
+            let response = insomnia.response.json();
+
+
+            if (response.token) {
+                insomnia.environment.set("token", response.token);
+                insomnia.environment.set("refreshToken", response.refreshToken);
+                insomnia.environment.set("tokenExpiresIn", response.tokenExpiresIn);
+                insomnia.environment.set("refreshTokenExpiresIn", response.refreshTokenExpiresIn);
+                console.log("Tokens renovados com sucesso.");
+            } else {
+                console.warn("Tokens não encontrados na resposta.");
             }
         settings:
           renderRequestBody: true
@@ -3335,6 +3380,34 @@ collection:
       sortKey: -1751331396323
       description: ""
     children:
+      - url: "{{ baseURL }}/type-recurrences"
+        name: List type recurrences
+        meta:
+          id: req_5e4604ff00eb4691a77e1078a47081cb
+          created: 1751331396323
+          modified: 1751331396323
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396324
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        scripts:
+          preRequest: ""
+          afterResponse: >-
+            let r = insomnia.response.json();
+
+            if (r && r[0]) insomnia.environment.set("typeRecurrenceId",
+            r[0].id);
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
       - url: "{{ baseURL }}/type-recurrences/{{ _.typeRecurrenceId }}"
         name: Update type recurrence
         meta:
@@ -3367,8 +3440,65 @@ collection:
             send: true
             store: true
           rebuildPath: true
-        method: GET
+      - url: "{{ baseURL }}/type-recurrences/{{ _.typeRecurrenceId }}"
+        name: Delete type recurrence
+        meta:
+          id: req_954cefc0c6804329acd56d7ac12a4887
+          created: 1751331396323
+          modified: 1751331396323
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396322
+        method: DELETE
         headers:
+          - name: Authorization
+            value: Bearer {{ token }}
+        scripts:
+          preRequest: ""
+          afterResponse: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseURL }}/type-recurrences"
+        name: Create type recurrence
+        meta:
+          id: req_c29edd6839cc4bafa2bf369b856c52cf
+          created: 1751331396323
+          modified: 1751331396323
+          isPrivate: false
+          description: ""
+          sortKey: -1751331396321
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "period": 1
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ token }}
+        scripts:
+          preRequest: ""
+          afterResponse: ""
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+    scripts:
+      afterResponse: ""
+      preRequest: ""
   - name: Collaborator
     meta:
       id: fld_a7f1fd255b3446fab42833713f4b19f8
@@ -3412,79 +3542,6 @@ collection:
           sortKey: -1751331396304
         method: GET
         headers:
-          - name: Authorization
-            value: Bearer {{ token }}
-        scripts:
-          preRequest: ""
-          afterResponse: ""
-        settings:
-          renderRequestBody: true
-          encodeUrl: true
-          followRedirects: global
-          cookies:
-            send: true
-            store: true
-          rebuildPath: true
-          - name: Authorization
-            value: Bearer {{ token }}
-        scripts:
-          preRequest: ""
-          afterResponse: >-
-            let r = insomnia.response.json();
-
-            if (r && r[0]) insomnia.environment.set("typeRecurrenceId",
-            r[0].id);
-        settings:
-          renderRequestBody: true
-          encodeUrl: true
-          followRedirects: global
-          cookies:
-            send: true
-            store: true
-          rebuildPath: true
-      - url: "{{ baseURL }}/type-recurrences/{{ _.typeRecurrenceId }}"
-        name: Delete type recurrence
-        meta:
-          id: req_954cefc0c6804329acd56d7ac12a4887
-          created: 1751331396323
-          modified: 1751331396323
-          isPrivate: false
-          description: ""
-          sortKey: -1751331396323
-        method: DELETE
-        headers:
-          - name: Authorization
-            value: Bearer {{ token }}
-        scripts:
-          preRequest: ""
-          afterResponse: ""
-        settings:
-          renderRequestBody: true
-          encodeUrl: true
-          followRedirects: global
-          cookies:
-            send: true
-            store: true
-          rebuildPath: true
-      - url: "{{ baseURL }}/type-recurrences"
-        name: Create type recurrence
-        meta:
-          id: req_c29edd6839cc4bafa2bf369b856c52cf
-          created: 1751331396323
-          modified: 1751331396323
-          isPrivate: false
-          description: ""
-          sortKey: -1751331396323
-        method: POST
-        body:
-          mimeType: application/json
-          text: |-
-            {
-              "period": 1
-            }
-        headers:
-          - name: Content-Type
-            value: application/json
           - name: Authorization
             value: Bearer {{ token }}
         scripts:

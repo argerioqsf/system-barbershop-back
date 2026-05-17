@@ -1,49 +1,31 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
-import { PrismaUsersRepository } from '@/repositories/prisma/prisma-users-repository'
 import { UserToken } from '../controllers/authenticate-controller'
+import { TOKEN_EXPIRED_MESSAGE } from '../controllers/auth/constants'
 
-export async function verifyJWT(request: FastifyRequest, replay: FastifyReply) {
+type FastifyJwtError = Error & { code?: string }
+
+function isTokenExpiredError(error: unknown): error is FastifyJwtError {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    (error as FastifyJwtError).code === 'FST_JWT_AUTHORIZATION_TOKEN_EXPIRED'
+  )
+}
+
+export async function verifyJWT(request: FastifyRequest, reply: FastifyReply) {
   try {
     await request.jwtVerify()
     const token = request.user as UserToken
-    const repo = new PrismaUsersRepository()
-    const user = await repo.findById(token.sub)
-    if (!user || !user.profile) {
-      return replay.status(401).send({ message: 'Unauthorized' })
-    }
-    if (
-      user.versionTokenInvalidate &&
-      user.versionTokenInvalidate === token.versionToken
-    ) {
-      return replay.status(401).send({ message: 'Unauthorized' })
-    }
-    if (token.versionToken && token.versionToken < user.versionToken) {
-      const permissions = user.profile?.permissions.map((p) => p.name)
-      const newVersion = user.versionToken
-      await repo.update(user.id, {
-        versionTokenInvalidate: token.versionToken,
-      })
-      request.user = {
-        sub: user.id,
-        unitId: user.unitId,
-        organizationId: user.organizationId,
-        role: user.profile.role.name,
-        permissions,
-        versionToken: newVersion,
-      }
-      const newToken = await replay.jwtSign(
-        {
-          unitId: user.unitId,
-          organizationId: user.organizationId,
-          role: user.profile.role.name,
-          permissions,
-          versionToken: newVersion,
-        },
-        { sign: { sub: user.id } },
-      )
-      request.newToken = newToken
+
+    if (token.tokenType && token.tokenType !== 'access') {
+      return reply.status(401).send({ message: 'Unauthorized' })
     }
   } catch (error) {
-    return replay.status(401).send({ message: 'Unauthorized' })
+    if (isTokenExpiredError(error)) {
+      return reply.status(401).send({ message: TOKEN_EXPIRED_MESSAGE })
+    }
+
+    return reply.status(401).send({ message: 'Unauthorized' })
   }
 }

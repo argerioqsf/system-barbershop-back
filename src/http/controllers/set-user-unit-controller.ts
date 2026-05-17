@@ -10,7 +10,7 @@ export const SetUserUnitController = async (
   const { unitId } = bodySchema.parse(request.body)
   const user = request.user
   const service = makeSetUserUnitService()
-  await service.execute({ user, unitId }, reply, request)
+  await service.execute({ user, unitId })
 
   return reply.status(200).send({})
 }

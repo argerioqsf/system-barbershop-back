@@ -11,7 +11,6 @@ import { Permission, Profile, Role, Unit, User } from '@prisma/client'
 import { hasPermission } from '@/utils/permissions'
 import { UnauthorizedError } from '../@errors/auth/unauthorized-error'
 import { UserToken } from '@/http/controllers/authenticate-controller'
-import { FastifyReply, FastifyRequest } from 'fastify'
 import { logger } from '@/lib/logger'
 
 interface UpdateUserRequest {
@@ -110,8 +109,6 @@ export class UpdateUserService {
   async execute(
     data: UpdateUserRequest,
     userToken?: UserToken,
-    reply?: FastifyReply,
-    request?: FastifyRequest,
   ): Promise<UpdateUserResponse> {
     const oldUser = await this.repository.findById(data.id)
     if (!oldUser) {
@@ -243,29 +240,6 @@ export class UpdateUserService {
           )
         }
       }
-    }
-
-    if (
-      userToken &&
-      reply &&
-      request &&
-      data.id === userToken.sub &&
-      changeCredentials
-    ) {
-      const permissions = profile?.permissions.map(
-        (permission) => permission.name,
-      )
-      const newToken = await reply.jwtSign(
-        {
-          unitId: user.unitId,
-          organizationId: user.organizationId,
-          role: profile?.role?.name ?? userToken.role,
-          permissions,
-          versionToken: user.versionToken,
-        },
-        { sign: { sub: user.id } },
-      )
-      request.newToken = newToken
     }
 
     const userRest = { ...user }

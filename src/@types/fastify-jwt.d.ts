@@ -10,12 +10,7 @@ declare module '@fastify/jwt' {
       role: RoleName
       permissions?: PermissionName[]
       versionToken?: number
+      tokenType?: 'access' | 'refresh'
     }
-  }
-}
-
-declare module 'fastify' {
-  interface FastifyRequest {
-    newToken?: string
   }
 }

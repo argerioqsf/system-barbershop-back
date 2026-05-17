@@ -76,12 +76,7 @@ export const UpdateBarberUserController = async (
     })),
   }
 
-  const { user } = await service.execute(
-    { id, ...normalized },
-    userToken,
-    reply,
-    request,
-  )
+  const { user } = await service.execute({ id, ...normalized }, userToken)
 
   return reply.status(200).send({ user })
 }

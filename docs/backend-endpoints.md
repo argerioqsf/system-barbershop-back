@@ -4,7 +4,9 @@ Este arquivo consolida o contrato do backend e referencia a integração no fron
 
 Convenções gerais
 - Autenticação: Bearer token (header `Authorization`) após `POST /sessions`.
-- Refresh de token: backend pode devolver novo token no corpo JSON (campo `token`) OU no header `x-new-token`. O frontend deve detectar e substituir o token ativo.
+- Tokens: access expira em 2 minutos e refresh em 30 dias. As respostas de login/refresh incluem `tokenExpiresIn` e `refreshTokenExpiresIn` (segundos) para o front armazenar.
+- Refresh de token: login (`POST /sessions`) e `POST /sessions/refresh` retornam `{ token, refreshToken, tokenExpiresIn, refreshTokenExpiresIn }`. Se uma request protegida responder 401 `{ message: 'TOKEN_EXPIRED' }`, o frontend deve chamar `/sessions/refresh` usando o refresh token atual.
+- Invalidação por versão: rotas protegidas não consultam mais o banco para validar `versionToken` a cada request, portanto não há invalidação imediata do access token por troca de unidade/permissões. Alterações que incrementam `versionToken` invalidam o refresh token atual; o access antigo pode permanecer válido até expirar. Se `/sessions/refresh` responder 401 `{ message: 'TOKEN_EXPIRED' }`, o frontend deve encerrar a sessão local e solicitar novo login.
 - Content-Type padrão: `application/json`; rotas com upload usam `multipart/form-data` (campo de arquivo indicado no endpoint).
 - Paginação (v1): query param `page`; resposta preferencial { items, count }. O frontend tolera array puro.
 - Paginação (v2): quando houver `withCount=true`, resposta vira `{ items, count, page, perPage }`.
@@ -27,8 +29,12 @@ Autenticação
 - POST `/sessions` (login) [público]
   - Body: `{ email, password }`
   - Exemplo: `{ "email": "user@exemplo.com", "password": "senha123" }`
-  - Resposta: `{ user, roles, token }`
-  - Exemplo (resposta): `{ "user": { "id": "usr_1", "email": "user@exemplo.com", "unitId": "unit_1", "organizationId": "org_1", "profile": { "id": "prof_1", "name": "User", "role": { "name": "BARBER" } } }, "roles": ["ADMIN","OWNER","MANAGER","BARBER"], "token": "<jwt>" }`
+  - Resposta: `{ user, roles, token, refreshToken, tokenExpiresIn, refreshTokenExpiresIn }`
+  - Exemplo (resposta): `{ "user": { "id": "usr_1", "email": "user@exemplo.com", "unitId": "unit_1", "organizationId": "org_1", "profile": { "id": "prof_1", "name": "User", "role": { "name": "BARBER" } } }, "roles": ["ADMIN","OWNER","MANAGER","BARBER"], "token": "<jwt>", "refreshToken": "<refresh_jwt>", "tokenExpiresIn": 120, "refreshTokenExpiresIn": 2592000 }`
+- POST `/sessions/refresh` (renova tokens) [público]
+  - Body: `{ refreshToken }`
+  - Resposta: `{ token, refreshToken, tokenExpiresIn, refreshTokenExpiresIn }`
+  - Observação: usar quando uma rota protegida responder 401 `{ message: 'TOKEN_EXPIRED' }`.
 - POST `/forgot-password` [público]
   - Body: `{ email }`
   - Exemplo (request): `{ "email": "user@exemplo.com" }`
@@ -41,9 +47,9 @@ Autenticação
 Sessão
 - PATCH `/sessions/unit` (altera unidade ativa) [protegido]
   - Body: `{ unitId }`
-  - Pode retornar novo token (corpo ou header `x-new-token`).
   - Exemplo (request): `{ "unitId": "unit_2" }`
-  - Resposta: 200 `{}` (header opcional `x-new-token`)
+  - Resposta: 200 `{}`
+  - Observação: trocar a unidade incrementa `versionToken` e invalida o refresh token atual. O access token antigo pode continuar válido até expirar; depois disso, `/sessions/refresh` tende a responder 401 `{ message: 'TOKEN_EXPIRED' }`, exigindo novo login.
 
 Uploads
 - POST `/upload` (arquivo único) [sem JWT]
@@ -100,9 +106,9 @@ Usuários da barbearia (gestão)
   - Exemplo (resposta): `{ "id": "usr_1", "name": "João", "email": "joao@ex.com", "balance": 120.5, "loans": [{ "id": "loan_1", "amount": 300, "status": "APPROVED" }] }`
 - PUT `/barber/users/:id` [protegido]
   - Body parcial: `{ name?, phone?, cpf?, genre?, birthday?, pix?, unitId?, roleId?, permissions?[], commissionPercentage?, active?, services?: { serviceId, time?, commissionPercentage?, commissionType? }[], products?: { productId, commissionPercentage?, commissionType? }[], removeServiceIds?: string[], removeProductIds?: string[] }`
-  - Pode renovar token do próprio usuário
+  - Alterações no próprio usuário que mudam credenciais/perfil podem incrementar `versionToken` e invalidar o refresh token atual. O access token antigo pode continuar válido até expirar; depois disso, `/sessions/refresh` tende a responder 401 `{ message: 'TOKEN_EXPIRED' }`, exigindo novo login.
   - Exemplo (request): `{ "name": "João da Silva", "active": true }`
-  - Resposta: `{ user: { "id": "usr_1", "name": "João da Silva" } }` (pode incluir header `x-new-token`)
+  - Resposta: `{ user: { "id": "usr_1", "name": "João da Silva" } }`
   - Observação: `commissionType` aceita `PERCENTAGE_OF_ITEM` | `PERCENTAGE_OF_USER` | `PERCENTAGE_OF_USER_ITEM`
 - DELETE `/barber/users/:id` [protegido] → 204
 
@@ -398,7 +404,8 @@ Config
   - Exemplo (resposta): `[{ "id": "usr_1", "name": "João", "email": "joao@ex.com" }]`
 
 1) Autenticação/Perfil
-- POST /sessions → { token, user, roles? }
+- POST /sessions → { token, refreshToken, tokenExpiresIn, refreshTokenExpiresIn, user, roles? }
+- POST /sessions/refresh → { token, refreshToken, tokenExpiresIn, refreshTokenExpiresIn }
 - POST /forgot-password
 - POST /reset-password
 - GET /profile

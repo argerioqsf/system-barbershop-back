@@ -136,13 +136,6 @@ app.register(fastifyJwt, {
   secret: env.JWT_SECRET,
 })
 
-app.addHook('onSend', async (request, reply, payload) => {
-  if (request.newToken) {
-    reply.header('x-new-token', request.newToken)
-  }
-  return payload
-})
-
 app.register(authRoute)
 app.register(sessionRoute)
 app.register(profileRoute)
